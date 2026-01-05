@@ -86,16 +86,16 @@ public:
 
   static unsigned depth()
   {
-    return Cpubits::Pt4() ? static_cast<unsigned>(Pdir_4lvl::Depth)
-                          : static_cast<unsigned>(Pdir_3lvl::Depth);
+    return Cpubits::Pt4() ? unsigned{Pdir_4lvl::Depth}
+                          : unsigned{Pdir_3lvl::Depth};
   }
 
   static unsigned super_level() { return Pte_ptr::super_level(); }
 
   static Address max_addr()
   {
-    return Cpubits::Pt4() ? static_cast<Address>(Pdir_4lvl::Max_addr)
-                          : static_cast<Address>(Pdir_3lvl::Max_addr);
+    return Cpubits::Pt4() ? Address{Pdir_4lvl::Max_addr}
+                          : Address{Pdir_3lvl::Max_addr};
   }
 
   static unsigned page_order_for_level(unsigned level)
@@ -130,7 +130,7 @@ public:
   static unsigned lsb_for_level(unsigned level)
   {
     return Cpubits::Pt4() ? Pdir_4lvl::lsb_for_level(level)
-                           : Pdir_3lvl::lsb_for_level(level);
+                          : Pdir_3lvl::lsb_for_level(level);
   }
 
   struct Levels
@@ -138,7 +138,7 @@ public:
     static unsigned long length(unsigned level)
     {
       return Cpubits::Pt4() ? Pdir_4lvl::Levels::length(level)
-                              : Pdir_3lvl::Levels::length(level);
+                            : Pdir_3lvl::Levels::length(level);
     }
 
     static unsigned long entry_size(unsigned level)
