@@ -905,8 +905,8 @@ public:
   {}
 
   // retained from Pdir_t
-  typedef Addr::Addr<Config::PAGE_SHIFT> Va; // same as physical address
-  typedef Addr::Addr<Config::PAGE_SHIFT>::Diff_type Vs;
+  typedef Addr::Addr<0> Va;
+  typedef Addr::Addr<0>::Diff_type Vs;
 };
 
 class Kpdir : public Pdir

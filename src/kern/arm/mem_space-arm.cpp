@@ -443,11 +443,11 @@ Mem_space::v_insert([[maybe_unused]] Phys_addr phys,
                     Vaddr virt, Page_order order,
                     Attr page_attribs, bool ku_mem)
 {
-  assert (phys == virt);
+  assert (Phys_addr(phys) == Virt_addr(virt));
   assert (cxx::is_zero(cxx::get_lsb(Phys_addr(phys), order)));
   assert (cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
-  Mword start = Vaddr::val(virt);
-  Mword end = Vaddr::val(virt) + (1UL << Page_order::val(order)) - 1U;
+  Mword start = cxx::int_value<Virt_addr>(Virt_addr(virt));
+  Mword end = start + (1UL << Page_order::val(order)) - 1U;
   Mpu_region_attr attr = Mpu_region_attr::make_attr(page_attribs.rights,
                                                     page_attribs.type,
                                                     !ku_mem);
@@ -542,7 +542,7 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
 {
   auto guard = lock_guard(_lock);
 
-  Mword v(Vaddr::val(virt));
+  Mword v = cxx::int_value<Virt_addr>(Virt_addr(virt));
   auto r = _dir->find(v);
   if (!r)
     {
@@ -588,8 +588,8 @@ Mem_space::v_delete(Vaddr virt, Page_order order,
 {
   assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
 
-  Mword start = Vaddr::val(virt);
-  Mword end = Vaddr::val(virt) + (1UL << Page_order::val(order)) - 1U;
+  Mword start = cxx::int_value<Virt_addr>(Virt_addr(virt));
+  Mword end = start + (1UL << Page_order::val(order)) - 1U;
   Mpu_region_attr attr;
 
   auto guard = lock_guard(_lock);
