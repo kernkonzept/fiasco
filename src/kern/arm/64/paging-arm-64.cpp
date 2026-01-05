@@ -67,8 +67,8 @@ private:
   };
 
 public:
-  typedef Addr::Addr<Config::PAGE_SHIFT> Va; // is this ok so?
-  typedef Addr::Addr<Config::PAGE_SHIFT>::Diff_type Vs;
+  typedef Addr::Addr<0> Va;
+  typedef Addr::Addr<0>::Diff_type Vs;
 
   typedef ::Pte_ptr Pte_ptr;
 
