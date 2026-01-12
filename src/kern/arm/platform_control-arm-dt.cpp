@@ -36,7 +36,7 @@ Platform_control::boot_ap_cpus_dt(Dt::Node cpus, Address phys_tramp_mp_addr)
 
       // Check for MPIDR match of boot CPU first. The boot CPU node does not
       // necessarily have an "enable-method"...
-      if (reg == Cpu::mpidr())
+      if (reg == (Cpu::mpidr() & ~0xff000000ul))
         return Dt::Continue;
 
       // The enable-method may also be on the parent node...
