@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /*
- * Copyright (C) 2023 Kernkonzept GmbH.
+ * Copyright (C) 2023, 2025 Kernkonzept GmbH.
  * Author(s): Manuel Kalettka <manuel.kalettka@kernkonzept.com>
  */
 

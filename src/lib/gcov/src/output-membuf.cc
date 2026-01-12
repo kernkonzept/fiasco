@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only or License-Ref-kk-custom */
 /*
- * Copyright (C) 2024 Kernkonzept GmbH.
+ * Copyright (C) 2024-2025 Kernkonzept GmbH.
  * Author(s): Valentin Gehrke <valentin.gehrke@kernkonzept.com
  *
  */

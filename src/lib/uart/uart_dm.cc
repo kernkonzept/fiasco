@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2021-2022 Stephan Gerhold <stephan@gerhold.net>
- * Copyright (C) 2022-2024 Kernkonzept GmbH.
+ * Copyright (C) 2022-2025 Kernkonzept GmbH.
  *
  * License: see LICENSE.spdx (in this directory or the directories above)
  */
