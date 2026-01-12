@@ -130,7 +130,7 @@ void Uart_linflex::set_uartcr(bool fifo_rx_enable)
   else
     v |= UARTCR_RDFL_1_byte;  // 1 byte in RX buffer
 
-  if (Fifo_tx_enabled)
+  if constexpr (Fifo_tx_enabled)
     v |= UARTCR_TFBM;         // TX FIFO enabled
   else
     v |= UARTCR_TDFL_1_byte;  // 1 byte in TX buffer
