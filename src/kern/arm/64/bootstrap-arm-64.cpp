@@ -230,7 +230,7 @@ Bootstrap::config_feature_traps(Mword pfr0, bool leave_el3, bool leave_el2)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv2]:
+IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv2 && !dt && !arm_acpi]:
 
 PUBLIC static void
 Bootstrap::config_gicv2_ns()
@@ -251,7 +251,7 @@ Bootstrap::config_gicv2_ns()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv3]:
+IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv3 && !dt && !arm_acpi]:
 
 PUBLIC static void
 Bootstrap::config_gicv3_ns()
@@ -272,27 +272,27 @@ Bootstrap::config_gicv3_ns()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && (!pic_gic || !mmu)]:
+IMPLEMENTATION [arm && (!pic_gic || !mmu || dt || arm_acpi)]:
 
 PUBLIC static void
 Bootstrap::config_gic_ns() {}
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv2 && !have_arm_gicv3]:
+IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv2 && !have_arm_gicv3 && !dt && !arm_acpi]:
 
 PUBLIC static void
 Bootstrap::config_gic_ns()
 { config_gicv2_ns(); }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mmu && pic_gic && !have_arm_gicv2 && have_arm_gicv3]:
+IMPLEMENTATION [arm && mmu && pic_gic && !have_arm_gicv2 && have_arm_gicv3 && !dt && !arm_acpi]:
 
 PUBLIC static void
 Bootstrap::config_gic_ns()
 { config_gicv3_ns(); }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv2 && have_arm_gicv3]:
+IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv2 && have_arm_gicv3 && !dt && !arm_acpi]:
 
 PUBLIC static inline void
 Bootstrap::config_gic_ns()
