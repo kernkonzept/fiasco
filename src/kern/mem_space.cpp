@@ -626,11 +626,11 @@ IMPLEMENT inline NEEDS["cpu_call.h"]
 void
 Mem_space::tlb_flush_all_cpus()
 {
-  if (!Mem_space::Need_xcpu_tlb_flush || tlb_type() == Mem_space::Tlb_iommu)
-    {
-      tlb_flush_current_cpu();
-      return;
-    }
+  if constexpr (!Mem_space::Need_xcpu_tlb_flush)
+    return tlb_flush_current_cpu();
+
+  if (tlb_type() == Mem_space::Tlb_iommu)
+    return tlb_flush_current_cpu();
 
   // To prevent a race condition that could potentially lead to the use of
   // outdated page table entries on other cores, we have to execute a memory
