@@ -87,7 +87,7 @@ INTERFACE [arm && arm_psci && arm_psci_dyn && !64bit]:
 // ------------------------------------------------------------------------
 INTERFACE [arm && arm_psci && arm_psci_dyn && 64bit]:
 
-#define FIASCO_ARM_PSCI_CALL_ASM_FUNC "tbz %[is_hvc], #0, 1f \n" \
+#define FIASCO_ARM_PSCI_CALL_ASM_FUNC "tbz %w[is_hvc], #0, 1f\n" \
                                       "hvc #0                \n" \
                                       "b 2f                  \n" \
                                       "1: smc #0             \n" \
