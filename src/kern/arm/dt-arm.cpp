@@ -2,16 +2,9 @@ IMPLEMENTATION [arm && dt]:
 
 EXTENSION class Dt
 {
-public:
   static unsigned
-  get_arm_gic_irq_array(Dt::Array_prop<3> ints, unsigned idx)
+  convert_to_global_irq(unsigned type, unsigned val)
   {
-    if (idx >= ints.elements())
-      return ~0u;
-
-    unsigned type = ints.get(idx, 0);
-    unsigned val  = ints.get(idx, 1);
-
     // Translate to global number space
     switch (type)
       {
@@ -23,11 +16,32 @@ public:
       };
   }
 
+public:
   static unsigned
   get_arm_gic_irq(Dt::Node node, unsigned idx)
   {
-    Dt::Array_prop<3> ints = node.get_prop_array("interrupts", { 1, 1, 1 });
-    return get_arm_gic_irq_array(ints, idx);
+    if (node.has_prop("interrupts"))
+      {
+        Dt::Array_prop<3> ints = node.get_prop_array("interrupts", { 1, 1, 1 });
+
+        if (idx >= ints.elements())
+          return ~0u;
+
+        return convert_to_global_irq(ints.get(idx, 0), ints.get(idx, 1));
+      }
+
+    if (node.has_prop("interrupts-extended"))
+      {
+        Dt::Array_prop<4> ints_ext
+          = node.get_prop_array("interrupts-extended", { 1, 1, 1, 1 });
+
+        if (idx >= ints_ext.elements())
+          return ~0u;
+
+        return convert_to_global_irq(ints_ext.get(idx, 1), ints_ext.get(idx, 2));
+      }
+
+    return ~0u;
   }
 
   static unsigned
