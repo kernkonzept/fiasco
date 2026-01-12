@@ -18,18 +18,13 @@ ifeq ($(CONFIG_CODE_RULES_TEST),y)
   SUBSYSTEMS += CODERULES
 endif
 
+# - do not profile all of LIBC, because it is used in the BOOT subsystem
+# - save some space for debugger, disassembler, ...
+NOOPT		+= $(patsubst %.o, %,$(OBJ_LIBC) $(OBJ_JDB) $(OBJ_LIBDISASM))
+
 #
-# ABI Subsystem
+# KERNEL subsystem
 #
-ABI		:= libabi.a
-VPATH 		+= abi/$(CONFIG_XARCH)/$(BITS) abi/$(CONFIG_XARCH) abi
-INTERFACES_ABI 	:= kip l4_types l4_fpage l4_msg_item l4_buf_desc l4_error
-
-l4_types_IMPL 	:= l4_types l4_types-debug
-kip_IMPL	:= kip kip-debug kip-$(CONFIG_XARCH)
-
-
-
 INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
 			   mem_region per_cpu_data startup                   \
 			   queue queue_item l4_buf_iter bitmap               \
@@ -69,16 +64,11 @@ INTERFACES_KERNEL-y$(CONFIG_NDEBUG) += assertion
 obj_space_IMPL = obj_space obj_space-$(OBJ_SPACE_TYPE)
 PREPROCESS_PARTS-$(CONFIG_PHYS_OBJ_SPACE_AVL) += obj_space_phys_avl
 
-
-platform_control_IMPL   := platform_control
-
-syscalls_IMPL		:= syscalls syscalls-log
-
-timer_tick_IMPL         := timer_tick
-
-vcpu_host_regs_IMPL	:= vcpu_host_regs-$(CONFIG_XARCH)
-
 kdb_ke_IMPL             := kdb_ke
+platform_control_IMPL   := platform_control
+syscalls_IMPL		:= syscalls syscalls-log
+timer_tick_IMPL         := timer_tick
+vcpu_host_regs_IMPL	:= vcpu_host_regs-$(CONFIG_XARCH)
 
 INTERFACES_STDWORKLOAD := std_workload
 
@@ -107,71 +97,54 @@ INTERFACES_KERNEL += \
 	jdb_kobject jdb_kobject_names jdb_space
 endif
 
-ifeq ("$(CONFIG_JDB)","y")
+ifeq ($(CONFIG_JDB),y)
 INTERFACES_KERNEL += \
 	jdb_tbuf jdb_tbuf_init tb_entry jdb_trace string_buffer
 endif
 
-# - do not profile all of LIBC, because it is used in the BOOT subsystem
-# - save some space for debugger, disassembler, ...
-NOOPT			+= $(patsubst %.o, %,\
-			   $(OBJ_LIBC) $(OBJ_JDB) $(OBJ_LIBDISASM))
+#
+# ABI Subsystem
+#
+ABI		:= libabi.a
+VPATH 		+= abi/$(CONFIG_XARCH)/$(BITS) abi/$(CONFIG_XARCH) abi
+INTERFACES_ABI 	:= kip l4_types l4_fpage l4_msg_item l4_buf_desc l4_error
 
-# Helper function to generate CXXFLAGS_uart-libuart
-LIBUART_UART = -include uart_$(strip $(1)).h \
-	       -DFIASCO_UART_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1))) \
-	       $(if $(CONFIG_INPUT),,-DUART_WITHOUT_INPUT)
+l4_types_IMPL 	:= l4_types l4_types-debug
+kip_IMPL	:= kip kip-debug kip-$(CONFIG_XARCH)
 
 #
-# COV Subsystem
+# CXXLIB Subsystem
 #
-ifneq ($(CONFIG_COV),)
+CXXLIB 		:= libcxx.a
+VPATH		+= lib/cxxlib
+CXXSRC_CXXLIB	:= paranoia.cc
 
-LIBCOV := libcov.a
-VPATH += lib/gcov/src
-PRIVATE_INCDIR += lib/gcov/src
+#
+# CRT0 subsystem
+#
+CRT0 		:= crt0.o
+ASSRC_CRT0	:= crt0.S
 
-ifeq ($(CC_TYPE),clang)
-  LIBCOV_CONTRIB_SUPPORTED_VERSIONS := 17 18 19 20
-  LIBCOV_CONTRIB_MAX_VERSION        := $(lastword $(LIBCOV_CONTRIB_SUPPORTED_VERSIONS))
-  LIBCOV_CONTRIB_VERSION            := $(CCVER_VERSION)
-
-  ifeq ($(filter $(LIBCOV_CONTRIB_VERSION),$(LIBCOV_CONTRIB_SUPPORTED_VERSIONS)),)
-    $(warning No suitable libcov version found for clang $(LIBCOV_CONTRIB_VERSION).)
-    $(warning Falling back to libcov $(LIBCOV_CONTRIB_MAX_VERSION), unexpected errors may occur.)
-    $(warning Please update the libcov package.)
-    LIBCOV_CONTRIB_VERSION   := $(LIBCOV_CONTRIB_MAX_VERSION)
-  endif
-
-  VPATH += lib/gcov/contrib/llvm_compiler-rt_profile/llvm-$(LIBCOV_CONTRIB_VERSION)/
-  PRIVATE_INCDIR += lib/gcov/contrib/llvm_compiler-rt_profile/llvm-$(LIBCOV_CONTRIB_VERSION)/
+#
+# FONTS subsystem
+#
+ifeq ($(CONFIG_FB_CONSOLE),y)
+  SUBSYSTEMS	+= FONTS
+  FONTS		:= libfonts.a
+  FONT_FILES	:= vgafont.psf
+  VPATH		+= ../data/fonts
+  OBJ_FONTS	:= $(addsuffix .bin.o,$(FONT_FILES))
+  NOOPT		+= $(patsubst %.o, %, $(OBJ_FONTS))
+  KERNEL_EXTRA_LIBS += $(FONTS)
 endif
 
-CSRC_LIBCOV-clang_contrib := \
-        InstrProfiling.c InstrProfilingBuffer.c InstrProfilingPlatformLinux.c \
-        InstrProfilingVersionVar.c InstrProfilingWriter.c                     \
-        InstrProfilingInternal.c
-
-CSRC_LIBCOV-clang := llvmcov.c plain.c llvmcov-plain.c
-CSRC_LIBCOV-clang += $(CSRC_LIBCOV-clang_contrib)
-
-CSRC_LIBCOV-gcc   := gcov.c plain.c gcov-plain.c
-
-CSRC_LIBCOV        = output.c base64.c
-CSRC_LIBCOV       += $(CSRC_LIBCOV-$(CC_TYPE))
-
-CSRC_LIBCOV       += $(if $(CONFIG_COV_OUTPUT_SERIAL),output-serial.c)
-CXXSRC_LIBCOV     += $(if $(CONFIG_COV_OUTPUT_MEMBUF),output-membuf.cc)
-
-# WARNING EXCEPTION: suppress compiler warnings for clang compiler-rt code,
-# only coverage tooling
-$(foreach f, $(patsubst %.c, %, $(CSRC_LIBCOV-clang_contrib)), \
-        $(eval CFLAGS_$(f) += -Wno-strict-prototypes -Wno-unused-parameter \
-                              -Wno-missing-prototypes -Wno-undef))
-
-NOOPT += $(patsubst %.o, %, $(OBJ_LIBCOV))
-
-endif
+#
+# JABI Subsystem
+#
+JABI		:= libjabi.a
+VPATH		+= $(if $(BITS),jabi/$(CONFIG_XARCH)/$(BITS),)
+VPATH		+= jabi/$(CONFIG_XARCH) jabi
+INTERFACES_JABI	:= jdb_ktrace jdb_obj_info
 
 #
 # LIBC Subsystem
@@ -256,6 +229,61 @@ ASSRC_LIBC        := setjmp.S longjmp.S \
                      $(if $(filter ia32,$(CONFIG_XARCH)),memcpy-i386.S)
 NOBUILTIN         += $(patsubst %.o, %, $(OBJ_LIBC))
 
+
+#
+# LIBCOV subsystem
+#
+ifneq ($(CONFIG_COV),)
+
+LIBCOV := libcov.a
+VPATH += lib/gcov/src
+PRIVATE_INCDIR += lib/gcov/src
+KERNEL_EXTRA_LIBS += $(LIBCOV)
+PRIVATE_INCDIR += lib/gcov/include
+INTERFACES_KERNEL-$(CONFIG_JDB) += jdb_cov_module
+
+ifeq ($(CC_TYPE),clang)
+  LIBCOV_CONTRIB_SUPPORTED_VERSIONS := 17 18 19 20
+  LIBCOV_CONTRIB_MAX_VERSION        := $(lastword $(LIBCOV_CONTRIB_SUPPORTED_VERSIONS))
+  LIBCOV_CONTRIB_VERSION            := $(CCVER_VERSION)
+
+  ifeq ($(filter $(LIBCOV_CONTRIB_VERSION),$(LIBCOV_CONTRIB_SUPPORTED_VERSIONS)),)
+    $(warning No suitable libcov version found for clang $(LIBCOV_CONTRIB_VERSION).)
+    $(warning Falling back to libcov $(LIBCOV_CONTRIB_MAX_VERSION), unexpected errors may occur.)
+    $(warning Please update the libcov package.)
+    LIBCOV_CONTRIB_VERSION   := $(LIBCOV_CONTRIB_MAX_VERSION)
+  endif
+
+  VPATH += lib/gcov/contrib/llvm_compiler-rt_profile/llvm-$(LIBCOV_CONTRIB_VERSION)/
+  PRIVATE_INCDIR += lib/gcov/contrib/llvm_compiler-rt_profile/llvm-$(LIBCOV_CONTRIB_VERSION)/
+endif
+
+CSRC_LIBCOV-clang_contrib := \
+        InstrProfiling.c InstrProfilingBuffer.c InstrProfilingPlatformLinux.c \
+        InstrProfilingVersionVar.c InstrProfilingWriter.c                     \
+        InstrProfilingInternal.c
+
+CSRC_LIBCOV-clang := llvmcov.c plain.c llvmcov-plain.c
+CSRC_LIBCOV-clang += $(CSRC_LIBCOV-clang_contrib)
+
+CSRC_LIBCOV-gcc   := gcov.c plain.c gcov-plain.c
+
+CSRC_LIBCOV        = output.c base64.c
+CSRC_LIBCOV       += $(CSRC_LIBCOV-$(CC_TYPE))
+
+CSRC_LIBCOV       += $(if $(CONFIG_COV_OUTPUT_SERIAL),output-serial.c)
+CXXSRC_LIBCOV     += $(if $(CONFIG_COV_OUTPUT_MEMBUF),output-membuf.cc)
+
+# WARNING EXCEPTION: suppress compiler warnings for clang compiler-rt code,
+# only coverage tooling
+$(foreach f, $(patsubst %.c, %, $(CSRC_LIBCOV-clang_contrib)), \
+        $(eval CFLAGS_$(f) += -Wno-strict-prototypes -Wno-unused-parameter \
+                              -Wno-missing-prototypes -Wno-undef))
+
+NOOPT += $(patsubst %.o, %, $(OBJ_LIBCOV))
+
+endif
+
 #
 # LIBFDT subsystem
 #
@@ -271,3 +299,43 @@ ifeq ($(CONFIG_DT),y)
   $(foreach f, $(patsubst %.c, %, $(CSRC_LIBFDT)), \
           $(eval CFLAGS_$(f) += -Wno-bad-function-cast))
 endif
+
+#
+# LIBK subsystem
+#
+LIBK		:= libk.a
+VPATH          	+= $(if $(BITS),lib/libk/$(CONFIG_XARCH)/$(BITS))
+VPATH		+= lib/libk/$(CONFIG_XARCH) lib/libk
+PRIVATE_INCDIR 	+= $(if $(BITS),lib/libk/$(CONFIG_XARCH)/$(BITS))
+PRIVATE_INCDIR	+= lib/libk/$(CONFIG_XARCH) lib/libk
+INTERFACES_LIBK := atomic lock_guard std_macros
+CXXSRC_LIBK     += construction.cc
+atomic_IMPL	 = atomic atomic-$(CONFIG_XARCH)
+
+#
+# LIBUART subsystem
+#
+SUBSYSTEMS	+= LIBUART
+LIBUART_UART	 = -include uart_$(strip $(1)).h \
+		 -DFIASCO_UART_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1))) \
+		 $(if $(CONFIG_INPUT),,-DUART_WITHOUT_INPUT)
+VPATH_LIBUART	:= $(srcdir)/lib/uart
+PRIVATE_INCDIR	+= lib/uart
+LIBUART		 = $(OBJECTS_LIBUART)
+
+#
+# TCBOFFSET
+#
+TCBOFFSET	:= tcboffset.h
+CXXSRC_TCBOFFSET := tcboffset.cc dump_tcboffsets.cc
+
+#
+# TYPES subsystem
+#
+PRIVATE_INCDIR += $(if $(BITS),types/$(CONFIG_XARCH)/$(BITS),)
+PRIVATE_INCDIR += types/$(CONFIG_XARCH) types
+
+#
+# VERSION subsystem
+#
+VERSION		:= version.h

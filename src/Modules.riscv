@@ -18,17 +18,8 @@ PREPROCESS_PARTS-$(CONFIG_JDB)    += debug log
 PREPROCESS_PARTS += $(PREPROCESS_PARTS-y)
 
 #
-# TYPES subsystem
-#
-PRIVATE_INCDIR += types/$(CONFIG_XARCH)/$(BITS) types/$(CONFIG_XARCH) types
-
-#
 # UART subsystem
 #
-VPATH_LIBUART   := $(srcdir)/lib/uart
-PRIVATE_INCDIR  += lib/uart
-SUBSYSTEMS      += LIBUART
-LIBUART         := uart/libuart.a
 OBJECTS_LIBUART  = uart_sbi.o
 
 #
@@ -47,14 +38,6 @@ processor_IMPL     := processor processor-riscv
 CXXSRC_DRIVERS     := glue_libc.cc
 #NOOPT             += $(patsubst %.o, %, $(OBJ_DRIVERS))
 ALWAYS_INLINE      += mem sbi
-
-#
-# JABI Subsystem
-#
-JABI            := libjabi.a
-VPATH           += jabi/$(CONFIG_XARCH)/$(BITS) jabi/$(CONFIG_XARCH) jabi
-INTERFACES_JABI := jdb_ktrace jdb_obj_info
-
 
 #
 # ABI Subsystem
@@ -150,30 +133,10 @@ NOOPT                   += $(filter jdb%,\
 NOOPT                   += tb_entry tb_entry_output
 
 #
-# CRT0 subsystem
-#
-CRT0            := crt0.o
-ASSRC_CRT0      := crt0.S
-
-
-#
-# CXXLIB Subsystem
-#
-CXXLIB            := libcxx.a
-VPATH             += lib/cxxlib
-CXXSRC_CXXLIB     := paranoia.cc
-
-#
 # LIBK subsystem
 #
-LIBK            := libk.a
-VPATH           += lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
-PRIVATE_INCDIR  += lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
-
-INTERFACES_LIBK := atomic lock_guard scaler_shift std_macros
+INTERFACES_LIBK += scaler_shift
 CSRC_LIBK       += gcc_lib.c
-CXXSRC_LIBK     += construction.cc
-atomic_IMPL     := atomic atomic-riscv
 scaler_shift_IMPL := scaler_shift scaler_shift-riscv
 
 #
@@ -217,14 +180,6 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
 endif
 
 #
-# VERSION subsystem
-#
-VERSION          := version.h
-
-TCBOFFSET        := tcboffset.h
-CXXSRC_TCBOFFSET := tcboffset.cc dump_tcboffsets.cc
-
-#
 # BSP subsystem
 #
 BSP_NAME         := $(patsubst "%",%,$(CONFIG_BSP_NAME))
@@ -236,10 +191,6 @@ endif
 
 include $(MODULES_FILE_BSP)
 VPATH += $(BSP_SRC_DIR)
-
-ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
-  LIBUART := $(OBJECTS_LIBUART)
-endif
 
 CONFIG_KERNEL_LOAD_ADDR    := $$(($(RAM_PHYS_BASE) + 0x800000))
 CONFIG_KERNEL_VIRT_ADDR-32 := 0xf0000000

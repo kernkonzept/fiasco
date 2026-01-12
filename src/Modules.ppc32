@@ -5,19 +5,12 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS += LIBUART
-
 PREPROCESS_PARTS 	+= $(CONFIG_XARCH) $(CONFIG_ABI) 32bit \
 			   abs_syscalls big_endian jdb_thread_names \
 			   obj_space_phys
 
 PREPROCESS_PARTS-$(CONFIG_JDB) += debug log
 PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
-
-#
-# TYPES subsystem
-#
-PRIVATE_INCDIR += types/$(CONFIG_XARCH) types
 
 #
 # DRIVERS Subsystem
@@ -35,13 +28,6 @@ reset_IMPL		:= reset-ppc32
 processor_IMPL		:= processor processor-ppc32
 CXXSRC_DRIVERS		:= glue_libc.cc
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
-
-#
-# JABI Subsystem
-#
-JABI		:= libjabi.a
-VPATH		+= jabi/$(CONFIG_XARCH) jabi
-INTERFACES_JABI	:= jdb_ktrace jdb_obj_info
 
 #
 # KERNEL subsystem
@@ -122,31 +108,6 @@ NOOPT			+= $(filter jdb%,\
 NOOPT			+= tb_entry #tb_entry_output
 
 #
-# CRT0 subsystem
-#
-CRT0 		:= crt0.o
-ASSRC_CRT0	:= crt0.S
-
-
-#
-# CXXLIB Subsystem
-# 
-CXXLIB 			:= libcxx.a
-VPATH			+= lib/cxxlib
-CXXSRC_CXXLIB 		:= paranoia.cc
-
-#
-# LIBK subsystem
-#
-LIBK 		:= libk.a
-VPATH          	+= lib/libk/$(CONFIG_XARCH) lib/libk
-PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH) lib/libk
-
-INTERFACES_LIBK	:= atomic lock_guard std_macros
-CXXSRC_LIBK     += construction.cc
-atomic_IMPL     := atomic atomic-ppc32
-
-#
 # LIBDISASM subsystem (only for Jdb)
 #
 ifeq ("$(CONFIG_JDB_DISASM)","y")
@@ -172,14 +133,6 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
 endif
 
 #
-# VERSION subsystem
-#
-VERSION		:= version.h
-
-TCBOFFSET	:= tcboffset.h
-CXXSRC_TCBOFFSET	:= tcboffset.cc dump_tcboffsets.cc
-
-#
 # BSP subsystem
 #
 BSP_NAME         := $(patsubst "%",%,$(CONFIG_BSP_NAME))
@@ -190,16 +143,5 @@ endif
 
 include $(MODULES_FILE_BSP)
 VPATH += kern/ppc32/bsp/$(BSP_NAME) kern/ppc32/bsp
-
-#
-# LIBUART subsystem
-#
-ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
-LIBUART			:= $(OBJECTS_LIBUART)
-PREPROCESS_PARTS	+= libuart
-endif
-
-VPATH_LIBUART		:= $(srcdir)/lib/uart
-PRIVATE_INCDIR		+= lib/uart drivers/$(CONFIG_XARCH)/include
 
 MODULES_FILES = $(MODULES_FILE) $(MODULES_FILE_BSP)

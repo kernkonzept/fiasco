@@ -5,8 +5,6 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS += LIBUART
-
 PREPROCESS_PARTS 	+= $(CONFIG_ABI) $(CONFIG_XARCH) libuart
 
 ifeq ($(CONFIG_BIT64),y)
@@ -32,16 +30,6 @@ PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)                 += vgic arm_esr_traps
 PREPROCESS_PARTS-$(CONFIG_ARM_SVE)                  += fpu_alloc_typed
 
 PREPROCESS_PARTS-$(CONFIG_IOMMU)                    += virtual_space_iface
-
-
-#
-# TYPES subsystem
-#
-
-PRIVATE_INCDIR += types/$(CONFIG_XARCH)/$(BITS) types/$(CONFIG_XARCH) types
-
-VPATH_LIBUART  := $(srcdir)/lib/uart
-PRIVATE_INCDIR += lib/uart
 
 #
 # DRIVERS Subsystem
@@ -77,7 +65,6 @@ NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBREGEX))
 #
 CSRC_LIBC       += aeabi.c atexit-aeabi.c
 
-
 #
 # LIBGZIP subsystem (only for Jdb)
 #
@@ -90,27 +77,6 @@ ifneq ($(CONFIG_JDB_GZIP),)
   $(foreach f, adler32 crc32 deflate trees zutil, \
     $(eval CFLAGS_$(f) += $(WNO_DEPRECATED_NON_PROTOTYPE) \
       -Wno-old-style-definition -Wno-strict-prototypes))
-endif
-
-
-#
-# JABI Subsystem
-#
-JABI			:= libjabi.a
-VPATH			+= jabi/$(CONFIG_XARCH)/$(BITS) jabi/$(CONFIG_XARCH) jabi
-INTERFACES_JABI		:= jdb_ktrace jdb_obj_info
-
-#
-# FONTS subsystem
-#
-ifeq ($(CONFIG_FB_CONSOLE),y)
-SUBSYSTEMS              += FONTS
-FONTS                   := libfonts.a
-FONT_FILES              := vgafont.psf
-VPATH                   += ../data/fonts
-OBJ_FONTS               := $(addsuffix .bin.o,$(FONT_FILES))
-NOOPT                   += $(patsubst %.o, %, $(OBJ_FONTS))
-KERNEL_EXTRA_LIBS       += $(FONTS)
 endif
 
 #
@@ -279,41 +245,22 @@ NOOPT			+= tb_entry tb_entry_output
 
 
 #
-# CRT0 subsystem
-#
-CRT0 		:= crt0.o
-ASSRC_CRT0	:= crt0.S
-
-
-#
-# CXXLIB Subsystem
-#
-CXXLIB 			:= libcxx.a
-VPATH			+= lib/cxxlib
-CXXSRC_CXXLIB	 	:= paranoia.cc
-
-#
 # LIBK subsystem
 #
-LIBK 		:= libk.a
-VPATH          	+= lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
-PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH)/$(BITS) lib/libk/$(CONFIG_XARCH) lib/libk
-
-ifneq ($(CONFIG_COV),)
- SUBSYSTEMS  += LIBCOV
- KERNEL_EXTRA_LIBS += $(LIBCOV)
- PRIVATE_INCDIR += lib/gcov/include
- INTERFACES_KERNEL-$(CONFIG_JDB) += jdb_cov_module
-endif
-
-INTERFACES_LIBK := std_macros atomic lock_guard scaler_shift
+INTERFACES_LIBK	+= scaler_shift
 ifeq ($(CONFIG_BIT32),y)
 CSRC_LIBK       += gcc_lib.c
 ASSRC_LIBK      += gcc_lib-aeabi.S
 endif
-CXXSRC_LIBK     += construction.cc
-atomic_IMPL     := atomic atomic-arm-$(BITS) atomic-arm
+atomic_IMPL	+= atomic-arm-$(BITS)
 scaler_shift_IMPL := scaler_shift scaler_shift-arm
+
+#
+# LIBCOV subsystem
+#
+ifneq ($(CONFIG_COV),)
+ SUBSYSTEMS  += LIBCOV
+endif
 
 #
 # SIMPLEMALLOC
@@ -386,14 +333,6 @@ endif
 
 endif
 
-#
-# VERSION subsystem
-#
-VERSION		:= version.h
-
-TCBOFFSET	:= tcboffset.h
-CXXSRC_TCBOFFSET	:= tcboffset.cc dump_tcboffsets.cc
-
 BSP_NAME         := $(patsubst "%",%,$(CONFIG_BSP_NAME))
 BSP_SRC_DIR      := kern/arm/bsp/$(BSP_NAME)
 MODULES_FILE_BSP := $(srcdir)/$(BSP_SRC_DIR)/Modules
@@ -408,10 +347,6 @@ INTERFACES_KERNEL       += $(INTERFACES_KERNEL-y) $(INTERFACES_KERNEL-y-y)
 INTERFACES_JDB		+= $(INTERFACES_JDB-y)
 TRAMP_MP_ASM_INCLUDE    ?= kern/arm/tramp-mp-asm-default.h
 CPPFLAGS                += -DTRAMP_MP_ASM_INCLUDE=\"$(srcdir)/$(TRAMP_MP_ASM_INCLUDE)\"
-
-ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
-  LIBUART		:= $(OBJECTS_LIBUART)
-endif
 
 # To avoid relocation work during bootup, RAM_PHYS_BASE can optionally be given.
 CONFIG_KERNEL_LOAD_ADDR := $(or $(RAM_PHYS_BASE),0x0)

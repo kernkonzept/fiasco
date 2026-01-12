@@ -23,11 +23,6 @@ PREPROCESS_PARTS-$(CONFIG_IOMMU)             += virtual_space_iface
 PREPROCESS_PARTS        += $(PREPROCESS_PARTS-y)
 
 #
-# TYPES subsystem
-#
-PRIVATE_INCDIR		+= types/$(CONFIG_XARCH) types
-
-#
 # ABI Subsystem
 #
 INTERFACES_ABI		+= virt
@@ -36,17 +31,9 @@ kip_IMPL		+= kip-ia32-debug
 virt_IMPL		:= virt-ia32
 
 #
-# JABI Subsystem
+# LIBUART subsystem
 #
-JABI			:= libjabi.a
-VPATH			+= jabi/$(CONFIG_XARCH) jabi
-INTERFACES_JABI		:= jdb_ktrace jdb_obj_info
-
-VPATH_LIBUART  := $(srcdir)/lib/uart
-PRIVATE_INCDIR += lib/uart
-SUBSYSTEMS += LIBUART
-OBJECTS_LIBUART = uart_16550.o
-LIBUART			:= $(OBJECTS_LIBUART)
+OBJECTS_LIBUART		= uart_16550.o
 
 #
 # DRIVERS subsystem
@@ -72,19 +59,6 @@ keyb_IMPL		:= keyb keyb-pc
 io_IMPL			:= io io-ia32
 mem_IMPL		:= mem mem-ia32
 processor_IMPL		:= processor processor-ia32
-
-#
-# FONTS subsystem
-#
-ifeq ($(CONFIG_FB_CONSOLE),y)
-SUBSYSTEMS		+= FONTS
-FONTS			:= libfonts.a
-FONT_FILES		:= vgafont.psf
-VPATH			+= ../data/fonts
-OBJ_FONTS		:= $(addsuffix .bin.o,$(FONT_FILES))
-NOOPT			+= $(patsubst %.o, %, $(OBJ_FONTS))
-KERNEL_EXTRA_LIBS	+= $(FONTS)
-endif
 
 #
 # KERNEL subsystem
@@ -226,11 +200,6 @@ NOOPT			+= $(foreach in,$(INTERFACES_JDB), \
 
 
 #
-# CRT0 subsystem
-#
-CRT0 			:= crt0.o
-ASSRC_CRT0		:= crt0.S
-
 #
 # BOOT subsystem
 #
@@ -242,20 +211,9 @@ ASSRC_BOOT		:= boot.S boot_idt.S
 NOOPT			+= $(patsubst %.o, %, $(OBJ_BOOT))
 
 #
-# TCBOFFSET subsystem
-#
-TCBOFFSET		:= tcboffset.h
-CXXSRC_TCBOFFSET	:= tcboffset.cc dump_tcboffsets.cc
-
-#
 # CHECKSUM subsystem
 #
 CHECKSUM		:= checksum_subsys
-
-#
-# VERSION subsystem
-#
-VERSION			:= version.h
 
 #
 # GBLCFG subsystem
@@ -264,23 +222,9 @@ GBLCFG			:= gblcfg.o
 OBJ_KERNEL		+= gblcfg.o
 
 #
-# CXXLIB Subsystem
-#
-
-CXXLIB			:= libcxx.a
-VPATH			+= lib/cxxlib
-CXXSRC_CXXLIB		:= paranoia.cc
-
-#
 # LIBK subsystem
 #
-LIBK		:= libk.a
-VPATH		+= lib/libk/$(CONFIG_XARCH) lib/libk
-PRIVATE_INCDIR  += lib/libk/$(CONFIG_XARCH) lib/libk
-INTERFACES_LIBK	:= atomic lock_guard std_macros
 CSRC_LIBK	+= gcc_lib.c
-CXXSRC_LIBK     += construction.cc
-atomic_IMPL     := atomic atomic-ia32
 
 #
 # LIBGZIP subsystem (only for Jdb)

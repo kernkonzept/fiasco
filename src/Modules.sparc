@@ -5,8 +5,6 @@
 
 include $(srcdir)/Modules.generic
 
-SUBSYSTEMS += LIBUART
-
 PREPROCESS_PARTS 	+= $(CONFIG_XARCH) $(CONFIG_ABI) 32bit \
 			   abs_syscalls big_endian jdb_thread_names \
 			   obj_space_phys
@@ -15,23 +13,9 @@ PREPROCESS_PARTS-$(CONFIG_JDB) += debug log
 PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
 
 #
-# TYPES subsystem
-#
-PRIVATE_INCDIR += types/$(CONFIG_XARCH) types
-
-#
 # LIBUART subsystem
 #
 OBJECTS_LIBUART		+= uart_leon3.o
-CXXFLAGS_uart-libuart   += $(call LIBUART_UART, leon3)
-
-ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
-LIBUART			:= $(OBJECTS_LIBUART)
-PREPROCESS_PARTS	+= libuart
-endif
-
-VPATH_LIBUART		:= $(srcdir)/lib/uart
-PRIVATE_INCDIR		+= lib/uart drivers/$(CONFIG_XARCH)/include
 
 #
 # DRIVERS Subsystem
@@ -47,15 +31,9 @@ mem_IMPL		:= mem mem-sparc
 reset_IMPL		:= reset-sparc
 processor_IMPL		:= processor processor-sparc
 uart_IMPL		:= uart uart-libuart
+CXXFLAGS_uart-libuart   += $(call LIBUART_UART, leon3)
 CXXSRC_DRIVERS		:= glue_libc.cc
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
-
-#
-# JABI Subsystem
-#
-JABI		:= libjabi.a
-VPATH		+= jabi/$(CONFIG_XARCH) jabi
-INTERFACES_JABI	:= jdb_ktrace jdb_obj_info
 
 #
 # KERNEL subsystem
@@ -133,30 +111,9 @@ NOOPT			+= $(filter jdb%,\
 NOOPT			+= tb_entry #tb_entry_output
 
 #
-# CRT0 subsystem
-#
-CRT0 		:= crt0.o
-ASSRC_CRT0	:= crt0.S
-
-
-#
-# CXXLIB Subsystem
-# 
-CXXLIB 			:= libcxx.a
-VPATH			+= lib/cxxlib
-CXXSRC_CXXLIB 		:= paranoia.cc
-
-#
 # LIBK subsystem
 #
-LIBK 		:= libk.a
-VPATH          	+= lib/libk/$(CONFIG_XARCH) lib/libk
-PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH) lib/libk
-
-INTERFACES_LIBK	:= atomic lock_guard std_macros
 CSRC_LIBK       += gcc_lib.c
-CXXSRC_LIBK     += construction.cc
-atomic_IMPL     := atomic atomic-sparc
 
 #
 # LIBDISASM subsystem (only for Jdb)
@@ -182,14 +139,6 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   CSRC_LIBDISASM      := sparc-dis.c sparc-opc.c dis-init.c dis-buf.c \
                          safe-ctype.c libbfd.c
 endif
-
-#
-# VERSION subsystem
-#
-VERSION		:= version.h
-
-TCBOFFSET	:= tcboffset.h
-CXXSRC_TCBOFFSET	:= tcboffset.cc dump_tcboffsets.cc
 
 #
 # BSP subsystem
