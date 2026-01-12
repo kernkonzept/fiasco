@@ -2,7 +2,10 @@ INTERFACE [dt]:
 
 // Have to place this explicitly here because of some preprocess limitation...
 extern "C" {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #include <libfdt.h>
+#pragma GCC diagnostic pop
 }
 
 // ------------------------------------------------------------------------
