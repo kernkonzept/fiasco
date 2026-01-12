@@ -16,4 +16,4 @@ vm_svm_asm.o:		$(TCBOFFSET)
 KERNEL_PREREQUISITES = kernel.ia32.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(1) \
                        $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) \
                        libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) \
-                       libfonts.a libgluedriverslibc.a
+                       $$(FONTS) libgluedriverslibc.a

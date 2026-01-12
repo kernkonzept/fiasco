@@ -72,7 +72,7 @@ KERNEL_PREREQUISITES = kernel.arm.lds $$(CRT0) bootstrap.$$(KERNEL).rel \
                        bootstrap.$$(KERNEL).sym $$(OBJ_KERNEL_noboot) $(1) \
                        $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(LIBDISASM) $$(ABI) \
                        libdrivers.a $$(LIBUART) $$(CXXLIB) $$(LIBC) $$(LIBK) \
-                       libfonts.a libgluedriverslibc.a
+                       $$(FONTS) libgluedriverslibc.a
 
 clean-KERNEL:
 	$(VERBOSE)$(RM) $(foreach s,bin rel sym,bootstrap.$(KERNEL).$(s))

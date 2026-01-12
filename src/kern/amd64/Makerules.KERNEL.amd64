@@ -15,4 +15,4 @@ vm_svm_asm.o:		$(TCBOFFSET)
 KERNEL_PREREQUISITES = kernel.amd64.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(1) \
                        $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) \
                        libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) \
-                       libfonts.a libgluedriverslibc.a $$(INTEL_MICROCODE_IMG)
+                       $$(FONTS) libgluedriverslibc.a $$(INTEL_MICROCODE_IMG)

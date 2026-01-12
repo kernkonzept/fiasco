@@ -84,6 +84,7 @@ processor_IMPL		:= processor processor-amd64
 #
 # FONTS subsystem
 #
+ifeq ($(CONFIG_FB_CONSOLE),y)
 SUBSYSTEMS		+= FONTS
 FONTS			:= libfonts.a
 FONT_FILES		:= vgafont.psf
@@ -91,6 +92,7 @@ VPATH			+= ../data/fonts
 OBJ_FONTS		:= $(addsuffix .bin.o,$(FONT_FILES))
 NOOPT			+= $(patsubst %.o, %, $(OBJ_FONTS))
 KERNEL_EXTRA_LIBS	+= $(FONTS)
+endif
 
 #
 # KERNEL subsystem
