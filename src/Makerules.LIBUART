@@ -1,25 +1,11 @@
 # vim:set ft=make:
 
-LIBUART_srcdir    := $(strip $(abspath $(srcdir)))
-LIBUART_VPATH_abs := $(abspath $(VPATH_LIBUART))
+# We do not build the UART drivers into a libuart.a to be able to use KEEP
+# statements in the linker script instead of using the --whole-archive
+# linker flag
 
-$(LIBUART): FORCE | $(dir $(LIBUART))
-	$(MAKE_MESSAGE)      
-	$(VERBOSE)$(MAKE) -C uart	 		\
-	  -f $(LIBUART_srcdir)/lib/uart/Makefile 	\
-	  srcdir=$(LIBUART_srcdir) 			\
-	  objbase=$(objbase) 				\
-	  VERBOSE="$(VERBOSE)" 				\
-	  OBJECTS="$(OBJECTS_LIBUART)" 			\
-	  TARGET="$(LIBUART)" 				\
-	  VPATH_LIBUART="$(LIBUART_VPATH_abs)" 		\
-	  PRIVATE_INCDIR="$(LIBUART_srcdir)/lib/uart $(PRIVATE_INCDIR)"
+# Allow to use `#ifndef UART_WITHOUT_INPUT..#endif` in UART objects.
+$(foreach o,$(basename $(OBJECTS_LIBUART)),\
+  $(eval CXXFLAGS_$o += $(if $(CONFIG_INPUT),,-DUART_WITHOUT_INPUT)))
 
-$(dir $(LIBUART)):
-	@mkdir -p $@
-
-clean-LIBUART:
-	$(VERBOSE)$(RM) uart/*.o
-
-cleanall-LIBUART:
-	$(VERBOSE)$(RM) uart/.*.d
+vpath %.cc $(srcdir)/lib/uart

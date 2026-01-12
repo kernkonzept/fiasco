@@ -151,7 +151,7 @@ Gic_h_v2::teardown_lr(Gic_h::Arm_vgic::Lrs *lr, unsigned idx)
 PUBLIC
 Address
 Gic_h_v2::gic_v_address() const override
-{ return Mem_layout::Gic_v_phys_base; }
+{ return Pic::gic_v_phys_base(); }
 
 PUBLIC static inline NEEDS["mem.h"]
 void
@@ -209,8 +209,9 @@ struct Gic_h_v2_init
     if (Pic::gic->gic_version() > 2)
       return;
 
+    assert(Pic::gic_h_phys_base() != 0); // ensure init ordering for DT/ACPI
     Gic_h_global::gic
-      = new Boot_object<Gic_h_v2>(Kmem_mmio::map(Mem_layout::Gic_h_phys_base,
+      = new Boot_object<Gic_h_v2>(Kmem_mmio::map(Pic::gic_h_phys_base(),
                                                  Config::PAGE_SIZE));
 
     Gic_h_global::gic->disable();

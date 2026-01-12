@@ -52,8 +52,8 @@ INTERFACES_JABI		:= jdb_ktrace jdb_obj_info
 VPATH_LIBUART  := $(srcdir)/lib/uart
 PRIVATE_INCDIR += lib/uart
 SUBSYSTEMS += LIBUART
-LIBUART			:= uart/libuart.a
 OBJECTS_LIBUART = uart_16550.o
+LIBUART			:= $(OBJECTS_LIBUART)
 
 #
 # DRIVERS subsystem

@@ -238,7 +238,7 @@ include $(MODULES_FILE_BSP)
 VPATH += $(BSP_SRC_DIR)
 
 ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
-  LIBUART := uart/libuart.a
+  LIBUART := $(OBJECTS_LIBUART)
 endif
 
 CONFIG_KERNEL_LOAD_ADDR    := $$(($(RAM_PHYS_BASE) + 0x800000))

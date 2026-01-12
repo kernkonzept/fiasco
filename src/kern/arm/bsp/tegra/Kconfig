@@ -26,6 +26,7 @@ config PF_TEGRA_ORIN
 	depends on PF_TEGRA
 	select CAN_ARM_CPU_CORTEX_A76
 	select HAVE_ARM_GICV3
+	select HAVE_ARM_GIC_MSI
 	select ARM_PSCI
 	select HAS_ARM_PSCI
 	select HAS_DT_OPTION

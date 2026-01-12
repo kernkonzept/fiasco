@@ -1,0 +1,83 @@
+# PF: ARM_GEN
+# PFDESCR: Generic Platform
+# PFSELECT: CAN_ARM_CPU_CORTEX_A15 CAN_ARM_CPU_CORTEX_A57
+# PFSELECT: ARM_GIC
+# PFSELECT: ARM_PSCI HAS_ARM_PSCI HAS_ARM_PSCI_DYNAMIC
+# PFSELECT: HAS_ARM_SVE
+# PFSELECT: ARM_IOMMU_COHERENT
+# PFSELECT: HAS_DT_OPTION
+# PFDEPENDS: ARM
+
+config PF_ARM_GEN_SELECT_SUPPORT
+	bool "Generic platform: Select specific support"
+	help
+	  Configure specific hardware support for the generic platform.
+	  On default, all support is available.
+	
+	  Select n if unsure.
+
+config PF_ARM_GEN_SELECT_ACPI
+	bool "Support ACPI" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+	select ARM_ACPI
+	select PF_ARM_GEN_SELECT_GICV3
+
+config ARM_IOMMU_MAX
+	int "Maximum number of IOMMUs support" if PF_ARM_GEN_SELECT_SUPPORT
+	depends on IOMMU
+	default 16
+
+config PF_ARM_GEN_SELECT_GICV2
+	bool "Support GICv2" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+	select HAVE_ARM_GICV2
+
+config PF_ARM_GEN_SELECT_GICV3
+	bool "Support GICv3/4" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+	select HAVE_ARM_GICV3
+	select HAVE_ARM_GIC_MSI
+	select ARM_GIC_MSI
+
+config PF_ARM_GEN_SELECT_SMMU_V3
+	bool "Support SMMUv3" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+	select HAS_IOMMU_ARM_SMMU_V3
+
+config PF_ARM_GEN_SELECT_UART_PL011
+	bool "Support UART pl011" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+
+config PF_ARM_GEN_SELECT_UART_16550
+	bool "Support UART 16550" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+
+config PF_ARM_GEN_SELECT_UART_CADENCE
+	bool "Support UART cadence" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+
+config PF_ARM_GEN_SELECT_UART_LINFLEX
+	bool "Support UART linflex" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+
+config PF_ARM_GEN_SELECT_UART_SH
+	bool "Support UART sh" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+
+config PF_ARM_GEN_SELECT_UART_DCC
+	bool "Support UART DCC" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+
+config PF_ARM_GEN_SELECT_UART_IMX
+	bool "Support UART i.MX" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+
+config PF_ARM_GEN_SELECT_UART_LPUART
+	bool "Support UART lpuart" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+
+config PF_ARM_GEN_SELECT_DT
+	bool
+	default y if !ARM_ACPI
+	select DT
+

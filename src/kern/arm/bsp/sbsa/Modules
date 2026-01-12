@@ -1,20 +1,14 @@
 # vim:set ft=make:
 
 OBJECTS_LIBUART       += uart_16550.o uart_pl011.o
-CXXFLAGS_uart-libuart += $(call LIBUART_UART, pl011)
-CXXFLAGS_uart-libuart += $(call LIBUART_UART2, 16550)
-PREPROCESS_PARTS      += second_uart
+PREPROCESS_PARTS      += dyn_uart
 PREPROCESS_PARTS      += arm_generic_timer pic_gic psci
 INTERFACES_KERNEL     += generic_timer
 
 config_IMPL           += config-arm-sbsa
-mem_layout_IMPL       += mem_layout-arm-sbsa
-pic_IMPL              += pic-gic pic-arm-sbsa
+pic_IMPL              += pic-gic
 timer_IMPL            += timer-arm-generic timer-arm-generic-sbsa
 timer_tick_IMPL       += timer_tick-single-vector
 reset_IMPL            += reset-arm-psci
 clock_IMPL            += clock-arm-generic
 platform_control_IMPL += platform_control-arm-sbsa
-psci_IMPL             += psci-arm-sbsa
-uart_IMPL             += uart-arm-sbsa
-iommu_IMPL            += iommu-arm-smmu-v3-sbsa

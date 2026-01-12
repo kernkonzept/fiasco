@@ -178,21 +178,6 @@ Platform_control::boot_ap_cpus(Address phys_reset_vector)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && pf_tegra && pf_tegra_orin && dt]:
-
-#include "dt.h"
-
-PUBLIC static
-void
-Platform_control::boot_ap_cpus(Address phys_tramp_mp_addr)
-{
-  if (Dt::Node cpus = Dt::node_by_path("/cpus"))
-    boot_ap_cpus_dt(cpus, phys_tramp_mp_addr);
-  else
-    WARN("No /cpus device-tree node found!\n");
-}
-
-// ------------------------------------------------------------------------
 IMPLEMENTATION [arm && mp && pf_tegra && arm_em_ns && (pf_tegra_tegra2 || pf_tegra_tegra3)]:
 
 #include <cstdio>

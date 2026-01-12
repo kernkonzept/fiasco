@@ -108,6 +108,24 @@ Platform_control::boot_ap_cpu_spin(unsigned ap_cpu, Unsigned64 mpidr,
   return true;
 }
 
+PRIVATE static
+void
+Platform_control::boot_ap_cpus_dt(Address phys_tramp_mp_addr)
+{
+  if (Dt::Node cpus = Dt::node_by_path("/cpus"))
+    boot_ap_cpus_dt(cpus, phys_tramp_mp_addr);
+  else
+    WARN("No /cpus device-tree node found!\n");
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && !dt]:
+
+PRIVATE static
+void
+Platform_control::boot_ap_cpus_dt(Address)
+{}
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && dt && arm_psci]:
 

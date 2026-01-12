@@ -22,13 +22,13 @@ PRIVATE_INCDIR += types/$(CONFIG_XARCH) types
 #
 # LIBUART subsystem
 #
-ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
-LIBUART			:= uart/libuart.a
-PREPROCESS_PARTS	+= libuart
-endif
-
 OBJECTS_LIBUART		+= uart_leon3.o
 CXXFLAGS_uart-libuart   += $(call LIBUART_UART, leon3)
+
+ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
+LIBUART			:= $(OBJECTS_LIBUART)
+PREPROCESS_PARTS	+= libuart
+endif
 
 VPATH_LIBUART		:= $(srcdir)/lib/uart
 PRIVATE_INCDIR		+= lib/uart drivers/$(CONFIG_XARCH)/include

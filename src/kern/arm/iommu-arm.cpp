@@ -110,6 +110,119 @@ INTERFACE [iommu && !arm_iommu_coherent]:
 EXTENSION class Iommu { public: enum { Coherent = 0 }; };
 
 // ------------------------------------------------------------------
+IMPLEMENTATION [iommu && dt]:
+
+#include "dt.h"
+#include "kmem_mmio.h"
+
+PRIVATE static
+bool
+Iommu::init_platform_dt()
+{
+  unsigned i = 0;
+  Dt::nodes_by_compatible("arm,smmu-v3", [&](Dt::Node) { ++i; });
+
+  printf("Number of arm,smmu-v3: %d\n", i);
+
+  if (i == 0)
+    return false;
+
+  _iommus = Iommu_array(new Boot_object<Iommu>[i], i);
+
+  i = 0;
+  Dt::nodes_by_compatible("arm,smmu-v3", [&](Dt::Node n)
+    {
+      int eventq_irq = Dt::get_arm_gic_irq(n, "eventq");
+      int gerror_irq = Dt::get_arm_gic_irq(n, "gerror");
+
+      uint64_t base, size;
+      bool ret = n.get_reg(0, &base, &size);
+      if (ret)
+        {
+          _iommus[i].setup(Kmem_mmio::map(base, size),
+                           eventq_irq, gerror_irq);
+          ++i;
+        }
+    });
+
+  return true;
+}
+
+// ------------------------------------------------------------------
+IMPLEMENTATION [iommu && !dt]:
+
+PRIVATE static
+bool
+Iommu::init_platform_dt()
+{ return false; }
+
+// ------------------------------------------------------------------
+IMPLEMENTATION [iommu && arm_acpi]:
+
+#include "acpi.h"
+#include "kmem.h"
+#include "panic.h"
+
+PRIVATE static
+bool
+Iommu::init_platform_acpi()
+{
+  auto *iort = Acpi::find<Acpi_iort const *>("IORT");
+  if (!iort)
+    {
+      WARNX(Error, "SBSA: no IORT found!\n");
+      return false;
+    }
+
+  unsigned num = 0;
+  for (auto const &node : *iort)
+    {
+      if (node->type == Acpi_iort::Node::Smmu_v2)
+        panic("SBSA: SMMUv2 not supported!");
+
+      if (node->type == Acpi_iort::Node::Smmu_v3)
+        num++;
+    }
+
+  _iommus = Iommu_array(new Boot_object<Iommu>[num], num);
+
+  unsigned i = 0;
+  for (auto const &node : *iort)
+    {
+      if (node->type != Acpi_iort::Node::Smmu_v3)
+        continue;
+
+      auto const *smmu = static_cast<Acpi_iort::Smmu_v3 const *>(node);
+      void *v = Kmem_mmio::map(smmu->base_addr, 0x100000);
+      _iommus[i++].setup(v, smmu->gsiv_event, smmu->gsiv_gerr);
+    }
+
+  return true;
+}
+
+// ------------------------------------------------------------------
+IMPLEMENTATION [iommu && !arm_acpi]:
+
+PRIVATE static
+bool
+Iommu::init_platform_acpi()
+{ return false; }
+
+// ------------------------------------------------------------------
+IMPLEMENTATION [iommu && (dt || arm_acpi)]:
+
+#include "dt.h"
+
+IMPLEMENT
+bool
+Iommu::init_platform()
+{
+  if (Dt::have_fdt())
+    return init_platform_dt();
+  return init_platform_acpi();
+}
+
+// ------------------------------------------------------------------
 IMPLEMENTATION [iommu]:
 
 #include "static_init.h"

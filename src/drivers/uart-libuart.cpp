@@ -21,8 +21,6 @@ private:
 //------------------------------------------------------
 IMPLEMENTATION [libuart]:
 
-DEFINE_GLOBAL Global_data<Static_object<FIASCO_UART_TYPE>> _the_uart;
-
 DEFINE_GLOBAL Global_data<L4::Uart *> Uart::_uart;
 
 IMPLEMENT
@@ -71,7 +69,9 @@ Uart::uart()
 }
 
 //------------------------------------------------------
-IMPLEMENTATION [!second_uart]:
+IMPLEMENTATION [!dyn_uart]:
+
+DEFINE_GLOBAL Global_data<Static_object<FIASCO_UART_TYPE>> _the_uart;
 
 IMPLEMENT void inline
 Uart::init_uart_instance(Unsigned32 base_baud)
@@ -80,31 +80,14 @@ Uart::init_uart_instance(Unsigned32 base_baud)
 }
 
 //------------------------------------------------------
-IMPLEMENTATION [second_uart]:
+IMPLEMENTATION [dyn_uart]:
 
-EXTENSION class Uart
-{
-  static unsigned _instance;
-};
-
-unsigned Uart::_instance;
-Static_object<FIASCO_UART2_TYPE> _the_uart_2;
+#include "device.h"
+#include "koptions.h"
 
 IMPLEMENT void inline
 Uart::init_uart_instance(Unsigned32 base_baud)
 {
-  if (_instance)
-    _uart = _the_uart_2.construct(base_baud);
-  else
-    _uart = _the_uart.construct(base_baud);
-}
-
-PUBLIC bool
-Uart::set_uart_instance(unsigned instance)
-{
-  if (state() & ENABLED)
-    return false; // too late -- Uart::startup() already called
-
-  _instance = instance;
-  return true;
+  _uart = l4re_dev_uart_create_by_dt_compatible_once(Koptions::o()->uart.compatible_id,
+                                                     base_baud);
 }

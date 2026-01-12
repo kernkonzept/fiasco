@@ -96,6 +96,15 @@ INTERFACE [arm && arm_psci && arm_psci_dyn && 64bit]:
 // ------------------------------------------------------------------------
 INTERFACE [arm && arm_psci && arm_psci_dyn]:
 
+EXTENSION class Psci
+{
+public:
+  static bool is_hvc() { return _is_hvc; }
+
+private:
+  static bool _is_hvc;
+};
+
 #define FIASCO_ARM_PSCI_CALL_ASM_OPERANDS \
     : FIASCO_ARM_SMC_CALL_ASM_OUTPUTS \
     : FIASCO_ARM_SMC_CALL_ASM_INPUTS, [is_hvc] "r"(Psci::is_hvc()) \
@@ -164,6 +173,8 @@ Psci::init(Cpu_number cpu)
   if (cpu != Cpu_number::boot_cpu())
     return;
 
+  init_psci_method();
+
   printf("Detecting PSCI ...\n");
   Result r = psci_call(Psci_version);
   printf("Detected PSCI v%ld.%ld\n", r.res[0] >> 16, r.res[0] & 0xffff);
@@ -212,6 +223,119 @@ Psci::system_off()
 {
   psci_call(Psci_system_off);
   printf("PSCI system-off failed.\n");
+}
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && arm_psci && arm_psci_dyn]:
+
+EXTENSION class Psci
+{
+public:
+  enum class Call_method { Unknown, Smc, Hvc, Not_supported  };
+};
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_psci && arm_psci_dyn && dt]:
+
+#include "dt.h"
+
+PRIVATE
+static
+Psci::Call_method
+Psci::probe_method_dt()
+{
+  if (!Dt::have_fdt())
+    return Call_method::Unknown;
+
+  const char *c[] = { "arm,psci-1.0", "arm,psci-0.2", "arm,psci" };
+  Dt::Node psci = Dt::node_by_compatible_list(c);
+
+  if (!psci.is_valid())
+    return Call_method::Unknown;
+
+  const char *method = psci.get_prop_str("method");
+  if (method && strcmp(method, "smc") == 0)
+    return Call_method::Smc;
+
+  if (method && strcmp(method, "hvc") == 0)
+    return Call_method::Hvc;
+
+  return Call_method::Not_supported;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_psci && arm_psci_dyn && !dt]:
+
+PRIVATE
+static
+Psci::Call_method
+Psci::probe_method_dt()
+{ return Call_method::Unknown; }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_psci && arm_psci_dyn && arm_acpi]:
+
+#include "acpi.h"
+#include "acpi_fadt.h"
+#include "panic.h"
+
+PRIVATE
+static
+Psci::Call_method
+Psci::probe_method_acpi()
+{
+  auto *fadt = Acpi::find<Acpi_fadt const *>("FACP");
+  if (!fadt)
+    return Call_method::Unknown;
+
+  if (!(fadt->flags & Acpi_fadt::Hw_reduced_acpi))
+    panic("FADT: no hardware-reduced ACPI");
+  if (!(fadt->arm_boot_flags & Acpi_fadt::Psci_compliant))
+    panic("FADT: PSCI not supported");
+
+  return (fadt->arm_boot_flags & Acpi_fadt::Psci_use_hvc)
+         ? Call_method::Hvc : Call_method::Smc;
+}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_psci && arm_psci_dyn && !arm_acpi]:
+
+PRIVATE
+static
+Psci::Call_method
+Psci::probe_method_acpi()
+{ return Call_method::Unknown; }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_psci && !arm_psci_dyn]:
+
+PRIVATE static inline
+void
+Psci::init_psci_method()
+{}
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && arm_psci && arm_psci_dyn]:
+
+#include "panic.h"
+
+bool Psci::_is_hvc;
+
+PRIVATE static
+void
+Psci::init_psci_method()
+{
+  Call_method call_method = probe_method_dt();
+
+  if (   call_method == Call_method::Unknown
+      || call_method == Call_method::Not_supported)
+    call_method = probe_method_acpi();
+
+  if (   call_method == Call_method::Unknown
+      || call_method == Call_method::Not_supported)
+    panic("PSCI: Could not find a PSCI call method");
+
+  _is_hvc = call_method == Call_method::Hvc;
 }
 
 // ------------------------------------------------------------------------

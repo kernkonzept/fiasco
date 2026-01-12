@@ -27,10 +27,6 @@ EXTENSION class Mem_layout
 public:
   enum Phys_layout_tegra : Address
   {
-    Gic_dist_phys_base    = 0x0f400000,
-    Gic_redist_phys_base  = 0x0f440000,
-    Gic_redist_size       = 0x200000,
-
     Hsp_base              = 0x3c00000,
     Hsp_size              = 0xa0000,
   };

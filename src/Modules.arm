@@ -408,7 +408,7 @@ TRAMP_MP_ASM_INCLUDE    ?= kern/arm/tramp-mp-asm-default.h
 CPPFLAGS                += -DTRAMP_MP_ASM_INCLUDE=\"$(srcdir)/$(TRAMP_MP_ASM_INCLUDE)\"
 
 ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
-  LIBUART			:= uart/libuart.a
+  LIBUART		:= $(OBJECTS_LIBUART)
 endif
 
 # To avoid relocation work during bootup, RAM_PHYS_BASE can optionally be given.

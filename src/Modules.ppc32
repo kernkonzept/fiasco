@@ -20,17 +20,6 @@ PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
 PRIVATE_INCDIR += types/$(CONFIG_XARCH) types
 
 #
-# LIBUART subsystem
-#
-ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
-LIBUART			:= uart/libuart.a
-PREPROCESS_PARTS	+= libuart
-endif
-
-VPATH_LIBUART		:= $(srcdir)/lib/uart
-PRIVATE_INCDIR		+= lib/uart drivers/$(CONFIG_XARCH)/include
-
-#
 # DRIVERS Subsystem
 #
 DRIVERS			:= libdrivers.a libgluedriverslibc.a
@@ -201,5 +190,16 @@ endif
 
 include $(MODULES_FILE_BSP)
 VPATH += kern/ppc32/bsp/$(BSP_NAME) kern/ppc32/bsp
+
+#
+# LIBUART subsystem
+#
+ifeq ("$(filter LIBUART, $(SUBSYSTEMS))","LIBUART")
+LIBUART			:= $(OBJECTS_LIBUART)
+PREPROCESS_PARTS	+= libuart
+endif
+
+VPATH_LIBUART		:= $(srcdir)/lib/uart
+PRIVATE_INCDIR		+= lib/uart drivers/$(CONFIG_XARCH)/include
 
 MODULES_FILES = $(MODULES_FILE) $(MODULES_FILE_BSP)

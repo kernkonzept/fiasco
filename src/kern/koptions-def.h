@@ -38,7 +38,7 @@ namespace L4_kernel_options
   enum
   {
     Magic = 0x4C344B43,
-    Version_current = 4,
+    Version_current = 5,
   };
 
   enum Uart_type
@@ -56,14 +56,13 @@ namespace L4_kernel_options
 
   struct Uart
   {
-    Unsigned8   variant;      ///< Platform-specific UART variant
-    Unsigned8   _unused[7];
     Unsigned32  base_baud;    ///< Base baud rate of the UART (if applicable)
     Unsigned32  baud;         ///< Baud rate (this is the baud rate to use)
     Unsigned16  irqno;        ///< (Receive) IRQ
     Unsigned8   reg_shift;    ///< Shift value for register addressing
     Unsigned8   access_type;  ///< Accesstype of UART: unset, MMIO or ports
     Unsigned64  base_address; ///< Start address of UART
+    char         compatible_id[32]; ///< Uart Device Tree compatible string
   } __attribute__((packed));
 
   struct Options
