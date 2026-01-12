@@ -19,7 +19,7 @@ Platform_control::boot_ap_cpus_dt(Dt::Node cpus, Address phys_tramp_mp_addr)
 
   char const *default_method = cpus.get_prop_str("enable-method");
   cpus.for_each_subnode(
-    [&ap_cpu, cpus, default_method, phys_tramp_mp_addr](Dt::Node cpu) -> Dt::Cb
+    [&ap_cpu, default_method, phys_tramp_mp_addr](Dt::Node cpu) -> Dt::Cb
     {
       if (ap_cpu >= Config::Max_num_cpus)
         return Dt::Break;
