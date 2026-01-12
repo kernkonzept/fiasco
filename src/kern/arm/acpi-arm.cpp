@@ -46,7 +46,7 @@ struct Acpi_iort : public Acpi_table_head
 
   class Iterator
   {
-    friend class Acpi_iort;
+    friend struct Acpi_iort;
 
   public:
     Iterator operator++()
