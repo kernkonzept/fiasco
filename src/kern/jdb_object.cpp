@@ -127,9 +127,9 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
         if (tag.words() < 2)
           return commit_result(-L4_err::EMsgtooshort);
 
-        // value[1] == length, set_buf will ensure it fits into Tb_entry_ke
-        //             however, we must not read above utcb
-        // value[2] == start of payload
+        // values[1] == length, set_buf will ensure it fits into Tb_entry_ke
+        //              however, we must not read above utcb
+        // values[2] == start of payload
         Mword length = access_once(&r_msg->values[1]);
         // restrict length to words in utcb
         length = min<Mword>((tag.words() - 2) * sizeof(Mword), length);
@@ -151,9 +151,9 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
         if (tag.words() < 2)
           return commit_result(-L4_err::EMsgtooshort);
 
-        // value[1] == length of payload in bytes, *must not* be bigger than
-        //             Tb_entry_ke_bin::SIZE and we must not read above utcb
-        // value[2] == start of payload
+        // values[1] == length of payload in bytes, *must not* be bigger than
+        //              Tb_entry_ke_bin::SIZE and we must not read above utcb
+        // values[2] == start of payload
         Mword length = min<Mword>(access_once(&r_msg->values[1]),
                                   Tb_entry_ke_bin::SIZE,
                                   (tag.words() - 2) * sizeof(Mword));
