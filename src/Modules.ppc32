@@ -7,7 +7,7 @@ include $(srcdir)/Modules.generic
 
 PREPROCESS_PARTS 	+= $(CONFIG_XARCH) $(CONFIG_ABI) 32bit \
 			   abs_syscalls big_endian jdb_thread_names \
-			   obj_space_phys
+			   obj_space_phys libuart
 
 PREPROCESS_PARTS-$(CONFIG_JDB) += debug log
 PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
@@ -37,6 +37,7 @@ KERNEL_EXTRA 	:= Symbols kernel.ppc32.lds fiasco.debug
 VPATH 		+= kern/$(CONFIG_XARCH) kern
 VPATH		+= jdb/$(CONFIG_XARCH) jdb
 PRIVATE_INCDIR 	+= kern/$(CONFIG_XARCH) kern
+PRIVATE_INCDIR 	+= drivers/$(CONFIG_XARCH)/include
 
 INTERFACES_KERNEL +=	boot_uart_init bootstrap decrementer msr ppc_types     \
 			util utcb_support irq_chip_generic dirq boot_info
