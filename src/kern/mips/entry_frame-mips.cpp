@@ -145,8 +145,7 @@ public:
   {
     // assume Entry_frame == Return_frame
     return reinterpret_cast<Entry_frame *>
-      (  reinterpret_cast<char *>(sf)
-       - reinterpret_cast<intptr_t>(&reinterpret_cast<Return_frame *>(0)->r[R_s0]));
+      ( reinterpret_cast<char *>(sf) - offsetof(Return_frame, r[R_s0]));
   }
 };
 
