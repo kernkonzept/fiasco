@@ -61,7 +61,7 @@ public:
   template< typename X >
   Context_ptr_base(Context_ptr_base<X> const &o) : Context_ptr(o)
   {
-    X *x = 0;
+    X *x = nullptr;
     T *t = x;
     static_cast<void>(t);
   }
@@ -75,7 +75,7 @@ public:
   template< typename X >
   Context_ptr_base<T> const &operator = (Context_ptr_base<X> const &o)
   {
-    X *x = 0;
+    X *x = nullptr;
     T *t = x;
     static_cast<void>(t);
     Context_ptr::operator = (o);

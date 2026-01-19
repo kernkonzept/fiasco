@@ -64,7 +64,7 @@ public:
         return nullptr;
       }
 
-    Chip *spot = 0;
+    Chip *spot = nullptr;
     for (unsigned x = 0; x < _used; ++x)
       {
         spot = &_chips[x];

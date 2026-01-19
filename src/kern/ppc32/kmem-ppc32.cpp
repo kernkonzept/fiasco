@@ -29,7 +29,7 @@ union {
 DEFINE_GLOBAL_CONSTINIT
 Global_data<Kpdir *> Kmem::kdir(&kernel_page_directory.kpdir);
 
-Mword *Kmem::_sp = 0;
+Mword *Kmem::_sp = nullptr;
 
 IMPLEMENT inline
 Mword *Kmem::kernel_sp()

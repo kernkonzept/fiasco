@@ -30,7 +30,7 @@ extern union Kernel_srmmu_l1 {
 DEFINE_GLOBAL_CONSTINIT
 Global_data<Kpdir *> Kmem::kdir(&kernel_srmmu_l1.kpdir);
 
-Mword *Kmem::_sp = 0;
+Mword *Kmem::_sp = nullptr;
 
 IMPLEMENT inline
 Mword *Kmem::kernel_sp()

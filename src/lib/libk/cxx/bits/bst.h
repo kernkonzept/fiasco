@@ -98,7 +98,7 @@ protected:
   Bst_node *_head;
 
   /// Create an empty tree.
-  Bst() : _head(0) {}
+  Bst() : _head(nullptr) {}
 
   /// Access the head node as object of type \a Node.
   Node *head() const { return static_cast<Node*>(_head); }
@@ -261,7 +261,7 @@ public:
       return;
 
     Bst_node *head = _head;
-    _head = 0;
+    _head = nullptr;
     remove_tree(head, cxx::forward<FUNC>(callback));
   }
 
@@ -292,7 +292,7 @@ Node *
 Bst<Node, Get_key, Compare>::lower_bound_node(Key_param_type key) const
 {
   Dir d;
-  Bst_node *r = 0;
+  Bst_node *r = nullptr;
 
   for (Bst_node *q = _head; q; q = Bst_node::next(q, d))
     {

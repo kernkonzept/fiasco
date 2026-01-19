@@ -210,7 +210,7 @@ Avl_tree_node::rotate2(Bst_node **t, Bal idir, Bal pre)
     {
       static_cast<A*>(tmp[0])->balance(Bal::N);
       static_cast<A*>(tmp[1])->balance(Bal::N);
-      return 0;
+      return nullptr;
     }
 
   static_cast<A*>(tmp[pre != idir])->balance(!pre);
@@ -295,7 +295,7 @@ Node *Avl_tree<Node, Get_key, Compare>::remove(Key_param_type key)
   N **s = &_head; /* last ('deepest') node on the search path to q
                    * with balance 0, at this place the rebalancing
                    * stops in any case */
-  N **t = 0;
+  N **t = nullptr;
   Dir dir;
 
   // find target node and rebalancing entry
@@ -316,7 +316,7 @@ Node *Avl_tree<Node, Get_key, Compare>::remove(Key_param_type key)
 
   // nothing found
   if (!t)
-    return 0;
+    return nullptr;
 
   A *i = static_cast<A*>(*t);
 

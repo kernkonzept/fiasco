@@ -233,7 +233,7 @@ TO dyn_cast(FROM *p)
                 "cxx::dyn_cast<T>(): casts away const qualifier");
 
   if (!p)
-    return 0;
+    return nullptr;
 
   auto r = p->_cxx_dyn_type();
 
@@ -254,7 +254,7 @@ TO dyn_cast(FROM *p)
         __builtin_unreachable();
     }
 
-  return 0;
+  return nullptr;
 }
 
 }
