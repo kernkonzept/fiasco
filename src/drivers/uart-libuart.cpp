@@ -69,7 +69,7 @@ Uart::uart()
 }
 
 //------------------------------------------------------
-IMPLEMENTATION [!dyn_uart]:
+IMPLEMENTATION [libuart && !dyn_uart]:
 
 DEFINE_GLOBAL Global_data<Static_object<FIASCO_UART_TYPE>> _the_uart;
 
@@ -80,7 +80,7 @@ Uart::init_uart_instance(Unsigned32 base_baud)
 }
 
 //------------------------------------------------------
-IMPLEMENTATION [dyn_uart]:
+IMPLEMENTATION [libuart && dyn_uart]:
 
 #include "device.h"
 #include "koptions.h"
