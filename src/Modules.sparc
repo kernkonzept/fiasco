@@ -7,7 +7,7 @@ include $(srcdir)/Modules.generic
 
 PREPROCESS_PARTS 	+= $(CONFIG_XARCH) $(CONFIG_ABI) 32bit \
 			   abs_syscalls big_endian jdb_thread_names \
-			   obj_space_phys
+			   obj_space_phys libuart
 
 PREPROCESS_PARTS-$(CONFIG_JDB) += debug log
 PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
