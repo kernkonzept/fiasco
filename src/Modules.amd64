@@ -70,13 +70,13 @@ VPATH			+= kern/$(CONFIG_XARCH) kern/ia32/64 kern/ia32 kern
 VPATH			+= jdb/ia32/64 jdb/ia32 jdb
 PRIVATE_INCDIR		+= kern/$(CONFIG_XARCH) kern/ia32/64 kern/ia32 kern
 
-INTERFACES_KERNEL	+= __main acpi acpi_fadt acpi_dmar \
+INTERFACES_KERNEL	+= __main acpi acpi_fadt acpi_dmar i8259 \
 			   irq_chip_ia32 irq_chip_pic \
 			   io_apic intel_iommu io_apic_remapped \
 			   boot_console syscall_entry \
 			   irq_msi io_space apic pit boot_info checksum \
-			   x86desc gdt idt tss timer_irq dirq \
-			   i8259 allocator alternatives
+			   x86desc gdt idt tss timer_irq dirq allocator \
+			   alternatives
 
 INTERFACES_KERNEL-$(CONFIG_IOMMU)    += intel_dmar dmar_space
 INTERFACES_KERNEL-$(CONFIG_CPU_VIRT) += svm vmx vm vm_svm vm_vmx_ept
@@ -256,7 +256,7 @@ ifeq ("$(CONFIG_JDB_DISASM)","y")
   CFLAGS_X86Disassembler = -Wno-unused-parameter
   CFLAGS_X86IntelInstPrinter = -Wno-unused-parameter -Wno-sign-compare
   CFLAGS_X86ATTInstPrinter   = -Wno-unused-parameter -Wno-sign-compare
-  CFLAGS_X86DisassemblerDecoder  = -Wno-bad-function-cast
+  CFLAGS_X86DisassemblerDecoder = -Wno-bad-function-cast
   # Clang does not support fallthrough warning elision via comments
   CFLAGS_X86DisassemblerDecoder += $(if $(CC_IS_CLANG),\
                                      -Wno-implicit-fallthrough)
