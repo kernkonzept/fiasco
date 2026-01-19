@@ -15,18 +15,8 @@ PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
 #
 # DRIVERS Subsystem
 #
-DRIVERS			:= libdrivers.a libgluedriverslibc.a
-VPATH			+= drivers/$(CONFIG_XARCH) drivers
-PRIVATE_INCDIR		+= drivers/$(CONFIG_XARCH) drivers 
-INTERFACES_DRIVERS	:= mux_console console mem reset uart filter_console \
-			   processor delayloop io
-INTERFACES_DRIVERS	+= $(if $(CONFIG_UART_CHECKSUM),stream_crc32)
+INTERFACES_DRIVERS	:= io
 io_IMPL			:= io io-ppc32
-mem_IMPL		:= mem mem-ppc32
-uart_IMPL		:= uart uart-libuart
-reset_IMPL		:= reset-ppc32
-processor_IMPL		:= processor processor-ppc32
-CXXSRC_DRIVERS		:= glue_libc.cc
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
 
 #

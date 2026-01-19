@@ -34,20 +34,10 @@ PREPROCESS_PARTS-$(CONFIG_IOMMU)                    += virtual_space_iface
 #
 # DRIVERS Subsystem
 #
-DRIVERS 		:= libdrivers.a libgluedriverslibc.a
-VPATH			+= drivers/$(CONFIG_XARCH)/$(BITS) drivers/$(CONFIG_XARCH) drivers
-PRIVATE_INCDIR		+= drivers/$(CONFIG_XARCH)/$(BITS) drivers/$(CONFIG_XARCH) drivers
-INTERFACES_DRIVERS 	:= sa1100 mux_console console uart filter_console \
-			   h3xxx io mem mmu reset processor delayloop ve_sysregs
-INTERFACES_DRIVERS	+= $(if $(CONFIG_UART_CHECKSUM),stream_crc32)
-INTERFACES_DRIVERS      += fb_console
+INTERFACES_DRIVERS 	+= sa1100 h3xxx io mmu ve_sysregs fb_console
 io_IMPL			:= io io-arm
 mmu_IMPL		:= mmu mmu-arm mmu-arm-$(BITS)
-mem_IMPL		:= mem mem-arm
-uart_IMPL		:= uart uart-libuart
 reset_IMPL		:=
-processor_IMPL		:= processor processor-arm-$(BITS) processor-arm
-CXXSRC_DRIVERS		:= glue_libc.cc
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
 ALWAYS_INLINE           += mem
 
@@ -230,6 +220,7 @@ CSRC_LIBK       += gcc_lib.c
 ASSRC_LIBK      += gcc_lib-aeabi.S
 endif
 atomic_IMPL	+= atomic-arm-$(BITS)
+processor_IMPL	:= processor processor-arm-$(BITS) processor-arm
 scaler_shift_IMPL := scaler_shift scaler_shift-arm
 
 #
