@@ -18,8 +18,8 @@ extern "C" {
 
 #include "llvmcov.h"
 
-static GLOBAL_DATA char *membuf_ptr = NULL;
-static GLOBAL_DATA char const *membuf_end = NULL;
+static GLOBAL_DATA char *membuf_ptr = nullptr;
+static GLOBAL_DATA char const *membuf_end = nullptr;
 
 static void
 cov_membuf_init()

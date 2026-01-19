@@ -12,14 +12,14 @@ Address Boot_info::uart_base()
 IMPLEMENT static
 Address Boot_info::pic_base()
 {
-  Of_device *dev = get_device((char*)"pic", NULL);
+  Of_device *dev = get_device((char*)"pic", nullptr);
   return dev ? dev->reg : 0;
 }
 
 PUBLIC static
 Address Boot_info::mbar()
 {
-  Of_device *dev = get_device("builtin", NULL);
+  Of_device *dev = get_device("builtin", nullptr);
 
   return dev ? dev->reg : 0;
 }

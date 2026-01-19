@@ -137,7 +137,7 @@ Pte_htab *
 Mem_space::locate(Pte_htab *pte, Address ea) 
 {
   Address *pteg[2] = {pteg_p(ea), pteg_s(ea)};
-  Pte_htab *ret = NULL, *free = NULL;
+  Pte_htab *ret = nullptr, *free = nullptr;
   Mword h = 0;
   for(int i = 0; i < 2*Config::Htab_entries; i += 2)
     {

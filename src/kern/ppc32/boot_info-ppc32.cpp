@@ -39,7 +39,7 @@ Boot_info::get_device(const char *name, const char *type)
       return dev + i;
 #endif
 
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -63,7 +63,7 @@ void Boot_info::set_prom(Address prom_ptr)
 PUBLIC static inline
 unsigned long Boot_info::get_time_base()
 {
-  return get_device(NULL, "cpu")->freq.time_freq;
+  return get_device(nullptr, "cpu")->freq.time_freq;
 }
 
 IMPLEMENT static 
