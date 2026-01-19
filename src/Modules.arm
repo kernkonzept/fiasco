@@ -52,32 +52,9 @@ NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
 ALWAYS_INLINE           += mem
 
 #
-# LIBREGEX subsystem (only for Jdb)
-#
-LIBREGEX	:= libregex.a
-VPATH		+= lib/regex
-PRIVATE_INCDIR	+= lib/regex
-CSRC_LIBREGEX	:= rx.c
-NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBREGEX))
-
-#
 # LIBC Subsystem addendum
 #
 CSRC_LIBC       += aeabi.c atexit-aeabi.c
-
-#
-# LIBGZIP subsystem (only for Jdb)
-#
-ifneq ($(CONFIG_JDB_GZIP),)
-  LIBGZIP		:= libgzip.a
-  VPATH			+= lib/gzip
-  PRIVATE_INCDIR	+= lib/gzip
-  CSRC_LIBGZIP		:= adler32.c crc32.c gzip.c trees.c deflate.c zutil.c
-  NOOPT			+= $(patsubst %.o, %, $(OBJ_LIBGZIP))
-  $(foreach f, adler32 crc32 deflate trees zutil, \
-    $(eval CFLAGS_$(f) += $(WNO_DEPRECATED_NON_PROTOTYPE) \
-      -Wno-old-style-definition -Wno-strict-prototypes))
-endif
 
 #
 # KERNEL subsystem
@@ -261,14 +238,6 @@ scaler_shift_IMPL := scaler_shift scaler_shift-arm
 ifneq ($(CONFIG_COV),)
  SUBSYSTEMS  += LIBCOV
 endif
-
-#
-# SIMPLEMALLOC
-#
-SIMPLEMALLOC     := libsimple_malloc.a
-VPATH             += lib/simple_malloc
-PRIVATE_INCDIR    += lib/simple_malloc
-CXXSRC_SIMPLEMALLOC = simple_malloc.cc
 
 ifeq ("$(CONFIG_JDB_DISASM)","y")
   # $(srcdir)/lib/disasm may be removed

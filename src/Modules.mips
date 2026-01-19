@@ -145,14 +145,6 @@ NOOPT			+= tb_entry #tb_entry_output
 CSRC_LIBK	+= umoddi3.c ashldi3.c udivdi3.c qdivrem.c ucmpdi2.c
 
 #
-# SIMPLEMALLOC
-#
-SIMPLEMALLOC     := libsimple_malloc.a
-VPATH             += lib/simple_malloc
-PRIVATE_INCDIR    += lib/simple_malloc
-CXXSRC_SIMPLEMALLOC = simple_malloc.cc
-
-#
 # LIBDISASM subsystem (only for Jdb)
 #
 ifeq ("$(CONFIG_JDB_DISASM)","y")

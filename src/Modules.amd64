@@ -199,7 +199,6 @@ NOOPT			+= tb_entry_output $(tb_entry_IMPL) $(perf_cnt_IMPL)  \
 NOOPT			+= $(foreach in,$(INTERFACES_JDB), \
 			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in)))
 
-
 #
 # BOOT subsystem
 #
@@ -229,28 +228,6 @@ OBJ_KERNEL		+= gblcfg.o
 ifeq ($(CONFIG_COV),y)
   SUBSYSTEMS += LIBCOV
 endif
-
-#
-# LIBGZIP subsystem (only for Jdb)
-#
-ifneq ($(CONFIG_JDB_GZIP),)
-  LIBGZIP		:= libgzip.a
-  VPATH			+= lib/gzip
-  PRIVATE_INCDIR	+= lib/gzip
-  CSRC_LIBGZIP		:= adler32.c crc32.c gzip.c trees.c deflate.c zutil.c
-  NOOPT			+= $(patsubst %.o, %, $(OBJ_LIBGZIP))
-  $(foreach f, adler32 crc32 deflate trees zutil, \
-    $(eval CFLAGS_$(f) += $(WNO_DEPRECATED_NON_PROTOTYPE) \
-      -Wno-old-style-definition -Wno-strict-prototypes))
-endif
-
-#
-# SIMPLEMALLOC
-#
-SIMPLEMALLOC       := libsimple_malloc.a
-VPATH              += lib/simple_malloc
-PRIVATE_INCDIR     += lib/simple_malloc
-CXXSRC_SIMPLEMALLOC = simple_malloc.cc
 
 #
 # LIBDISASM subsystem (only for Jdb)
@@ -298,19 +275,9 @@ CSRC_LIBPERFCTR	:= event_set_p5.c event_set_p6.c event_set_amd.c \
 NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBPERFCTR))
 
 #
-# LIBREGEX subsystem (only for Jdb)
-#
-LIBREGEX	:= libregex.a
-VPATH		+= lib/regex
-PRIVATE_INCDIR	+= lib/regex
-CSRC_LIBREGEX	:= rx.c
-NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBREGEX))
-
-#
 # LIBC Subsystem addendum
 #
 NOCOV		+= $(patsubst %.o, %, $(OBJ_LIBC))  # Because the BOOT subsystem requires LIBC.
-
 
 ifeq ("$(CONFIG_JDB)","y")
 

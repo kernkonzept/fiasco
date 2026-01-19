@@ -140,14 +140,6 @@ CSRC_LIBK       += gcc_lib.c
 scaler_shift_IMPL := scaler_shift scaler_shift-riscv
 
 #
-# SIMPLEMALLOC
-#
-SIMPLEMALLOC        := libsimple_malloc.a
-VPATH               += lib/simple_malloc
-PRIVATE_INCDIR      += lib/simple_malloc
-CXXSRC_SIMPLEMALLOC  = simple_malloc.cc
-
-#
 # LIBDISASM subsystem (only for Jdb)
 #
 ifeq ("$(CONFIG_JDB_DISASM)","y")

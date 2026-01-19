@@ -301,6 +301,20 @@ ifeq ($(CONFIG_DT),y)
 endif
 
 #
+# LIBGZIP subsystem (only for Jdb, depends on HAS_JDB_GZIP_OPTION)
+#
+ifneq ($(CONFIG_JDB_GZIP),)
+  LIBGZIP		:= libgzip.a
+  VPATH			+= lib/gzip
+  PRIVATE_INCDIR	+= lib/gzip
+  CSRC_LIBGZIP		:= adler32.c crc32.c gzip.c trees.c deflate.c zutil.c
+  NOOPT			+= $(patsubst %.o, %, $(OBJ_LIBGZIP))
+  $(foreach f, adler32 crc32 deflate trees zutil, \
+    $(eval CFLAGS_$(f) += $(WNO_DEPRECATED_NON_PROTOTYPE) \
+      -Wno-old-style-definition -Wno-strict-prototypes))
+endif
+
+#
 # LIBK subsystem
 #
 LIBK		:= libk.a
@@ -313,6 +327,15 @@ CXXSRC_LIBK     += construction.cc
 atomic_IMPL	 = atomic atomic-$(CONFIG_XARCH)
 
 #
+# LIBREGEX subsystem (only for Jdb)
+#
+LIBREGEX	:= libregex.a
+VPATH		+= lib/regex
+PRIVATE_INCDIR	+= lib/regex
+CSRC_LIBREGEX	:= rx.c
+NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBREGEX))
+
+#
 # LIBUART subsystem
 #
 SUBSYSTEMS	+= LIBUART
@@ -322,6 +345,14 @@ LIBUART_UART	 = -include uart_$(strip $(1)).h \
 VPATH_LIBUART	:= $(srcdir)/lib/uart
 PRIVATE_INCDIR	+= lib/uart
 LIBUART		 = $(OBJECTS_LIBUART)
+
+#
+# SIMPLEMALLOC (LIBREGEX, LIBDISASM depend on it)
+#
+SIMPLEMALLOC       := libsimple_malloc.a
+VPATH              += lib/simple_malloc
+PRIVATE_INCDIR     += lib/simple_malloc
+CXXSRC_SIMPLEMALLOC = simple_malloc.cc
 
 #
 # TCBOFFSET
