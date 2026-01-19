@@ -331,6 +331,9 @@ asm
 "     add  a1, a1, a2                  \n"
 "     ldr  a2, [a1, a3]                \n"
 "     sub  a1, r12, a2                 \n"
+"     mov  v1, a1                      \n"
+"     bl   relocate                    \n"
+"     mov  a1, v1                      \n"
 "     bl   bootstrap_main              \n"
 
 ".Lstack_offs: .word (_stack - _start) \n"
@@ -373,8 +376,9 @@ struct Elf32_rel
   }
 };
 
-PUBLIC static void
-Bootstrap::relocate(unsigned long load_addr)
+extern "C"
+void
+relocate(unsigned long load_addr)
 {
   Elf<Elf32_dyn, Elf32_rel>::relocate(load_addr);
 }

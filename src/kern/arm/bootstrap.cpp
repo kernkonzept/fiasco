@@ -215,16 +215,8 @@ Bootstrap::kern_to_boot(void *a)
 
 extern "C" void bootstrap_main(unsigned long load_addr_delta_vs_link)
 {
-  if (load_addr_delta_vs_link)
-    {
-      Bootstrap::relocate(load_addr_delta_vs_link);
-
-      // prevent compiler from reordering loads before applying the relocations
-      Mem::barrier();
-
-      bs_info.kernel_start_phys += load_addr_delta_vs_link;
-      bs_info.kernel_end_phys += load_addr_delta_vs_link;
-    }
+  bs_info.kernel_start_phys += load_addr_delta_vs_link;
+  bs_info.kernel_end_phys += load_addr_delta_vs_link;
 
   Bootstrap::load_addr = load_addr_delta_vs_link + bs_info.kernel_load_addr;
 
@@ -248,6 +240,9 @@ IMPLEMENTATION [arm && !mmu]:
 
 #include "globalconfig.h"
 #include "infinite_loop.h"
+
+extern "C" void relocate(unsigned long)
+{}
 
 extern "C" void bootstrap_main()
 {

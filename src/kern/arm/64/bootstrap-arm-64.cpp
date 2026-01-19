@@ -109,8 +109,9 @@ struct Elf64_rela
   }
 };
 
-PUBLIC static void
-Bootstrap::relocate(unsigned long load_addr)
+extern "C"
+void
+relocate(unsigned long load_addr)
 {
   Elf<Elf64_dyn, Elf64_rela>::relocate(load_addr);
 }
@@ -501,6 +502,9 @@ asm
 "     adrp x9, :got:_start             \n"
 "     ldr  x9, [x9, #:got_lo12:_start] \n"
 "     sub  x0, x10, x9                 \n"
+"     mov  x19, x0                     \n"
+"     bl   relocate                    \n"
+"     mov  x0, x19                     \n"
 "     bl   bootstrap_main              \n"
 ".p2align 3                            \n"  // running uncached -> align!
 ".Lstack_offs: .8byte (_stack - _start)\n"
