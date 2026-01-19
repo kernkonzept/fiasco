@@ -193,7 +193,7 @@ NOOPT			+= $(filter jdb%,\
 			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in))))
 NOOPT			+= tb_entry_output $(tb_entry_IMPL) $(perf_cnt_IMPL)  \
 			   kern_cnt loadcnt $(apic_IMPL) $(watchdog_IMPL) kdb \
-			   $(kernel_uart_IMPL) push_console virq thread-dbf   \
+			   $(kernel_uart_IMPL) push_console thread-dbf   \
 			   trap_state
 NOOPT			+= $(foreach in,$(INTERFACES_JDB), \
 			       $(if $($(in)_IMPL),$($(in)_IMPL),$(in)))
