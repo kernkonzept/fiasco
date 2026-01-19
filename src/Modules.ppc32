@@ -15,7 +15,7 @@ PREPROCESS_PARTS	+= $(PREPROCESS_PARTS-y)
 #
 # DRIVERS Subsystem
 #
-INTERFACES_DRIVERS	:= io
+INTERFACES_DRIVERS	+= io
 io_IMPL			:= io io-ppc32
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
 

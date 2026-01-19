@@ -20,7 +20,7 @@ OBJECTS_LIBUART		+= uart_leon3.o
 #
 # DRIVERS Subsystem
 #
-INTERFACES_DRIVERS	:= io
+INTERFACES_DRIVERS	+= io
 io_IMPL			:= io io-sparc
 CXXFLAGS_uart-libuart   += $(call LIBUART_UART, leon3)
 NOOPT			+= $(patsubst %.o, %, $(OBJ_DRIVERS))
