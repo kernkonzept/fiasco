@@ -21,9 +21,38 @@ bootstrap-mmu%o: mmu%cc
 	  $*,$@) $< $(COLLECT_REDIR)
 	@mv .$*.cc.d.new .$*.cc.d
 
+# For debugging purposes: Make it possible to use printf() during bootstrap
+# phase. The backend writes directly to the PL011 UART. It's even possible to
+# add printf() to code from the kern/ directoy (e.g. ptab_base). It is NOT
+# possible to use printf() after Bootstrap::enable_paging() was called.
+PRINTF_PL011_DURING_BOOT ?=
+
+ifeq ($(PRINTF_PL011_DURING_BOOT),1)
+  OBJ_BOOTSTRAP_LIBC = $(addprefix bootstrap-,printf.o vfprintf.o strlen.o \
+                         stdout_write.o memset.o strnlen.o memchr.o puts.o \
+                         putchar.o)
+  OBJ_BOOTSTRAP += $(OBJ_BOOTSTRAP_LIBC) bootstrap-glue_libc.o
+  CXXFLAGS += -include $(srcdir)/lib/libc/include/cstdio
+
+  define bootstrap_libc_rule =
+$(1): $(2)
+	$$(call comp_msg,$$*)
+	$$(VERBOSE)$$(CC) -c -MD -MP -MF .bootstrap-$(2).d.new -o $$@ \
+	  $$(call c_flgs,$(2),$$@) -fno-builtin $$< $$(COLLECT_REDIR)
+	@mv .bootstrap-$(2).d.new .bootstrap-$$*.d
+
+  endef
+
+  $(foreach f,$(OBJ_BOOTSTRAP_LIBC),$(eval $(call bootstrap_libc_rule,\
+    $(f),$(patsubst bootstrap-%.o,%.c,$(f)))))
+endif
+
 define gen_bootstrap_flags =
-CXXFLAGS_$(basename $(notdir $(1))) = \
+CFLAGS_$(basename $(notdir $(1))) = \
   -fPIC $(if $(CONFIG_COV),$(COVFLAGS_bootstrap-$(CC_TYPE)))
+CXXFLAGS_$(basename $(notdir $(1))) = \
+  -fPIC $(if $(CONFIG_COV),$(COVFLAGS_bootstrap-$(CC_TYPE))) \
+  $(if $(PRINTF_DURING_BOOT),-include $(srcdir)/lib/libc/include/cstdio)
 endef
 
 $(foreach obj,$(OBJ_BOOTSTRAP),$(eval $(call gen_bootstrap_flags, $(obj))))
