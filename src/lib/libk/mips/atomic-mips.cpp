@@ -2,6 +2,42 @@ IMPLEMENTATION [mips]:
 
 #include "asm_mips.h"
 
+template<typename T> ALWAYS_INLINE inline
+T
+atomic_load(T const *mem)
+{
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  T res;
+  switch (sizeof(T))
+    {
+    case 4:
+      __asm__ __volatile__ ("lw %0, %1" : "=r" (res) : "m"(*mem));
+      return res;
+
+    case 8:
+      __asm__ __volatile__ ("ld %0, %1" : "=r" (res) : "m"(*mem));
+      return res;
+    }
+}
+
+template<typename T, typename V> ALWAYS_INLINE inline
+void
+atomic_store(T *mem, V value)
+{
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  T val = value;
+  switch (sizeof(T))
+    {
+    case 4:
+      __asm__ __volatile__ ("sw %1, %0" : "=m" (*mem) : "r" (val));
+      break;
+
+    case 8:
+      __asm__ __volatile__ ("sd %1, %0" : "=m" (*mem) : "r" (val));
+      break;
+    }
+}
+
 // ``unsafe'' stands for no safety according to the size of the given type.
 // There are type safe versions of the cas operations in the architecture
 // independent part of atomic that use the unsafe versions and make a type
