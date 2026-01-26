@@ -623,11 +623,6 @@ Mem_space::switchin_guest_space()
     Mem_unit::hfence_gvma();
 
   _current_guest.current() = this;
-
-  if (!Mem_unit::Have_vmids && from)
-    // Without VMIDs, after switching away from a space, the TLB got flushed and
-    // thus will have forgotten about it.
-    from->tlb_mark_unused();
 }
 
 PUBLIC static inline

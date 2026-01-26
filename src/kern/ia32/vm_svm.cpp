@@ -189,7 +189,9 @@ PUBLIC
 void
 Vm_svm::tlb_flush_current_cpu() override
 {
-  // Nothing to do here, we flush on each entry!
+  // We flush the tlb on each entry, but call tlb_mark_unused() only on explicit
+  // TLB flush, to avoid cache line bouncing.
+  tlb_mark_unused();
 }
 
 // to do:
@@ -655,9 +657,6 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
       vmcb_s->state_save_area.cr3 = kernel_vmcb_s->state_save_area.cr3;
       vmcb_s->state_save_area.cr4 = kernel_vmcb_s->state_save_area.cr4;
     }
-
-  // we flush the tlb on each entry
-  tlb_mark_unused();
 
   copy_control_area_back(vmcb_s, kernel_vmcb_s);
 

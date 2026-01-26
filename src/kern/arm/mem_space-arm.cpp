@@ -175,7 +175,10 @@ Mem_space::tlb_flush_current_cpu()
   sync_mpu_state();
 
   if constexpr (!Have_asids)
-    Mem_unit::tlb_flush();
+    {
+      Mem_unit::tlb_flush();
+      tlb_mark_unused_if_non_current();
+    }
   else if (c_asid() != Mem_unit::Asid_invalid)
     {
       Mem_unit::tlb_flush(c_asid());

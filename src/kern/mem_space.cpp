@@ -435,8 +435,10 @@ private:
    * CPUs it could potentially have TLB entries. Each CPU bit must only be set
    * from the corresponding CPU!
    *
-   * TODO: this could be pretty CL-bouncing. Is it worth having a per-cpu-style
-   * mechanisms for bits/booleans?
+   * To reduce the potential of cache-line bouncing between CPUs, a space clears
+   * the active bit only when doing an explicit TLB flush. Thus, for a TLB that
+   * flushes when switching spaces (Tlb_per_cpu_global), the active mask is an
+   * overestimation.
    */
   Cpu_mask _tlb_active_on_cpu;
 
@@ -591,8 +593,7 @@ bool
 Mem_space::is_sigma0() const
 { return false; }
 
-IMPLEMENT_DEFAULT inline NEEDS["kmem.h", "logdefs.h",
-                               Mem_space::tlb_track_space_usage]
+IMPLEMENT_DEFAULT inline NEEDS["kmem.h", "logdefs.h"]
 void
 Mem_space::switchin_context(Mem_space *from, Switchin_flags flags)
 {
@@ -612,8 +613,6 @@ Mem_space::switchin_context(Mem_space *from, Switchin_flags flags)
 
       CNT_ADDR_SPACE_SWITCH;
       make_current(flags);
-
-      from->tlb_track_space_usage();
     }
 }
 
@@ -660,11 +659,6 @@ Cpu_mask
 Mem_space::active_tlb()
 { return Cpu_mask(); }
 
-PRIVATE inline
-void
-Mem_space::tlb_track_space_usage()
-{}
-
 // ----------------------------------------------------------
 IMPLEMENTATION [need_xcpu_tlb_flush]:
 
@@ -707,32 +701,3 @@ PUBLIC static inline
 void
 Mem_space::disable_tlb(Cpu_number cpu)
 { _tlb_active.atomic_clear(cpu); }
-
-/**
- * Update the TLB usage state of this memory space when switching away from it.
- */
-PRIVATE inline
-void
-Mem_space::tlb_track_space_usage()
-{
-  // Use regular_tlb_type() instead of tlb_type(), to allow for compile-time
-  // optimization of the following branch conditions. This is safe,
-  // as tlb_track_space_usage() must and can only be invoked from a regular
-  // Mem_space, which can be assigned as the current Mem_space on a CPU
-  // (_current).
-  // Mem_space overrides like Dmar_space or Vm_vmx_ept have to implement their
-  // own TLB usage tracking mechanism.
-  if (regular_tlb_type() == Tlb_per_cpu_global)
-    {
-      /* Without ASIDs, when we switched away from this space, the TLB
-       * will have forgotten us. */
-      assert(_current.current() != this);
-      tlb_mark_unused();
-    }
-  else if (regular_tlb_type() == Tlb_per_cpu_asid)
-    {
-      /* With ASIDs the TLB has data until we flush it explicitly,
-       * thus _tlb_active_on_cpu needs to keep its info */
-      assert(_current.current() != this);
-    }
-}

@@ -554,6 +554,10 @@ Mem_space::tlb_flush_current_cpu()
 {
   if (_current.current() == this)
     Mem_unit::tlb_flush();
+  else
+    // We flush the tlb on each memory space switch, but call tlb_mark_unused()
+    // only on explicit TLB flush, to avoid cache line bouncing.
+    tlb_mark_unused();
 }
 
 PRIVATE inline
