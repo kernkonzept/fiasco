@@ -132,14 +132,26 @@ PUBLIC inline Ram_quota * Space::ram_quota() const
 
 IMPLEMENT inline Space::~Space() {}
 
+/**
+ * Find kernel-user memory chunk for address provided by user-space.
+ *
+ * \param p      Address provided by user-space.
+ * \param size   Size that together with the address defines the address range
+ *               the kernel-user memory chunk needs to cover.
+ * \param align  Alignment the address must satisfy (must be a power-of-two).
+ *
+ * \return Kernel-user memory chunk containing the given address range.
+ * \retval nullptr  No kernel-user memory chunk matches the given address
+ *                  range or address violates alignment requirement.
+ */
 PUBLIC
 Space::Ku_mem const *
-Space::find_ku_mem(User_ptr<void> p, unsigned size)
+Space::find_ku_mem(User_ptr<void> p, unsigned size, unsigned align)
 {
   Address const pa = reinterpret_cast<Address>(p.get());
 
   // alignment check
-  if (EXPECT_FALSE(pa & (sizeof(double) - 1)))
+  if (EXPECT_FALSE(pa & (align - 1)))
     return nullptr;
 
   // overflow check

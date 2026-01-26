@@ -511,7 +511,8 @@ Thread_object::sys_vcpu_control(L4_fpage::Rights, L4_msg_tag const &tag,
           add_state |= Thread_ext_vcpu_enabled;
         }
 
-      Space::Ku_mem const *vcpu_m = space()->find_ku_mem(vcpu, size);
+      Space::Ku_mem const *vcpu_m =
+        space()->find_ku_mem(vcpu, size, alignof(Vcpu_state));
       if (!vcpu_m)
         return commit_result(-L4_err::EInval);
 

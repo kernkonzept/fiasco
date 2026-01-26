@@ -672,7 +672,8 @@ Jdb_obj_info_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) overrid
 
   User_ptr<Jobj_info> mem(reinterpret_cast<Jobj_info*>(utcb->values[1]));
   Mword size = utcb->values[2];
-  Space::Ku_mem const*ku_mem = current()->space()->find_ku_mem(mem, size);
+  Space::Ku_mem const *ku_mem =
+    current()->space()->find_ku_mem(mem, size, alignof(Jobj_info));
   Jobj_info *i = ku_mem->kern_addr(mem);
   Mword skip = utcb->values[3];
 
