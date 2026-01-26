@@ -57,33 +57,6 @@ atomic_or(T *mem, V value)
       : "cc");
 }
 
-inline
-bool
-cas_arch(Mword *m, Mword o, Mword n)
-{
-  Mword tmp, res;
-
-  asm volatile
-    ("mov     %[res], #1          \n"
-     "prfm    pstl1strm, %[m]     \n"
-     "1:                          \n"
-     "ldxr    %[tmp], %[m]        \n"
-     "cmp     %[tmp], %[o]        \n"
-     "b.ne    2f                  \n"
-     "stxr    %w[res], %[n], %[m] \n"
-     "cbnz    %w[res], 1b         \n"
-     "dmb     ish                 \n"
-     "2:                          \n"
-     : [tmp] "=&r" (tmp), [res] "=&r" (res), [m] "+Q" (*m)
-     : [n] "r" (n), [o] "r" (o)
-     : "cc", "memory");
-
-  // res == 0 is ok
-  // res == 1 is failed
-
-  return !res;
-}
-
 template<typename T, typename V> inline
 T
 atomic_exchange(T *mem, V value)
@@ -194,5 +167,32 @@ atomic_store(T *p, V value)
       asm volatile ("str %x1, %0" : "=m" (*p) : "r" (val));
       break;
     }
+}
+
+inline
+bool
+cas_arch(Mword *m, Mword o, Mword n)
+{
+  Mword tmp, res;
+
+  asm volatile
+    ("mov     %[res], #1          \n"
+     "prfm    pstl1strm, %[m]     \n"
+     "1:                          \n"
+     "ldxr    %[tmp], %[m]        \n"
+     "cmp     %[tmp], %[o]        \n"
+     "b.ne    2f                  \n"
+     "stxr    %w[res], %[n], %[m] \n"
+     "cbnz    %w[res], 1b         \n"
+     "dmb     ish                 \n"
+     "2:                          \n"
+     : [tmp] "=&r" (tmp), [res] "=&r" (res), [m] "+Q" (*m)
+     : [n] "r" (n), [o] "r" (o)
+     : "cc", "memory");
+
+  // res == 0 is ok
+  // res == 1 is failed
+
+  return !res;
 }
 
