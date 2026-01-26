@@ -190,11 +190,7 @@ PRIVATE_INCDIR    += lib/libc/arch/$(LIBC_ARCH) \
                      lib/libc/src/internal \
                      lib/libc/src/include \
                      lib/libc/include
-CSRC_LIBC         := putchar.c \
-                     putstr.c \
-                     stdout_write.c \
-                     \
-                     memchr.c \
+CSRC_LIBC         := memchr.c \
                      memmove.c \
                      memset.c \
                      memcmp.c \
@@ -223,15 +219,6 @@ CSRC_LIBC         := putchar.c \
                      isspace.c \
                      tolower.c \
                      \
-                     printf.c \
-                     snprintf.c \
-                     sprintf.c \
-                     vfprintf.c \
-                     vsnprintf.c \
-                     vsprintf.c \
-                     vprintf.c \
-                     puts.c \
-                     \
                      atexit.c \
                      \
                      intscan.c
@@ -245,6 +232,20 @@ ASSRC_LIBC        := setjmp.S longjmp.S \
                      $(if $(filter ia32,$(CONFIG_XARCH)),memcpy-i386.S)
 NOBUILTIN         += $(patsubst %.o, %, $(OBJ_LIBC))
 
+CSRC_LIBC-$(CONFIG_OUTPUT)  += \
+                     printf.c \
+                     putchar.c \
+                     puts.c \
+                     putstr.c \
+                     snprintf.c \
+                     sprintf.c \
+                     stdout_write.c \
+                     vfprintf.c \
+                     vprintf.c \
+                     vsnprintf.c \
+                     vsprintf.c
+
+CSRC_LIBC         += $(CSRC_LIBC-y)
 
 #
 # LIBCOV subsystem
