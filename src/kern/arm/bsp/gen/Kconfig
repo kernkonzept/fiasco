@@ -25,7 +25,7 @@ config PF_ARM_GEN_SELECT_ACPI
 config ARM_IOMMU_MAX
 	int "Maximum number of IOMMUs support" if PF_ARM_GEN_SELECT_SUPPORT
 	depends on IOMMU
-	default 16
+	default 32
 
 config PF_ARM_GEN_SELECT_GICV2
 	bool "Support GICv2" if PF_ARM_GEN_SELECT_SUPPORT
