@@ -47,9 +47,34 @@ Context *context_of(const void *ptr)
     (reinterpret_cast<unsigned long>(ptr) & ~(Context_base::Size - 1));
 }
 
+/**
+ * Get the current context.
+ *
+ * Derive the current context from the stack pointer. The exact value of the
+ * address is not important as it only needs to identify the stack of the
+ * current context.
+ *
+ * During context switch, all registers are either clobbered or saved and
+ * restored, ensuring the right value is derived in the new context.
+ *
+ * \return Current context.
+ */
 inline NEEDS [context_of, "processor.h"]
 Context *current()
-{ return context_of(reinterpret_cast<void *>(Proc::stack_pointer_for_context())); }
+{
+#if FIASCO_HAS_BUILTIN(__builtin_stack_address)
+  // Optimized version of the textbook approach of manually accessing the
+  // platform-specific stack pointer. Since the compiler understands the
+  // semantics of the intrinsic function used, the call can be possibly
+  // optimized out if not needed and the return value can be cached if
+  // used multiple times.
+  return context_of(__builtin_stack_address());
+#else
+  // Compatibility variant for compilers that do not provide the intrinsic
+  // function to read the stack pointer.
+  return context_of(reinterpret_cast<void *>(Proc::stack_pointer_for_context()));
+#endif
+}
 
 
 //---------------------------------------------------------------------------

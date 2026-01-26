@@ -42,6 +42,9 @@ public:
   /// restored, ensuring the right value in the new context. This optimized
   /// version allows the compiler to remove such a function call if the value is
   /// not needed.
+  ///
+  /// This can be completely removed once all supported compilers provide the
+  /// __builtin_stack_address() intrinsic function.
   static Mword stack_pointer_for_context();
 
   static Mword program_counter();
