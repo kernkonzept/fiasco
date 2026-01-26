@@ -12,7 +12,7 @@ class Jdb_kobject_name : public Jdb_kobject_extension
 {
 public:
   static char const *const static_type;
-  virtual char const *type() const override { return static_type; }
+  char const *type() const override { return static_type; }
 
   void operator delete (void *);
 
@@ -75,10 +75,7 @@ Jdb_kobject_name::name()
 { return _name; }
 
 class Jdb_name_hdl : public Jdb_kobject_handler
-{
-public:
-  virtual ~Jdb_name_hdl() {}
-};
+{};
 
 PRIVATE static
 void

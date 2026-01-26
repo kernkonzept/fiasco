@@ -69,7 +69,7 @@ Jdb_utcb::print(Thread *t, bool overlayprint)
     Jdb::line();
 }
 
-PUBLIC virtual
+PUBLIC
 Jdb_module::Action_code
 Jdb_utcb::action( int cmd, void *&, char const *&, int &) override
 {
@@ -112,8 +112,6 @@ class Jdb_kobject_utcb_hdl : public Jdb_kobject_handler
 public:
   bool show_kobject(Kobject_common *, int) override
   { return true; }
-
-  virtual ~Jdb_kobject_utcb_hdl() {}
 };
 
 PUBLIC static FIASCO_INIT

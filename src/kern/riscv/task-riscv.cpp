@@ -62,7 +62,7 @@ private:
 Vm::Gdir_alloc Vm::_gdir_alloc;
 
 PUBLIC virtual bool Task::is_vm() const { return false; }
-PUBLIC virtual bool Vm::is_vm() const override { return true; }
+PUBLIC bool Vm::is_vm() const override { return true; }
 
 PUBLIC static
 Vm *Vm::alloc(Ram_quota *q)

@@ -82,7 +82,7 @@ private:
 class Jdb_kobject_extension : public Kobject_dbg::Dbg_extension
 {
 public:
-  virtual ~Jdb_kobject_extension() {}
+  ~Jdb_kobject_extension() override {}
   virtual char const *type() const = 0;
 };
 
@@ -252,8 +252,7 @@ Jdb_kobject_list::Mode::Mode_list Jdb_kobject_list::Mode::modes;
 class Jdb_kobject_id_hdl : public Jdb_kobject_handler
 {
 public:
-  virtual bool show_kobject(Kobject_common *, int) override { return false; }
-  virtual ~Jdb_kobject_id_hdl() {}
+  bool show_kobject(Kobject_common *, int) override { return false; }
 };
 
 PUBLIC

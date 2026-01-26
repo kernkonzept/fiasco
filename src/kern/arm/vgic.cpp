@@ -267,7 +267,7 @@ protected:
   }
 
 public:
-  From_vgic_mode switch_from_vcpu(Arm_vgic *g) override final
+  From_vgic_mode switch_from_vcpu(Arm_vgic *g) final
   {
     auto hcr = self()->hcr();
     if (!hcr.en())
@@ -292,7 +292,7 @@ public:
     return From_vgic_mode::Enabled;
   }
 
-  void disable() override final
+  void disable() final
   {
     self()->disable_load_defaults();
     IMPL::vgic_barrier();

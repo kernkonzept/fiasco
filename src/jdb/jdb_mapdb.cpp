@@ -385,8 +385,6 @@ class Jdb_kobject_mapdb_hdl : public Jdb_kobject_handler
 public:
   bool show_kobject(Kobject_common *, int) override
   { return true; }
-
-  virtual ~Jdb_kobject_mapdb_hdl() {}
 };
 
 PUBLIC static FIASCO_INIT

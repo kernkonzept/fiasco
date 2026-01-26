@@ -71,7 +71,7 @@ PUBLIC explicit
 Thread_object::Thread_object(Ram_quota *q, Context_mode_kernel k)
 : Thread(q, k) {}
 
-PUBLIC virtual
+PUBLIC
 bool
 Thread_object::put() override
 { return dec_ref() == 0; }

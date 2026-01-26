@@ -35,7 +35,7 @@ IMPLEMENTATION:
 IMPLEMENT inline Ipc_sender_base::~Ipc_sender_base() {}
 
 PUBLIC template< typename Derived >
-virtual void
+void
 Ipc_sender<Derived>::ipc_receiver_aborted(Receiver *receiver) override
 {
   assert (wait_queue());
@@ -45,7 +45,7 @@ Ipc_sender<Derived>::ipc_receiver_aborted(Receiver *receiver) override
 }
 
 PUBLIC template< typename Derived >
-virtual void
+void
 Ipc_sender<Derived>::ipc_send_msg(Receiver *receiver, bool) override
 {
   sender_dequeue(receiver->sender_list());

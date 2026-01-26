@@ -153,7 +153,7 @@ Mru::attach(Irq_base *irq, Mword pin, bool init = true) override
 
 PUBLIC inline
 void
-Mru::mask(Mword pin) override final
+Mru::mask(Mword pin) final
 {
   Vmid_guard g;
 
@@ -164,7 +164,7 @@ Mru::mask(Mword pin) override final
 
 PUBLIC inline
 void
-Mru::unmask(Mword pin) override final
+Mru::unmask(Mword pin) final
 {
   Vmid_guard g;
 
@@ -175,7 +175,7 @@ Mru::unmask(Mword pin) override final
 
 PUBLIC inline
 void
-Mru::ack(Mword pin) override final
+Mru::ack(Mword pin) final
 {
   Vmid_guard g;
   unsigned reg = pin * Ch_offset + Ch_mbstat;

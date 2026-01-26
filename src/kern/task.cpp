@@ -100,7 +100,7 @@ void
 Task::cleanup_vcpu(Context *, Vcpu_state *)
 {}
 
-PUBLIC virtual
+PUBLIC
 bool
 Task::put() override
 { return dec_ref() == 0; }

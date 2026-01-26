@@ -261,7 +261,7 @@ Kmem_slab::~Kmem_slab() override
 // Callback functions called by our super class, Slab_cache, to
 // allocate or free blocks
 
-virtual void *
+void *
 Kmem_slab::block_alloc(unsigned long size, unsigned long) override
 {
   assert (size >= Buddy_alloc::Min_size);
@@ -270,7 +270,7 @@ Kmem_slab::block_alloc(unsigned long size, unsigned long) override
   return Kmem_alloc::allocator()->alloc(Bytes(size));
 }
 
-virtual void
+void
 Kmem_slab::block_free(void *block, unsigned long size) override
 {
   Kmem_alloc::allocator()->free(Bytes(size), block);

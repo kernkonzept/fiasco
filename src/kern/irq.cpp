@@ -672,7 +672,7 @@ Irq_sender::Irq_sender(Ram_quota *q)
 }
 
 PUBLIC
-Irq_sender::~Irq_sender()
+Irq_sender::~Irq_sender() override
 {
   assert(!_irq_thread);
   assert(!_drq.queued());

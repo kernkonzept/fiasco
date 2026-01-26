@@ -521,7 +521,7 @@ Jdb_tcb::at_jdb_enter()
 }
 
 
-PUBLIC virtual
+PUBLIC
 Kobject *
 Jdb_tcb::parent(Kobject_common *o) override
 {

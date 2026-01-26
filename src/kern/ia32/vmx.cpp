@@ -3030,7 +3030,7 @@ Vmx_vmcs::Vmx_vmcs(Ram_quota *quota, void *addr)
  *                deleted.
  * \retval false  The object is still referenced.
  */
-PUBLIC virtual
+PUBLIC
 bool
 Vmx_vmcs::put() override
 {

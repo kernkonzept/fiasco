@@ -191,7 +191,7 @@ Ipc_gate_obj::abort_all_unblocked()
     }
 }
 
-PUBLIC virtual
+PUBLIC
 void
 Ipc_gate_obj::initiate_deletion(Kobjects_list &reap_list) override
 {
@@ -203,7 +203,7 @@ Ipc_gate_obj::initiate_deletion(Kobjects_list &reap_list) override
   Kobject::initiate_deletion(reap_list);
 }
 
-PUBLIC virtual
+PUBLIC
 void
 Ipc_gate_obj::destroy(Kobjects_list &reap_list) override
 {
@@ -238,7 +238,7 @@ Ipc_gate_obj::put() override
 }
 
 PUBLIC
-Ipc_gate_obj::~Ipc_gate_obj()
+Ipc_gate_obj::~Ipc_gate_obj() override
 {
   assert(_wait_q.empty());
 }
