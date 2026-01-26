@@ -1,129 +1,78 @@
 INTERFACE [arm]:
 
 // preprocess off
-#define ATOMIC_OP(name, op)                                       \
-  template<typename T, typename V> inline                         \
-  void                                                            \
-  atomic_##name(T *mem, V value)                                  \
-  {                                                               \
-    static_assert(sizeof(T) == 4 || sizeof(T) == 8);              \
-    T val = value;                                                \
-    Mword tmp, ret;                                               \
-                                                                  \
-    asm volatile (                                                \
-        "1:                                 \n"                   \
-        "ldxr    %[tmp], %[mem]             \n"                   \
-        #op "    %[tmp], %[tmp], %[val]     \n"                   \
-        "stxr    %w[ret], %[tmp], %[mem]    \n"                   \
-        "cbnz    %w[ret], 1b                \n"                   \
-        : [tmp] "=&r" (tmp), [ret] "=&r" (ret), [mem] "+Q" (*mem) \
-        : [val] "r" (val)                                         \
-        : "cc");                                                  \
-  }
-ATOMIC_OP(and, and)
-ATOMIC_OP(or, orr)
-ATOMIC_OP(add, add)
-#undef ATOMIC_OP
-
-
-#define ATOMIC_FETCH_OP(name, op)                                              \
-  template<typename T, typename V> inline                                      \
-  T                                                                            \
-  atomic_fetch_##name(T *mem, V value)                                         \
+#define ATOMIC_OP_(name, op, size, pfx)                                        \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  void                                                                         \
+  atomic_##name(T *mem, V value)                                               \
   {                                                                            \
-    static_assert (sizeof(T) == 4 || sizeof(T) == 8,                           \
-                   "invalid size of operand (must be 4 or 8 byte)");           \
-    T val = value;                                                             \
-    T res, old;                                                                \
-    Mword tmp;                                                                 \
-                                                                               \
-    switch (sizeof(T))                                                         \
-      {                                                                        \
-      case 4:                                                                  \
-        asm (                                                                  \
-            "     prfm   pstl1strm, %[mem] \n"                                 \
-            "1:   ldxr  %w[old], %[mem] \n"                                    \
-            "   " #op "   %w[res], %w[old], %w[val] \n"                        \
-            "     stxr  %w[tmp], %w[res], %[mem] \n"                           \
-            "     cmp   %[tmp], #0 \n"                                         \
-            "     bne   1b "                                                   \
-            : [res] "=&r" (res), [old] "=&r" (old), [tmp] "=&r" (tmp),         \
-              [mem] "+Q" (*mem)                                                \
-            : [val] "r" (val)                                                  \
-            : "cc");                                                           \
-        return old;                                                            \
-                                                                               \
-      case 8:                                                                  \
-        asm (                                                                  \
-            "     prfm   pstl1strm, %[mem] \n"                                 \
-            "1:   ldxr   %[old], %[mem] \n"                                    \
-            "   " #op "    %[res], %[old], %[val] \n"                          \
-            "     stxr   %w[tmp], %[res], %[mem] \n"                           \
-            "     cmp    %[tmp], #0 \n"                                        \
-            "     bne    1b "                                                  \
-            : [res] "=&r" (res), [old] "=&r" (old), [tmp] "=&r" (tmp),         \
-              [mem] "+Q" (*mem)                                                \
-            : [val] "r" (val)                                                  \
-            : "cc");                                                           \
-        return old;                                                            \
-                                                                               \
-      default:                                                                 \
-        return T();                                                            \
-      }                                                                        \
-  }
-ATOMIC_FETCH_OP(and, and)
-ATOMIC_FETCH_OP(or, orr)
-ATOMIC_FETCH_OP(add, add)
-#undef ATOMIC_FETCH_OP
-
-
-#define ATOMIC_OP_FETCH(name, op)                                              \
-  template<typename T, typename V> inline                                      \
-  T                                                                            \
-  atomic_##name##_fetch(T *mem, V value)                                       \
-  {                                                                            \
-    static_assert (sizeof(T) == 4 || sizeof(T) == 8,                           \
-                   "invalid size of operand (must be 4 or 8 byte)");           \
     T val = value;                                                             \
     T res;                                                                     \
     Mword tmp;                                                                 \
                                                                                \
-    switch (sizeof(T))                                                         \
-      {                                                                        \
-      case 4:                                                                  \
-        asm (                                                                  \
-            "     prfm   pstl1strm, %[mem] \n"                                 \
-            "1:   ldxr  %w[res], %[mem] \n"                                    \
-            "   " #op "   %w[res], %w[res], %w[val] \n"                        \
-            "     stxr  %w[tmp], %w[res], %[mem] \n"                           \
-            "     cmp   %[tmp], #0 \n"                                         \
-            "     bne   1b "                                                   \
-            : [res] "=&r" (res), [tmp] "=&r" (tmp), [mem] "+Q" (*mem)          \
-            : [val] "r" (val)                                                  \
-            : "cc");                                                           \
-        return res;                                                            \
+    asm volatile (                                                             \
+        "     prfm  pstl1strm, %[mem] \n"                                      \
+        "1:   ldxr  %"#pfx"[res], %[mem] \n"                                   \
+        "   " #op " %"#pfx"[res], %"#pfx"[res], %"#pfx"[val] \n"               \
+        "     stxr  %w[tmp], %"#pfx"[res], %[mem] \n"                          \
+        "     cbnz  %w[tmp], 1b \n"                                            \
+        : [res] "=&r" (res), [tmp] "=&r" (tmp), [mem] "+Q" (*mem)              \
+        : [val] "r" (val)                                                      \
+        : "cc");                                                               \
+  }                                                                            \
                                                                                \
-      case 8:                                                                  \
-        asm (                                                                  \
-            "     prfm   pstl1strm, %[mem] \n"                                 \
-            "1:   ldxr   %[res], %[mem] \n"                                    \
-            "   " #op "    %[res], %[res], %[val] \n"                          \
-            "     stxr   %w[tmp], %[res], %[mem] \n"                           \
-            "     cmp    %[tmp], #0 \n"                                        \
-            "     bne    1b "                                                  \
-            : [res] "=&r" (res), [tmp] "=&r" (tmp), [mem] "+Q" (*mem)          \
-            : [val] "r" (val)                                                  \
-            : "cc");                                                           \
-        return res;                                                            \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  T                                                                            \
+  atomic_fetch_##name(T *mem, V value)                                         \
+  {                                                                            \
+    T val = value;                                                             \
+    T res, old;                                                                \
+    Mword tmp;                                                                 \
                                                                                \
-      default:                                                                 \
-        return T();                                                            \
-      }                                                                        \
+    asm (                                                                      \
+        "     prfm  pstl1strm, %[mem] \n"                                      \
+        "1:   ldxr  %"#pfx"[old], %[mem] \n"                                   \
+        "   " #op " %"#pfx"[res], %"#pfx"[old], %"#pfx"[val] \n"               \
+        "     stxr  %w[tmp], %"#pfx"[res], %[mem] \n"                          \
+        "     cbnz  %w[tmp], 1b \n"                                            \
+        : [res] "=&r" (res), [old] "=&r" (old), [tmp] "=&r" (tmp),             \
+          [mem] "+Q" (*mem)                                                    \
+        : [val] "r" (val)                                                      \
+        : "cc");                                                               \
+    return old;                                                                \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  T                                                                            \
+  atomic_##name##_fetch(T *mem, V value)                                       \
+  {                                                                            \
+    T val = value;                                                             \
+    T res;                                                                     \
+    Mword tmp;                                                                 \
+                                                                               \
+    asm (                                                                      \
+        "     prfm  pstl1strm, %[mem] \n"                                      \
+        "1:   ldxr  %"#pfx"[res], %[mem] \n"                                   \
+        "   " #op " %"#pfx"[res], %"#pfx"[res], %"#pfx"[val] \n"               \
+        "     stxr  %w[tmp], %"#pfx"[res], %[mem] \n"                          \
+        "     cbnz  %w[tmp], 1b \n"                                            \
+        : [res] "=&r" (res), [tmp] "=&r" (tmp), [mem] "+Q" (*mem)              \
+        : [val] "r" (val)                                                      \
+        : "cc");                                                               \
+    return res;                                                                \
   }
-ATOMIC_OP_FETCH(and, and)
-ATOMIC_OP_FETCH(or, orr)
-ATOMIC_OP_FETCH(add, add)
-#undef ATOMIC_OP_FETCH
+#define ATOMIC_OP(name, op)  \
+  ATOMIC_OP_(name, op, 4, w) \
+  ATOMIC_OP_(name, op, 8, x)
+
+ATOMIC_OP(and, and)
+ATOMIC_OP(or, orr)
+ATOMIC_OP(add, add)
+#undef ATOMIC_OP_
+#undef ATOMIC_OP
 // preprocess on
 
 //----------------------------------------------------------------------------
