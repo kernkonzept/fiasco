@@ -20,9 +20,9 @@ constexpr bool is_enabled(Warn_level level)
 }
 
 #define WARNX(level, ...) \
-  do {							\
-       if (Warn::is_enabled(level))			\
-	 printf("\n\033[31mKERNEL\033[m: Warning: " __VA_ARGS__);	\
+  do {                                                            \
+       if constexpr (Warn::is_enabled(level))                     \
+         printf("\n\033[31mKERNEL\033[m: Warning: " __VA_ARGS__); \
      } while (0)
 
 #define WARN(...) WARNX(Warning, __VA_ARGS__)

@@ -157,7 +157,7 @@ void
 Gic_dist::igroup_init(V2, unsigned num)
 {
   Mword v = 0;
-  if (Config_tz_sec || Config_mxc_tzic)
+  if constexpr (Config_tz_sec || Config_mxc_tzic)
     v = 0xffffffff;
 
   for (unsigned i = 32; i < num; i += 32)
@@ -169,7 +169,7 @@ void
 Gic_dist::enable(V2)
 {
   Unsigned32 dist_enable = GICD_CTRL_ENABLE;
-  if (Config_mxc_tzic && !Config_tz_sec)
+  if constexpr (Config_mxc_tzic && !Config_tz_sec)
     dist_enable |= MXC_TZIC_CTRL_NSEN | MXC_TZIC_CTRL_NSENMASK;
 
   _dist.write<Unsigned32>(dist_enable, GICD_CTRL);
@@ -181,11 +181,11 @@ Gic_dist::cpu_init_v2()
 {
   Mword sec_irqs;
 
-  if (Config_tz_sec)
+  if constexpr (Config_tz_sec)
     sec_irqs = 0x00000f00;
 
   _dist.write<Unsigned32>(0xffffffff, GICD_ICENABLER);
-  if (Config_tz_sec)
+  if constexpr (Config_tz_sec)
     {
       _dist.write<Unsigned32>(0x00000f00, GICD_ISENABLER);
       _dist.write<Unsigned32>(~sec_irqs, GICD_IGROUPR);
@@ -207,7 +207,7 @@ Gic_dist::cpu_init_v2()
   for (unsigned g = 0; g < 32; g += 4)
     {
       Mword v = 0;
-      if (Config_tz_sec)
+      if constexpr (Config_tz_sec)
         {
           unsigned b = (sec_irqs >> g) & 0xf;
 
@@ -487,7 +487,7 @@ Gic_dist::init(VERSION, unsigned cpu_prio, int nr_pins_override = -1)
   if (nr_pins_override >= 0)
     num = static_cast<unsigned>(nr_pins_override);
 
-  if (!Config_mxc_tzic)
+  if constexpr (!Config_mxc_tzic)
     {
       for (unsigned i = 32; i < num; i += 16)
         _dist.write<Unsigned32>(0, GICD_ICFGR + i * 4 / 16);
@@ -503,7 +503,7 @@ Gic_dist::init(VERSION, unsigned cpu_prio, int nr_pins_override = -1)
   // must be enabled before interrupt affinities (targets) can be assigned.
   init_targets(num, VERSION());
 
-  if (Config_mxc_tzic)
+  if constexpr (Config_mxc_tzic)
     {
       _dist.write<Unsigned32>(0x0, MXC_TZIC_SYNCCTRL);
       _dist.write<Unsigned32>(cpu_prio, MXC_TZIC_PRIOMASK);

@@ -289,10 +289,8 @@ PUBLIC inline NEEDS ["config.h", Timeout_q::program_timer]
 void
 Timeout_q::update_timer(Unsigned64 max_timeout, Timeout const *ignore = nullptr)
 {
-  if constexpr (!Config::Scheduler_one_shot)
-    return;
-
-  program_timer(next_timeout(max_timeout, ignore));
+  if constexpr (Config::Scheduler_one_shot)
+    program_timer(next_timeout(max_timeout, ignore));
 }
 
 /**

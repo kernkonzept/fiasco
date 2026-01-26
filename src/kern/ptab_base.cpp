@@ -139,7 +139,7 @@ namespace Ptab
 
     static unsigned idx(Address virt)
     {
-      if (Mask)
+      if constexpr (Mask)
 	return cxx::get_lsb(virt >> Shift, Address{Size});
       else
 	return (virt >> Shift);

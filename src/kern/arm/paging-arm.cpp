@@ -345,13 +345,14 @@ public:
     if (attr.rights & Page::Rights::U())
       lower |= 0x040;
 
-    if (ATTRIBS::Priv_levels == 1)
+    if constexpr (ATTRIBS::Priv_levels == 1)
       lower |= 0x040; // the bit is RES1
 
-    if (ATTRIBS::Priv_levels == 2 && !(attr.rights & Page::Rights::U()))
+    if constexpr (ATTRIBS::Priv_levels == 2)
       {
         // Make kernel mappings never executable by userspace
-        lower |= ATTRIBS::UXN;
+        if (!(attr.rights & Page::Rights::U()))
+          lower |= ATTRIBS::UXN;
       }
 
     if (!(attr.rights & Page::Rights::X()))
@@ -367,7 +368,7 @@ public:
     Page::Rights rights = Page::Rights::R();
     if (!(c & 0x80))
       rights |= Page::Rights::W();
-    if (ATTRIBS::Priv_levels == 2)
+    if constexpr (ATTRIBS::Priv_levels == 2)
       {
         if (c & 0x40)
           rights |= Page::Rights::U();
