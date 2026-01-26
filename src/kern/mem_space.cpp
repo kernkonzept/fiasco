@@ -622,32 +622,6 @@ Address
 Mem_space::pmem_to_phys(Address virt) const
 { return Mem_layout::pmem_to_phys(virt); }
 
-IMPLEMENT inline NEEDS["cpu_call.h"]
-void
-Mem_space::tlb_flush_all_cpus()
-{
-  if constexpr (!Mem_space::Need_xcpu_tlb_flush)
-    return tlb_flush_current_cpu();
-
-  if (tlb_type() == Mem_space::Tlb_iommu)
-    return tlb_flush_current_cpu();
-
-  // To prevent a race condition that could potentially lead to the use of
-  // outdated page table entries on other cores, we have to execute a memory
-  // barrier that ensures that our PTE changes are visible to all other cores,
-  // before we access tlb_active_on_cpu(). Otherwise, if the Mem_space gets
-  // active on another core, shortly after we read tlb_active_on_cpu() where it
-  // was reported as non-active, we won't send a TLB flush to the other core,
-  // but it might not yet see our PTE changes.
-  Mem_space::sync_read_tlb_active_on_cpu();
-
-  Cpu_call::cpu_call_many(tlb_active_on_cpu(), [this](Cpu_number)
-    {
-      tlb_flush_current_cpu();
-      return false;
-    });
-}
-
 IMPLEMENT_DEFAULT static inline
 void
 Mem_space::reload_current()
@@ -665,6 +639,11 @@ Mem_space::max_usable_user_address()
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [!need_xcpu_tlb_flush]:
+
+IMPLEMENT inline
+void
+Mem_space::tlb_flush_all_cpus()
+{ tlb_flush_current_cpu(); }
 
 PUBLIC static inline
 void
@@ -690,6 +669,29 @@ Mem_space::tlb_track_space_usage()
 IMPLEMENTATION [need_xcpu_tlb_flush]:
 
 Cpu_mask Mem_space::_tlb_active;
+
+IMPLEMENT inline NEEDS["cpu_call.h"]
+void
+Mem_space::tlb_flush_all_cpus()
+{
+  if (tlb_type() == Mem_space::Tlb_iommu)
+    return tlb_flush_current_cpu();
+
+  // To prevent a race condition that could potentially lead to the use of
+  // outdated page table entries on other cores, we have to execute a memory
+  // barrier that ensures that our PTE changes are visible to all other cores,
+  // before we access tlb_active_on_cpu(). Otherwise, if the Mem_space gets
+  // active on another core, shortly after we read tlb_active_on_cpu() where it
+  // was reported as non-active, we won't send a TLB flush to the other core,
+  // but it might not yet see our PTE changes.
+  Mem_space::sync_read_tlb_active_on_cpu();
+
+  Cpu_call::cpu_call_many(tlb_active_on_cpu(), [this](Cpu_number)
+    {
+      tlb_flush_current_cpu();
+      return false;
+    });
+}
 
 PUBLIC static inline
 Cpu_mask const &
