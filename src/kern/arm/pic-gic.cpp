@@ -234,6 +234,8 @@ PRIVATE static inline bool Pic::init_dt_gicv3() { return false; }
 // ------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && dt]:
 
+#include "panic.h"
+
 PRIVATE static FIASCO_INIT
 void
 Pic::init_dt()
