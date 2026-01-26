@@ -14,7 +14,6 @@ public:
   char const *type() const override { return static_type; }
 
   Jdb_space_image_info(Mword base, char const *name, int size);
-  ~Jdb_space_image_info() {}
 
   void operator delete (void *);
 

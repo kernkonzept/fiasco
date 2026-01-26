@@ -13,9 +13,6 @@ class Filter_console : public Console
 {
   friend struct Console_test;
 
-public:
-  ~Filter_console() {}
-
 private:
   Console *const _o;
   /**

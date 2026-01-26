@@ -734,7 +734,7 @@ Task::map_all_segs(Mem_desc::Mem_type)
 {}
 
 PUBLIC inline
-Task::~Task()
+Task::~Task() override
 {
   // Task, and thus also its page table, is no longer used anywhere at this
   // point, so no not necessary to flush the freed kernel user memory mappings

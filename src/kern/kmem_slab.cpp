@@ -242,7 +242,7 @@ Kmem_slab::Kmem_slab(unsigned elem_size,
 }
 
 PUBLIC
-Kmem_slab::~Kmem_slab()
+Kmem_slab::~Kmem_slab() override
 {
   // Only for here to be able to destroy Kmem_slab objects during unit tests.
   // Other than that, Kmem_slab objects must never be destroyed!

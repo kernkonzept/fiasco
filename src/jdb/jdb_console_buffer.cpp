@@ -89,7 +89,7 @@ Console_buffer::alloc(size_t size)
 }
 
 PUBLIC
-Console_buffer::~Console_buffer()
+Console_buffer::~Console_buffer() override
 {
   if(out_buf)
     Kmem_alloc::allocator()->free(Bytes(out_buf_size), out_buf);

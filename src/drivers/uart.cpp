@@ -48,9 +48,6 @@ public:
   /// ctor
   Uart();
 
-  /// dtor
-  ~Uart();
-
   /**
    * (abstract) Shutdown the serial port.
    */
@@ -175,9 +172,6 @@ public:
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [libuart]:
-
-IMPLEMENT inline Uart::~Uart()
-{}
 
 IMPLEMENT inline void Uart::shutdown()
 {

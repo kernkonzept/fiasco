@@ -14,8 +14,6 @@ public:
   static char const *const static_type;
   virtual char const *type() const override { return static_type; }
 
-  ~Jdb_kobject_name() {}
-
   void operator delete (void *);
 
 private:

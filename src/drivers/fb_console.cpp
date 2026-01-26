@@ -24,7 +24,6 @@ public:
              Unsigned8 bytes_per_pixel,
              bool light_white = false, bool use_color = false);
 
-  ~Fb_console();
   int write(char const *str, size_t len) override;
 
   int getchar(bool blocking = true) override;
@@ -836,10 +835,6 @@ int Fb_console::getchar(bool)
   blink_cursor(_x, _y);
   return -1;
 }
-
-IMPLEMENT
-Fb_console::~Fb_console()
-{}
 
 IMPLEMENT inline
 bool Fb_console::is_working()
