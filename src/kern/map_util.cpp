@@ -77,7 +77,7 @@ private:
     {
       Flush_store<4>::add_space(space);
 
-      if (Mem_space::Need_xcpu_tlb_flush && all)
+      if constexpr (Mem_space::Need_xcpu_tlb_flush)
         {
           // When we run out of spaces, we have to record the affected CPUs
           // directly, which depending on the architecture requires an expensive
@@ -89,8 +89,11 @@ private:
           // Otherwise it is not possible to safely partition the system,
           // because for example one partition could influence the other
           // partition by causing TLB flush induced IPI storms.
-          Mem_space::sync_read_tlb_active_on_cpu();
-          _all_affected_cpus |= space->tlb_active_on_cpu();
+          if (all)
+            {
+              Mem_space::sync_read_tlb_active_on_cpu();
+              _all_affected_cpus |= space->tlb_active_on_cpu();
+            }
         }
     }
 
@@ -163,7 +166,7 @@ private:
     if (_cpu_tlb.empty)
       return;
 
-    if (Mem_space::Need_xcpu_tlb_flush)
+    if constexpr (Mem_space::Need_xcpu_tlb_flush)
       {
         // To prevent a race condition that could potentially lead to the use of
         // outdated page table entries on other cores, we have to execute a
