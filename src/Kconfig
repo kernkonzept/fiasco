@@ -648,6 +648,7 @@ config SERIAL
 	bool "Support for debugging over serial line" if HAS_SERIAL_OPTION
 	depends on HAS_SERIAL_OPTION
 	default y if HAS_SERIAL_OPTION
+	select OUTPUT
 	help
 	  This option enables support for input/output over serial interface.
 
@@ -698,12 +699,16 @@ config INPUT
 	  Enable input specific code in the kernel. Disable this option if you
 	  do not require input support.
 
+config OUTPUT
+	bool
+
 menuconfig JDB
 	bool "JDB kernel debugger"
 	default y
 	select RT_DBG
 	select INPUT
 	depends on !AMP
+	depends on OUTPUT
 	help
 	  The powerful Fiasco kernel debugger.
 
@@ -810,6 +815,7 @@ config UART_CHECKSUM
 config FB_CONSOLE
 	bool "Enable kernel framebuffer console"
 	depends on IA32 || AMD64 || ARM || ARM64
+	select OUTPUT
 	help
 	  This enables the kernel framebuffer console and, if a framebuffer
 	  is available, will output kernel messages.
