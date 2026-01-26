@@ -34,7 +34,7 @@ INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
                            obj_space_types obj_space_phys_util \
 			   ready_queue_fp obj_space ptab_base ram_quota      \
 			   ref_obj mem_space space \
-			   vlog kmem kmem_alloc kmem_mmio slab_cache         \
+			   kmem kmem_alloc kmem_mmio slab_cache         \
 			   mem_layout kmem_slab switch_lock kip_init         \
 			   helping_lock cpu_lock timer timeout   \
 			   ipc_timeout timeslice_timeout per_cpu_data_alloc  \
@@ -55,6 +55,8 @@ INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
 			   clock sys_call_page boot_alloc                    \
 			   semaphore jdb_object tlbs amp_node global_data    \
 			   observer_irq dt
+
+INTERFACES_KERNEL-$(or $(CONFIG_OUTPUT),$(CONFIG_INPUT)) += vlog
 
 OBJ_SPACE_TYPE = $(if $(CONFIG_VIRT_OBJ_SPACE),virt,phys)
 PREPROCESS_PARTS-y$(CONFIG_VIRT_OBJ_SPACE) += obj_space_phys
