@@ -252,19 +252,28 @@ public:
     void set(User_ptr<T> const &u, T *k)
     { _u = u; _k = k; }
 
-    T *access(bool is_current = false) const
+    T *access(bool = false) const
+    requires (int{Config::Access_user_mem} == Config::No_access_user_mem)
     {
-      // assert (!is_current || current() == context());
-      if (is_current
-          && int{Config::Access_user_mem} == Config::Access_user_mem_direct)
-        return _u.get();
+      return _k;
+    }
 
+    T *access(bool is_current = false) const
+    requires (int{Config::Access_user_mem} == Config::Access_user_mem_direct)
+    {
+      return is_current ? _u.get() : _k;
+    }
+
+    T *access(bool = false) const
+    requires (int{Config::Access_user_mem} == Config::Must_access_user_mem_direct)
+    {
       Cpu_number const cpu = current_cpu();
-      if (int{Config::Access_user_mem} == Config::Must_access_user_mem_direct
-          && cpu == context()->home_cpu()
+
+      if (cpu == context()->home_cpu()
           && Mem_space::current_mem_space(cpu) == context()->space())
         return _u.get();
-      return _k;
+      else
+        return _k;
     }
 
     User_ptr<T> usr() const { return _u; }
