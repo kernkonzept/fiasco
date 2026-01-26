@@ -759,7 +759,20 @@ sub parse_file
 	    {
 	      next NEXTLINE;
 	    }
-	  
+
+          if (/^$s\/\/\s*preprocess off\s*\n/s)
+            {
+              if (/^$s\/\/\s*preprocess off\s*\n.*?\/\/\s*preprocess on\s*$/s)
+                {
+                  handle_source_code ();
+                  next NEXTLINE;
+                }
+              else
+                {
+                  next MORE;
+                }
+            }
+
 	  # Preprocessor directive?
 	  if (/^$s\#/s)
 	    {
@@ -1126,7 +1139,7 @@ sub read_more ()	# Read one more line of code. Stow away
 	  s/\003/$saved/s;
 	}
 
-      while (s|(//(?!-\s*\n).*\n)|\001$number\001|m) # Do not match magic "//-"
+      while (s,(//(?!(-\s*\n|\s*preprocess (off\s*\n|on\s*$))).*\n),\001$number\001,m) # Do not match magic "//-" and "// preprocess off/on"
 	{			# The \001 signifies whitespace.
 	  push @comments, $1;
 	  $number++;
@@ -1137,7 +1150,10 @@ sub read_more ()	# Read one more line of code. Stow away
 	  push @comments, $1;
 	  $number++;
 	}
-      
+
+      # Return if line does not contain an unfinished block comment.
+      # Otherwise continue reading from input until the corresponding
+      # closing tag is found.
       if (! /\/\*/)
 	{
 	  last;
