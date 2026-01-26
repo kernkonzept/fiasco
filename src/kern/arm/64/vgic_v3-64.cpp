@@ -105,65 +105,34 @@ Gic_h_v3::load_aprs(Unsigned32 const *a)
 }
 
 PUBLIC static inline ALWAYS_INLINE void
-Gic_h_v3::read_lr(Unsigned64 *a, unsigned crm, unsigned opc2)
-{
-  asm volatile ("mrs %x0, S3_4_C12_c%1_%2" : "=r"(*a) : "i"(crm), "i"(opc2));
-}
-
-PUBLIC static inline ALWAYS_INLINE void
 Gic_h_v3::write_lr(Unsigned64 a, unsigned crm, unsigned opc2)
 {
   asm volatile ("msr S3_4_C12_c%1_%2, %x0" :: "r"(a), "i"(crm), "i"(opc2));
 }
 
-PUBLIC inline ALWAYS_INLINE void
+PUBLIC inline ALWAYS_INLINE
+template<int I = 0> void
 Gic_h_v3::save_lrs(Gic_h::Arm_vgic::Lrs *lr)
 {
-#define TRANSFER_LR(i) \
-  read_lr(lr->lr64 + i, 12 + i / 8, i % 8); \
-  if constexpr (Gic_h::Arm_vgic::N_lregs <= i + 1) return
-  TRANSFER_LR(0);
-  TRANSFER_LR(1);
-  TRANSFER_LR(2);
-  TRANSFER_LR(3);
-  TRANSFER_LR(4);
-  TRANSFER_LR(5);
-  TRANSFER_LR(6);
-  TRANSFER_LR(7);
-  TRANSFER_LR(8);
-  TRANSFER_LR(9);
-  TRANSFER_LR(10);
-  TRANSFER_LR(11);
-  TRANSFER_LR(12);
-  TRANSFER_LR(13);
-  TRANSFER_LR(14);
-  TRANSFER_LR(15);
-#undef TRANSFER_LR
+  if constexpr (Gic_h::Arm_vgic::N_lregs > I)
+    {
+      asm volatile ("mrs %x0, S3_4_C12_c%1_%2" : "=r"(*(lr->lr64 + I))
+                                               : "i"(12 + I / 8), "i"( I % 8));
+      save_lrs<I + 1>(lr);
+    }
 }
 
-PUBLIC inline ALWAYS_INLINE void
+PUBLIC inline ALWAYS_INLINE
+template<int I = 0> void
 Gic_h_v3::load_lrs(Gic_h::Arm_vgic::Lrs const *lr)
 {
-#define TRANSFER_LR(i) \
-  write_lr(lr->lr64[i], 12 + i / 8, i % 8); \
-  if constexpr (Gic_h::Arm_vgic::N_lregs <= i + 1) return
-  TRANSFER_LR(0);
-  TRANSFER_LR(1);
-  TRANSFER_LR(2);
-  TRANSFER_LR(3);
-  TRANSFER_LR(4);
-  TRANSFER_LR(5);
-  TRANSFER_LR(6);
-  TRANSFER_LR(7);
-  TRANSFER_LR(8);
-  TRANSFER_LR(9);
-  TRANSFER_LR(10);
-  TRANSFER_LR(11);
-  TRANSFER_LR(12);
-  TRANSFER_LR(13);
-  TRANSFER_LR(14);
-  TRANSFER_LR(15);
-#undef TRANSFER_LR
+  if constexpr (Gic_h::Arm_vgic::N_lregs > I)
+    {
+      asm volatile ("msr S3_4_C12_c%1_%2, %x0" :: "r"(lr->lr64[I]),
+                                                  "i"(12 + I / 8),
+                                                  "i"(I % 8));
+      load_lrs<I + 1>(lr);
+    }
 }
 
 PUBLIC inline void
