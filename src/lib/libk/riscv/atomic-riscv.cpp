@@ -1,148 +1,83 @@
+INTERFACE [riscv]:
+
+// preprocess off
+#define ATOMIC_OP(name, op, rettype, retval)         \
+  template<typename T, typename V> inline            \
+  rettype                                            \
+  atomic_##name(T *l, V value)                       \
+  {                                                  \
+    static_assert(sizeof(T) == 4 || sizeof(T) == 8); \
+    T val = value;                                   \
+    T prev;                                          \
+                                                     \
+    switch (sizeof(T))                               \
+      {                                              \
+      case 4:                                        \
+        __asm__ __volatile__ (                       \
+          "amo" #op ".w %[prev], %[mask], %[l]"      \
+          : [prev]"=r" (prev), [l]"+A"(*l)           \
+          : [mask]"r" (val)                          \
+          : "memory");                               \
+        return retval;                               \
+                                                     \
+      case 8:                                        \
+        __asm__ __volatile__ (                       \
+          "amo" #op ".d %[prev], %[mask], %[l]"      \
+          : [prev]"=r" (prev), [l]"+A"(*l)           \
+          : [mask]"r" (val)                          \
+          : "memory");                               \
+        return retval;                               \
+      }                                              \
+  }
+ATOMIC_OP(or, or, void,)
+ATOMIC_OP(and, and, void,)
+ATOMIC_OP(add, add, void,)
+ATOMIC_OP(fetch_or, or, T, prev)
+ATOMIC_OP(fetch_and, and, T, prev)
+ATOMIC_OP(fetch_add, add, T, prev)
+ATOMIC_OP(exchange, swap, T, prev)
+#undef ATOMIC_OP
+
+#define ATOMIC_OP_FETCH(name, op)                    \
+  template<typename T, typename V> inline            \
+  T                                                  \
+  atomic_##name(T *mem, V value)                     \
+  {                                                  \
+    static_assert(sizeof(T) == 4 || sizeof(T) == 8); \
+    T val = value;                                   \
+    T res;                                           \
+                                                     \
+    switch (sizeof(T))                               \
+      {                                              \
+      case 4:                                        \
+        __asm__ __volatile__ (                       \
+          "amo" #op ".w %[res], %[val], %[mem] \n"   \
+          #op "         %[res], %[res], %[val] \n"   \
+          : [res]"=&r" (res), [mem]"+A"(*mem)        \
+          : [val]"r" (val)                           \
+          : "memory");                               \
+        return res;                                  \
+                                                     \
+      case 8:                                        \
+        __asm__ __volatile__ (                       \
+          "amo" #op ".d %[res], %[val], %[mem] \n"   \
+          #op "         %[res], %[res], %[val] \n"   \
+          : [res]"=&r" (res), [mem]"+A"(*mem)        \
+          : [val]"r" (val)                           \
+          : "memory");                               \
+        return res;                                  \
+      }                                              \
+  }
+ATOMIC_OP_FETCH(or_fetch, or)
+ATOMIC_OP_FETCH(and_fetch, and)
+ATOMIC_OP_FETCH(add_fetch, add)
+#undef ATOMIC_OP_FETCH
+// preprocess on
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:
 
 #include "asm_riscv.h"
-
-template<typename T, typename V>
-Mword
-atomic_and(T *l, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T val = value;
-  T prev;
-
-  switch (sizeof(T))
-    {
-    case 4:
-      __asm__ __volatile__ (
-        "amoand.w %[prev], %[mask], %[l]"
-        : [prev]"=r" (prev), [l]"+A"(*l)
-        : [mask]"r" (val)
-        : "memory");
-      return prev;
-
-    case 8:
-      __asm__ __volatile__ (
-        "amoand.d %[prev], %[mask], %[l]"
-        : [prev]"=r" (prev), [l]"+A"(*l)
-        : [mask]"r" (val)
-        : "memory");
-      return prev;
-    }
-}
-
-template<typename T, typename V> inline
-Mword
-atomic_or(T *l, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T val = value;
-  T prev;
-
-  switch (sizeof(T))
-    {
-    case 4:
-      __asm__ __volatile__ (
-        "amoor.w %[prev], %[bits], %[l]"
-        : [prev]"=r" (prev), [l]"+A"(*l)
-        : [bits]"r" (val)
-        : "memory");
-      return prev;
-
-    case 8:
-      __asm__ __volatile__ (
-        "amoor.d %[prev], %[bits], %[l]"
-        : [prev]"=r" (prev), [l]"+A"(*l)
-        : [bits]"r" (val)
-        : "memory");
-      return prev;
-    }
-}
-
-template<typename T, typename V> inline
-Mword
-atomic_add(T *l, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T val = value;
-  T prev;
-
-  switch (sizeof(T))
-    {
-    case 4:
-      __asm__ __volatile__ (
-        "amoadd.w %[prev], %[value], %[l]"
-        : [prev]"=r" (prev), [l]"+A"(*l)
-        : [value]"r" (val)
-        : "memory");
-      return prev;
-
-    case 8:
-      __asm__ __volatile__ (
-        "amoadd.d %[prev], %[value], %[l]"
-        : [prev]"=r" (prev), [l]"+A"(*l)
-        : [value]"r" (val)
-        : "memory");
-      return prev;
-    }
-}
-
-template<typename T, typename V> inline
-T
-atomic_exchange(T *mem, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T val = value;
-  T res;
-
-  switch (sizeof(T))
-    {
-    case 4:
-      __asm__ __volatile__ (
-        "amoswap.w %[res], %[val], %[mem]"
-        : [res]"=r" (res), [mem]"+A"(*mem)
-        : [val]"r" (val)
-        : "memory");
-      return res;
-
-    case 8:
-      __asm__ __volatile__ (
-        "amoswap.d %[res], %[val], %[mem]"
-        : [res]"=r" (res), [mem]"+A"(*mem)
-        : [val]"r" (val)
-        : "memory");
-      return res;
-    }
-}
-
-template<typename T, typename V> inline
-T
-atomic_add_fetch(T *mem, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T val = value;
-  T res;
-
-  switch (sizeof(T))
-    {
-    case 4:
-      __asm__ __volatile__ (
-        "amoadd.w %[res], %[val], %[mem] \n"
-        "add      %[res], %[res], %[val] \n"
-        : [res]"=&r" (res), [mem]"+A"(*mem)
-        : [val]"r" (val)
-        : "memory");
-      return res;
-
-    case 8:
-      __asm__ __volatile__ (
-        "amoadd.d %[res], %[val], %[mem] \n"
-        "add      %[res], %[res], %[val] \n"
-        : [res]"=&r" (res), [mem]"+A"(*mem)
-        : [val]"r" (val)
-        : "memory");
-      return res;
-    }
-}
 
 template<typename T> ALWAYS_INLINE inline
 T
@@ -181,24 +116,24 @@ atomic_store(T *mem, V value)
 }
 
 inline
-Mword
-local_atomic_and(Mword *l, Mword mask)
+void
+local_atomic_and(Mword *mem, Mword mask)
 {
-  return atomic_and(l, mask);
+  atomic_and(mem, mask);
 }
 
 inline
-Mword
-local_atomic_or(Mword *l, Mword bits)
+void
+local_atomic_or(Mword *mem, Mword bits)
 {
-  return atomic_or(l, bits);
+  atomic_or(mem, bits);
 }
 
 inline
-Mword
-local_atomic_add(Mword *l, Mword value)
+void
+local_atomic_add(Mword *mem, Mword value)
 {
-  return atomic_add(l, value);
+  atomic_add(mem, value);
 }
 
 // ``unsafe'' stands for no safety according to the size of the given type.

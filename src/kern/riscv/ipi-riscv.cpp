@@ -19,7 +19,7 @@ public:
 private:
   bool atomic_set(Message m)
   {
-    return !(atomic_or(&_rq, m) & m);
+    return !(atomic_fetch_or(&_rq, m) & m);
   }
 
 private:
