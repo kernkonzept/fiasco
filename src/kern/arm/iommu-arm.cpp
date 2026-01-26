@@ -132,8 +132,13 @@ Iommu::init_platform_dt()
   i = 0;
   Dt::nodes_by_compatible("arm,smmu-v3", [&](Dt::Node n)
     {
-      int eventq_irq = Dt::get_arm_gic_irq(n, "eventq");
-      int gerror_irq = Dt::get_arm_gic_irq(n, "gerror");
+      unsigned eventq_irq = Dt::get_arm_gic_irq(n, "eventq");
+      unsigned gerror_irq = Dt::get_arm_gic_irq(n, "gerror");
+
+      if (eventq_irq == ~0u) // Event logging is optional
+        eventq_irq = 0;
+      if (gerror_irq == ~0u) // We want error reporting
+        return;
 
       uint64_t base, size;
       bool ret = n.get_reg(0, &base, &size);
