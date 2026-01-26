@@ -1,76 +1,87 @@
 INTERFACE [riscv]:
 
 // preprocess off
-#define ATOMIC_OP(name, op, rettype, retval)         \
-  template<typename T, typename V> inline            \
-  rettype                                            \
-  atomic_##name(T *l, V value)                       \
-  {                                                  \
-    static_assert(sizeof(T) == 4 || sizeof(T) == 8); \
-    T val = value;                                   \
-    T prev;                                          \
-                                                     \
-    switch (sizeof(T))                               \
-      {                                              \
-      case 4:                                        \
-        __asm__ __volatile__ (                       \
-          "amo" #op ".w %[prev], %[mask], %[l]"      \
-          : [prev]"=r" (prev), [l]"+A"(*l)           \
-          : [mask]"r" (val)                          \
-          : "memory");                               \
-        return retval;                               \
-                                                     \
-      case 8:                                        \
-        __asm__ __volatile__ (                       \
-          "amo" #op ".d %[prev], %[mask], %[l]"      \
-          : [prev]"=r" (prev), [l]"+A"(*l)           \
-          : [mask]"r" (val)                          \
-          : "memory");                               \
-        return retval;                               \
-      }                                              \
+#define ATOMIC_OP_(op, size, suffix)                                           \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  void                                                                         \
+  atomic_##op(T *mem, V value)                                                 \
+  {                                                                            \
+    T val = value;                                                             \
+    T prev;                                                                    \
+                                                                               \
+    __asm__ __volatile__ (                                                     \
+      "amo" #op "." #suffix " %[prev], %[mask], %[mem]"                        \
+      : [prev]"=r" (prev), [mem]"+A"(*mem)                                     \
+      : [mask]"r" (val)                                                        \
+      : "memory");                                                             \
   }
-ATOMIC_OP(or, or, void,)
-ATOMIC_OP(and, and, void,)
-ATOMIC_OP(add, add, void,)
-ATOMIC_OP(fetch_or, or, T, prev)
-ATOMIC_OP(fetch_and, and, T, prev)
-ATOMIC_OP(fetch_add, add, T, prev)
-ATOMIC_OP(exchange, swap, T, prev)
+#define ATOMIC_OP(op)  \
+  ATOMIC_OP_(op, 4, w) \
+  ATOMIC_OP_(op, 8, d)
+
+ATOMIC_OP(or)
+ATOMIC_OP(and)
+ATOMIC_OP(add)
+#undef ATOMIC_OP_
 #undef ATOMIC_OP
 
-#define ATOMIC_OP_FETCH(name, op)                    \
-  template<typename T, typename V> inline            \
-  T                                                  \
-  atomic_##name(T *mem, V value)                     \
-  {                                                  \
-    static_assert(sizeof(T) == 4 || sizeof(T) == 8); \
-    T val = value;                                   \
-    T res;                                           \
-                                                     \
-    switch (sizeof(T))                               \
-      {                                              \
-      case 4:                                        \
-        __asm__ __volatile__ (                       \
-          "amo" #op ".w %[res], %[val], %[mem] \n"   \
-          #op "         %[res], %[res], %[val] \n"   \
-          : [res]"=&r" (res), [mem]"+A"(*mem)        \
-          : [val]"r" (val)                           \
-          : "memory");                               \
-        return res;                                  \
-                                                     \
-      case 8:                                        \
-        __asm__ __volatile__ (                       \
-          "amo" #op ".d %[res], %[val], %[mem] \n"   \
-          #op "         %[res], %[res], %[val] \n"   \
-          : [res]"=&r" (res), [mem]"+A"(*mem)        \
-          : [val]"r" (val)                           \
-          : "memory");                               \
-        return res;                                  \
-      }                                              \
+
+#define ATOMIC_FETCH_OP_(name, op, size, suffix)                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  T                                                                            \
+  atomic_##name(T *mem, V value)                                               \
+  {                                                                            \
+    T val = value;                                                             \
+    T prev;                                                                    \
+                                                                               \
+    __asm__ __volatile__ (                                                     \
+      "amo" #op "." #suffix " %[prev], %[mask], %[mem]"                        \
+      : [prev]"=r" (prev), [mem]"+A"(*mem)                                     \
+      : [mask]"r" (val)                                                        \
+      : "memory");                                                             \
+    return prev;                                                               \
   }
-ATOMIC_OP_FETCH(or_fetch, or)
-ATOMIC_OP_FETCH(and_fetch, and)
-ATOMIC_OP_FETCH(add_fetch, add)
+
+#define ATOMIC_FETCH_OP(name, op)  \
+  ATOMIC_FETCH_OP_(name, op, 4, w) \
+  ATOMIC_FETCH_OP_(name, op, 8, d)
+
+ATOMIC_FETCH_OP(fetch_or, or)
+ATOMIC_FETCH_OP(fetch_and, and)
+ATOMIC_FETCH_OP(fetch_add, add)
+ATOMIC_FETCH_OP(exchange, swap)
+#undef ATOMIC_FETCH_OP_
+#undef ATOMIC_FETCH_OP
+
+
+#define ATOMIC_OP_FETCH_(op, size, suffix)                                     \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  T                                                                            \
+  atomic_##op##_fetch(T *mem, V value)                                         \
+  {                                                                            \
+    T val = value;                                                             \
+    T res;                                                                     \
+                                                                               \
+    __asm__ __volatile__ (                                                     \
+      "amo" #op "." #suffix " %[res], %[val], %[mem] \n"                       \
+      #op "         %[res], %[res], %[val] \n"                                 \
+      : [res]"=&r" (res), [mem]"+A"(*mem)                                      \
+      : [val]"r" (val)                                                         \
+      : "memory");                                                             \
+    return res;                                                                \
+  }
+
+#define ATOMIC_OP_FETCH(op)  \
+  ATOMIC_OP_FETCH_(op, 4, w) \
+  ATOMIC_OP_FETCH_(op, 8, d)
+
+ATOMIC_OP_FETCH(or)
+ATOMIC_OP_FETCH(and)
+ATOMIC_OP_FETCH(add)
+#undef ATOMIC_OP_FETCH_
 #undef ATOMIC_OP_FETCH
 // preprocess on
 
