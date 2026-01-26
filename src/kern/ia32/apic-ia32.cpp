@@ -670,9 +670,8 @@ Apic::enable_errors()
 
       Unsigned32 after = get_num_errors();
 
-      if (Warn::is_enabled(Info))
-        printf("APIC ESR value before/after enabling: %08x/%08x\n",
-               before, after);
+      WARNX(Info, "APIC ESR value before/after enabling: %08x/%08x\n",
+            before, after);
     }
 }
 
@@ -874,9 +873,8 @@ PUBLIC static
 void
 Apic::dump_info()
 {
-  if (Warn::is_enabled(Info))
-    printf("Local APIC[%02x]: version=%02x max_lvt=%d\n",
-           cxx::int_value<Apic_id>(get_id()) >> 24, get_version(), get_max_lvt());
+  WARNX(Info, "Local APIC[%02x]: version=%02x max_lvt=%d\n",
+        cxx::int_value<Apic_id>(get_id()) >> 24, get_version(), get_max_lvt());
 }
 
 /**

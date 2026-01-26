@@ -35,8 +35,8 @@ bool Per_cpu_data_alloc::alloc(Cpu_number cpu)
   extern char _per_cpu_data_start[];
   extern char _per_cpu_data_end[];
 
-  if (Warn::is_enabled(Info))
-    printf("Per_cpu_data_alloc: (orig: %p-%p)\n", _per_cpu_data_start, _per_cpu_data_end);
+  WARNX(Info, "Per_cpu_data_alloc: (orig: %p-%p)\n", _per_cpu_data_start,
+        _per_cpu_data_end);
 
   if (cpu == Cpu_number::boot_cpu())
     {
@@ -55,11 +55,11 @@ bool Per_cpu_data_alloc::alloc(Cpu_number cpu)
   memset(per_cpu, 0, size);
 
   _offsets[cpu] = per_cpu - _per_cpu_data_start;
-  if (Warn::is_enabled(Info))
-    printf("Allocate %u bytes (%u KiB) for CPU[%u] local storage (offset=%lx, %p-%p)\n",
-           size, (size + 1023) / 1024, cxx::int_value<Cpu_number>(cpu),
-           _offsets[cpu], _per_cpu_data_start + _offsets[cpu],
-           _per_cpu_data_end + _offsets[cpu]);
+  WARNX(Info,
+        "Allocate %u bytes (%u KiB) for CPU[%u] local storage (offset=%lx, %p-%p)\n",
+        size, (size + 1023) / 1024, cxx::int_value<Cpu_number>(cpu),
+        _offsets[cpu], _per_cpu_data_start + _offsets[cpu],
+        _per_cpu_data_end + _offsets[cpu]);
 
   return true;
 

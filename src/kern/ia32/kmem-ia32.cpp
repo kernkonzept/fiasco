@@ -557,8 +557,7 @@ void
 Kmem::init_cpu(Cpu &cpu)
 {
   Lockless_alloc cpu_mem_vm(Kmem_alloc::allocator()->alloc(Bytes(1024)), 1024);
-  if (Warn::is_enabled(Info))
-    printf("Allocate cpu_mem @ %p\n", cpu_mem_vm.ptr());
+  WARNX(Info, "Allocate cpu_mem @ %p\n", cpu_mem_vm.ptr());
 
   // now switch to our new page table
   Cpu::set_pdbr(Mem_layout::pmem_to_phys(kdir));

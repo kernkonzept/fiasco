@@ -109,8 +109,8 @@ App_cpu_thread::bootstrap(Mword resume)
   if (!resume)
     {
       Cpu::cpus.current().print_infos();
-      if (Warn::is_enabled(Info))
-        printf("CPU[%u]: goes to idle loop\n", cxx::int_value<Cpu_number>(ccpu));
+      WARNX(Info,"CPU[%u]: goes to idle loop\n",
+                 cxx::int_value<Cpu_number>(ccpu));
     }
 
   init_workload();

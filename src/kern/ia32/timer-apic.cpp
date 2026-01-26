@@ -35,10 +35,9 @@ Timer::init(Cpu_number)
   // make sure that PIT does pull its interrupt line
   Pit::done();
 
-  if (Warn::is_enabled(Info))
-    printf ("Using the Local APIC timer on vector %x (%s Mode) for scheduling\n",
-            static_cast<unsigned>(Config::Apic_timer_vector),
-            cxx::const_ite<Config::Scheduler_one_shot>("One-Shot", "Periodic"));
+  WARNX(Info,"Using the Local APIC timer on vector %x (%s Mode) for scheduling\n",
+             static_cast<unsigned>(Config::Apic_timer_vector),
+             cxx::const_ite<Config::Scheduler_one_shot>("One-Shot", "Periodic"));
 
 }
 
