@@ -486,16 +486,6 @@ Cpu::phys_bits()
 IMPLEMENTATION [arm && arm_v8plus]:
 
 PUBLIC static inline
-void
-Cpu::enable_smp()
-{}
-
-PUBLIC static inline
-void
-Cpu::disable_smp()
-{}
-
-PUBLIC static inline
 Unsigned64
 Cpu::hcr()
 {

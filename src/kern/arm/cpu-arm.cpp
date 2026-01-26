@@ -108,6 +108,8 @@ public:
   bool has_pmuv3() const;
 
   static void print_boot_infos();
+  static void enable_smp();
+  static void disable_smp();
 
 private:
   void init_supervisor_mode(bool is_boot_cpu);
@@ -431,23 +433,33 @@ void
 Cpu::print_boot_infos()
 {}
 
+IMPLEMENT_DEFAULT inline
+void
+Cpu::enable_smp()
+{}
+
+IMPLEMENT_DEFAULT inline
+void
+Cpu::disable_smp()
+{}
+
 IMPLEMENTATION [arm && arm_v6]: // -----------------------------------------
 
-PUBLIC static inline NEEDS[Cpu::set_actrl]
+IMPLEMENT_OVERRIDE inline NEEDS[Cpu::set_actrl]
 void
 Cpu::enable_smp()
 {
   set_actrl(0x20);
 }
 
-PUBLIC static inline NEEDS[Cpu::clear_actrl]
+IMPLEMENT_OVERRIDE inline NEEDS[Cpu::clear_actrl]
 void
 Cpu::disable_smp()
 {
   clear_actrl(0x20);
 }
 
-IMPLEMENTATION [arm && arm_v7plus && 32bit]: //-----------------------------
+IMPLEMENTATION [arm && arm_v7plus && 32bit && mp]: //-------------------------
 
 static void modify_actl(Unsigned64 mask, Unsigned64 value)
 {
@@ -498,7 +510,7 @@ static Midr_match constexpr _enable_smp[] =
   { 0xff0ffff0, 0x410fd080, 0x40, 0x40, &modify_cpuectl }, // Cortex-A72
 };
 
-PUBLIC static
+IMPLEMENT_OVERRIDE
 void
 Cpu::enable_smp()
 {
@@ -511,7 +523,7 @@ Cpu::enable_smp()
       }
 }
 
-PUBLIC static
+IMPLEMENT_OVERRIDE
 void
 Cpu::disable_smp()
 {
