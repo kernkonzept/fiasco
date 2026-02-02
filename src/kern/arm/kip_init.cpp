@@ -131,6 +131,7 @@ Kip_init::init_syscalls(Kip *)
 IMPLEMENTATION[mpu]:
 
 #include "kmem.h"
+#include "panic.h"
 
 /**
  * Map KIP in separate region to make it accessible to user space.
