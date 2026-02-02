@@ -73,47 +73,35 @@ ATOMIC_OP(or, orr)
 ATOMIC_OP(add, add)
 #undef ATOMIC_OP_
 #undef ATOMIC_OP
+
+
+#define ATOMIC_EXCHANGE(size, pfx)                                             \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  T                                                                            \
+  atomic_exchange(T *mem, V value)                                             \
+  {                                                                            \
+    T val = value;                                                             \
+    T res;                                                                     \
+    Mword tmp;                                                                 \
+                                                                               \
+    asm volatile (                                                             \
+        "     prfm  pstl1strm, %[mem] \n"                                      \
+        "1:   ldxr  %"#pfx"[res], %[mem] \n"                                   \
+        "     stxr  %w[tmp], %"#pfx"[val], %[mem] \n"                          \
+        "     cbnz  %w[tmp], 1b \n"                                            \
+        : [res] "=&r" (res), [tmp] "=&r" (tmp), [mem] "+Q" (*mem)              \
+        : [val] "r" (val)                                                      \
+        : "cc");                                                               \
+    return res;                                                                \
+  }
+ATOMIC_EXCHANGE(4, w)
+ATOMIC_EXCHANGE(8, x)
+#undef ATOMIC_EXCHANGE
 // preprocess on
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION[arm]:
-
-template<typename T, typename V> inline
-T
-atomic_exchange(T *mem, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T val = value;
-  T res;
-  Mword tmp;
-
-  switch (sizeof(T))
-    {
-    case 4:
-      asm volatile (
-          "     prfm  pstl1strm, [%[mem]] \n"
-          "1:   ldxr  %w[res], [%[mem]] \n"
-          "     stxr  %w[tmp], %w[val], [%[mem]] \n"
-          "     cmp   %w[tmp], #0 \n"
-          "     b.ne  1b "
-          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
-          : [mem] "r" (mem), [val] "r" (val)
-          : "cc");
-      return res;
-
-    case 8:
-      asm volatile (
-          "     prfm   pstl1strm, [%[mem]] \n"
-          "1:   ldxr   %x[res], [%[mem]] \n"
-          "     stxr   %w[tmp], %x[val], [%[mem]] \n"
-          "     cmp    %w[tmp], #0 \n"
-          "     b.ne   1b "
-          : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
-          : [mem] "r" (mem), [val] "r" (val)
-          : "cc");
-      return res;
-    }
-}
 
 template< typename T > ALWAYS_INLINE inline
 T
