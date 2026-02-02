@@ -618,10 +618,9 @@ Gic_its::Table::ensure_id_present(unsigned id)
 }
 
 PUBLIC
-void
-Gic_its::init(Gic_cpu_v3 *gic_cpu, void *base, unsigned num_lpis)
+Gic_its::Gic_its(Gic_cpu_v3 *gic_cpu, void *base, unsigned num_lpis)
+  : _its(base)
 {
-  _its = Mmio_register_block(base);
   unsigned arch_rev = (_its.read<Unsigned32>(GITS_PIDR2) >> 4) & 0xf;
   if (arch_rev != 0x3 && arch_rev != 0x4)
     // No GICv3 and no GICv4

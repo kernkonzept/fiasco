@@ -325,8 +325,7 @@ Gic_v3::add_its(void *its_base)
       return false;
     }
 
-  Gic_its *its = new Boot_object<Gic_its>();
-  its->init(&_cpu, its_base, _msi->nr_pins());
+  Gic_its *its = new Boot_object<Gic_its>(&_cpu, its_base, _msi->nr_pins());
   its->cpu_init(Cpu_number::boot_cpu(), _redist.cpu(Cpu_number::boot_cpu()));
   _its_vec[_num_its++] = its;
   return true;
