@@ -104,7 +104,7 @@ Kip_init::init_kip_clock()
 }
 
 //--------------------------------------------------------------
-IMPLEMENTATION[64bit]:
+IMPLEMENTATION [64bit]:
 
 PRIVATE static inline FIASCO_INIT
 void
@@ -120,7 +120,7 @@ Kip_init::init_syscalls(Kip *kinfo)
 }
 
 //--------------------------------------------------------------
-IMPLEMENTATION[32bit]:
+IMPLEMENTATION [32bit]:
 
 PRIVATE static inline FIASCO_INIT
 void
@@ -128,7 +128,7 @@ Kip_init::init_syscalls(Kip *)
 {}
 
 //--------------------------------------------------------------
-IMPLEMENTATION[mpu]:
+IMPLEMENTATION [mpu]:
 
 #include "kmem.h"
 #include "panic.h"
@@ -161,7 +161,7 @@ Kip_init::map_kip(Kip *k)
 }
 
 //--------------------------------------------------------------
-IMPLEMENTATION[!mpu]:
+IMPLEMENTATION [!mpu]:
 
 IMPLEMENT inline
 void
