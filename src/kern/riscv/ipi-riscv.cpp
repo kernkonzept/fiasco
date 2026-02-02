@@ -13,7 +13,7 @@ public:
 
   static Mword pending_ipis_reset(Cpu_number cpu)
   {
-    return atomic_xchg(&_ipi.cpu(cpu)._rq, 0);
+    return atomic_exchange(&_ipi.cpu(cpu)._rq, 0);
   }
 
 private:

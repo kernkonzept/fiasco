@@ -86,35 +86,6 @@ atomic_add(T *l, V value)
     }
 }
 
-
-template<typename T, typename V> inline
-Mword
-atomic_xchg(T *l, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T val = value;
-  T prev;
-
-  switch (sizeof(T))
-    {
-    case 4:
-      __asm__ __volatile__ (
-        "amoswap.w %[prev], %[value], %[l]"
-        : [prev]"=r" (prev), [l]"+A"(*l)
-        : [value]"r" (val)
-        : "memory");
-      return prev;
-
-    case 8:
-      __asm__ __volatile__ (
-        "amoswap.d %[prev], %[value], %[l]"
-        : [prev]"=r" (prev), [l]"+A"(*l)
-        : [value]"r" (val)
-        : "memory");
-      return prev;
-    }
-}
-
 template<typename T, typename V> inline
 T
 atomic_exchange(T *mem, V value)
@@ -228,13 +199,6 @@ Mword
 local_atomic_add(Mword *l, Mword value)
 {
   return atomic_add(l, value);
-}
-
-inline
-Mword
-local_atomic_xchg(Mword *l, Mword value)
-{
-  return atomic_xchg(l, value);
 }
 
 // ``unsafe'' stands for no safety according to the size of the given type.

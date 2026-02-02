@@ -140,7 +140,7 @@ public:
   /**
    * Currently active ASID on a CPU.
    *
-   * written using atomic_xchg outside of spinlock and
+   * written using atomic_exchange outside of spinlock and
    * atomic_write under protection of spinlock
    */
   Asid active = Asid::Invalid;
@@ -390,7 +390,7 @@ public:
       }
 
     // Set active asid, needs to be atomic since this value is written
-    // above using atomic_xchg()
+    // above using atomic_exchange()
     atomic_store(active_asid, a);
 
     // Is a TLB flush pending?
