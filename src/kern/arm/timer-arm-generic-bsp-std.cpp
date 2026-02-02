@@ -78,8 +78,8 @@ void Timer::bsp_init(Cpu_number)
   if (!have_interrupt_names)
     {
       _irq_phys = Dt::get_arm_gic_irq(timer_node, static_cast<int>(0)); // Secure EL1
-      _irq_virt = Dt::get_arm_gic_irq(timer_node, 1); // Non-Secure EL1
-
+      // 1: Non-Secure EL1
+      _irq_virt = Dt::get_arm_gic_irq(timer_node, 2); // Virt
       _irq_hyp = Dt::get_arm_gic_irq(timer_node, 3); // Non-Secure EL2
       if (_irq_hyp == ~0u)
         _irq_hyp = 0;
