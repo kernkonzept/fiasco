@@ -419,6 +419,11 @@ void
 Arm_vtimer_ppi::handle(Upstream_irq const *ui)
 {
   auto *c = current();
+  // Spurious call?
+  if ((c->state() & (Thread_vcpu_user | Thread_ext_vcpu_enabled)) !=
+                    (Thread_vcpu_user | Thread_ext_vcpu_enabled)) [[unlikely]]
+    return;
+
   bool upcall = c->vcpu_vtimer_hit();
   if (upcall)
     {
@@ -627,6 +632,11 @@ void
 Context::vcpu_vgic_maintenance(unsigned virq)
 {
   Vcpu_state *vcpu = vcpu_state().access();
+  // Spurious maintenance interrupt?
+  if ((state() & (Thread_vcpu_user | Thread_ext_vcpu_enabled)) !=
+                 (Thread_vcpu_user | Thread_ext_vcpu_enabled)) [[unlikely]]
+    return;
+
   Vm_state *v = vm_state(vcpu);
 
   Unsigned32 eois;
