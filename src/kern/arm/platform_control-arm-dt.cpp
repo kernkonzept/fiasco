@@ -27,6 +27,9 @@ Platform_control::boot_ap_cpus_dt(Dt::Node cpus, Address phys_tramp_mp_addr)
       if (!cpu.check_device_type("cpu"))
         return Dt::Continue;
 
+      if (!cpu.is_enabled())
+        return Dt::Continue;
+
       uint64_t reg;
       if (!cpu.get_reg_untranslated(0, &reg))
         {

@@ -120,7 +120,11 @@ bool
 Iommu::init_platform_dt()
 {
   unsigned i = 0;
-  Dt::nodes_by_compatible("arm,smmu-v3", [&](Dt::Node) { ++i; });
+  Dt::nodes_by_compatible("arm,smmu-v3", [&](Dt::Node n)
+    {
+      if (n.is_enabled())
+        ++i;
+    });
 
   printf("Number of arm,smmu-v3: %d\n", i);
 
@@ -132,21 +136,24 @@ Iommu::init_platform_dt()
   i = 0;
   Dt::nodes_by_compatible("arm,smmu-v3", [&](Dt::Node n)
     {
-      unsigned eventq_irq = Dt::get_arm_gic_irq(n, "eventq");
-      unsigned gerror_irq = Dt::get_arm_gic_irq(n, "gerror");
-
-      if (eventq_irq == ~0u) // Event logging is optional
-        eventq_irq = 0;
-      if (gerror_irq == ~0u) // We want error reporting
-        return;
-
-      uint64_t base, size;
-      bool ret = n.get_reg(0, &base, &size);
-      if (ret)
+      if (n.is_enabled())
         {
-          _iommus[i].setup(Kmem_mmio::map(base, size),
-                           eventq_irq, gerror_irq);
-          ++i;
+          unsigned eventq_irq = Dt::get_arm_gic_irq(n, "eventq");
+          unsigned gerror_irq = Dt::get_arm_gic_irq(n, "gerror");
+
+          if (eventq_irq == ~0u) // Event logging is optional
+            eventq_irq = 0;
+          if (gerror_irq == ~0u) // We want error reporting
+            return;
+
+          uint64_t base, size;
+          bool ret = n.get_reg(0, &base, &size);
+          if (ret)
+            {
+              _iommus[i].setup(Kmem_mmio::map(base, size),
+                               eventq_irq, gerror_irq);
+              ++i;
+            }
         }
     });
 

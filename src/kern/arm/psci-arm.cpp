@@ -250,7 +250,7 @@ Psci::probe_method_dt()
   const char *c[] = { "arm,psci-1.0", "arm,psci-0.2", "arm,psci" };
   Dt::Node psci = Dt::node_by_compatible_list(c);
 
-  if (!psci.is_valid())
+  if (!psci.is_valid() || !psci.is_enabled())
     return Call_method::Unknown;
 
   const char *method = psci.get_prop_str("method");

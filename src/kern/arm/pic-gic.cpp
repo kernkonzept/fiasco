@@ -101,7 +101,7 @@ Pic::init_dt_gicv2()
   const char *c[] = { "arm,cortex-a15-gic", "arm,gic-400", "arm,cortex-a7-gic",
                       "arm,cortex-a5-gic", "arm,cortex-a9-gic" };
   Dt::Node gic_node = Dt::node_by_compatible_list(c);
-  if (!gic_node.is_valid())
+  if (!gic_node.is_valid() || !gic_node.is_enabled())
     return false;
 
   uint64_t dist_phys_base, dist_size;
@@ -198,7 +198,7 @@ bool
 Pic::init_dt_gicv3()
 {
   Dt::Node gic_node = Dt::node_by_compatible("arm,gic-v3");
-  if (!gic_node.is_valid())
+  if (!gic_node.is_valid() || !gic_node.is_enabled())
     return false;
 
   uint64_t dist_phys, dist_size;
@@ -214,9 +214,12 @@ Pic::init_dt_gicv3()
   Dt::nodes_by_compatible("arm,gic-v3-its",
                           [g](Dt::Node n)
                           {
-                            uint64_t base, sz;
-                            if (n.get_reg(0, &base, &sz))
-                              g->add_its(Kmem_mmio::map(base, sz));
+                            if (n.is_enabled())
+                              {
+                                uint64_t base, sz;
+                                if (n.get_reg(0, &base, &sz))
+                                  g->add_its(Kmem_mmio::map(base, sz));
+                              }
                           });
 
   typedef Irq_mgr_msi<Gic_v3, Gic_msi> M;
