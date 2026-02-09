@@ -1,4 +1,4 @@
-INTERFACE [arm]:
+INTERFACE [arm && !arm_lse]:
 
 // preprocess off
 #define ATOMIC_OP_(name, op, size, pfx)                                        \
@@ -101,6 +101,84 @@ ATOMIC_EXCHANGE(8, x)
 // preprocess on
 
 //----------------------------------------------------------------------------
+INTERFACE [arm && arm_lse]:
+
+// preprocess off
+#define ATOMIC_OP_(name, op, rop, neg, size, pfx)                              \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  void                                                                         \
+  atomic_##name(T *mem, V value)                                               \
+  {                                                                            \
+    T val = value;                                                             \
+                                                                               \
+    asm volatile (                                                             \
+        "st"#op " %"#pfx"[val], %[mem]"                                        \
+        : [mem] "+Q" (*mem)                                                    \
+        : [val] "r" (neg val));                                                \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  T                                                                            \
+  atomic_fetch_##name(T *mem, V value)                                         \
+  {                                                                            \
+    T val = value;                                                             \
+    T old;                                                                     \
+                                                                               \
+    asm volatile (                                                             \
+        "ld"#op " %"#pfx"[val], %"#pfx"[old], %[mem]"                          \
+        : [old] "=r" (old), [mem] "+Q" (*mem)                                  \
+        : [val] "r" (neg val));                                                \
+    return old;                                                                \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  T                                                                            \
+  atomic_##name##_fetch(T *mem, V value)                                       \
+  {                                                                            \
+    T val = value;                                                             \
+    T res;                                                                     \
+                                                                               \
+    asm volatile (                                                             \
+        "ld"#op " %"#pfx"[val], %"#pfx"[res], %[mem] \n"                       \
+        : [res] "=r" (res), [mem] "+Q" (*mem)                                  \
+        : [val] "r" (neg val));                                                \
+    return res rop val;                                                        \
+  }
+#define ATOMIC_OP(name, op, rop, neg)                                          \
+  ATOMIC_OP_(name, op, rop, neg, 4, w)                                         \
+  ATOMIC_OP_(name, op, rop, neg, 8, x)
+
+// There is no ldand instruction, thus we have to negate the value and use ldclr.
+ATOMIC_OP(and, clr, &, ~)
+ATOMIC_OP(or, set, |, )
+ATOMIC_OP(add, add, +, )
+#undef ATOMIC_OP_
+#undef ATOMIC_OP
+
+#define ATOMIC_EXCHANGE(size, pfx)                                             \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  T                                                                            \
+  atomic_exchange(T *mem, V value)                                             \
+  {                                                                            \
+    T val = value;                                                             \
+    T old;                                                                     \
+                                                                               \
+    asm volatile (                                                             \
+        "swp %"#pfx"[val], %"#pfx"[old], %[mem]"                               \
+        : [old] "=r" (old), [mem] "+Q" (*mem)                                  \
+        : [val] "r" (val));                                                    \
+    return old;                                                                \
+  }
+ATOMIC_EXCHANGE(4, w)
+ATOMIC_EXCHANGE(8, x)
+#undef ATOMIC_EXCHANGE
+// preprocess on
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION[arm]:
 
 template< typename T > requires(sizeof(T) == 4) inline
@@ -137,6 +215,9 @@ atomic_store(T *p, V value)
   asm volatile ("str %x1, %0" : "=m" (*p) : "r" (val));
 }
 
+//----------------------------------------------------------------------------
+IMPLEMENTATION[arm && !arm_lse]:
+
 inline
 bool
 cas_arch(Mword *m, Mword o, Mword n)
@@ -162,4 +243,21 @@ cas_arch(Mword *m, Mword o, Mword n)
   // res == 1 is failed
 
   return !res;
+}
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[arm && arm_lse]:
+
+/// Compare-and-swap with acquire/release memory order.
+inline
+bool
+cas_arch(Mword *mem, Mword oldval, Mword newval)
+{
+  Mword old = oldval;
+  asm volatile (
+      "casal %[o], %[n], %[mem]"
+      : [o] "+r" (old), [mem] "+Q" (*mem)
+      : [n] "r" (newval));
+
+  return old == oldval;
 }

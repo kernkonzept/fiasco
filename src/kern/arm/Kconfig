@@ -196,6 +196,9 @@ config ARM_PROFILE_R
 	select SYNC_CLOCK
 	bool
 
+config ARM_LSE
+	bool
+
 # SECTION: CPU
 
 choice
@@ -276,6 +279,7 @@ config ARM_CORTEX_A55
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT if ARM_GIC
 	select HAS_64BIT
+	select ARM_LSE
 
 config ARM_CORTEX_A57
 	bool "ARM Cortex-A57 CPU"
@@ -300,6 +304,7 @@ config ARM_CORTEX_A76
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT if ARM_GIC
 	select HAS_64BIT
+	select ARM_LSE
 
 config ARM_NEOVERSE_N1
 	bool "ARM Neoverse-N1 CPU"
@@ -308,6 +313,7 @@ config ARM_NEOVERSE_N1
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT if ARM_GIC
 	select HAS_64BIT
+	select ARM_LSE
 
 config ARM_KRAIT
 	bool "Qualcomm Krait"
@@ -340,6 +346,7 @@ config ARM_V8R_GENERIC
 	select HAS_CPU_AMP_OPTION if BIT32
 	select HAS_MP_OPTION if BIT64
 	select HAS_64BIT
+	select ARM_LSE
 
 config ARM_CORTEX_R52
 	bool "ARM Cortex-R52 CPU"
@@ -360,6 +367,7 @@ config ARM_CORTEX_R82
 	select HAS_CPU_VIRT
 	select HAS_MP_OPTION
 	select HAS_64BIT
+	select ARM_LSE
 
 endchoice
 
