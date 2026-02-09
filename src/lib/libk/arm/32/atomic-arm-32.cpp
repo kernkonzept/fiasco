@@ -151,8 +151,9 @@ ATOMIC_OP(add, adds, adc)
 //----------------------------------------------------------------------------
 IMPLEMENTATION[arm && arm_v6plus]:
 
-template<typename T, typename V> inline
-cxx::enable_if_t<(sizeof(T) == 4), T>
+template<typename T, typename V>
+requires(sizeof(T) == 4) inline
+T
 atomic_exchange(T *mem, V value)
 {
   T val = value;
@@ -174,10 +175,9 @@ atomic_exchange(T *mem, V value)
 // --------------------------------------------------------------------
 IMPLEMENTATION[arm && (arm_v7plus || (arm_v6 && mp))]:
 
-#include <cxx/type_traits>
-
-template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
+template<typename T, typename V>
+requires(sizeof(T) == 8) inline
+T
 atomic_exchange(T *mem, V value)
 {
   T val = value;
@@ -198,12 +198,11 @@ atomic_exchange(T *mem, V value)
 // --------------------------------------------------------------------
 IMPLEMENTATION[arm && arm_v6 && !mp]:
 
-#include <cxx/type_traits>
 #include "processor.h"
 
-template<typename T, typename V> inline NEEDS ["mem.h", "processor.h",
-                                               <cxx/type_traits>]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
+template<typename T, typename V> NEEDS ["processor.h"]
+requires(sizeof(T) == 8) inline
+T
 atomic_exchange(T *mem, V value)
 {
   Mword s = Proc::cli_save();
@@ -219,9 +218,9 @@ atomic_exchange(T *mem, V value)
   return res;
 }
 
-template<typename T, typename V> inline NEEDS ["mem.h", "processor.h",
-                                               <cxx/type_traits>]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
+template<typename T, typename V> NEEDS ["processor.h"]
+requires(sizeof(T) == 8) inline
+T
 atomic_add_fetch(T *mem, V value)
 {
   Mword s = Proc::cli_save();
