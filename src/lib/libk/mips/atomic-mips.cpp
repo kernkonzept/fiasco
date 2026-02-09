@@ -1,6 +1,157 @@
-IMPLEMENTATION [mips]:
+INTERFACE [mips]:
 
 #include "asm_mips.h"
+
+// preprocess off
+#define ATOMIC_OP(name, op)                                                    \
+  inline                                                                       \
+  void                                                                         \
+  local_atomic_##name(Mword *mem, Mword value)                                 \
+  {                                                                            \
+    Mword tmp;                                                                 \
+                                                                               \
+    do                                                                         \
+      {                                                                        \
+        __asm__ __volatile__(                                                  \
+            ASM_LL " %[tmp], %[mem]  \n"                                       \
+            op    " %[tmp], %[val] \n"                                         \
+            ASM_SC " %[tmp], %[mem]  \n"                                       \
+            : [tmp] "=&r" (tmp), [mem] "+ZC" (*mem)                            \
+            : [val] "Ir" (value));                                             \
+      }                                                                        \
+    while (!tmp);                                                              \
+  }                                                                            \
+                                                                               \
+  inline                                                                       \
+  Mword                                                                        \
+  __f_atomic_fetch_##name(Mword *mem, Mword value)                             \
+  {                                                                            \
+    Mword tmp, old;                                                            \
+                                                                               \
+    do                                                                         \
+      {                                                                        \
+        __asm__ __volatile__(                                                  \
+            ASM_LL   " %[tmp], %[ptr]  \n"                                     \
+            "move      %[old], %[tmp]  \n"                                     \
+            op      " %[tmp], %[val]    \n"                                    \
+            ASM_SC   " %[tmp], %[ptr]  \n"                                     \
+            : [tmp] "=&r" (tmp), [ptr] "+ZC" (*mem), [old] "=&r"(old)            \
+            : [val] "Ir" (value));                                             \
+      }                                                                        \
+    while (!tmp);                                                              \
+    return old;                                                                \
+  }                                                                            \
+                                                                               \
+  inline                                                                       \
+  Mword                                                                        \
+  __f_atomic_##name##_fetch(Mword *mem, Mword value)                           \
+  {                                                                            \
+    Mword tmp, res;                                                            \
+                                                                               \
+    do                                                                         \
+      {                                                                        \
+        __asm__ __volatile__(                                                  \
+            ASM_LL   " %[tmp], %[ptr]  \n"                                     \
+            op      " %[tmp], %[val]    \n"                                    \
+            "move      %[res], %[tmp]  \n"                                     \
+            ASM_SC   " %[tmp], %[ptr]  \n"                                     \
+            : [tmp] "=&r" (tmp), [ptr] "+ZC" (*mem), [res] "=&r"(res)          \
+            : [val] "Ir" (value));                                             \
+      }                                                                        \
+    while (!tmp);                                                              \
+    return res;                                                                \
+  }
+ATOMIC_OP(or, "or")
+ATOMIC_OP(and, "and")
+ATOMIC_OP(add, ASM_ADDU)
+#undef ATOMIC_OP
+// preprocess on
+
+//----------------------------------------------------------------------------
+INTERFACE [mips && mp]:
+
+#include "mem.h"
+
+// preprocess off
+#define ATOMIC_OP_(name)                                                       \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == sizeof(Mword)) inline                                  \
+  void                                                                         \
+  atomic_##name(T *mem, V value)                                               \
+  {                                                                            \
+    T val = value;                                                             \
+    Mem::mp_mb();                                                              \
+    local_atomic_##name(mem, val);                                             \
+    Mem::mp_mb();                                                              \
+  }                                                                            \
+
+#define ATOMIC_RET_OP_(name)                                                   \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == sizeof(Mword)) inline                                  \
+  T                                                                            \
+  atomic_##name(T *mem, V value)                                               \
+  {                                                                            \
+    T val = value;                                                             \
+    Mem::mp_mb();                                                              \
+    Mword res = __f_atomic_##name(mem, val);                                   \
+    Mem::mp_mb();                                                              \
+    return res;                                                                \
+  }
+
+#define ATOMIC_OP(name)                                                        \
+  ATOMIC_OP_(name)                                                             \
+  ATOMIC_RET_OP_(fetch_##name)                                                 \
+  ATOMIC_RET_OP_(name##_fetch)
+
+ATOMIC_OP(or)
+ATOMIC_OP(and)
+ATOMIC_OP(add)
+#undef ATOMIC_OP_
+#undef ATOMIC_RET_OP_
+#undef ATOMIC_OP
+// preprocess on
+
+//----------------------------------------------------------------------------
+INTERFACE [mips && !mp]:
+
+#include "mem.h"
+
+// preprocess off
+#define ATOMIC_OP_(name)                                                       \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == sizeof(Mword)) inline                                  \
+  void                                                                         \
+  atomic_##name(T *mem, V value)                                               \
+  {                                                                            \
+    T val = value;                                                             \
+    local_atomic_##name(mem, val);                                             \
+  }                                                                            \
+
+#define ATOMIC_RET_OP_                                                         \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == sizeof(Mword)) inline                                  \
+  T                                                                            \
+  atomic_##name(T *mem, V value)                                               \
+  {                                                                            \
+    T val = value;                                                             \
+    return __f_atomic_##name(mem, val);                                        \
+  }
+
+#define ATOMIC_OP(name)                                                        \
+  ATOMIC_OP_(name)                                                             \
+  ATOMIC_RET_OP_(fetch_##name)                                                 \
+  ATOMIC_RET_OP_(name##_fetch)                                                 \
+
+ATOMIC_OP(or)
+ATOMIC_OP(and)
+ATOMIC_OP(add)
+#undef ATOMIC_OP_
+#undef ATOMIC_RET_OP_
+#undef ATOMIC_OP
+// preprocess on
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [mips]:
 
 template<typename T> ALWAYS_INLINE inline
 T
@@ -71,131 +222,10 @@ local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
   return ret == oldval;
 }
 
-inline NEEDS["asm_mips.h"]
-void
-local_atomic_and(Mword *l, Mword mask)
-{
-  Mword tmp;
-
-  do
-    {
-      __asm__ __volatile__(
-          ASM_LL " %[tmp], %[ptr]  \n"
-          "and     %[tmp], %[mask] \n"
-          ASM_SC " %[tmp], %[ptr]  \n"
-          : [tmp] "=&r" (tmp), [ptr] "+ZC" (*l)
-          : [mask] "Ir" (mask));
-    }
-  while (!tmp);
-}
-
-inline NEEDS["asm_mips.h"]
-void
-local_atomic_or(Mword *l, Mword bits)
-{
-  Mword tmp;
-
-  do
-    {
-      __asm__ __volatile__(
-          ASM_LL "  %[tmp], %[ptr]  \n"
-          "or       %[tmp], %[bits] \n"
-          ASM_SC "  %[tmp], %[ptr]  \n"
-          : [tmp] "=&r" (tmp), [ptr] "+ZC" (*l)
-          : [bits] "Ir" (bits));
-    }
-  while (!tmp);
-}
-
-inline NEEDS["asm_mips.h"]
-void
-local_atomic_add(Mword *l, Mword v)
-{
-  Mword tmp;
-
-  do
-    {
-      __asm__ __volatile__(
-          ASM_LL   " %[tmp], %[ptr]  \n"
-          ASM_ADDU " %[tmp], %[v]    \n"
-          ASM_SC   " %[tmp], %[ptr]  \n"
-          : [tmp] "=&r" (tmp), [ptr] "+ZC" (*l)
-          : [v] "Ir" (v));
-    }
-  while (!tmp);
-}
-
-inline NEEDS["asm_mips.h"]
-Mword
-__f_atomic_add_fetch(Mword *l, Mword v)
-{
-  Mword tmp, res;
-
-  do
-    {
-      __asm__ __volatile__(
-          ASM_LL   " %[tmp], %[ptr]  \n"
-          ASM_ADDU " %[tmp], %[v]    \n"
-          "move      %[res], %[tmp]  \n"
-          ASM_SC   " %[tmp], %[ptr]  \n"
-          : [tmp] "=&r" (tmp), [ptr] "+ZC" (*l), [res] "=&r"(res)
-          : [v] "Ir" (v));
-    }
-  while (!tmp);
-  return res;
-}
-
 //---------------------------------------------------------------------------
 IMPLEMENTATION [mips && mp]:
 
-#include "mem.h"
-
-template<typename T, typename V> inline NEEDS["mem.h"]
-void
-atomic_and(T *l, V value)
-{
-  static_assert(sizeof(T) == sizeof(Mword));
-  T val = value;
-  Mem::mp_mb();
-  local_atomic_and(l, val);
-  Mem::mp_mb();
-}
-
-template<typename T, typename V>  inline NEEDS["mem.h"]
-void
-atomic_or(T *l, V value)
-{
-  static_assert(sizeof(T) == sizeof(Mword));
-  T val = value;
-  Mem::mp_mb();
-  local_atomic_or(l, val);
-  Mem::mp_mb();
-}
-
-template<typename T, typename V> inline NEEDS["mem.h"]
-void
-atomic_add(T *l, V value)
-{
-  static_assert(sizeof(T) == sizeof(Mword));
-  T val = value;
-  Mem::mp_mb();
-  local_atomic_add(l, val);
-  Mem::mp_mb();
-}
-
-template<typename T, typename V> inline NEEDS["mem.h", __f_atomic_add_fetch]
-Mword
-atomic_add_fetch(T *l, V value)
-{
-  static_assert(sizeof(T) == sizeof(Mword));
-  T val = value;
-  Mem::mp_mb();
-  Mword res = __f_atomic_add_fetch(l, val);
-  Mem::mp_mb();
-  return res;
-}
-
-inline NEEDS["mem.h"]
+inline
 bool
 cas_arch(Mword *m, Mword o, Mword n)
 {
@@ -207,42 +237,6 @@ cas_arch(Mword *m, Mword o, Mword n)
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [mips && !mp]:
-
-template<typename T, typename V> inline
-void
-atomic_and(T *l, V value)
-{
-  static_assert(sizeof(T) == sizeof(Mword));
-  T val = value;
-  local_atomic_and(l, val);
-}
-
-template<typename T, typename V> inline
-void
-atomic_or(T *l, V value)
-{
-  static_assert(sizeof(T) == sizeof(Mword));
-  T val = value;
-  local_atomic_or(l, val);
-}
-
-template<typename T, typename V> inline
-void
-atomic_add(T *l, V value)
-{
-  static_assert(sizeof(T) == sizeof(Mword));
-  T val = value;
-  local_atomic_add(l, val);
-}
-
-template<typename T, typename V> inline NEEDS[__f_atomic_add_fetch]
-Mword
-atomic_add_fetch(T *l, V value)
-{
-  static_assert(sizeof(T) == sizeof(Mword));
-  Mword val = value;
-  return __f_atomic_add_fetch(l, val);
-}
 
 inline
 bool
