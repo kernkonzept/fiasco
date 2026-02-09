@@ -54,60 +54,6 @@ local_atomic_change(T *ptr, T mask, T bits)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION[(ppc32 && !mp) || (sparc && !mp) || (arm && !arm_v6plus)]:
-
-#include <cxx/type_traits>
-#include "processor.h"
-
-// Fall-back UP implementations for ppc32, sparc and armv5
-
-template<typename T, typename V> inline NEEDS["processor.h"]
-void
-atomic_and(T *l, V value)
-{
-  static_assert(sizeof(T) == 4);
-  T val = value;
-  Proc::Status s = Proc::cli_save();
-  *l &= val;
-  Proc::sti_restore(s);
-}
-
-template<typename T, typename V> inline NEEDS["processor.h"]
-void
-atomic_or(T *l, V value)
-{
-  static_assert(sizeof(T) == 4);
-  T val = value;
-  Proc::Status s = Proc::cli_save();
-  *l |= val;
-  Proc::sti_restore(s);
-}
-
-template<typename T, typename V> inline NEEDS["processor.h"]
-void
-atomic_add(T *l, V value)
-{
-  static_assert(sizeof(T) == 4);
-  T val = value;
-  Proc::Status s = Proc::cli_save();
-  *l += val;
-  Proc::sti_restore(s);
-}
-
-template<typename T, typename V> inline NEEDS [<cxx/type_traits>, "processor.h"]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 4), T>
-atomic_add_fetch(T *mem, V value)
-{
-  static_assert(sizeof(T) == 4);
-  T val = value;
-  Proc::Status s = Proc::cli_save();
-  *mem += val;
-  T res = *mem;
-  Proc::sti_restore(s);
-  return res;
-}
-
-//---------------------------------------------------------------------------
 IMPLEMENTATION [!mp]:
 
 /**
@@ -156,3 +102,82 @@ cas(T *ptr, T oldval, T newval)
                     static_cast<Mword>(oldval),
                     static_cast<Mword>(newval));
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [generic_local_atomic]:
+
+inline
+void
+local_atomic_and(Mword *mem, Mword value)
+{
+  Mword old;
+  do { old = *mem; }
+  while (!local_cas(mem, old, old & value));
+}
+
+inline
+void
+local_atomic_or(Mword *mem, Mword value)
+{
+  Mword old;
+  do { old = *mem; }
+  while (!local_cas(mem, old, old | value));
+}
+
+inline
+void
+local_atomic_add(Mword *mem, Mword value)
+{
+  Mword old;
+  do { old = *mem; }
+  while (!local_cas(mem, old, old + value));
+}
+
+//---------------------------------------------------------------------------
+INTERFACE[generic_atomic && !mp]:
+
+#include "processor.h"
+
+// preprocess off
+// Fall-back UP implementations for ppc32, sparc and armv5
+#define ATOMIC_OP(name, op)                                                    \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 4) inline                                              \
+  void                                                                         \
+  atomic_##name(T *mem, V value)                                               \
+  {                                                                            \
+    T val = value;                                                             \
+    Proc::Status s = Proc::cli_save();                                         \
+    *mem op##= val;                                                            \
+    Proc::sti_restore(s);                                                      \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 4) inline                                              \
+  T                                                                            \
+  atomic_##name##_fetch(T *mem, V value)                                       \
+  {                                                                            \
+    T val = value;                                                             \
+    Proc::Status s = Proc::cli_save();                                         \
+    *mem op##= val;                                                            \
+    T res = *mem;                                                              \
+    Proc::sti_restore(s);                                                      \
+    return res;                                                                \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 4) inline                                              \
+  T                                                                            \
+  atomic_fetch_##name(T *mem, V value)                                         \
+  {                                                                            \
+    Proc::Status s = Proc::cli_save();                                         \
+    T res = *mem;                                                              \
+    *mem op##= value;                                                          \
+    Proc::sti_restore(s);                                                      \
+    return res;                                                                \
+  }
+ATOMIC_OP(and, &)
+ATOMIC_OP(or, |)
+ATOMIC_OP(add, +)
+#undef ATOMIC_OP
+// preprocess on

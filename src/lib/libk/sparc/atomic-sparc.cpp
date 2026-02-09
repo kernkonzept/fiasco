@@ -35,34 +35,3 @@ local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 
   //return __sync_bool_compare_and_swap(ptr, oldval, newval);
 }
-
-inline
-void
-local_atomic_and(Mword *l, Mword mask)
-{
-  Mword old;
-  do
-    old = *l;
-  while (!local_cas(l, old, old & mask));
-}
-
-inline
-void
-local_atomic_or(Mword *l, Mword bits)
-{
-  Mword old;
-  do
-    old = *l;
-  while (!local_cas(l, old, old | bits));
-}
-
-inline
-Mword
-atomic_add_fetch(Mword *l, Mword a)
-{
-  Mword old;
-  do
-    old = *l;
-  while (!cas(l, old, old + a));
-  return old + a;
-}

@@ -219,6 +219,7 @@ ifeq ($(CONFIG_BIT32),y)
 CSRC_LIBK       += gcc_lib.c
 ASSRC_LIBK      += gcc_lib-aeabi.S
 endif
+PREPROCESS_PARTS-$(if $(CONFIG_ARM_V6PLUS),,y) += generic_atomic generic_local_atomic
 atomic_IMPL	+= atomic-arm-$(BITS)
 processor_IMPL	:= processor processor-arm-$(BITS) processor-arm
 scaler_shift_IMPL := scaler_shift scaler_shift-arm
