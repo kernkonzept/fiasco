@@ -1,24 +1,3 @@
-IMPLEMENTATION[arm]:
-
-#include <cxx/type_traits>
-
-template< typename T > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 4), T>
-atomic_load(T const *p)
-{
-  T res;
-  asm volatile ("ldr %0, %1" : "=r" (res) : "m"(*p));
-  return res;
-}
-
-template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE void
-atomic_store(T *p, V value, cxx::enable_if_t<(sizeof(T) == 4), int> = 0)
-{
-  T val = value;
-  asm volatile ("str %1, %0" : "=m" (*p) : "r" (val));
-}
-
 // --------------------------------------------------------------------
 IMPLEMENTATION[arm && arm_v6plus]:
 
@@ -126,28 +105,6 @@ atomic_add_fetch(T *mem, V value)
 }
 
 // --------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v6plus && (arm_lpae || arm_v8plus)]:
-
-#include <cxx/type_traits>
-
-template< typename T > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
-atomic_load(T const *p)
-{
-  T res;
-  asm volatile ("ldrd %0, %H0, %1" : "=&r" (res) : "m"(*p));
-  return res;
-}
-
-template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE void
-atomic_store(T *p, V value, cxx::enable_if_t<(sizeof(T) == 8), int> = 0)
-{
-  T val = value;
-  asm volatile ("strd %1, %H1, %0" : "=m" (*p) : "r" (val));
-}
-
-// --------------------------------------------------------------------
 IMPLEMENTATION[arm && (arm_v7plus || (arm_v6 && mp))]:
 
 #include <cxx/type_traits>
@@ -190,37 +147,6 @@ atomic_add_fetch(T *mem, V value)
       : [mem] "r" (mem), [val] "r" (val)
       : "cc");
   return res;
-}
-
-// --------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v6plus && mp && !(arm_lpae || arm_v8plus)]:
-
-#include <cxx/type_traits>
-
-template< typename T > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
-atomic_load(T const *p)
-{
-  T res;
-  asm volatile ("ldrexd %0, %H0, [%1]" : "=&r" (res) : "r" (p), "Qo" (*p));
-  return res;
-}
-
-template< typename T, typename V > inline NEEDS ["mem.h", <cxx/type_traits>]
-ALWAYS_INLINE void
-atomic_store(T *p, V value, cxx::enable_if_t<(sizeof(T) == 8), int> = 0)
-{
-  T val = value;
-  long long tmp;
-  Mem::prefetch_w(p);
-  asm volatile (
-      "1: ldrexd %0, %H0, [%2] \n"
-      "   strexd %0, %3, %H3, [%2] \n"
-      "   teq    %0, #0 \n"
-      "   bne    1b"
-      : "=&r"(tmp), "=Qo"(*p)
-      : "r"(p), "r"(val)
-      : "cc");
 }
 
 // --------------------------------------------------------------------
@@ -269,12 +195,33 @@ atomic_add_fetch(T *mem, V value)
 }
 
 // --------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v6plus && !mp && !(arm_lpae || arm_v8plus)]:
+IMPLEMENTATION[arm]:
 
-#include <cxx/type_traits>
+template<typename T>
+requires(sizeof(T) == 4) inline
+T
+atomic_load(T const *p)
+{
+  T res;
+  asm volatile ("ldr %0, %1" : "=&r" (res) : "m"(*p));
+  return res;
+}
 
-template< typename T > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
+template<typename T, typename V>
+requires(sizeof(T) == 4) inline
+void
+atomic_store(T *p, V value)
+{
+  T val = value;
+  asm volatile("str %1, %0" : "=m"(*p) : "r"(val));
+}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION[arm && arm_v6plus && (!mp || arm_lpae || arm_v8plus)]:
+
+template<typename T>
+requires(sizeof(T) == 8) inline
+T
 atomic_load(T const *p)
 {
   T res;
@@ -282,15 +229,44 @@ atomic_load(T const *p)
   return res;
 }
 
-template< typename T, typename V > inline NEEDS [<cxx/type_traits>]
-ALWAYS_INLINE void
-atomic_store(T *p, V value, cxx::enable_if_t<(sizeof(T) == 8), int> = 0)
+template<typename T, typename V>
+requires(sizeof(T) == 8) inline
+void
+atomic_store(T *p, V value)
 {
   T val = value;
+  asm volatile ("strd %1, %H1, %0" : "=m" (*p) : "r" (val));
+}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION[arm && arm_v6plus && mp && !arm_lpae && !arm_v8plus]:
+
+template<typename T>
+requires(sizeof(T) == 8) inline
+T
+atomic_load(T const *p)
+{
+  T res;
+  asm volatile ("ldrexd %0, %H0, [%1]" : "=&r" (res) : "r" (p), "Qo" (*p));
+  return res;
+}
+
+template<typename T, typename V>
+requires(sizeof(T) == 8) inline
+void
+atomic_store(T *p, V value)
+{
+  T val = value;
+  long long tmp;
+  Mem::prefetch_w(p);
   asm volatile (
-      "strd   %1, %H1, %0"
-      : "=m"(*p)
-      : "r"(val));
+      "1: ldrexd %0, %H0, [%2] \n"
+      "   strexd %0, %3, %H3, [%2] \n"
+      "   teq    %0, #0 \n"
+      "   bne    1b"
+      : "=&r"(tmp), "=Qo"(*p)
+      : "r"(p), "r"(val)
+      : "cc");
 }
 
 // --------------------------------------------------------------------
