@@ -34,9 +34,9 @@ endef
 $(eval $(call all_checksum_rules,$(KERNEL),$(KERNEL).debug))
 
 
-setchecksum: setchecksum.c
+setchecksum: setchecksum.cc
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(HOST_CC) $(HOST_CPPFLAGS) $(HOST_CFLAGS) -o $@ $^
+	$(VERBOSE)$(HOST_CXX) -fno-rtti -fno-exceptions $(HOST_CPPFLAGS) $(HOST_CXXFLAGS) -o $@ $^
 
 genchecksum: genchecksum.cc
 	$(COMP_MESSAGE)
