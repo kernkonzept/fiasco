@@ -85,35 +85,6 @@ atomic_or(T *l, V value)
       : "cc");
 }
 
-inline NEEDS["mem.h"]
-bool
-cas_arch(Mword *m, Mword o, Mword n)
-{
-  Mword tmp, res;
-
-  asm volatile
-    ("mov     %[res], #1           \n"
-     "1:                           \n"
-     "ldr     %[tmp], [%[m]]       \n"
-     "teq     %[tmp], %[o]         \n"
-     "bne     2f                   \n"
-     "ldrex   %[tmp], [%[m]]       \n"
-     "teq     %[tmp], %[o]         \n"
-     "strexeq %[res], %[n], [%[m]] \n"
-     "teq     %[res], #1           \n"
-     "beq     1b                   \n"
-     "2:                           \n"
-     : [tmp] "=&r" (tmp), [res] "=&r" (res), "+m" (*m)
-     : [n] "r" (n), [m] "r" (m), [o] "r" (o)
-     : "cc", "memory");
-  Mem::dmb();
-
-  // res == 0 is ok
-  // res == 1 is failed
-
-  return !res;
-}
-
 template<typename T, typename V> inline NEEDS["mem.h", <cxx/type_traits>]
 ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 4), T>
 atomic_exchange(T *mem, V value)
@@ -320,4 +291,38 @@ atomic_store(T *p, V value, cxx::enable_if_t<(sizeof(T) == 8), int> = 0)
       "strd   %1, %H1, %0"
       : "=m"(*p)
       : "r"(val));
+}
+
+// --------------------------------------------------------------------
+IMPLEMENTATION[arm && arm_v6plus]:
+
+#include "mem.h"
+
+inline NEEDS["mem.h"]
+bool
+cas_arch(Mword *m, Mword o, Mword n)
+{
+  Mword tmp, res;
+
+  asm volatile
+    ("mov     %[res], #1           \n"
+     "1:                           \n"
+     "ldr     %[tmp], [%[m]]       \n"
+     "teq     %[tmp], %[o]         \n"
+     "bne     2f                   \n"
+     "ldrex   %[tmp], [%[m]]       \n"
+     "teq     %[tmp], %[o]         \n"
+     "strexeq %[res], %[n], [%[m]] \n"
+     "teq     %[res], #1           \n"
+     "beq     1b                   \n"
+     "2:                           \n"
+     : [tmp] "=&r" (tmp), [res] "=&r" (res), "+m" (*m)
+     : [n] "r" (n), [m] "r" (m), [o] "r" (o)
+     : "cc", "memory");
+  Mem::dmb();
+
+  // res == 0 is ok
+  // res == 1 is failed
+
+  return !res;
 }
