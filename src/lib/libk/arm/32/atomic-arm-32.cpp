@@ -1,71 +1,158 @@
-// --------------------------------------------------------------------
-IMPLEMENTATION[arm && arm_v6plus]:
+INTERFACE[arm && arm_v6plus]:
 
 #include "mem.h"
-#include <cxx/type_traits>
+
+// preprocess off
+#define ATOMIC_OP(name, op)                                                    \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 4) inline                                              \
+  void                                                                         \
+  atomic_##name(T *mem, V value)                                               \
+  {                                                                            \
+    T val = value;                                                             \
+    T res;                                                                     \
+    Mword tmp;                                                                 \
+    Mem::prefetch_w(mem);                                                      \
+    asm volatile (                                                             \
+        "1:   ldrex %[res], %[mem] \n"                                         \
+              #op " %[res], %[res], %[val] \n"                                 \
+        "     strex %[tmp], %[res], %[mem] \n"                                 \
+        "     teq   %[tmp], #0 \n"                                             \
+        "     bne   1b "                                                       \
+        : [res] "=&r" (res), [tmp] "=&r" (tmp), [mem] "+Q" (*mem)              \
+        : [val] "r" (val)                                                      \
+        : "cc");                                                               \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 4) inline                                              \
+  T                                                                            \
+  atomic_fetch_##name(T *mem, V value)                                         \
+  {                                                                            \
+    T val = value;                                                             \
+    T res, old;                                                                \
+    Mword tmp;                                                                 \
+    Mem::prefetch_w(mem);                                                      \
+    asm volatile (                                                             \
+        "1:   ldrex %[old], %[mem] \n"                                         \
+              #op " %[res], %[old], %[val] \n"                                 \
+        "     strex %[tmp], %[res], %[mem] \n"                                 \
+        "     teq   %[tmp], #0 \n"                                             \
+        "     bne   1b "                                                       \
+        : [res] "=&r" (res), [old] "=&r" (old), [tmp] "=&r" (tmp),             \
+          [mem] "+Q" (*mem)                                                    \
+        : [val] "r" (val)                                                      \
+        : "cc");                                                               \
+    return old;                                                                \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 4) inline                                              \
+  T                                                                            \
+  atomic_##name##_fetch(T *mem, V value)                                       \
+  {                                                                            \
+    T val = value;                                                             \
+    T res;                                                                     \
+    Mword tmp;                                                                 \
+    Mem::prefetch_w(mem);                                                      \
+    asm volatile (                                                             \
+        "1:   ldrex %[res], %[mem] \n"                                         \
+              #op " %[res], %[res], %[val] \n"                                 \
+        "     strex %[tmp], %[res], %[mem] \n"                                 \
+        "     teq   %[tmp], #0 \n"                                             \
+        "     bne   1b "                                                       \
+        : [res] "=&r" (res), [tmp] "=&r" (tmp), [mem] "+Q" (*mem)              \
+        : [val] "r" (val)                                                      \
+        : "cc");                                                               \
+    return res;                                                                \
+  }
+ATOMIC_OP(and, and)
+ATOMIC_OP(or, orr)
+ATOMIC_OP(add, add)
+#undef ATOMIC_OP
+// preprocess on
+
+// --------------------------------------------------------------------
+INTERFACE[arm && (arm_v7plus || (arm_v6 && mp))]:
+
+// preprocess off
+#define ATOMIC_OP(name, opl, oph)                                              \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 8) inline                                              \
+  void                                                                         \
+  atomic_##name(T *mem, V value)                                               \
+  {                                                                            \
+    T val = value;                                                             \
+    T res;                                                                     \
+    Mword tmp;                                                                 \
+    Mem::prefetch_w(mem);                                                      \
+    asm volatile (                                                             \
+        "1:   ldrexd %[res], %H[res], %[mem] \n"                               \
+              #opl " %[res], %[res], %[val] \n"                                \
+              #oph " %H[res], %H[res], %H[val] \n"                             \
+        "     strexd %[tmp], %[res], %H[res], %[mem] \n"                       \
+        "     teq    %[tmp], #0 \n"                                            \
+        "     bne    1b "                                                      \
+        : [res] "=&r" (res), [tmp] "=&r" (tmp), [mem] "+Q" (*mem)              \
+        : [val] "r" (val)                                                      \
+        : "cc");                                                               \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 8) inline                                              \
+  T                                                                            \
+  atomic_fetch_##name(T *mem, V value)                                         \
+  {                                                                            \
+    T val = value;                                                             \
+    T res, old;                                                                \
+    Mword tmp;                                                                 \
+    Mem::prefetch_w(mem);                                                      \
+    asm (                                                                      \
+        "1:   ldrexd %[old], %H[res], %[mem] \n"                               \
+              #opl " %[res], %[old], %[val] \n"                                \
+              #oph " %H[res], %H[old], %H[val] \n"                             \
+        "     strexd %[tmp], %[res], %H[res], %[mem] \n"                       \
+        "     teq    %[tmp], #0 \n"                                            \
+        "     bne    1b "                                                      \
+        : [res] "=&r" (res), [old] "=&r" (old), [tmp] "=&r" (tmp),             \
+          [mem] "+Q" (*mem)                                                    \
+        : [val] "r" (val)                                                      \
+        : "cc");                                                               \
+    return old;                                                                \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 8) inline                                              \
+  T                                                                            \
+  atomic_##name##_fetch(T *mem, V value)                                       \
+  {                                                                            \
+    T val = value;                                                             \
+    T res;                                                                     \
+    Mword tmp;                                                                 \
+    Mem::prefetch_w(mem);                                                      \
+    asm volatile (                                                             \
+        "1:   ldrexd %[res], %H[res], %[mem] \n"                               \
+              #opl " %[res], %[res], %[val] \n"                                \
+              #oph " %H[res], %H[res], %H[val] \n"                             \
+        "     strexd %[tmp], %[res], %H[res], %[mem] \n"                       \
+        "     teq    %[tmp], #0 \n"                                            \
+        "     bne    1b "                                                      \
+        : [res] "=&r" (res), [tmp] "=&r" (tmp), [mem] "+Q" (*mem)              \
+        : [val] "r" (val)                                                      \
+        : "cc");                                                               \
+    return res;                                                                \
+  }
+ATOMIC_OP(and, and, and)
+ATOMIC_OP(or, orr, orr)
+ATOMIC_OP(add, adds, adc)
+#undef ATOMIC_OP
+// preprocess on
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION[arm && arm_v6plus]:
 
 template<typename T, typename V> inline
-void
-atomic_add(T *l, V value)
-{
-  static_assert(sizeof(T) == 4);
-  T val = value;
-  Mword tmp, ret;
-
-  asm volatile (
-      "1:                                 \n"
-      "ldrex   %[v], [%[mem]]             \n"
-      "add     %[v], %[v], %[addval]      \n"
-      "strex   %[ret], %[v], [%[mem]]     \n"
-      "teq     %[ret], #0                 \n"
-      "bne     1b                         \n"
-      : [v] "=&r" (tmp), [ret] "=&r" (ret), "+m" (*l)
-      :  [mem] "r" (l), [addval] "r" (val)
-      : "cc");
-}
-
-template<typename T, typename V> inline
-void
-atomic_and(T *l, V value)
-{
-  static_assert(sizeof(T) == 4);
-  T val = value;
-  Mword tmp, ret;
-
-  asm volatile (
-      "1:                                 \n"
-      "ldrex   %[v], [%[mem]]             \n"
-      "and     %[v], %[v], %[andval]     \n"
-      "strex   %[ret], %[v], [%[mem]]     \n"
-      "teq     %[ret], #0                 \n"
-      "bne     1b                         \n"
-      : [v] "=&r" (tmp), [ret] "=&r" (ret), "+m" (*l)
-      :  [mem] "r" (l), [andval] "r" (val)
-      : "cc");
-}
-
-template<typename T, typename V> inline
-void
-atomic_or(T *l, V value)
-{
-  static_assert(sizeof(T) == 4);
-  T val = value;
-  Mword tmp, ret;
-
-  asm volatile (
-      "1:                                 \n"
-      "ldrex   %[v], [%[mem]]             \n"
-      "orr     %[v], %[v], %[orval]     \n"
-      "strex   %[ret], %[v], [%[mem]]     \n"
-      "teq     %[ret], #0                 \n"
-      "bne     1b                         \n"
-      : [v] "=&r" (tmp), [ret] "=&r" (ret), "+m" (*l)
-      :  [mem] "r" (l), [orval] "r" (val)
-      : "cc");
-}
-
-template<typename T, typename V> inline NEEDS["mem.h", <cxx/type_traits>]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 4), T>
+cxx::enable_if_t<(sizeof(T) == 4), T>
 atomic_exchange(T *mem, V value)
 {
   T val = value;
@@ -76,26 +163,6 @@ atomic_exchange(T *mem, V value)
   asm volatile (
       "1:   ldrex %[res], [%[mem]] \n"
       "     strex %[tmp], %[val], [%[mem]] \n"
-      "     cmp   %[tmp], #0 \n"
-      "     bne   1b "
-      : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
-      : [mem] "r" (mem), [val] "r" (val)
-      : "cc");
-  return res;
-}
-
-template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 4), T>
-atomic_add_fetch(T *mem, V value)
-{
-  T val = value;
-  T res;
-  Mword tmp;
-  Mem::prefetch_w(mem);
-  asm volatile (
-      "1:   ldrex %[res], [%[mem]] \n"
-      "     add   %[res], %[res], %[val] \n"
-      "     strex %[tmp], %[res], [%[mem]] \n"
       "     cmp   %[tmp], #0 \n"
       "     bne   1b "
       : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
@@ -118,33 +185,12 @@ atomic_exchange(T *mem, V value)
   Mword tmp;
   Mem::prefetch_w(mem);
   asm volatile (
-      "1:   ldrexd %[res], %H[res], [%[mem]] \n"
-      "     strexd %[tmp], %[val], %H[val], [%[mem]] \n"
+      "1:   ldrexd %[res], %H[res], %[mem] \n"
+      "     strexd %[tmp], %[val], %H[val], %[mem] \n"
       "     cmp    %[tmp], #0 \n"
       "     bne    1b "
-      : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
-      : [mem] "r" (mem), [val] "r" (val)
-      : "cc");
-  return res;
-}
-
-template<typename T, typename V> inline NEEDS ["mem.h", <cxx/type_traits>]
-ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
-atomic_add_fetch(T *mem, V value)
-{
-  T val = value;
-  T res;
-  Mword tmp;
-  Mem::prefetch_w(mem);
-  asm volatile (
-      "1:   ldrexd %[res], %H[res], [%[mem]] \n"
-      "     adds   %[res], %[res], %[val] \n"
-      "     adc    %H[res], %H[res], %H[val] \n"
-      "     strexd %[tmp], %[res], %H[res], [%[mem]] \n"
-      "     cmp    %[tmp], #0 \n"
-      "     bne    1b "
-      : [res] "=&r" (res), [tmp] "=&r" (tmp), "+Qo" (*mem)
-      : [mem] "r" (mem), [val] "r" (val)
+      : [res] "=&r" (res), [tmp] "=&r" (tmp), [mem] "+Q" (*mem)
+      : [val] "r" (val)
       : "cc");
   return res;
 }
