@@ -135,7 +135,7 @@ ALWAYS_INLINE cxx::enable_if_t<(sizeof(T) == 8), T>
 atomic_load(T const *p)
 {
   T res;
-  asm volatile ("ldrd %0, %H0, %1" : "=r" (res) : "m"(*p));
+  asm volatile ("ldrd %0, %H0, %1" : "=&r" (res) : "m"(*p));
   return res;
 }
 
