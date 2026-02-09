@@ -1,4 +1,110 @@
+INTERFACE [amd64]:
+
+// preprocess off
+#define ATOMIC_OP_(op, size, suffix)                                           \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size) inline                                           \
+  void                                                                         \
+  atomic_##op(T *mem, V value)                                                 \
+  {                                                                            \
+    T val = value;                                                             \
+    asm volatile (                                                             \
+      "lock; "#op #suffix" %1, %2"                                             \
+      : "=m"(*mem)                                                             \
+      : "er"(val), "m"(*mem));                                                 \
+  }
+
+#define ATOMIC_OP(op)  \
+  ATOMIC_OP_(op, 4, l) \
+  ATOMIC_OP_(op, 8, q)
+
+ATOMIC_OP(or)
+ATOMIC_OP(and)
+ATOMIC_OP(add)
+#undef ATOMIC_OP_
+#undef ATOMIC_OP
+// preprocess on
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION [amd64]:
+
+template<typename T, typename V> inline
+T
+atomic_fetch_and(T *mem, V value)
+{
+  T val = value;
+  T old;
+  do
+    {
+      old = *mem;
+    }
+  while (!cas(mem, old, old & val));
+  return old;
+}
+
+template<typename T, typename V> inline
+T
+atomic_and_fetch(T *mem, V value)
+{
+  T val = value;
+  T old;
+  do
+    {
+      old = *mem;
+    }
+  while (!cas(mem, old, old & val));
+  return old & val;
+}
+
+template<typename T, typename V> inline
+T
+atomic_fetch_or(T *mem, V value)
+{
+  T val = value;
+  T old;
+  do
+    {
+      old = *mem;
+    }
+  while (!cas(mem, old, old | val));
+  return old;
+}
+
+template<typename T, typename V> inline
+T
+atomic_or_fetch(T *mem, V value)
+{
+  T val = value;
+  T old;
+  do
+    {
+      old = *mem;
+    }
+  while (!cas(mem, old, old | val));
+  return old | val;
+}
+
+template<typename T, typename V>
+requires(sizeof(T) == 4 || sizeof(T) == 8) inline
+T
+atomic_fetch_add(T *mem, V value)
+{
+  T val = value;
+  T old;
+  asm volatile ("lock; xadd %1, %0" : "+m"(*mem), "=r"(old) : "1"(val));
+  return old;
+}
+
+template<typename T, typename V>
+requires(sizeof(T) == 4 || sizeof(T) == 8) inline
+T
+atomic_add_fetch(T *mem, V value)
+{
+  T val = value;
+  T old;
+  asm volatile ("lock; xadd %1, %0" : "+m"(*mem), "=r"(old) : "1"(val));
+  return old + val;
+}
 
 template<typename T, typename V> inline
 T
@@ -12,68 +118,6 @@ atomic_exchange(T *mem, V value)
                 : [val] "=r" (val), [mem] "+m" (*mem) : "0" (val));
 
   return val;
-}
-
-template<typename T, typename V> inline
-void
-atomic_and(T *l, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T val = value;
-  switch (sizeof(T))
-    {
-    case 4:
-      asm volatile ("lock; andl %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
-      break;
-    case 8:
-      asm volatile ("lock; andq %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
-      break;
-    }
-}
-
-template<typename T, typename V> inline
-void
-atomic_or(T *l, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T val = value;
-  switch (sizeof(T))
-    {
-    case 4:
-      asm volatile ("lock; orl %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
-      break;
-    case 8:
-      asm volatile ("lock; orq %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
-      break;
-    }
-}
-
-template<typename T, typename V> inline
-void
-atomic_add(T *l, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T val = value;
-  switch (sizeof(T))
-    {
-    case 4:
-      asm volatile ("lock; addl %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
-      break;
-    case 8:
-      asm volatile ("lock; addq %1, %2" : "=m"(*l) : "er"(val), "m"(*l));
-      break;
-    }
-}
-
-template<typename T, typename V> inline
-T
-atomic_add_fetch(T *mem, V value)
-{
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
-  T res;
-  T val = value;
-  asm volatile ("lock; xadd %1, %0" : "+m"(*mem), "=r"(res) : "1"(val));
-  return res + val;
 }
 
 template< typename T > ALWAYS_INLINE inline
