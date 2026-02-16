@@ -127,7 +127,7 @@ INTERFACE [mips && !mp]:
     local_atomic_##name(mem, val);                                             \
   }                                                                            \
 
-#define ATOMIC_RET_OP_                                                         \
+#define ATOMIC_RET_OP_(name)                                                   \
   template<typename T, typename V>                                             \
   requires(sizeof(T) == sizeof(Mword)) inline                                  \
   T                                                                            \
