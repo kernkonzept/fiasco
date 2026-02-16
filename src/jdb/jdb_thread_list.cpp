@@ -857,7 +857,8 @@ Jdb_thread_list::cmds() const override
 {
   static Cmd cs[] =
     {
-	{ 0, "l", "list", "%C", "l{r|p}\tshow ready/present list", &subcmd },
+	{ 0, "l", "list", "%C",
+          "l{r|c<cpunum>|p}\tshow ready/ready-for-cpu/present list", &subcmd },
         { 1, "", "threadlist", "%C", nullptr /* invisible */, &subcmd },
     };
 
