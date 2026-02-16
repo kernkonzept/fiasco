@@ -98,17 +98,20 @@ public:
    * - terminating '\0'. */
 
   /* 0x800-0x900:
-   * Code for syscall invocation. */
+   * Code for syscall invocation.
+   * See OFFS__KIP_FN_SYSCALL in kip_offsets.h. */
 
   /* 0x900-0x97F:
    * Code for reading the system clock with microsecond resolution. Depending on
    * the configuration, this clock might or might not be synchronized with the
-   * KIP clock. */
+   * KIP clock.
+   * See OFFS__KIP_FN_READ_US in kip_offsets.h. */
 
   /* 0x980-0x9FF:
    * Code for reading the system clock with nanosecond resolution. Depending on
    * the configuration, this clock might or might not be synchronized with the
-   * KIP clock. */
+   * KIP clock.
+   * See OFFS__KIP_FN_READ_NS in kip_offsets.h. */
 
 private:
   static Global_data<Kip *> global_kip;
