@@ -15,7 +15,7 @@ class Generic_obj_space
   friend class Jdb_tcb;
 
 public:
-  static char const * const name;
+  static constexpr char const *name = "Obj_space";
 
   typedef Obj::Attr Attr;
   typedef Obj::Capability Capability;
@@ -118,10 +118,6 @@ public:
   inline V_pfn map_max_address() const
   { return obj_map_max_address(); }
 };
-
-template< typename SPACE >
-char const * const Generic_obj_space<SPACE>::name = "Obj_space";
-
 
 // ------------------------------------------------------------------------------
 INTERFACE [debug]:

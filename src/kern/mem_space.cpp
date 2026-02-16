@@ -21,7 +21,7 @@ class Mem_space
 
 public:
   typedef int Status;
-  static char const *const name;
+  static constexpr char const *name = "Mem_space";
 
   typedef Page::Attr Attr;
   typedef Pdir::Va Vaddr;
@@ -490,8 +490,6 @@ IMPLEMENTATION:
 
 DEFINE_PER_CPU Per_cpu<Mem_space *> Mem_space::_current;
 
-
-char const * const Mem_space::name = "Mem_space";
 DEFINE_GLOBAL Global_data<Mem_space *> Mem_space::_kernel_space;
 
 static DEFINE_GLOBAL Global_data<Mem_space::Fit_size> __mfs;

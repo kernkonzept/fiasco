@@ -29,7 +29,7 @@ class Generic_io_space
   friend class Jdb_iomap;
 
 public:
-  static char const *const name;
+  static constexpr char const *name = "Io_space";
 
   typedef Port_number V_pfn;
   typedef Port_number V_pfc;
@@ -196,9 +196,6 @@ private:
     return _iopb_active_on_cpu.get(current_cpu());
   }
 };
-
-template<typename SPACE>
-char const *const Generic_io_space<SPACE>::name = "Io_space";
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [io]:
