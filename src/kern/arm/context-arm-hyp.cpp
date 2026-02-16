@@ -184,7 +184,7 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
       else
         arm_ext_vcpu_switch_to_host_no_load(vcpu, v);
 
-      vcpu_vgic_switch_to_kernel(vcpu, do_load);
+      vcpu_vgic_switch_to_kernel(vcpu);
     }
 
   _tpidruro = vcpu->host.tpidruro;
@@ -697,7 +697,7 @@ Context::vcpu_vgic_switch_to_user(Vcpu_state *vcpu)
 
 PRIVATE inline
 void
-Context::vcpu_vgic_switch_to_kernel(Vcpu_state *vcpu, bool)
+Context::vcpu_vgic_switch_to_kernel(Vcpu_state *vcpu)
 {
   _vcpu_vtimer_irq.save(&vm_state(vcpu)->vtmr);
 }
@@ -727,7 +727,7 @@ Context::vcpu_vgic_switch_to_user(Vcpu_state *)
 
 PRIVATE inline
 void
-Context::vcpu_vgic_switch_to_kernel(Vcpu_state *, bool)
+Context::vcpu_vgic_switch_to_kernel(Vcpu_state *)
 {}
 
 //---------------------------------------------------------------------------
