@@ -1,6 +1,8 @@
 /* -*- c -*- */
+
 #include "globalconfig.h"
 #include "kernel.ld.inc"
+#include "kip_offsets.h"
 
 phys_offset = kernel_virt_addr - kernel_load_addr;
 
@@ -77,6 +79,12 @@ SECTIONS {
     PROVIDE (_initkip_end = .);
     /* See KIP layout in abi/kip.cpp. The feature strings are terminated by '\0'! */
     ASSERT (_initkip_end < my_kernel_info_page + 0x800, "Kernel version strings too long");
+    ASSERT(kip_time_fn_read_us_end - kip_time_fn_read_us <=
+           (OFFS__KIP_SCALER_TIME_STAMP_TO_US - OFFS__KIP_FN_READ_US),
+           "KIP code for reading the timer in us too long");
+    ASSERT(kip_time_fn_read_us_end - kip_time_fn_read_us <=
+           (OFFS__KIP_SCALER_TIME_STAMP_TO_NS - OFFS__KIP_FN_READ_NS),
+           "KIP code for reading the timer in ns too long");
   } :kip :l4_kip
 
   . = ALIGN(4K);

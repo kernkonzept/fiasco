@@ -18,6 +18,7 @@ IMPLEMENTATION [arm]:
 
 #include "amp_node.h"
 #include "config.h"
+#include "kip_offsets.h"
 #include "mem_layout.h"
 #include "mem_space.h"
 #include "mem_unit.h"
@@ -90,17 +91,22 @@ Kip_init::init_kip_clock()
 
   K *k = reinterpret_cast<K *>(Kip::k());
 
-  *reinterpret_cast<Mword*>(k->b + 0x970) = Timer::get_scaler_shift_ts_to_us().scaler;
-  *reinterpret_cast<Mword*>(k->b + 0x978) = Timer::get_scaler_shift_ts_to_us().shift;
-  *reinterpret_cast<Mword*>(k->b + 0x9f0) = Timer::get_scaler_shift_ts_to_ns().scaler;
-  *reinterpret_cast<Mword*>(k->b + 0x9f8) = Timer::get_scaler_shift_ts_to_ns().shift;
+  *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SCALER_TIME_STAMP_TO_US)
+    = Timer::get_scaler_shift_ts_to_us().scaler;
+  *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SHIFT_TIME_STAMP_TO_US)
+    = Timer::get_scaler_shift_ts_to_us().shift;
+  *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SCALER_TIME_STAMP_TO_NS)
+    = Timer::get_scaler_shift_ts_to_ns().scaler;
+  *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SHIFT_TIME_STAMP_TO_NS)
+    = Timer::get_scaler_shift_ts_to_ns().shift;
 
-  memcpy(k->b + 0x900, kip_time_fn_read_us,
+  memcpy(k->b + OFFS__KIP_FN_READ_US, kip_time_fn_read_us,
          kip_time_fn_read_us_end - kip_time_fn_read_us);
-  memcpy(k->b + 0x980, kip_time_fn_read_ns,
+  memcpy(k->b + OFFS__KIP_FN_READ_NS, kip_time_fn_read_ns,
          kip_time_fn_read_ns_end - kip_time_fn_read_ns);
 
-  Mem_unit::make_coherent_to_pou(k->b + 0x900, 0x100);
+  size_t sz = OFFS__KIP_FN_CODE_END - OFFS__KIP_FN_CODE_START;
+  Mem_unit::make_coherent_to_pou(k->b + OFFS__KIP_FN_CODE_START, sz);
 }
 
 //--------------------------------------------------------------
@@ -116,7 +122,7 @@ Kip_init::init_syscalls(Kip *kinfo)
     Mword w[0x1000 / sizeof(Mword)];
   };
   K *k = reinterpret_cast<K *>(kinfo);
-  k->w[0x800 / sizeof(Mword)] = 0xd65f03c0d4000001; // svc #0; ret
+  k->w[OFFS__KIP_FN_SYSCALL / sizeof(Mword)] = 0xd65f03c0d4000001; // svc #0; ret
 }
 
 //--------------------------------------------------------------

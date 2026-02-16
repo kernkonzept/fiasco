@@ -1,8 +1,9 @@
 /* -*- c -*- */
 
 #include "globalconfig.h"
-#include "linking.h"
 #include "kernel.ld.inc"
+#include "kip_offsets.h"
+#include "linking.h"
 
 _boot_sys_start = 0x300000;
 _kernel_image	= FIASCO_IMAGE_VIRT_START;	/* kernel link address */
@@ -142,6 +143,12 @@ SECTIONS {
     _initkip_end = .;
     /* See KIP layout in abi/kip.cpp. The feature strings are terminated by '\0'! */
     ASSERT (_initkip_end < my_kernel_info_page + 0x900, "Kernel version strings too long");
+    ASSERT(kip_time_fn_read_us_end - kip_time_fn_read_us <=
+           (OFFS__KIP_SCALER_TIME_STAMP_TO_US - OFFS__KIP_FN_READ_US),
+           "KIP code for reading the timer in us too long");
+    ASSERT(kip_time_fn_read_us_end - kip_time_fn_read_us <=
+           (OFFS__KIP_SCALER_TIME_STAMP_TO_NS - OFFS__KIP_FN_READ_NS),
+           "KIP code for reading the timer in ns too long");
     . = ALIGN(4K);
   } :kip :l4_kip = 0
 

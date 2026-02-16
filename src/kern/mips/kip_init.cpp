@@ -16,6 +16,7 @@ IMPLEMENTATION [mips]:
 #include <cstring>
 
 #include "config.h"
+#include "kip_offsets.h"
 #include "mem_space.h"
 #include "mem_unit.h"
 
@@ -89,10 +90,11 @@ Kip_init::init_kip_clock()
 
   K *k = reinterpret_cast<K *>(Kip::k());
 
-  memcpy(k->b + 0x900, kip_time_fn_read_us,
+  memcpy(k->b + OFFS__KIP_FN_READ_US, kip_time_fn_read_us,
          kip_time_fn_read_us_end - kip_time_fn_read_us);
-  memcpy(k->b + 0x980, kip_time_fn_read_ns,
+  memcpy(k->b + OFFS__KIP_FN_READ_US, kip_time_fn_read_ns,
          kip_time_fn_read_ns_end - kip_time_fn_read_ns);
 
-  Mem_unit::make_coherent_to_pou(k->b + 0x900, 0x100);
+  size_t sz = OFFS__KIP_FN_CODE_END - OFFS__KIP_FN_CODE_START;
+  Mem_unit::make_coherent_to_pou(k->b + OFFS__KIP_FN_CODE_START, sz);
 }

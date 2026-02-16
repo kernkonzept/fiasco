@@ -21,6 +21,7 @@ IMPLEMENTATION [ia32 || amd64]:
 #include "config.h"
 #include "cpu.h"
 #include "div32.h"
+#include "kip_offsets.h"
 #include "kmem.h"
 #include "panic.h"
 
@@ -120,12 +121,14 @@ Kip_init::init_kip_clock()
   K *k = reinterpret_cast<K *>(Kip::k());
 
   Cpu cpu = Cpu::cpus.cpu(Cpu_number::boot_cpu());
-  *reinterpret_cast<Mword*>(k->b + 0x9f0) = cpu.get_scaler_tsc_to_us();
-  *reinterpret_cast<Mword*>(k->b + 0x9f8) = cpu.get_scaler_tsc_to_ns();
+  *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SCALER_TIME_STAMP_TO_US)
+    = cpu.get_scaler_tsc_to_us();
+  *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SCALER_TIME_STAMP_TO_NS)
+    = cpu.get_scaler_tsc_to_ns();
 
-  memcpy(k->b + 0x900, kip_time_fn_read_us,
+  memcpy(k->b + OFFS__KIP_FN_READ_US, kip_time_fn_read_us,
          kip_time_fn_read_us_end - kip_time_fn_read_us);
-  memcpy(k->b + 0x980, kip_time_fn_read_ns,
+  memcpy(k->b + OFFS__KIP_FN_READ_NS, kip_time_fn_read_ns,
          kip_time_fn_read_ns_end - kip_time_fn_read_ns);
 }
 
