@@ -107,8 +107,8 @@ INTERFACE[arm && (arm_v7plus || (arm_v6 && mp))]:
     T res, old;                                                                \
     Mword tmp;                                                                 \
     Mem::prefetch_w(mem);                                                      \
-    asm (                                                                      \
-        "1:   ldrexd %[old], %H[res], %[mem] \n"                               \
+    asm volatile (                                                             \
+        "1:   ldrexd %[old], %H[old], %[mem] \n"                               \
               #opl " %[res], %[old], %[val] \n"                                \
               #oph " %H[res], %H[old], %H[val] \n"                             \
         "     strexd %[tmp], %[res], %H[res], %[mem] \n"                       \
