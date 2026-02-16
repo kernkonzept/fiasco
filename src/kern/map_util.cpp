@@ -671,10 +671,21 @@ map(MAPDB* mapdb,
             // nothing found
             continue;
 
-          if (r != Mapdb_lookup_src_dst::Dst_child_of_src
-              || grant
-              || SPACE::page_address(r_phys, i_order) != i_phys
-              || r_order > i_order)
+          if (r == Mapdb_lookup_src_dst::Dst_child_of_src
+              && !grant
+              && SPACE::page_address(r_phys, i_order) == i_phys
+              && r_order <= i_order)
+            {
+              i_attribs |= r_attribs;
+              // we might unlock the sender mapping as we are going to manipulate
+              // the existing receiver mapping without doing a mapdb->insert later.
+              if (!rcv_frame.same_lock(sender_frame))
+                sender_frame.clear();
+
+              // store the still locked rcv mapping for later unlock
+              sender_frame = rcv_frame;
+            }
+          else
             {
               // unmap dst
               auto r_addr = SPACE::page_address(rcv_addr, r_order);
@@ -713,17 +724,6 @@ map(MAPDB* mapdb,
               // unlock destination if it is not a grant is the same tree
               if (!rcv_frame.same_lock(sender_frame))
                 rcv_frame.clear();
-            }
-          else if (r == Mapdb_lookup_src_dst::Dst_child_of_src)
-            {
-              i_attribs |= r_attribs;
-              // we might unlock the sender mapping as we are going to manipulate
-              // the existing receiver mapping without doing a mapdb->insert later.
-              if (!rcv_frame.same_lock(sender_frame))
-                sender_frame.clear();
-
-              // store the still locked rcv mapping for later unlock
-              sender_frame = rcv_frame;
             }
         }
       else if (! mapdb->lookup(from_id,
