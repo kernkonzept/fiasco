@@ -316,7 +316,20 @@ Gic_redist::cpu_init_lpi()
 
   Ctrl ctrl(_redist.read<Unsigned32>(GICR_CTRL));
   if (ctrl.enable_lpis())
-    panic("GIC: LPI support of redistributor is already enabled.\n");
+    {
+      WARNX(Warning,
+            "GIC: LPI support of redistributor already enabled; disabling...");
+      ctrl.enable_lpis() = 0;
+      _redist.write<Unsigned32>(ctrl.raw, GICR_CTRL);
+      Mem::dsb();
+      sync_rwp();
+      ctrl = Ctrl(_redist.read<Unsigned32>(GICR_CTRL));
+      if (ctrl.enable_lpis())
+        {
+          WARNX(Warning, "... did not work!\n");
+          panic("GIC: LPI support of redistributor is already enabled.");
+        }
+    }
 
   Propbaser propbaser;
   propbaser.id_bits() = num_lpi_intid_bits - 1;
