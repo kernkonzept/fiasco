@@ -584,6 +584,7 @@ my $template_arg;    # Template argument list
 my $exception_spec;  # exception spec for function declarations
 my $ctor_initializer; # ctor initializer ' : foo(), bar() '
 my $attribute_spec;  # attribute specification
+my $requires_spec;   # requires specification
 
 my $src_pos;         # current source position (file and line)
 my $block_pos;       # file and start position of the currently parsed block
@@ -640,6 +641,8 @@ sub parse_init			# Initialize parser variables.
   my $alignas = qr { \b alignas $s \( $paren_expr \) }sx;
 
   $attribute_spec = qr { $s (?:$alignas | $gcc_attribute | $cpp_attribute) }sx;
+
+  $requires_spec = qr { (?: \b requires $s \( $paren_expr \)) }sx;
 }
 
 sub match_e_opt
@@ -1378,6 +1381,12 @@ sub handle_function
 	  next;
         }
 
+      if (s/^($s)($requires_spec)([\s\n])/$1$3/s)
+        {
+          $func->{requires} .= $2;
+          $func->{pretext} =~ s/\Q$2//s;
+        }
+
       if (s/^($s)(inline|constexpr)([\s\n])/$1$3/si) # "inline" is case-insensitive.
         {
           # constexpr implies inline and must always be inlined.
@@ -1741,6 +1750,11 @@ sub func_prototype($)		# Return a function declaration from
       $pretext =~ s/^($s)/${1}$attr_text/s;
     }
 
+  if ($func->{requires})
+    {
+      $pretext =~ s/^($s)/${1}$func->{requires} /s;
+    }
+
   if ($func->{funtemplate} ne '')
     {
       $pretext =~ s/^($s)/${1}$func->{funtemplate} /s;
@@ -1888,6 +1902,11 @@ sub print_funcdef($)
     {
       my $attr_text = join ' ', @{$function->{attributes}};
       $pretext =~ s/^($s)/${1}$attr_text/s;
+    }
+
+  if ($function->{requires})
+    {
+      $pretext =~ s/^($s)/${1}$function->{requires} /s;
     }
 
   if ($function->{funtemplate} ne '')
