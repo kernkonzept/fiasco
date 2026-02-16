@@ -196,6 +196,9 @@ config ARM_PROFILE_R
 	select SYNC_CLOCK
 	bool
 
+config ARM_LSE_MAY
+	bool
+
 config ARM_LSE
 	bool
 
@@ -335,6 +338,7 @@ config ARM_V8A_GENERIC
 	select HAS_MP_OPTION
 	select HAS_CPU_VIRT
 	select HAS_64BIT
+	select ARM_LSE_MAY
 
 config ARM_V8R_GENERIC
 	bool "Generic Armv8-R CPU"
