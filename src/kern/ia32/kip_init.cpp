@@ -130,6 +130,9 @@ Kip_init::init_kip_clock()
          kip_time_fn_read_us_end - kip_time_fn_read_us);
   memcpy(k->b + OFFS__KIP_FN_READ_NS, kip_time_fn_read_ns,
          kip_time_fn_read_ns_end - kip_time_fn_read_ns);
+
+  size_t sz = OFFS__KIP_FN_CODE_END - OFFS__KIP_FN_CODE_START;
+  Mem_unit::make_coherent_to_pou(k->b + OFFS__KIP_FN_CODE_START, sz);
 }
 
 //----------------------------------------------------------------------------
