@@ -751,39 +751,3 @@ PRIVATE static inline
 int
 Thread::call_nested_trap_handler(Trap_state *)
 { return -1; }
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION [(ia32 || amd64) && virt_obj_space]:
-
-IMPLEMENT_OVERRIDE inline
-bool
-Thread::pagein_tcb_request(Return_frame *regs)
-{
-  // Counterpart: Mem_layout::read_special_safe()
-  unsigned long new_ip = regs->ip();
-  if (*reinterpret_cast<Unsigned8*>(new_ip) == 0x48) // REX.W
-    new_ip += 1;
-
-  Unsigned16 op = *reinterpret_cast<Unsigned16*>(new_ip);
-  if ((op & 0xc0ff) == 0x8b)
-    {
-      regs->ip(new_ip + 2);
-      // stack layout:
-      //         user eip
-      //         PF error code
-      // reg =>  eax/rax
-      //         ecx/rcx
-      //         edx/rdx
-      //         ...
-      Mword *reg = reinterpret_cast<Mword*>(regs) - 2
-                   - Return_frame::Pf_ax_offset;
-      assert((op >> 11) <= 2);
-      reg[-(op>>11)] = 0; // op==0 => eax, op==1 => ecx, op==2 => edx
-
-      // tell program that a pagefault occurred we cannot handle
-      regs->flags(regs->flags() | 0x41); // set carry and zero flag in EFLAGS
-      return true;
-    }
-
-  return false;
-}

@@ -484,33 +484,6 @@ Thread::handle_svc(Trap_state *ts)
 }
 
 //-----------------------------------------------------------------------------
-IMPLEMENTATION [arm && 32bit && virt_obj_space]:
-
-IMPLEMENT_OVERRIDE inline
-bool
-Thread::pagein_tcb_request(Return_frame *regs)
-{
-#ifdef __thumb__
-  enum : Mword { Ldr_lr_lr_inst = 0xe000f8de }; // ldr.w lr,[lr]
-#else
-  enum : Mword { Ldr_lr_lr_inst = 0xe59ee000 }; // ldr lr,[lr]
-#endif
-
-  // Counterpart: Mem_layout::read_special_safe()
-  if (*reinterpret_cast<Mword*>(regs->pc) == Ldr_lr_lr_inst)
-    {
-      // skip faulting instruction
-      regs->pc += 4;
-      // tell program that a pagefault occurred we cannot handle
-      regs->psr |= 0x40000000; // set zero flag in psr
-      regs->km_lr = 0;
-
-      return true;
-    }
-  return false;
-}
-
-//-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && (!cpu_virt || mpu)]:
 
 PUBLIC static inline template<typename T>

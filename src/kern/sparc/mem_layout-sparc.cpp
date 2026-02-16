@@ -109,26 +109,3 @@ Mem_layout::add_pmem(Address phys, Address virt, unsigned long size)
       virt += Config::SUPERPAGE_SIZE;
     }
 }
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION [sparc && virt_obj_space]:
-
-#include "panic.h"
-
-PUBLIC static inline
-template< typename V >
-bool
-Mem_layout::read_special_safe(V const * /* *address */, V &/*v*/)
-{
-  panic("%s not implemented", __PRETTY_FUNCTION__);
-  return false;
-}
-
-PUBLIC static inline
-template< typename T >
-T
-Mem_layout::read_special_safe(T const *a)
-{
-  Mword res;
-  return T(res);
-}

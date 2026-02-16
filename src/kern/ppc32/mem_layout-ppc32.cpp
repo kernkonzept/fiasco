@@ -63,31 +63,6 @@ Mem_layout::pmem_to_phys (Address addr)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION [ppc32 && virt_obj_space]:
-
-#include "panic.h"
-
-PUBLIC static inline
-template< typename V >
-bool
-Mem_layout::read_special_safe(V const * /* *address */, V &/*v*/)
-{
-  panic("%s not implemented", __PRETTY_FUNCTION__);
-  return false;
-}
-
-PUBLIC static inline
-template< typename T >
-T
-Mem_layout::read_special_safe(T const *a)
-{
-  Mword res;
-  asm volatile("lwz %0, 0(%1)\n"
-               : "=r"(res) : "r"(a));
-  return T(res);
-}
-
-//---------------------------------------------------------------------------
 IMPLEMENTATION [ppc32 && debug]:
 
 #include <cstdio>

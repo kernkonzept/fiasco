@@ -3,11 +3,11 @@ INTERFACE:
 #include "task.h"
 #include "obj_space_phys_util.h"
 
-class Vm : public Obj_space_phys_override<Task>
+class Vm : public Task
 {
 public:
   explicit Vm(Ram_quota *q)
-  : Obj_space_phys_override<Task>(q, Caps::mem() | Caps::obj())
+  : Task(q, Caps::mem() | Caps::obj())
   {}
 
   int resume_vcpu(Context *, Vcpu_state *, bool) override = 0;

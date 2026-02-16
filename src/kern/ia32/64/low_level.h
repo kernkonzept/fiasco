@@ -320,7 +320,7 @@
 	.macro	SAVE_SCRATCH
 	push	%rdi
 	push	%rsi
-	push	%rax /* must be ax cx dx for pagein_tcb_request */
+	push	%rax
 	push	%rcx
 	push	%rdx
 	push	%r8

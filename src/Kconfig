@@ -8,9 +8,6 @@ config HAS_FPU_OPTION
 config HAS_LAZY_FPU
 	bool
 
-config HAS_VIRT_OBJ_SPACE_OPTION
-	bool
-
 config HAS_SERIAL_OPTION
 	bool
 
@@ -344,17 +341,6 @@ config IRQ_DIRECT_INJECT
 	  forward hardware interrupts to a guest. This enables just the
 	  infrastructure. The virtual machine monitor needs to support this
 	  feature as well and manage the hardware interrupts accordingly.
-
-config DISABLE_VIRT_OBJ_SPACE
-	bool "No virtually mapped array for cap tables" if HAS_VIRT_OBJ_SPACE_OPTION
-	depends on HAS_VIRT_OBJ_SPACE_OPTION && EXPERIMENTAL && MMU
-
-config VIRT_OBJ_SPACE
-	def_bool y
-	depends on HAS_VIRT_OBJ_SPACE_OPTION
-	depends on !DISABLE_VIRT_OBJ_SPACE
-	depends on !KERNEL_ISOLATION
-	depends on MMU
 
 config PHYS_OBJ_SPACE_AVL
 	bool "Use AVL tree for object space"

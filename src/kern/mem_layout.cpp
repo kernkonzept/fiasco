@@ -52,19 +52,6 @@ public:
 
 };
 
-IMPLEMENTATION [obj_space_virt]:
-
-PUBLIC static inline
-bool
-Mem_layout::is_caps_area(Address a)
-{ return (a >= Caps_start) && (a < Caps_end); }
-
-IMPLEMENTATION [!obj_space_virt]:
-
-PUBLIC static inline
-bool
-Mem_layout::is_caps_area(Address)
-{ return false; }
 
 IMPLEMENTATION:
 

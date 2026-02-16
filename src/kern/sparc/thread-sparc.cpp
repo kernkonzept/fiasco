@@ -115,14 +115,6 @@ extern "C" {
 
 };
 
-IMPLEMENT_OVERRIDE inline
-bool
-Thread::pagein_tcb_request(Return_frame * /*regs*/)
-{
-  NOT_IMPL_PANIC;
-  return false;
-}
-
 extern "C"
 {
   void timer_handler()

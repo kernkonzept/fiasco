@@ -94,19 +94,16 @@ Thread::arm_kernel_sync_entry(Trap_state *ts)
       call_nested_trap_handler(ts);
       break;
     case 0x25: // data abort from kernel mode
-      if (EXPECT_FALSE(!handle_cap_area_fault(ts)))
-        {
-          ts->pf_address = get_fault_pfa(esr, false, false);
-          if (is_transient_mpu_fault(ts, esr))
-            return;
+      ts->pf_address = get_fault_pfa(esr, false, false);
+      if (is_transient_mpu_fault(ts, esr))
+        return;
 
-          if (!PF::is_read_error(esr.raw()) && is_permission_fault(esr.raw()))
-            {
-              ts->dump();
-              panic("kernel code modification\n");
-            }
-          call_nested_trap_handler(ts);
+      if (!PF::is_read_error(esr.raw()) && is_permission_fault(esr.raw()))
+        {
+          ts->dump();
+          panic("kernel code modification\n");
         }
+      call_nested_trap_handler(ts);
       break;
 
     case 0x3c: // BRK
@@ -337,31 +334,8 @@ Thread::get_fault_pfa(Arm_esr hsr, bool /*insn_abt*/, bool /*ext_vcpu*/)
   return a;
 }
 
-PRIVATE static inline
-bool
-Thread::handle_cap_area_fault(Trap_state *ts)
-{
-  Address pfa;
-  asm volatile ("mrs %0, FAR_EL1" : "=r"(pfa));
-
-  if (EXPECT_FALSE(!Mem_layout::is_caps_area(pfa)))
-    return false;
-
-  if (EXPECT_FALSE(!pagein_tcb_request(ts)))
-    return false;
-
-  return true;
-}
-
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit && cpu_virt]:
-
-PRIVATE static inline
-bool
-Thread::handle_cap_area_fault(Trap_state *)
-{
-  return false; // cannot happen in HYP mode
-}
 
 PRIVATE static inline
 Arm_esr
@@ -406,29 +380,6 @@ Thread::get_fault_pfa(Arm_esr hsr, bool /*insn_abt*/, bool ext_vcpu)
     return ~0UL;
 
   return (res & 0x00fffffffffff000) | (a & 0xfff);
-}
-
-//--------------------------------------------------------------------------
-IMPLEMENTATION [arm && 64bit && virt_obj_space]:
-
-IMPLEMENT_OVERRIDE inline
-bool
-Thread::pagein_tcb_request(Return_frame *regs)
-{
-  // Counterpart: Mem_layout::read_special_safe()
-  assert (!regs->esr.pf_write()); // must be a read
-  assert (regs->esr.il());        // must be a 32bit wide insn
-  // we assume the instruction is a ldr with the target register
-  // in the lower 5 bits
-  unsigned rt = *reinterpret_cast<Mword*>(regs->pc) & 0x1f;
-
-  // skip faulting instruction
-  regs->pc += 4;
-  // tell program that a pagefault occurred we cannot handle
-  regs->psr |= 0x40000000;	// set zero flag in psr
-  regs->r[rt] = 0;
-
-  return true;
 }
 
 //--------------------------------------------------------------------------

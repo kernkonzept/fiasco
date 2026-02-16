@@ -31,7 +31,7 @@ IMPLEMENT inline NEEDS[<cstdio>,"kdb_ke.h","processor.h",
 		       "config.h","std_macros.h","logdefs.h",
 		       "warn.h",Thread::page_fault_log, "paging.h"]
 int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
-                              Return_frame *regs)
+                              Return_frame *)
 {
   CNT_PAGE_FAULT;
 
@@ -71,23 +71,6 @@ int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
     return 0;
 
   // We're in kernel code faulting on a kernel memory region
-
-  // A page is not present but a mapping exists in the global page dir.
-  // Update our page directory by copying from the master pdir
-  // This is the only path that should be executed with interrupts
-  // disabled if the page faulter also had interrupts disabled.   
-  // thread_page_fault() takes care of that.
-  else if (Mem_layout::is_caps_area(pfa))
-    {
-      // Test for special case -- see function documentation
-      if (pagein_tcb_request(regs))
-	 return 2;
-
-      printf("Fiasco BUG: Invalid CAP access (pc=%lx, pfa=%lx)\n", pc, pfa);
-      kdb_ke("Fiasco BUG: Invalid access to Caps area");
-      return 0;
-    }
-
   WARN("No page-fault handler for 0x%lx, error 0x%lx, pc " L4_PTR_FMT "\n",
         pfa, error_code, pc);
 
