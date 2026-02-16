@@ -200,8 +200,8 @@ IMPLEMENTATION[arm && arm_v6 && !mp]:
 
 #include "processor.h"
 
-template<typename T, typename V> NEEDS ["processor.h"]
-requires(sizeof(T) == 8) inline
+template<typename T, typename V>
+requires(sizeof(T) == 8) inline NEEDS ["processor.h"]
 T
 atomic_exchange(T *mem, V value)
 {
@@ -218,8 +218,8 @@ atomic_exchange(T *mem, V value)
   return res;
 }
 
-template<typename T, typename V> NEEDS ["processor.h"]
-requires(sizeof(T) == 8) inline
+template<typename T, typename V>
+requires(sizeof(T) == 8) inline NEEDS ["processor.h"]
 T
 atomic_add_fetch(T *mem, V value)
 {
