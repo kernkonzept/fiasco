@@ -80,27 +80,6 @@ JDB_DEFINE_TYPENAME(Jdb_object, "Jdb");
 
 static DEFINE_GLOBAL Global_data<Jdb_object> __jdb_kobject;
 
-extern "C" void sys_invoke_debug(Kobject_iface *o, Syscall_frame *f) __attribute__((weak));
-
-PRIVATE inline NOEXPORT
-L4_msg_tag
-Jdb_object::sys_kobject_debug(L4_msg_tag tag, unsigned /* op */,
-                              L4_fpage::Rights rights,
-                              Syscall_frame *f,
-                              Utcb const *r_msg, Utcb *)
-{
-  if (sys_invoke_debug)
-    {
-      Kobject_iface *i = Ko::deref<Kobject_iface>(&tag, r_msg, &rights);
-      if (!i)
-        return tag;
-
-      sys_invoke_debug(i, f);
-      return f->tag();
-    }
-  return commit_result(0);
-}
-
 //----------------------------------------------------------------------------
 IMPLEMENTATION [rt_dbg && debug]:
 
@@ -320,6 +299,24 @@ Jdb_object::sys_debugger(L4_msg_tag,
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [rt_dbg]:
+
+#include "jdb_kobject.h"
+
+PRIVATE inline NOEXPORT NEEDS["jdb_kobject.h"]
+L4_msg_tag
+Jdb_object::sys_kobject_debug(L4_msg_tag tag, unsigned /* op */,
+                              L4_fpage::Rights rights,
+                              Syscall_frame *f,
+                              Utcb const *r_msg, Utcb *)
+{
+  Kobject_iface *i = Ko::deref<Kobject_iface>(&tag, r_msg, &rights);
+  if (!i)
+    return tag;
+
+  sys_invoke_debug(i, f);
+  return f->tag();
+}
+
 
 IMPLEMENT_OVERRIDE
 L4_msg_tag

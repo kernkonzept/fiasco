@@ -150,15 +150,10 @@ IMPLEMENTATION:
 
 #include "thread.h"
 
-extern "C" void
+void
 sys_invoke_debug(Kobject_iface *o, Syscall_frame *f)
 {
-  if (!o)
-    {
-      f->tag(Kobject_iface::commit_result(-L4_err::EInval));
-      return;
-    }
-
+  assert(o != nullptr);
   Utcb *utcb = current_thread()->utcb().access();
   //printf("sys_invoke_debug: [%p] -> %p\n", o, f);
   Jdb_kobject_handler *h = Jdb_kobject::module()->find_handler(o);

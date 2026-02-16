@@ -42,8 +42,6 @@ IMPLEMENTATION [debug]:
 #include "space.h"
 #include "task.h"
 
-extern "C" void sys_invoke_debug(Kobject_iface *o, Syscall_frame *f) __attribute__((weak));
-
 //---------------------------------------------------------------------------
 INTERFACE [ia32 || amd64]:
 
