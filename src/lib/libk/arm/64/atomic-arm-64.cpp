@@ -31,7 +31,7 @@ INTERFACE [arm]:
     T res, old;                                                                \
     Mword tmp;                                                                 \
                                                                                \
-    asm (                                                                      \
+    asm volatile (                                                             \
         "     prfm  pstl1strm, %[mem] \n"                                      \
         "1:   ldxr  %"#pfx"[old], %[mem] \n"                                   \
         "   " #op " %"#pfx"[res], %"#pfx"[old], %"#pfx"[val] \n"               \
@@ -53,7 +53,7 @@ INTERFACE [arm]:
     T res;                                                                     \
     Mword tmp;                                                                 \
                                                                                \
-    asm (                                                                      \
+    asm volatile (                                                                      \
         "     prfm  pstl1strm, %[mem] \n"                                      \
         "1:   ldxr  %"#pfx"[res], %[mem] \n"                                   \
         "   " #op " %"#pfx"[res], %"#pfx"[res], %"#pfx"[val] \n"               \
