@@ -76,5 +76,7 @@ public:
       rights |= r.rights;
       return *this;
     }
+
+    bool operator==(Attr const &) const = default;
   };
 };
