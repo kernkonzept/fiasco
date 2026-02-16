@@ -233,7 +233,7 @@ public:
 
 
 struct Mapping_type_t;
-typedef cxx::int_type<unsigned, Mapping_type_t> Mapping_type;
+using Mapping_type = cxx::int_type<unsigned, Mapping_type_t>;
 
 template< typename SPACE, typename M, typename O >
 inline
@@ -510,7 +510,7 @@ map_lookup_src(SPACE* from,
                typename SPACE::Attr *i_attribs,
                typename SPACE::Attr attribs)
 {
-  typedef Map_traits<SPACE> Mt;
+  using Mt = Map_traits<SPACE>;
   // Sigma0 special case: Sigma0 doesn't need to have a
   // fully-constructed page table, and it can fabricate mappings
   // for all physical addresses.
@@ -544,13 +544,13 @@ map(MAPDB* mapdb,
 {
   using namespace Mu;
 
-  typedef typename SPACE::Attr Attr;
-  typedef typename SPACE::Page_order Page_order;
+  using Attr = SPACE::Attr;
+  using Page_order = SPACE::Page_order;
 
-  typedef typename SPACE::V_pfn V_pfn;
-  typedef typename SPACE::V_pfc V_pfc;
+  using V_pfn = SPACE::V_pfn;
+  using V_pfc = SPACE::V_pfc;
 
-  typedef typename MAPDB::Frame Frame;
+  using Frame = MAPDB::Frame;
 
   L4_error condition = L4_error::None;
 
@@ -872,10 +872,10 @@ unmap(MAPDB* mapdb, SPACE* space, Space *space_id,
 {
   using namespace Mu;
 
-  typedef typename MAPDB::Frame Frame;
+  using Frame = MAPDB::Frame;
 
-  typedef typename SPACE::V_pfn V_pfn;
-  typedef typename SPACE::V_pfc V_pfc;
+  using V_pfn = SPACE::V_pfn;
+  using V_pfc = SPACE::V_pfc;
 
   bool me_too = mask.self_unmap();
 
