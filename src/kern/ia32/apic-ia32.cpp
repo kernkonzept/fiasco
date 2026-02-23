@@ -187,15 +187,20 @@ Unsigned32
 Apic::us_to_apic(Unsigned64 us)
 {
   Unsigned64 apic;
-  Unsigned32 temp1;
+  Unsigned32 temp1, temp2;
   asm ("movl  %%edx, %[temp1]   \n\t"
-       "mull  %[scaler]         \n\t"
+       "mull  %[scaler]         \n\t" // edx: (us.lo*scaler) / 2^32
+                                      // eax: (us.lo*scaler) mod 2^32
+       "movl  %%eax, %[temp2]   \n\t"
        "movl  %[temp1], %%eax   \n\t"
        "movl  %%edx, %[temp1]   \n\t"
-       "mull  %[scaler]         \n\t"
+       "mull  %[scaler]         \n\t" // edx.eax: (us.hi*2^32*scaler) mod 2^64
        "addl  %[temp1], %%eax   \n\t"
+       "adcl  $0, %%edx         \n\t" // edx.eax: (us.hi*2^32*scaler
+                                      //              + us.lo*scaler) mod 2^64
        "shld  $11, %%eax, %%edx \n\t"
-      :"=A" (apic), [temp1]"=&r"(temp1)
+       "shld  $11, %[temp2], %%eax\n\t"
+      :"=A" (apic), [temp1]"=&r"(temp1), [temp2]"=&r"(temp2)
       : "A" (us), [scaler]"g" (static_cast<Unsigned32>(scaler_us_to_apic))
         // scaler_us_to_apic is actually 32-bit
        );
