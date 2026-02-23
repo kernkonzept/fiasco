@@ -206,9 +206,9 @@ Gic_dist::cpu_init_v2()
 
   for (unsigned g = 0; g < 32; g += 4)
     {
-      Mword v = 0;
       if constexpr (Config_tz_sec)
         {
+          Mword v = 0;
           unsigned b = (sec_irqs >> g) & 0xf;
 
           for (int i = 0; i < 4; ++i)
@@ -216,11 +216,10 @@ Gic_dist::cpu_init_v2()
               v |= 0x40 << (i * 8);
             else
               v |= 0xa0 << (i * 8);
+          _dist.write<Unsigned32>(v, GICD_IPRIORITYR + g);
         }
       else
-        v = 0xa0a0a0a0;
-
-      _dist.write<Unsigned32>(v, GICD_IPRIORITYR + g);
+        _dist.write<Unsigned32>(0xa0a0a0a0, GICD_IPRIORITYR + g);
     }
 }
 

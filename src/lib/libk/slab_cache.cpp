@@ -364,7 +364,7 @@ PUBLIC
 unsigned long
 Slab_cache::reap()		// request that cache returns memory to system
 {
-  Slab *s = nullptr;
+  Slab *s;
   unsigned long sz = 0;
 
   for (;;)

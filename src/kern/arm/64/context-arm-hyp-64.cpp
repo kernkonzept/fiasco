@@ -135,7 +135,7 @@ PRIVATE inline
 void
 Context::load_ext_vcpu_state(Vm_state const *v)
 {
-  Unsigned64 vtcr = 0;
+  Unsigned64 vtcr;
 
   // ACTLR_EL1 accesses always trapped because of HCR.TACR=1
   // asm volatile ("msr ACTLR_EL1, %0" : : "r"(v->actlr));

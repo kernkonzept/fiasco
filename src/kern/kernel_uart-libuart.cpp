@@ -87,7 +87,7 @@ bool Kernel_uart::startup(unsigned, int irq, bool resume)
 
         case Koptions::Uart_type_mmio:
             {
-              L4::Io_register_block *r = nullptr;
+              L4::Io_register_block *r;
               Unsigned8 shift = Koptions::o()->uart.reg_shift;
 
               // Koptions doesn't pass the UART size so take a sound guess.
