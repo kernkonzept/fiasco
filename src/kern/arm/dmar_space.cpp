@@ -79,7 +79,7 @@ Dmar_space::initialize()
   if (!_dmarpt)
     return false;
 
-  _dmarpt->clear(Pte_ptr::need_cache_write_back());
+  _dmarpt->clear(Dmar_pte_ptr::need_cache_write_back());
 
   return true;
 }
@@ -123,7 +123,7 @@ Dmar_space::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
     if (Mem_space::Page_order(Dmar_pdir::page_order_for_level(level)) <= order)
       break;
 
-  auto i = _dmarpt->walk(virt, level, Pte_ptr::need_cache_write_back(),
+  auto i = _dmarpt->walk(virt, level, Dmar_pte_ptr::need_cache_write_back(),
                          Kmem_alloc::q_allocator(ram_quota()));
 
   if (EXPECT_FALSE(!i.is_valid() && i.level != level))

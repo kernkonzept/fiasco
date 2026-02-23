@@ -26,17 +26,17 @@ INTERFACE [iommu]:
 
 EXTENSION class Dmar_space
 {
-  class Pte_ptr :
-    public Pte_long_desc<Pte_ptr>,
-    public Pte_iommu<Pte_ptr>,
-    public Pte_stage2_attribs<Pte_ptr, Page>,
-    public Pte_generic<Pte_ptr, Unsigned64>
+  class Dmar_pte_ptr :
+    public Pte_long_desc<Dmar_pte_ptr>,
+    public Pte_iommu<Dmar_pte_ptr>,
+    public Pte_stage2_attribs<Dmar_pte_ptr, Page>,
+    public Pte_generic<Dmar_pte_ptr, Unsigned64>
   {
   public:
     static constexpr unsigned super_level() { return 1; }
     static constexpr unsigned max_level()   { return 2; }
-    Pte_ptr() = default;
-    Pte_ptr(void *p, unsigned char level) : Pte_long_desc<Pte_ptr>(p, level) {}
+    Dmar_pte_ptr() = default;
+    Dmar_pte_ptr(void *p, unsigned char level) : Pte_long_desc<Dmar_pte_ptr>(p, level) {}
 
     unsigned char page_order() const
     {
@@ -47,7 +47,7 @@ EXTENSION class Dmar_space
 
   using Dmar_ptab_traits_vpn = Ptab::Shift<Ptab_traits, Virt_addr::Shift>::List;
 
-  using Dmar_pdir = Pdir_t<Pte_ptr, Dmar_ptab_traits_vpn, Ptab_va_vpn>;
+  using Dmar_pdir = Pdir_t<Dmar_pte_ptr, Dmar_ptab_traits_vpn, Ptab_va_vpn>;
   Dmar_pdir *_dmarpt;
 
   using Dmarpt_alloc = Kmem_slab_t<Dmar_pdir, sizeof(Dmar_pdir)>;

@@ -33,17 +33,17 @@ EXTENSION class Dmar_space
     };
   };
 
-  class Pte_ptr :
-    public Pte_long_desc<Pte_ptr>,
-    public Pte_iommu<Pte_ptr>,
-    public Pte_long_attribs<Pte_ptr, Iommu_page_attr>,
-    public Pte_generic<Pte_ptr, Unsigned64>
+  class Dmar_pte_ptr :
+    public Pte_long_desc<Dmar_pte_ptr>,
+    public Pte_iommu<Dmar_pte_ptr>,
+    public Pte_long_attribs<Dmar_pte_ptr, Iommu_page_attr>,
+    public Pte_generic<Dmar_pte_ptr, Unsigned64>
   {
   public:
     static constexpr unsigned super_level() { return ::K_pte_ptr::super_level(); }
     static constexpr unsigned max_level()   { return ::K_pte_ptr::max_level(); }
-    Pte_ptr() = default;
-    Pte_ptr(void *p, unsigned char level) : Pte_long_desc<Pte_ptr>(p, level) {}
+    Dmar_pte_ptr() = default;
+    Dmar_pte_ptr(void *p, unsigned char level) : Pte_long_desc<Dmar_pte_ptr>(p, level) {}
 
     unsigned char page_order() const
     {
@@ -73,17 +73,17 @@ public:
   }
 
 private:
-  class Pte_ptr :
-    public Pte_long_desc<Pte_ptr>,
-    public Pte_iommu<Pte_ptr>,
-    public Pte_stage2_attribs<Pte_ptr, Page>,
-    public Pte_generic<Pte_ptr, Unsigned64>
+  class Dmar_pte_ptr :
+    public Pte_long_desc<Dmar_pte_ptr>,
+    public Pte_iommu<Dmar_pte_ptr>,
+    public Pte_stage2_attribs<Dmar_pte_ptr, Page>,
+    public Pte_generic<Dmar_pte_ptr, Unsigned64>
   {
   public:
     static unsigned super_level() { return ::Pte_ptr::super_level(); }
     static unsigned max_level()   { return ::Pte_ptr::max_level(); }
-    Pte_ptr() = default;
-    Pte_ptr(void *p, unsigned char level) : Pte_long_desc<Pte_ptr>(p, level) {}
+    Dmar_pte_ptr() = default;
+    Dmar_pte_ptr(void *p, unsigned char level) : Pte_long_desc<Dmar_pte_ptr>(p, level) {}
 
     unsigned char page_order() const
     {
@@ -100,7 +100,7 @@ INTERFACE [iommu]:
 
 EXTENSION class Dmar_space
 {
-  using Dmar_pdir = Pdir_t<Pte_ptr, Dmar_ptab_traits_vpn, Ptab_va_vpn>;
+  using Dmar_pdir = Pdir_t<Dmar_pte_ptr, Dmar_ptab_traits_vpn, Ptab_va_vpn>;
   Dmar_pdir *_dmarpt;
 
   using Dmarpt_alloc = Kmem_slab_t<Dmar_pdir, sizeof(Dmar_pdir)>;
