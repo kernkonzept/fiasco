@@ -185,13 +185,13 @@ Unsigned32
 Apic::us_to_apic(Unsigned64 us)
 {
   Unsigned32 apic, dummy1, dummy2;
-  asm ("movl  %%edx, %%ecx		\n\t"
-       "mull  %4			\n\t"
-       "movl  %%ecx, %%eax		\n\t"
-       "movl  %%edx, %%ecx		\n\t"
-       "mull  %4			\n\t"
-       "addl  %%ecx, %%eax		\n\t"
-       "shll  $11, %%eax		\n\t"
+  asm ("movl  %%edx, %%ecx      \n\t"
+       "mull  %4                \n\t"
+       "movl  %%ecx, %%eax      \n\t"
+       "movl  %%edx, %%ecx      \n\t"
+       "mull  %4                \n\t"
+       "addl  %%ecx, %%eax      \n\t"
+       "shll  $11, %%eax        \n\t"
       :"=a" (apic), "=d" (dummy1), "=&c" (dummy2)
       : "A" (us),   "g" (static_cast<Unsigned32>(scaler_us_to_apic))
         // scaler_us_to_apic is actually 32-bit
@@ -207,8 +207,8 @@ Unsigned32
 Apic::us_to_apic(Unsigned64 us)
 {
   Unsigned32 apic, dummy;
-  asm ("mulq  %3			\n\t"
-       "shrq  $21,%%rax			\n\t"
+  asm ("mulq  %3                \n\t"
+       "shrq  $21,%%rax         \n\t"
       :"=a"(apic), "=d"(dummy)
       :"a"(us), "g"(scaler_us_to_apic)
       );
