@@ -2253,9 +2253,9 @@ void
 Context::rcu_wait()
 {
   auto guard = lock_guard(cpu_lock);
-  state_change_dirty(~Thread_ready, Thread_waiting);
+  state_change_dirty(~Thread_ready, Thread_rcu_wait);
   Rcu::call(this, &rcu_unblock);
-  while (state() & Thread_waiting)
+  while (state() & Thread_rcu_wait)
     {
       state_del_dirty(Thread_ready);
       schedule();
@@ -2267,7 +2267,7 @@ bool
 Context::rcu_unblock(Rcu_item *i)
 {
   assert(cpu_lock.test());
-  return static_cast<Context*>(i)->xcpu_state_change(~Thread_waiting, Thread_ready);
+  return static_cast<Context*>(i)->xcpu_state_change(~Thread_rcu_wait, Thread_ready);
 }
 
 //----------------------------------------------------------------------------

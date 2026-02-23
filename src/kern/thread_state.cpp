@@ -71,8 +71,8 @@ enum Thread_state
 
   /// Thread polls for DRQs.
   Thread_drq_wait             = 0x100000,
-  /// Thread waits for a lock.
-  Thread_waiting              = 0x200000,
+  /// Thread waits for an RCU grace period.
+  Thread_rcu_wait             = 0x200000,
 
   /// vCPU state enabled.
   Thread_vcpu_enabled         = 0x400000,

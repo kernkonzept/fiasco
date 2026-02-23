@@ -641,7 +641,7 @@ void
 Thread::assert_irq_entry()
 {
   assert(Sched_context::rq.current().schedule_in_progress
-             || current_thread()->state() & (Thread_ready_mask | Thread_drq_wait | Thread_waiting | Thread_ipc_transfer));
+             || current_thread()->state() & (Thread_ready_mask | Thread_drq_wait | Thread_rcu_wait | Thread_ipc_transfer));
 }
 
 IMPLEMENT_DEFAULT inline
