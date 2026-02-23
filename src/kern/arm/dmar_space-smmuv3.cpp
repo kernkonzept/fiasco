@@ -1,28 +1,38 @@
 // -----------------------------------------------------------
-INTERFACE [iommu && !arm_iommu_stage2 && 64bit]:
+INTERFACE [iommu && 64bit]:
 
-/**
- * When the SMMU is configured to use stage 1 translation, we use the same
- * page table layout for the SMMU as for the kernel (with a small difference,
- * see Iommu_page_attr). For a non-virtualization-enabled kernel, this is
- * equivalent to the regular memory space page table layout. However, for a
- * virtualization-enabled kernel, memory spaces use a stage 2 page table layout,
- * whereas the kernel uses a stage 1 page table layout.
- */
 EXTENSION class Dmar_space
 {
-  static constexpr unsigned start_level()
-  {
-    // Not defined or used for stage 1 page tables.
-    return 0;
-  }
+  typedef Ptab::Tupel<Ptab::Traits<Unsigned64, 39, 9, false>,
+                      Ptab::Traits<Unsigned64, 30, 9, true>,
+                      Ptab::Traits<Unsigned64, 21, 9, true>,
+                      Ptab::Traits<Unsigned64, 12, 9, true> >::List Dmar_traits;
+  typedef Ptab::Shift<Dmar_traits, 12>::List Dmar_traits_vpn;
+  typedef Ptab::Page_addr_wrap<Page_number, 12> Dmar_va_vpn;
 
-  /// For the SMMU we always use the NS-EL1&0 translation regime, just like the
-  /// kernel does with virtualization disabled, whereas with virtualization
-  /// enabled the kernel uses the EL2 translation regime. Therefore, we override
-  /// the corresponding attributes here.
-  struct Iommu_page_attr : public Kernel_page_attr
+  // For 4-level stage 2 page tables, we start at level zero. Not defined or
+  // used for stage 1 page tables.
+  static constexpr unsigned start_level()
+  { return 2; }
+
+};
+
+// -----------------------------------------------------------
+INTERFACE [iommu && !arm_iommu_stage2 && 64bit]:
+
+EXTENSION class Dmar_space
+{
+  struct Stage1_page_attr
   {
+    // See Iommu::Mair0_bits for the definition.
+    enum Attribs_enum
+    {
+      Cache_mask    = 0x01c, ///< MAIR index 0..7
+      NONCACHEABLE  = 0x000, ///< MAIR Attr0: Caching is off
+      CACHEABLE     = 0x008, ///< MAIR Attr2: Cache is enabled
+      BUFFERED      = 0x004, ///< MAIR Attr1: Write buffer enabled -- Normal, non-cached
+    };
+
     enum
     {
       /// The NS-EL1&0 translation regime supports two privilege levels.
@@ -36,63 +46,57 @@ EXTENSION class Dmar_space
   class Dmar_pte_ptr :
     public Pte_long_desc<Dmar_pte_ptr>,
     public Pte_iommu<Dmar_pte_ptr>,
-    public Pte_long_attribs<Dmar_pte_ptr, Iommu_page_attr>,
+    public Pte_long_attribs<Dmar_pte_ptr, Stage1_page_attr>,
     public Pte_generic<Dmar_pte_ptr, Unsigned64>
   {
   public:
-    static constexpr unsigned super_level() { return ::K_pte_ptr::super_level(); }
-    static constexpr unsigned max_level()   { return ::K_pte_ptr::max_level(); }
+    static constexpr unsigned super_level() { return 2; }
+    static constexpr unsigned max_level()   { return 3; }
     Dmar_pte_ptr() = default;
     Dmar_pte_ptr(void *p, unsigned char level) : Pte_long_desc<Dmar_pte_ptr>(p, level) {}
 
     unsigned char page_order() const
     {
-      return Ptab::Level<Dmar_ptab_traits_vpn>::shift(level)
-        + Dmar_ptab_traits_vpn::Head::Base_shift;
+      return Ptab::Level<Dmar_traits_vpn>::shift(level)
+        + Dmar_traits_vpn::Head::Base_shift;
     }
   };
-
-  using Dmar_ptab_traits_vpn = K_ptab_traits_vpn;
 };
 
 // -----------------------------------------------------------
 INTERFACE [iommu && arm_iommu_stage2 && cpu_virt && 64bit]:
 
-/**
- * When the SMMU is configured to use stage 2 translation, we use the regular
- * stage 2 page table layout also for the SMMU.
- */
 EXTENSION class Dmar_space
 {
-public:
-  static unsigned start_level()
+  struct Stage2_page_attr
   {
-    // For 3-level page tables the first page table is concatenated
-    // (10-bits), we skip level zero.
-    return Page::vtcr_sl0();
-  }
+    enum Attribs_enum : Mword
+    {
+      Cache_mask    = 0x03c,
+      NONCACHEABLE  = 0x000, ///< Caching is off
+      CACHEABLE     = 0x03c, ///< Cache is enabled
+      BUFFERED      = 0x014, ///< Write buffer enabled -- Normal, non-cached
+    };
+  };
 
-private:
   class Dmar_pte_ptr :
     public Pte_long_desc<Dmar_pte_ptr>,
     public Pte_iommu<Dmar_pte_ptr>,
-    public Pte_stage2_attribs<Dmar_pte_ptr, Page>,
+    public Pte_stage2_attribs<Dmar_pte_ptr, Stage2_page_attr>,
     public Pte_generic<Dmar_pte_ptr, Unsigned64>
   {
   public:
-    static unsigned super_level() { return ::Pte_ptr::super_level(); }
-    static unsigned max_level()   { return ::Pte_ptr::max_level(); }
+    static constexpr unsigned super_level() { return 2; }
+    static constexpr unsigned max_level()   { return 3; }
     Dmar_pte_ptr() = default;
     Dmar_pte_ptr(void *p, unsigned char level) : Pte_long_desc<Dmar_pte_ptr>(p, level) {}
 
     unsigned char page_order() const
     {
-      return Ptab::Level<Dmar_ptab_traits_vpn>::shift(level)
-        + Dmar_ptab_traits_vpn::Head::Base_shift;
+      return Ptab::Level<Dmar_traits_vpn>::shift(level)
+        + Dmar_traits_vpn::Head::Base_shift;
     }
   };
-
-  using Dmar_ptab_traits_vpn = Ptab_traits_vpn_3lvl;
 };
 
 // -----------------------------------------------------------
@@ -100,7 +104,7 @@ INTERFACE [iommu]:
 
 EXTENSION class Dmar_space
 {
-  using Dmar_pdir = Pdir_t<Dmar_pte_ptr, Dmar_ptab_traits_vpn, Ptab_va_vpn>;
+  using Dmar_pdir = Pdir_t<Dmar_pte_ptr, Dmar_traits_vpn, Dmar_va_vpn>;
   Dmar_pdir *_dmarpt;
 
   using Dmarpt_alloc = Kmem_slab_t<Dmar_pdir, sizeof(Dmar_pdir)>;

@@ -46,6 +46,18 @@ public:
     Default_vmid = 0,
   };
 
+  /**
+   * Memory Attribute Indirection (MAIR0)
+   * Attr0: Device-nGnRnE memory
+   * Attr1: Normal memory, Inner/Outer Non-cacheable
+   * Attr2: Normal memory, RW, Inner/Outer Write-Back Cacheable (Non-transient)
+   * Attr3: Device-nGnRnE memory (unused)
+   *
+   * See Dmar_space::Stage1_page_attr for the user.
+   */
+  static constexpr Unsigned32 Mair0_bits = 0x00ff4400;
+  static constexpr Unsigned32 Mair1_bits = 0;
+
   using Asid = unsigned long;
   using Asid_alloc = Simple_id_alloc<Asid, First_asid, Last_asid, Invalid_asid>;
 
@@ -2206,8 +2218,8 @@ Iommu_domain::get_or_init_cd(unsigned ias, unsigned virt_addr_size, Address pt_p
   _cd.aset() = 1;
   _cd.asid() = asid;
   _cd.ttb0() = pt_phys_addr;
-  _cd.mair0() = Page::Mair0_prrr_bits;
-  _cd.mair1() = Page::Mair1_nmrr_bits;
+  _cd.mair0() = Iommu::Mair0_bits;
+  _cd.mair1() = Iommu::Mair1_bits;
   _cd.amair0() = 0;
   _cd.amair1() = 0;
 
