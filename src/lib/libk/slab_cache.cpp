@@ -53,8 +53,8 @@ protected:
   virtual void block_free(void *block, unsigned long size) = 0;
 
 private:
-  Slab_cache();
-  Slab_cache(const Slab_cache&); // default constructor is undefined
+  Slab_cache() = delete;
+  Slab_cache(const Slab_cache&) = delete;
 
   //
   // data declaration follows
