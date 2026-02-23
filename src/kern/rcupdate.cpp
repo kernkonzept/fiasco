@@ -184,6 +184,7 @@ public:
   static inline void leave_idle(Cpu_number) {};
   static inline bool has_pending_work(Cpu_number) { return false; };
   static inline bool do_pending_work(Cpu_number) { return false; }
+  static inline bool suspended_from_rcu(Cpu_number) { return false; }
 };
 
 // --------------------------------------------------------------------------
