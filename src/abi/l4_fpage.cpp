@@ -311,7 +311,7 @@ private:
   Raw _raw;
 
   /** \name Rights of the flexpage */
-  CXX_BITFIELD_MEMBER( 0,  3, _rights, _raw);
+  CXX_BITFIELD_MEMBER_RO( 0,  3, _rights, _raw);
 
 public:
   /** \name Type of the flexpage */
@@ -320,7 +320,7 @@ public:
   CXX_BITFIELD_MEMBER( 6, 11, order, _raw);
 private:
   /** \name Address encoded in the flexpage */
-  CXX_BITFIELD_MEMBER(12, MWORD_BITS-1, adr, _raw);
+  CXX_BITFIELD_MEMBER_RO(12, MWORD_BITS-1, adr, _raw);
 
 public:
 
