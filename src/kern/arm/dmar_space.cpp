@@ -39,6 +39,7 @@ private:
     }
   };
 
+  bool prealloc_pt();
   static void init_page_sizes();
 
   static bool _initialized;
@@ -81,8 +82,20 @@ Dmar_space::initialize()
 
   _dmarpt->clear(Dmar_pte_ptr::need_cache_write_back());
 
+  if (!prealloc_pt())
+    {
+      _dmarpt_alloc.q_free(ram_quota(), _dmarpt);
+      _dmarpt = nullptr;
+      return false;
+    }
+
   return true;
 }
+
+IMPLEMENT_DEFAULT inline
+bool
+Dmar_space::prealloc_pt()
+{ return true; }
 
 PUBLIC inline
 int

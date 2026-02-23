@@ -10,11 +10,12 @@ EXTENSION class Dmar_space
   typedef Ptab::Shift<Dmar_traits, 12>::List Dmar_traits_vpn;
   typedef Ptab::Page_addr_wrap<Page_number, 12> Dmar_va_vpn;
 
-  // For 4-level stage 2 page tables, we start at level zero. Not defined or
-  // used for stage 1 page tables.
-  static constexpr unsigned start_level()
-  { return 2; }
-
+  struct Ptab_cfg
+  {
+    Address pt_phys_addr;
+    unsigned char virt_addr_size;
+    unsigned char start_level;
+  };
 };
 
 // -----------------------------------------------------------
@@ -114,16 +115,71 @@ EXTENSION class Dmar_space
 };
 
 // -----------------------------------------------------------
+IMPLEMENTATION [iommu && !arm_iommu_stage2]:
+
+PRIVATE inline
+Dmar_space::Ptab_cfg
+Dmar_space::get_ptab_cfg(Iommu *)
+{
+  unsigned char virt_addr_size = Dmar_pdir::page_order_for_level(0)
+                                 + Dmar_pdir::Levels::size(0);
+  // The start level is irrelevant for stage 1 PTs...
+  return {Mem_layout::pmem_to_phys(_dmarpt), virt_addr_size, 0};
+}
+
+// -----------------------------------------------------------
+IMPLEMENTATION [iommu && arm_iommu_stage2]:
+
+IMPLEMENT_OVERRIDE inline
+bool
+Dmar_space::prealloc_pt()
+{
+  // Force allocation of the first level 1 page table entry. Required to
+  // support SMMUs that require to start at level 1 instead of level 0. See
+  // get_ptab_cfg() below.
+  auto i = _dmarpt->walk(Virt_addr(0), 1, Dmar_pte_ptr::need_cache_write_back(),
+                         Kmem_alloc::q_allocator(ram_quota()));
+  return i.level == 1;
+}
+
+PRIVATE inline
+Dmar_space::Ptab_cfg
+Dmar_space::get_ptab_cfg(Iommu *iommu)
+{
+  constexpr unsigned max_ipa_size = Dmar_pdir::page_order_for_level(0)
+                                    + Dmar_pdir::Levels::size(0);
+  unsigned char ias = min(iommu->ipa_size(), max_ipa_size);
+  if (ias >= 44)
+    // From 44 bits and above, use 4 levels and start at level 0
+    return {Mem_layout::pmem_to_phys(_dmarpt), ias, 2};
+
+  // There is an unusable range between 40 and 43. Such hardware requires to
+  // start at level 1 (see ARM IHI 0070 STE.S2T0SZ description in conjunction
+  // with ARM DDI 0487 section D5.2.3, "Controlling Address translation
+  // stages"). Because we have no concatenated first level table, constrain the
+  // input size. :-(
+  if (ias >= 40)
+    {
+      static bool warned = false;
+      if (!warned)
+        {
+          warned = true;
+          WARN("IOMMU: hardware supports more bits (%d) than the kernel can use!"
+               " DMA addresses constrained to 39 bits.\n", ias);
+        }
+      ias = 39;
+    }
+
+  // Skip the first level...
+  auto pte = _dmarpt->walk(Virt_addr(0), 0);
+  assert(pte.is_valid());
+  return {pte.next_level(), ias, 1};
+}
+
+// -----------------------------------------------------------
 IMPLEMENTATION [iommu]:
 
 #include "kmem.h"
-
-PUBLIC static inline
-unsigned
-Dmar_space::virt_addr_size()
-{
-  return Dmar_pdir::page_order_for_level(0) + Dmar_pdir::Levels::size(0);
-}
 
 IMPLEMENT
 void
@@ -132,13 +188,6 @@ Dmar_space::init_page_sizes()
   add_page_size(Mem_space::Page_order(12));
   add_page_size(Mem_space::Page_order(21)); // 2 MiB
   add_page_size(Mem_space::Page_order(30)); // 1 GiB
-}
-
-PRIVATE inline
-Address
-Dmar_space::pt_phys_addr() const
-{
-  return Mem_layout::pmem_to_phys(_dmarpt);
 }
 
 IMPLEMENT
@@ -152,15 +201,17 @@ IMPLEMENT
 int
 Dmar_space::bind_mmu(Iommu *mmu, Unsigned32 stream_id)
 {
-  return mmu->bind(stream_id, _domain, pt_phys_addr(),
-                   virt_addr_size(), Dmar_space::start_level());
+  auto [pt_phys_addr, virt_addr_size, start_level] = get_ptab_cfg(mmu);
+  return mmu->bind(stream_id, _domain, pt_phys_addr, virt_addr_size,
+                   start_level);
 }
 
 IMPLEMENT
 int
 Dmar_space::unbind_mmu(Iommu *mmu, Unsigned32 stream_id)
 {
-  return mmu->unbind(stream_id, _domain, pt_phys_addr());
+  auto pt_phys_addr = get_ptab_cfg(mmu).pt_phys_addr;
+  return mmu->unbind(stream_id, _domain, pt_phys_addr);
 }
 
 PRIVATE
@@ -168,5 +219,8 @@ void
 Dmar_space::remove_from_all_iommus()
 {
   for (auto &iommu : Iommu::iommus())
-    iommu.remove(_domain, pt_phys_addr());
+    {
+      auto pt_phys_addr = get_ptab_cfg(&iommu).pt_phys_addr;
+      iommu.remove(_domain, pt_phys_addr);
+    }
 }
