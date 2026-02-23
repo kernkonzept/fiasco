@@ -86,8 +86,9 @@ Dmar_space::tlb_flush_current_cpu()
 
 IMPLEMENT
 int
-Dmar_space::bind_mmu(Iommu *mmu, Unsigned32 stream_id)
+Dmar_space::bind_mmu(Iommu *mmu, Unsigned32 stream_id, Unsigned64 *max_addr)
 {
+  *max_addr = (Unsigned64{1} << mmu->ipa_size()) - 1;
   return mmu->bind(stream_id, pt_phys_addr(), &_space_id);
 }
 

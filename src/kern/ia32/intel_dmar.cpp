@@ -12,7 +12,8 @@ JDB_DEFINE_TYPENAME(Dmar, "IOMMU");
 
 struct Dmar : Kobject_h<Dmar, Kobject>
 {
-  L4_RPC(0, bind,   (Unsigned64 src_id, Ko::Cap<Dmar_space> dma_space));
+  L4_RPC(0, bind,   (Unsigned64 src_id, Ko::Cap<Dmar_space> dma_space,
+                     Unsigned64 *min_addr, Unsigned64 *max_addr));
   L4_RPC(1, unbind, (Unsigned64 src_id, Ko::Cap<Dmar_space> dma_space));
 
   L4_msg_tag kinvoke(L4_obj_ref, L4_fpage::Rights rights,
@@ -152,7 +153,8 @@ Dmar::parse_src_id(Src_id src_id, Unsigned8 *bus, unsigned *devfn,
  */
 PRIVATE
 L4_msg_tag
-Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
+Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap,
+              Unsigned64 *min_addr, Unsigned64 *max_addr)
 {
   Unsigned8 bus;
   unsigned devfn;
@@ -194,6 +196,10 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
 
   if (mmu->set_context_entry(entryp, bus, devfn, entry))
     mmu->queue_and_wait();
+
+  static constexpr unsigned char agaw[8] = { 0, 39, 48, 57, 0 };
+  *min_addr = 0;
+  *max_addr = (Unsigned64{1} << agaw[aw]) - 1;
 
   return Kobject_iface::commit_result(0);
 }

@@ -10,7 +10,8 @@ JDB_DEFINE_TYPENAME(Dmar, "SMMU");
 
 struct Dmar : Kobject_h<Dmar, Kobject>
 {
-  L4_RPC(0, bind,   (Unsigned64 src_id, Ko::Cap<Dmar_space> dma_space));
+  L4_RPC(0, bind,   (Unsigned64 src_id, Ko::Cap<Dmar_space> dma_space,
+                     Unsigned64 *min_addr, Unsigned64 *max_addr));
   L4_RPC(1, unbind, (Unsigned64 src_id, Ko::Cap<Dmar_space> dma_space));
 
   L4_msg_tag kinvoke(L4_obj_ref, L4_fpage::Rights rights,
@@ -64,7 +65,8 @@ private:
  */
 PRIVATE
 L4_msg_tag
-Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
+Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap,
+              Unsigned64 *min_addr, Unsigned64 *max_addr)
 {
   Src_id s(src_id);
   Iommu *iommu = Iommu::iommu(s.smmu_idx());
@@ -80,7 +82,9 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
   // must be interruptible.
   auto guard_cpu = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
-  return Kobject_iface::commit_result(space->bind_mmu(iommu, s.stream_id()));
+  *min_addr = 0;
+  return Kobject_iface::commit_result(space->bind_mmu(iommu, s.stream_id(),
+                                                      max_addr));
 }
 
 /*

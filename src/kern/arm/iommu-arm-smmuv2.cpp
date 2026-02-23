@@ -914,6 +914,11 @@ Iommu::tlb_invalidate_space(Space_id const &space_id)
     iommus()[i].tlb_invalidate_vmid(space_id.vmid(i));
 }
 
+PUBLIC inline
+unsigned
+Iommu::ipa_size() const
+{ return _ias; }
+
 // ------------------------------------------------------------------
 IMPLEMENTATION [iommu && !debug]:
 

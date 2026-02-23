@@ -197,9 +197,10 @@ Dmar_space::tlb_flush_current_cpu()
 
 IMPLEMENT
 int
-Dmar_space::bind_mmu(Iommu *mmu, Unsigned32 stream_id)
+Dmar_space::bind_mmu(Iommu *mmu, Unsigned32 stream_id, Unsigned64 *max_addr)
 {
   auto [pt_phys_addr, virt_addr_size, start_level] = get_ptab_cfg(mmu);
+  *max_addr = (Unsigned64{1} << virt_addr_size) - 1;
   return mmu->bind(stream_id, _domain, pt_phys_addr, virt_addr_size,
                    start_level);
 }

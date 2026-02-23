@@ -10,7 +10,7 @@ class Dmar_space :
 {
 public:
   void tlb_flush_current_cpu() override;
-  int bind_mmu(Iommu *mmu, Unsigned32 stream_id);
+  int bind_mmu(Iommu *mmu, Unsigned32 stream_id, Unsigned64 *max_addr);
   int unbind_mmu(Iommu *mmu, Unsigned32 stream_id);
 
 private:
