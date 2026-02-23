@@ -827,7 +827,34 @@ Apic::calibrate_timer(Cpu *cpu)
   if (!frequency_ok)
     panic("APIC frequency too high, adapt Apic::scaler_us_to_apic");
 
-  scaler_us_to_apic       = Cpu::muldiv(1<<21, frequency_khz, 1000);
+  /**
+   * Determine scaler for transforming microseconds into APIC ticks.
+   *
+   * \code
+   *                        APIC_ticks     2^21       APIC_ticks * 2^21
+   * scaler_us_to_apic  =  ------------ * ------  =  -------------------
+   *                            ms         1000              us
+   * \endcode
+   *
+   * Transform microseconds (us) to APIC ticks:
+   *
+   * \code
+   *                 us * scaler_us_to_apic
+   * APIC_ticks  =  ------------------------
+   *                          2^21
+   * \endcode
+   *
+   * Examples:
+   * - APIC frequency 10 kHz:
+   *   - 2^21 * 10 = 20971520 (0x0140'0000)
+   *   - scaler_us_to_apic = 20971 (0x0000'51eb)
+   *   - max time period = 429507.379364 s = 119 h
+   * - APIC frequency 2 GHz:
+   *   - 2^21 * 2000 = 4194304000 (0xfa00'0000)
+   *   - scaler_us_to_apic = 4194304 (0x0040'0000)
+   *   - max time period = 2147.483647 s = 35.8 min
+   */
+  scaler_us_to_apic = Cpu::muldiv(1<<21, frequency_khz, 1000);
 }
 
 IMPLEMENT
