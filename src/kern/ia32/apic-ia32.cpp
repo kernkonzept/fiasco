@@ -1027,3 +1027,13 @@ Apic::init(bool resume)
 
   init_timer(cpu);
 }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [test_support_code]:
+
+PUBLIC static
+Unsigned64 &
+Apic::get_scaler_us_to_apic()
+{
+  return scaler_us_to_apic;
+}
