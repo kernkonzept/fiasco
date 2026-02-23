@@ -585,6 +585,7 @@ my $exception_spec;  # exception spec for function declarations
 my $ctor_initializer; # ctor initializer ' : foo(), bar() '
 my $attribute_spec;  # attribute specification
 my $requires_spec;   # requires specification
+my $tag_enabled_spec; # TAG_ENABLED specification
 
 my $src_pos;         # current source position (file and line)
 my $block_pos;       # file and start position of the currently parsed block
@@ -643,6 +644,8 @@ sub parse_init			# Initialize parser variables.
   $attribute_spec = qr { $s (?:$alignas | $gcc_attribute | $cpp_attribute) }sx;
 
   $requires_spec = qr { (?: \b requires $s \( $paren_expr \)) }sx;
+
+  $tag_enabled_spec = qr { (?: \b TAG_ENABLED $s (\( $paren_expr \)) ) }sx;
 }
 
 sub match_e_opt
@@ -808,7 +811,7 @@ sub parse_file
 	      next MORE;
 	    }
 
-          s/(TAG_ENABLED\((.+?)\))/(match_e_opt($2) ? "true" : "false")." \/* = $1 *\/"/sge;
+          s/($tag_enabled_spec)/(match_e_opt($2) ? "true" : "false")." \/* = $1 *\/"/sge;
 	  
           # top-level namespace declaration
           if (/^$s (?:inline $s)? namespace $s/sx)
