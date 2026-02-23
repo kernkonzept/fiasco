@@ -1812,21 +1812,10 @@ Iommu::setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq)
     panic("IOMMU: Fixed queue or table base addresses are not supported!");
 
   _oas = address_size(idr5.oas());
-  // On QEMU with Fiasco in the ARM_PT48 configuration the assumption that the
-  // SMMU supports the same physical address size as the MMU does not hold (with
-  // `cpu max` the physical address size is 48-bit, but SMMU still only supports
-  // 44-bit).
-  // Also assume that the SMMU supports as many bits as physical memory is
-  // available in the system, even if the SMMU supports less bits than the
-  // page-tables, i.e. physical memory addressable by the CPU.
-  if (_oas > Cpu::phys_bits())
-    // If CPU page-tables support less memory range, set the output address
-    // size to the one used by Fiasco, which might be lower than the maximum
-    // supported.
-    _oas = Cpu::phys_bits();
 
-  // The maximum intermediate address size is equals to the maximum output
-  // address size (physical address size).
+  // By default, the maximum intermediate address size is equals to the maximum
+  // output address size (physical address size). The Dmar_space is free to use
+  // less bits, though.
   _ias = _oas;
 
   _support_wfe = idr0.sev();
