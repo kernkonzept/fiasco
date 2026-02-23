@@ -21,7 +21,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && vcache]:
+IMPLEMENTATION [arm && vcache && !sync_clock]:
 
 #include "mem_unit.h"
 
@@ -33,7 +33,7 @@ Timer::kipclock_cache()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && !vcache]:
+IMPLEMENTATION [arm && !vcache && !sync_clock]:
 
 PRIVATE static inline
 void
