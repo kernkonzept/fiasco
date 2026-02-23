@@ -16,6 +16,7 @@ class S_list_item
 {
 public:
   S_list_item() : _n(nullptr) {}
+  // BSS allocation
   explicit S_list_item(bool) {}
 
 private:
@@ -29,6 +30,12 @@ private:
   S_list_item *_n;
 };
 
+/**
+ * Simple single-linked list.
+ *
+ * \tparam T  Type of elements saved in the list. Must inherit from
+ *            cxx::S_list_item
+ */
 template< typename T, typename POLICY = Bits::Basic_list_policy< T, S_list_item > >
 class S_list : public Bits::Basic_list<POLICY>
 {
@@ -54,6 +61,7 @@ public:
 
   S_list() : Base() {}
 
+  /// Add an element to the front of the list.
   void add(T *e)
   {
     e->_n = this->_f;
@@ -70,7 +78,14 @@ public:
     while (!c(&this->_f, e->_n, e));
   }
 
+  /// Add an element to the front of the list.
   void push_front(T *e) { add(e); }
+
+  /**
+   *  Remove and return the head element of the list.
+   *
+   *  \pre The list must not be empty or the behaviour will be undefined.
+   */
   T *pop_front()
   {
     T *r = this->front();

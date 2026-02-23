@@ -30,6 +30,7 @@ class Bst
 {
 private:
   typedef Direction Dir;
+
   /// Ops for forward iterators
   struct Fwd
   {

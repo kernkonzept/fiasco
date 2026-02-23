@@ -33,6 +33,7 @@ struct Basic_list_policy
   static Const_type next(Const_type c) { return c->_n; }
 };
 
+/// Internal: Common functions for all head-based list implementations.
 template< typename POLICY >
 class Basic_list
 {
@@ -92,6 +93,7 @@ public:
     { return lhs._c == rhs._c; }
     friend bool operator != (Const_iterator const &lhs, Const_iterator const &rhs)
     { return lhs._c != rhs._c; }
+
     Const_iterator() {}
     Const_iterator(Iterator const &o) : _c(*o) {}
 
@@ -119,21 +121,40 @@ public:
     return *this;
   }
 
+  /// Check if the list is empty.
   bool empty() const { return !_f; }
+  /// Return the first element in the list.
   Value_type front() const { return static_cast<Value_type>(_f); }
 
+  /**
+   * Remove all elements from the list.
+   *
+   * After the operation the state of the elements is undefined.
+   */
   void clear() { _f = nullptr; }
 
+  /// Return an iterator to the beginning of the list.
   Iterator begin() { return Iterator(&_f); }
+  /// Return a const iterator to the beginning of the list.
   Const_iterator begin() const { return Const_iterator(_f); }
+  /**
+   *  Return a const iterator that begins at the given element.
+   *
+   *  \param c  Element where the iterator should start.
+   *
+   *  \pre The element `c` must already be in a list.
+   */
   static Const_iterator iter(Const_value_type c) { return Const_iterator(c); }
+  /// Return a const iterator to the end of the list.
   Const_iterator end() const { return Const_iterator(nullptr); }
+  /// Return an iterator to the end of the list.
   Iterator end() { return Iterator(); }
 
 protected:
   static typename POLICY::Type __get_internal(Iterator const &i) { return i._c; }
   static Iterator __iter(typename POLICY::Type c) { return Iterator(c); }
 
+  /// Pointer to front of the list.
   typename POLICY::Head_type _f;
 };
 

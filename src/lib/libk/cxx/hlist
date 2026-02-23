@@ -44,6 +44,11 @@ private:
 template< typename T >
 struct H_list_item_t : H_list_item {};
 
+/**
+ * General double-linked list of unspecified cxx::H_list_item elements.
+ *
+ * Most of the time, you want to use H_list_t.
+ */
 template< typename T, typename POLICY = Bits::Basic_list_policy< T, H_list_item> >
 class H_list : public Bits::Basic_list<POLICY>
 {
@@ -62,10 +67,21 @@ public:
   explicit H_list(bool x) : Base(x) {}
   H_list() : Base() {}
 
+  /**
+   *  Return an iterator for an arbitrary list element
+   *
+   *  \param c  List element to start the iteration.
+   *
+   *  \return A mutable forward iterator.
+   *
+   *  \pre The element must be in a list.
+   */
   static Iterator iter(T *c) { return Base::__iter(c->Item::_pn); }
 
+  /// Check if the given element is currently part of a list.
   static bool in_list(T const *e) { return e->Item::_pn; }
 
+  /// Add element to the front of the list.
   void add(T *e)
   {
     if (this->_f)
@@ -75,6 +91,7 @@ public:
     this->_f = static_cast<Item*>(e);
   }
 
+  /// Add element to the front of the list.
   void push_front(T *e) { add(e); }
 
   void insert(T *e, Iterator const &pred)
@@ -105,6 +122,17 @@ public:
     *x = static_cast<Item*>(e);
   }
 
+  /**
+   * Replace an element in a list with a new element.
+   *
+   * \param p  Element in list to be replaced.
+   * \param e  Replacement element, must not yet be in a list.
+   *
+   * \pre `p` and `e` must not be NULL.
+   *
+   * After the operation the p element is no longer in the
+   * list and may be reused.
+   */
   static void replace(T *p, T *e)
   {
     e->Item::_n = p->Item::_n;
@@ -116,9 +144,27 @@ public:
     p->Item::_pn = nullptr;
   }
 
+  /**
+   * Remove the given element from its list.
+   *
+   * \param e  Element to be removed. Must be in a list.
+   */
   static void remove(T *e)
   { e->Item::l_remove(); }
 
+  /**
+   * Remove the element at the given iterator position.
+   *
+   * \param e  Iterator pointing to the element to be removed. Must not
+   *           point to end().
+   *
+   * \return New iterator pointing to the element after the removed one.
+   *
+   * \note The hlist implementation guarantees that the original iterator
+   *       is still valid after the element has been removed. In fact, the
+   *       iterator returned is the same as the one supplied in the `e`
+   *       parameter.
+   */
   static Iterator erase(Iterator const &e)
   { e->Item::l_remove(); return e; }
 };
