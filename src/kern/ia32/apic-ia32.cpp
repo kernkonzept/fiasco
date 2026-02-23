@@ -187,16 +187,16 @@ Unsigned32
 Apic::us_to_apic(Unsigned64 us)
 {
   Unsigned64 apic;
-  Unsigned32 dummy;
-  asm ("movl  %%edx, %%ecx      \n\t"
-       "mull  %3                \n\t"
-       "movl  %%ecx, %%eax      \n\t"
-       "movl  %%edx, %%ecx      \n\t"
-       "mull  %3                \n\t"
-       "addl  %%ecx, %%eax      \n\t"
+  Unsigned32 temp1;
+  asm ("movl  %%edx, %[temp1]   \n\t"
+       "mull  %[scaler]         \n\t"
+       "movl  %[temp1], %%eax   \n\t"
+       "movl  %%edx, %[temp1]   \n\t"
+       "mull  %[scaler]         \n\t"
+       "addl  %[temp1], %%eax   \n\t"
        "shld  $11, %%eax, %%edx \n\t"
-      :"=A" (apic), "=&c" (dummy)
-      : "A" (us),   "g" (static_cast<Unsigned32>(scaler_us_to_apic))
+      :"=A" (apic), [temp1]"=&r"(temp1)
+      : "A" (us), [scaler]"g" (static_cast<Unsigned32>(scaler_us_to_apic))
         // scaler_us_to_apic is actually 32-bit
        );
   return min<Unsigned64>(apic, 0xffffffff);
