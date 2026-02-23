@@ -1,4 +1,4 @@
-INTERFACE [arm && arm_v8]:
+INTERFACE [arm && arm_v8 && perf_cnt]:
 
 EXTENSION class Perf_cnt
 {
@@ -75,7 +75,7 @@ private:
 };
 
 // --------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_v8]:
+IMPLEMENTATION [arm && arm_v8 && perf_cnt]:
 
 IMPLEMENT
 void
