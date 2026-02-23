@@ -122,7 +122,7 @@ Platform_control::boot_ap_cpus_dt(Address phys_tramp_mp_addr)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && !dt]:
+IMPLEMENTATION [arm && !dt && arm_acpi]:
 
 PRIVATE static
 void

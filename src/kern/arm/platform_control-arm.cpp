@@ -229,7 +229,7 @@ Platform_control::boot_ap_cpus_acpi(Address phys_tramp_mp_addr)
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && mp && !arm_acpi]:
+IMPLEMENTATION [arm && mp && !arm_acpi && dt]:
 
 PRIVATE static
 void
