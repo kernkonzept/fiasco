@@ -86,7 +86,7 @@ private:
   static_assert(sizeof(Shift_type)*8 >= Bits + Lsb, "error finding the type to keep the shifted bits");
   static_assert(sizeof(Bits_type) <= sizeof(Base_type), "size mismatch for Bits_type");
   static_assert(sizeof(Shift_type) <= sizeof(Base_type), "size mismatch for Shift_type");
-  static_assert(sizeof(Bits_type) <= sizeof(Shift_type), "size mismacht for Shift_type and Bits_type");
+  static_assert(sizeof(Bits_type) <= sizeof(Shift_type), "size mismatch for Shift_type and Bits_type");
 
 public:
   /**

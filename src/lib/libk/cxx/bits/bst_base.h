@@ -14,7 +14,7 @@
 #pragma once
 
 /*
- * This file contains very basic bits for implementing binary serach trees
+ * This file contains very basic bits for implementing binary search trees
  */
 namespace cxx {
 /**

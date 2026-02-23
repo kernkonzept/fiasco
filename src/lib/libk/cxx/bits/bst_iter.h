@@ -88,7 +88,7 @@ public:
   /**
    * \brief Create an iterator for the given tree.
    * \param t the root node of the tree to iterate.
-   * \param cmp the conmparison functor for tree elements.
+   * \param cmp the comparison functor for tree elements.
    */
   __Bst_iter(Node const *t) : Base(t) {}
   __Bst_iter(Node const *t, Node const *r) : Base(t, r) {}

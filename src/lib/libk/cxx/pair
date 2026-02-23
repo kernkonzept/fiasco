@@ -82,7 +82,7 @@ public:
   Pair_first_compare(Cmp const &cmp = Cmp()) : _cmp(cmp) {}
 
   /**
-   * \brief Do the comaprison based on the first value.
+   * \brief Do the comparison based on the first value.
    * \param l The lefthand value.
    * \param r The righthand value.
    */

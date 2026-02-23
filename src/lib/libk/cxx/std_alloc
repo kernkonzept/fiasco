@@ -13,7 +13,7 @@
 namespace cxx {
 /** 
  * \ingroup cxx_api
- * \brief Helper type to distinguish the <c> oeprator new </c> version
+ * \brief Helper type to distinguish the <c> operator new </c> version
  *        that does not throw exceptions.
  */
 class Nothrow {};
