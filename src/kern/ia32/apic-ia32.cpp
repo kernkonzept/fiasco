@@ -180,39 +180,44 @@ Apic::pm_on_resume(Cpu_number cpu) override
 //----------------------------------------------------------------------------
 IMPLEMENTATION[ia32]:
 
-PUBLIC static inline
+#include <minmax.h>
+
+PUBLIC static inline NEEDS[<minmax.h>]
 Unsigned32
 Apic::us_to_apic(Unsigned64 us)
 {
-  Unsigned32 apic, dummy1, dummy2;
+  Unsigned64 apic;
+  Unsigned32 dummy;
   asm ("movl  %%edx, %%ecx      \n\t"
-       "mull  %4                \n\t"
+       "mull  %3                \n\t"
        "movl  %%ecx, %%eax      \n\t"
        "movl  %%edx, %%ecx      \n\t"
-       "mull  %4                \n\t"
+       "mull  %3                \n\t"
        "addl  %%ecx, %%eax      \n\t"
-       "shll  $11, %%eax        \n\t"
-      :"=a" (apic), "=d" (dummy1), "=&c" (dummy2)
+       "shld  $11, %%eax, %%edx \n\t"
+      :"=A" (apic), "=&c" (dummy)
       : "A" (us),   "g" (static_cast<Unsigned32>(scaler_us_to_apic))
         // scaler_us_to_apic is actually 32-bit
        );
-  return apic;
+  return min<Unsigned64>(apic, 0xffffffff);
 }
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION[amd64]:
 
-PUBLIC static inline
+#include <minmax.h>
+
+PUBLIC static inline NEEDS[<minmax.h>]
 Unsigned32
 Apic::us_to_apic(Unsigned64 us)
 {
-  Unsigned32 apic, dummy;
+  Unsigned64 apic, dummy;
   asm ("mulq  %3                \n\t"
        "shrq  $21,%%rax         \n\t"
       :"=a"(apic), "=d"(dummy)
       :"a"(us), "g"(scaler_us_to_apic)
       );
-  return apic;
+  return min<Unsigned64>(apic, 0xffffffff);
 }
 
 //----------------------------------------------------------------------------
