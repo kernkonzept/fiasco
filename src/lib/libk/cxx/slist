@@ -150,14 +150,6 @@ public:
     t._tail = &t._f;
   }
 
-  void push_front(T *e)
-  {
-    if (Base::empty())
-      _tail = &e->_n;
-
-    Base::push_front(e);
-  }
-
   S_list_tail &operator = (S_list_tail &&t)
   {
     if (&t == this)
@@ -167,6 +159,14 @@ public:
     _tail = t.empty() ? &this->_f : t._tail;
     t._tail = &t._f;
     return *this;
+  }
+
+  void push_front(T *e)
+  {
+    if (Base::empty())
+      _tail = &e->_n;
+
+    Base::push_front(e);
   }
 
   void push_back(T *e)
