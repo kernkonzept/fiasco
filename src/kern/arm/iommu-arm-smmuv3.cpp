@@ -968,8 +968,8 @@ private:
 
   static constexpr Unsigned8 address_size(Unsigned8 encoded)
   {
-    constexpr Unsigned8 sizes[] = {32, 36, 40, 42, 44, 48};
-    return encoded < cxx::size(sizes) ? sizes[encoded] : 0;
+    constexpr Unsigned8 sizes[] = {32, 36, 40, 42, 44, 48, 52, 0};
+    return sizes[encoded & 0x7];
   }
 
   static constexpr Unsigned8 address_size_encode(Unsigned8 size)
@@ -982,7 +982,8 @@ private:
         case address_size(3): return 3;
         case address_size(4): return 4;
         case address_size(5): return 5;
-        default: return 5;
+        case address_size(6): return 6;
+        default: return 6;
       }
   }
 
