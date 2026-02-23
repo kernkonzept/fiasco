@@ -82,11 +82,6 @@ Mword
 Cpu::dfr1()
 { Mword r; asm volatile ("mrc p15, 0, %0, c0, c3, 5": "=r" (r)); return r; }
 
-IMPLEMENT_OVERRIDE inline
-bool
-Cpu::has_hpmn0() const
-{ return ((dfr1() >> 4) & 0xf) == 1; }
-
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 

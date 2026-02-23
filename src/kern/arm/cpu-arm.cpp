@@ -122,8 +122,6 @@ private:
   // 32 bits: 24..31: Aff3 (0 for ARM32); 16..23: Aff2; 8..15: Aff1; 0..7: Aff0
   Cpu_phys_id _phys_id;
   Ids _cpu_id;
-
-  bool has_hpmn0() const;
 };
 
 // ------------------------------------------------------------------------
@@ -399,13 +397,6 @@ IMPLEMENTATION [arm]:
 IMPLEMENT_DEFAULT static inline
 void
 Cpu::bsp_init(bool) {}
-
-IMPLEMENT_DEFAULT inline
-bool
-Cpu::has_hpmn0() const
-{
-  return false;
-}
 
 IMPLEMENT_DEFAULT inline
 bool

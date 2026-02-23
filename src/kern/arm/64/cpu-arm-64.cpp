@@ -375,11 +375,6 @@ Cpu::has_sve() const
 
 IMPLEMENT_OVERRIDE inline
 bool
-Cpu::has_hpmn0() const
-{ return ((_cpu_id._dfr0 >> 60) & 0xf) == 1; }
-
-IMPLEMENT_OVERRIDE inline
-bool
 Cpu::has_pmuv1() const
 {
   unsigned pmuv = (_cpu_id._dfr0 >> 8) & 0xf;
