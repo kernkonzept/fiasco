@@ -407,3 +407,20 @@ Bootstrap::disable_mmu_and_caches()
       Mem::barrier();
     }
 }
+
+static inline NEEDS[Bootstrap::map_page_order]
+Bootstrap::Phys_addr
+Bootstrap::map_page_size_phys()
+{ return Phys_addr(1) << map_page_order(); }
+
+static inline NEEDS[Bootstrap::map_page_order]
+Bootstrap::Virt_addr
+Bootstrap::map_page_size()
+{ return Virt_addr(1) << map_page_order(); }
+
+static inline void
+Bootstrap::map_memory(void *pd, Virt_addr va, Phys_addr pa, bool local)
+{
+  Phys_addr *const p = static_cast<Phys_addr *>(pd);
+  p[cxx::int_value<Virt_addr>(va >> map_page_order())] = pt_entry(pa, local);
+}
