@@ -34,7 +34,7 @@ Jdb_thread::print_state_bits(Mword bits, unsigned max_size)
       cxx::const_ite<TAG_ENABLED(alien)>("alien", "0x10000"),
       cxx::const_ite<TAG_ENABLED(alien)>("dealien", "0x20000"),
                                         "exc_progr",    "<0x80000>",
-      "drq",           "lock_wait",     "vcpu",         "vcpu_user",
+      "drq",           "rcu_wait",      "vcpu",         "vcpu_user",
       "vcpu_fpu_disabled", "vcpu_ext"
     };
 
