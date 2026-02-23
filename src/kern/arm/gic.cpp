@@ -35,7 +35,6 @@ class Gic_mixin : public Gic
 private:
   friend class Jdb;
 
-  using Self = IMPL;
   IMPL const *self() const { return static_cast<IMPL const *>(this); }
   IMPL *self() { return static_cast<IMPL *>(this); }
 
@@ -325,7 +324,7 @@ Gic_mixin<IMPL, CPU>::cascade_hit(Irq_base *_self, Upstream_irq const *u)
   // this function calls some virtual functions that might be
   // ironed out
   Cascade_irq *self = nonull_static_cast<Cascade_irq*>(_self);
-  IMPL *gic = nonull_static_cast<Self*>(self->child());
+  IMPL *gic = nonull_static_cast<IMPL*>(self->child());
   Upstream_irq ui(self, u);
   gic->hit(&ui);
 }

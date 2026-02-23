@@ -381,7 +381,7 @@ Timeout_q::have_timeouts(Timeout const *ignore) const
       To_list const &t = first(i);
       if (!t.empty())
         {
-          To_list::Const_iterator f = t.begin();
+          Const_iterator f = t.begin();
           if (*f == ignore && (++f) == t.end())
             continue;
 
@@ -406,7 +406,7 @@ Timeout_q::next_timeout(Unsigned64 max_timeout, Timeout const *ignore) const
       if (queue.empty())
         continue;
 
-      To_list::Const_iterator timeout = queue.begin();
+      Const_iterator timeout = queue.begin();
       if (ignore != nullptr && (*timeout == ignore && ++timeout == queue.end()))
         continue;
 

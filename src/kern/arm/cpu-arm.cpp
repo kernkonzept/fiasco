@@ -372,7 +372,7 @@ private:
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && cpu_virt && arm_cortex_r52]:
+INTERFACE [arm && cpu_virt && mpu && arm_cortex_r52]:
 
 EXTENSION class Cpu
 {
@@ -384,7 +384,7 @@ EXTENSION class Cpu
 };
 
 // ------------------------------------------------------------------------
-INTERFACE [arm && cpu_virt && !arm_cortex_r52]:
+INTERFACE [arm && cpu_virt && mpu && !arm_cortex_r52]:
 
 EXTENSION class Cpu
 {

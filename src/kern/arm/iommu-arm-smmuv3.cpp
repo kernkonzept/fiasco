@@ -694,7 +694,8 @@ private:
   };
 
   template<typename T, typename RBASE, typename RPROD, typename RCONS>
-  class Read_queue : public Queue<T, RBASE, RPROD, RCONS, unsigned, false>
+  class [[maybe_unused]] Read_queue :
+    public Queue<T, RBASE, RPROD, RCONS, unsigned, false>
   {
     public:
       template<typename OVERFLOW_CB>

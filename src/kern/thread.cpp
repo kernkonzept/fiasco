@@ -123,12 +123,6 @@ private:
     Mword _state;
   };
 
-  struct Migration_helper_info
-  {
-    Migration *inf;
-    Thread *victim;
-  };
-
   void *operator new(size_t) = delete; ///< Default new operator undefined
 
   bool handle_sigma0_page_fault (Address pfa);
