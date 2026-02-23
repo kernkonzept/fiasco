@@ -252,7 +252,7 @@ Pic::init_dt()
 }
 
 // ------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && !dt]:
+IMPLEMENTATION [arm && pic_gic && !dt && arm_acpi]:
 
 PRIVATE static FIASCO_INIT
 void
@@ -356,8 +356,7 @@ Pic::init_acpi()
 }
 
 // ------------------------------------------------------------------------
-IMPLEMENTATION [arm && pic_gic && !arm_acpi]:
-
+IMPLEMENTATION [arm && pic_gic && !arm_acpi && dt]:
 PRIVATE static FIASCO_INIT
 void
 Pic::init_acpi()
