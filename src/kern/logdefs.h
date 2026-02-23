@@ -58,8 +58,7 @@
     l->from_space = space();                                            \
     l->_ip = regs()->ip_syscall_user();                                 \
     l->dst = t;                                                         \
-    l->dst_orig = t_orig;                                               \
-    l->lock_cnt = t_orig->lock_cnt();                                   \
+    l->lock_cnt = t->lock_cnt();                                        \
     l->from_sched = cs;                                                 \
     l->from_prio = cs ? cs->prio() : 0;                                 \
     l->kernel_ip = reinterpret_cast<Mword>(__builtin_return_address(0)) )

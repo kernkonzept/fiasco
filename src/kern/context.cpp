@@ -1088,9 +1088,6 @@ Context::switch_exec_locked(Context *t, enum Helping_mode mode)
   assert (current() != t);
   assert (current() == this);
 
-  // only for logging
-  [[maybe_unused]] Context *t_orig = t;
-
   // Is t temporarily running on a foreign CPU, due to being helped?
   if (EXPECT_FALSE(t->running_on_different_cpu()))
     {
@@ -1117,9 +1114,6 @@ Context::switch_exec_helping(Context *t, Mword const *lock, Mword val)
   assert (cpu_lock.test());
   assert (current() != t);
   assert (current() == this);
-
-  // only for logging
-  [[maybe_unused]] Context *t_orig = t;
 
   // we actually hold locks
   if (!t->need_help(lock, val))
@@ -2469,7 +2463,6 @@ public:
   using Tb_entry::_ip;
 
   Context const *dst;		///< switcher target
-  Context const *dst_orig;
   Address kernel_ip;
   Mword lock_cnt;
   Space const *from_space;
@@ -2518,33 +2511,19 @@ Tb_entry_ctx_sw::print(String_buffer *buf) const
   Context *sctx = nullptr;
   Mword sctxid = ~0UL;
   Mword dst;
-  Mword dst_orig;
 
   sctx = from_sched->context();
   sctxid = Kobject_dbg::pointer_to_id(sctx);
 
   dst = Kobject_dbg::pointer_to_id(this->dst);
-  dst_orig = Kobject_dbg::pointer_to_id(this->dst_orig);
 
   if (sctx != ctx())
     buf->printf("(%lx)", sctxid);
 
   buf->printf(" ==> %lx ", dst);
 
-  if (dst != dst_orig || lock_cnt)
-    buf->printf("(");
-
-  if (dst != dst_orig)
-    buf->printf("want %lx", dst_orig);
-
-  if (dst != dst_orig && lock_cnt)
-    buf->printf(" ");
-
   if (lock_cnt)
-    buf->printf("lck %lu", lock_cnt);
-
-  if (dst != dst_orig || lock_cnt)
-    buf->printf(") ");
+    buf->printf("(lck %lu)", lock_cnt);
 
   buf->printf(" krnl " L4_PTR_FMT " @ " L4_PTR_FMT, kernel_ip, _ip);
 }
