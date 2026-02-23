@@ -50,11 +50,6 @@ IMPLEMENTATION [arm && mmu]:
 
 #include "paging_bits.h"
 
-static inline
-Bootstrap::Order
-Bootstrap::map_page_order()
-{ return Order(21); }
-
 /**
  * Map RAM range with super pages.
  *

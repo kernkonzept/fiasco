@@ -97,6 +97,21 @@ Bootstrap::init_paging()
   return Phys_addr(reinterpret_cast<Mword>(lpae));
 }
 
+static inline NEEDS[Bootstrap::map_page_order]
+Bootstrap::Phys_addr
+Bootstrap::pt_entry(Phys_addr pa, bool local)
+{
+  Phys_addr res = cxx::mask_lsb(pa, map_page_order()) | Phys_addr(1); // this is a block
+
+  if (local)
+    res |= Phys_addr(1 << 11); // nG flag
+
+  res |= Phys_addr(8); // Cached
+  res |= Phys_addr(1 << 10); // AF
+  res |= Phys_addr(3 << 8);  // Inner sharable
+  return res;
+}
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && !arm_lpae && !(arm_v7 || arm_v8 || arm_mpcore)]:
 
@@ -113,6 +128,7 @@ IMPLEMENTATION [arm && mmu && !arm_lpae]:
 
 #include "config.h"
 #include "cpu.h"
+#include "paging.h"
 
 PUBLIC static inline NEEDS["cpu.h", "config.h"]
 void
@@ -138,6 +154,19 @@ Bootstrap::enable_paging(Mword pdir)
                : : [sctlr] "r" (sctlr));
   Mem::isb();
 }
+
+PUBLIC static inline NEEDS["paging.h"]
+Bootstrap::Phys_addr
+Bootstrap::pt_entry(Phys_addr pa, bool local)
+{
+  return cxx::mask_lsb(pa, map_page_order())
+                | Phys_addr(Page::Section_cachable)
+                | Phys_addr(local ? Page::Section_local : Page::Section_global);
+}
+
+static inline
+Bootstrap::Order
+Bootstrap::map_page_order() { return Order(20); }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_1176_cache_alias_fix]:
