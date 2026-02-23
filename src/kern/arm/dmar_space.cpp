@@ -256,13 +256,6 @@ Dmar_space::~Dmar_space()
     }
 }
 
-PUBLIC inline
-Address
-Dmar_space::pt_phys_addr() const
-{
-  return Mem_layout::pmem_to_phys(_dmarpt);
-}
-
 namespace {
 
 static inline

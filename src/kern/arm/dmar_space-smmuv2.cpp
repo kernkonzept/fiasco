@@ -70,6 +70,13 @@ Dmar_space::init_page_sizes()
   add_page_size(Mem_space::Page_order(30));
 }
 
+PRIVATE inline
+Address
+Dmar_space::pt_phys_addr() const
+{
+  return Mem_layout::pmem_to_phys(_dmarpt);
+}
+
 IMPLEMENT
 void
 Dmar_space::tlb_flush_current_cpu()
