@@ -129,7 +129,7 @@ private:
     Thread *victim;
   };
 
-  void *operator new(size_t);	///< Default new operator undefined
+  void *operator new(size_t) = delete; ///< Default new operator undefined
 
   bool handle_sigma0_page_fault (Address pfa);
 
