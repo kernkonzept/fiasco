@@ -394,7 +394,7 @@ Thread::handle_timer_interrupt()
 {
   on_enter_irq_from_tickless();
 
-  Cpu_number _cpu = current_cpu();
+  Cpu_number const cpu = current_cpu();
 
   static_assert(!(Config::Scheduler_one_shot && !Config::Fine_grained_cputime),
                 "One-shot timer mode requires fine-grained CPU time.");
@@ -402,11 +402,11 @@ Thread::handle_timer_interrupt()
   if constexpr (!Config::Fine_grained_cputime)
     consume_time(Config::Scheduler_granularity);
 
-  bool resched = Rcu::do_pending_work(_cpu);
+  bool resched = Rcu::do_pending_work(cpu);
 
   // Check if we need to reschedule due to timeouts or wakeups
   Unsigned64 now = Timer::system_clock();
-  if ((Timeout_q::timeout_queue.cpu(_cpu).do_timeouts(now) || resched)
+  if ((Timeout_q::timeout_queue.cpu(cpu).do_timeouts(now) || resched)
       && !Sched_context::rq.current().schedule_in_progress)
     {
       schedule();
