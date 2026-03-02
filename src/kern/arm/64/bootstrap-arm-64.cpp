@@ -225,6 +225,9 @@ Bootstrap::config_feature_traps(Mword pfr0, bool leave_el3, bool leave_el2)
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv2 && !dt && !arm_acpi]:
 
+#include "gic_cpu_v2.h"
+#include "gic_dist_regs.h"
+
 PUBLIC static void
 Bootstrap::config_gicv2_ns()
 {
@@ -233,18 +236,21 @@ Bootstrap::config_gicv2_ns()
 
   Mmio_register_block dist(dist_mmio);
   Mmio_register_block cpu(cpu_mmio);
-  unsigned n = ((dist.read<Unsigned32>(4 /*GICD_TYPER*/) & 0x1f) + 1) * 32;
-  dist.write<Unsigned32>(0, 0 /*Gic::GICD_CTRL*/);
+  unsigned n = ((dist.read<Unsigned32>(Gic_dist_regs::GICD_TYPER) & 0x1f) + 1) * 32;
+  dist.write<Unsigned32>(0, Gic_dist_regs::GICD_CTRL);
 
   for (unsigned i = 0; i < n / 32; ++i)
-    dist.write<Unsigned32>(~0U, 0x80 + i * 4); // GICD_IGROUPR
+    dist.write<Unsigned32>(~0U, Gic_dist_regs::GICD_IGROUPR + i * 4);
 
-  cpu.write<Unsigned32>(0xff, 4 /*PMR*/);
+  cpu.write<Unsigned32>(0xff, Gic_cpu_v2::GICC_PMR);
   Mmu::flush_cache();
 }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && pic_gic && have_arm_gicv3 && !dt && !arm_acpi]:
+
+#include "gic_dist_regs.h"
+#include "gic_redist_regs.h"
 
 PUBLIC static void
 Bootstrap::config_gicv3_ns()
@@ -254,11 +260,11 @@ Bootstrap::config_gicv3_ns()
 
   Mmio_register_block dist(dist_mmio);
   Mmio_register_block redist(redist_mmio);
-  unsigned n = ((dist.read<Unsigned32>(4 /*GICD_TYPER*/) & 0x1f) + 1) * 32;
-  dist.write<Unsigned32>(0, 0 /*Gic::GICD_CTRL*/);
+  unsigned n = ((dist.read<Unsigned32>(Gic_dist_regs::GICD_TYPER) & 0x1f) + 1) * 32;
+  dist.write<Unsigned32>(0, Gic_dist_regs::GICD_CTRL);
 
   for (unsigned i = 0; i < n / 32; ++i)
-    redist.write<Unsigned32>(~0U, 0x10080 + i * 4); // GICR_IGROUPR0
+    redist.write<Unsigned32>(~0U, Gic_redist_regs::GICR_IGROUPR0 + i * 4);
 
   asm volatile("msr S3_0_C4_C6_0, %x0": : "r" (0xff)); // ICC_PMR_EL1
   Mmu::flush_cache();
