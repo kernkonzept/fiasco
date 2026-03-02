@@ -195,9 +195,10 @@ PUBLIC
 void
 Ipc_gate_obj::initiate_deletion(Kobjects_list &reap_list) override
 {
-  // Invalidate existence lock under lock of waiting queue, to ensure that from
-  // now on no new senders block on the IPC gate, see the
-  // `existence_lock.valid()` check in `Ipc_gate::block()`.
+  /* Invalidate existence lock under lock of waiting queue, to ensure that from
+   * now on no new senders block on the IPC gate, see the
+   * `existence_lock.valid()` check in `Ipc_gate::block()`.
+   */
   auto guard = lock_guard(_wait_q.lock());
 
   Kobject::initiate_deletion(reap_list);

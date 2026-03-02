@@ -138,18 +138,19 @@ init_mapdb_mem(Space *sigma0)
   // Use at most MWORD_BITS to calculate page sizes
   unsigned phys_bits = min(Cpu::boot_cpu()->phys_bits(), MWORD_BITS);
 
-  // Create a list (s_0, ... , s_n) of Page_order elements with
-  //   * s_0 == max(Page_order(phys_bits - Max_mdb_ps_diff),
-  //                global_page_sizes[0])
-  //   * s_n == Page_order(Config::PAGE_SHIFT)
-  //   * s_m - s_{m+1} <= Page_order(Max_mdb_ps_diff) to restrict the
-  //                      number of entries per MDB split array
-  //
-  // Assume ps is terminated by Page_order(Config::PAGE_SHIFT) as
-  // specified by Mem_space::get_global_page_sizes().
-  //
-  // Subtract Config::PAGE_SHIFT from each Page_order element of the
-  // list, as expected by Mapdb.
+  /* Create a list (s_0, ... , s_n) of Page_order elements with
+   *   * s_0 == max(Page_order(phys_bits - Max_mdb_ps_diff),
+   *                global_page_sizes[0])
+   *   * s_n == Page_order(Config::PAGE_SHIFT)
+   *   * s_m - s_{m+1} <= Page_order(Max_mdb_ps_diff) to restrict the
+   *                      number of entries per MDB split array
+   *
+   * Assume ps is terminated by Page_order(Config::PAGE_SHIFT) as
+   * specified by Mem_space::get_global_page_sizes().
+   *
+   * Subtract Config::PAGE_SHIFT from each Page_order element of the
+   * list, as expected by Mapdb.
+   */
 
   unsigned idx = 0;
   Page_order c(phys_bits);
