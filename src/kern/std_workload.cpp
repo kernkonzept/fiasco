@@ -26,7 +26,7 @@ Task *
 create_sigma0_task(Kobjects_list &reap_list)
 {
   int err;
-  Task *sigma0 = Task::create<Sigma0_task>(Ram_quota::root, L4_msg_tag(),
+  Task *sigma0 = Task::create<Sigma0_task>(Ram_quota::root, L4_msg_tag(0),
                                            nullptr, nullptr, &err, nullptr);
   assert_opt (sigma0);
   // prevent deletion of the sigma0 task
@@ -54,7 +54,7 @@ Task *
 create_boot_task(Task *sigma0, Thread *sigma0_thread, Kobjects_list &reap_list)
 {
   int err;
-  Task *boot_task = Task::create<Task>(Ram_quota::root, L4_msg_tag(),
+  Task *boot_task = Task::create<Task>(Ram_quota::root, L4_msg_tag(0),
                                        nullptr, nullptr, &err, nullptr);
   assert_opt (boot_task);
   // prevent deletion of the boot task
