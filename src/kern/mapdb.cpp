@@ -377,7 +377,7 @@ Physframe::~Physframe()
   assert (!has_mappings());
 }
 
-static // inline NEEDS[Physframe::~Physframe]
+static
 void
 Physframe::free(Physframe *block, size_t size, Space *owner)
 {

@@ -442,7 +442,6 @@ Map_traits<Obj_space>::apply_attribs(Obj_space::Attr attribs,
  * \return IPC error
  */
 // Don't inline -- it eats too much stack.
-// inline NEEDS ["config.h", io_map]
 L4_error
 fpage_map(Space *from, L4_fpage fp_from, Space *to,
           L4_fpage fp_to, L4_snd_item control, Kobjects_list &reap_list)
@@ -475,7 +474,6 @@ fpage_map(Space *from, L4_fpage fp_from, Space *to,
     @return combined (bit-ORed) access flags of unmapped physical pages
 */
 // Don't inline -- it eats too much stack.
-// inline NEEDS ["config.h", io_fpage_unmap]
 Page::Flags
 fpage_unmap(Space *space, L4_fpage fp, L4_map_mask mask,
             Kobjects_list &reap_list)
