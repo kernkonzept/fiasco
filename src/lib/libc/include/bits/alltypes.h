@@ -30,11 +30,7 @@ typedef long wchar_t;
 #define __USE_TIME_BITS64 1
 
 #if defined(__NEED_size_t) && !defined(__DEFINED_size_t)
-#if 0
-typedef unsigned _Addr size_t;
-#else
 typedef __SIZE_TYPE__ size_t;
-#endif
 #define __DEFINED_size_t
 #endif
 
