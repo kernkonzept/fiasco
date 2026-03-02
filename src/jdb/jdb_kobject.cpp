@@ -155,7 +155,8 @@ sys_invoke_debug(Kobject_iface *o, Syscall_frame *f)
 {
   assert(o != nullptr);
   Utcb *utcb = current_thread()->utcb().access();
-  //printf("sys_invoke_debug: [%p] -> %p\n", o, f);
+  if constexpr (false)
+    printf("sys_invoke_debug: [%p] -> %p\n", o, f);
   Jdb_kobject_handler *h = Jdb_kobject::module()->find_handler(o);
   if (h && h->invoke(o, f, utcb))
     return;
