@@ -891,7 +891,7 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
   subframe->release();
 
   return ret;
-} // Treemap::insert()
+}
 
 PUBLIC
 void
@@ -901,7 +901,7 @@ Treemap::flush(Physframe* f, Pcnt offs_begin, Pcnt offs_end)
   // encoding the tree.
   f->flush(offs_begin, offs_end, Treemap_ops(_page_shift));
   return;
-} // Treemap::flush()
+}
 
 /**
  * \see Mapdb::flush()
@@ -916,7 +916,7 @@ Treemap::flush(Physframe* f, Mapping_tree::Iterator parent,
   // encoding the tree.
   f->flush(parent, me_too, offs_begin, offs_end, Treemap_ops(_page_shift));
   return;
-} // Treemap::flush()
+}
 
 /**
  * \see Mapdb::grant()
