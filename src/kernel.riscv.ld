@@ -183,9 +183,9 @@ SECTIONS {
 
   .initcall.data : AT(ADDR(.initcall.data) - phys_offset) {
     *(.initcall.data*)
-    . = ALIGN(4K);
-    _initcall_end = .;
   } : kidata
+  . = ALIGN(4K);
+  _initcall_end = .;
 
   _phys_image_end = . - phys_offset;
 

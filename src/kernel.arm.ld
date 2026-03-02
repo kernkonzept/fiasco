@@ -301,8 +301,8 @@ SECTIONS {
     PROVIDE (_alt_insns_begin = .);
     KEEP(*(SORT(.alt_insns)))
     PROVIDE (_alt_insns_end = .);
-    . = ALIGN(PAGE_ALIGN);
   } :kidata
+  . = ALIGN(PAGE_ALIGN);
   _initcall_end = .;
 
   /DISCARD/ :{

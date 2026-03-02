@@ -210,9 +210,9 @@ SECTIONS {
     PROVIDE (_alt_insns_begin = .);
     KEEP(*(SORT(.alt_insns)))
     PROVIDE (_alt_insns_end = .);
-    . = ALIGN(4096);
-    PROVIDE (_initcall_end = .);
   } : kidata
+  . = ALIGN(4096);
+  PROVIDE (_initcall_end = .);
 
   ASSERT(_initcall_end - _kernel_image < FIASCO_IMAGE_VIRT_SIZE,
          "Increase FIASCO_IMAGE_VIRT_SIZE!")

@@ -170,9 +170,9 @@ SECTIONS {
     KEEP(*(SORT(.alt_insns)))
     PROVIDE (_alt_insns_end = .);
     *(.alt_insn_replacement)
-    . = ALIGN(4K);
-    PROVIDE (_initcall_end = .);
   }
+  . = ALIGN(4K);
+  PROVIDE (_initcall_end = .);
 
   /DISCARD/ : {
     *(.MIPS.abiflags)

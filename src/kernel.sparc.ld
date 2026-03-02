@@ -112,15 +112,15 @@ SECTIONS {
   PROVIDE (_end = .);
 
   .initcall.text : AT (ADDR(.initcall.text)) {
-  PROVIDE (_initcall_start = .);
+    PROVIDE (_initcall_start = .);
     *(.initcall.text*)
   } : kitext = 0x000000000
 
   .initcall.data : AT (ADDR(.initcall.data)) {
     *(.initcall.data*)
-    . = ALIGN(4K);
-    PROVIDE (_initcall_end = .);
   } : kidata
+  . = ALIGN(4K);
+  PROVIDE (_initcall_end = .);
 
   /DISCARD/ : {
     *(.note)

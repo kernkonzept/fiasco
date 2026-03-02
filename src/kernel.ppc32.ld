@@ -122,8 +122,8 @@ SECTIONS {
 
   .initcall.data : AT (ADDR(.initcall.data)) {
     *(.initcall.data*)
-    . = ALIGN(4K);
   } : kidata
+  . = ALIGN(4K);
   PROVIDE (_initcall_end = .);
 
   /DISCARD/ : {
