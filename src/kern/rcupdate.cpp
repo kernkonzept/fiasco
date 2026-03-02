@@ -254,6 +254,9 @@ bool
 Rcu_data::do_batch()
 {
   // This function may not properly work if called without CPU lock.
+  // In particular the _len modification below needs to be guarded by a CPU
+  // lock and maybe also other parts, such as clear(). So if this precondition
+  // is ever removed, re-check the function!
   assert(cpu_lock.test());
 
   int count = 0;
@@ -267,18 +270,8 @@ Rcu_data::do_batch()
       ++count;
     }
 
-  // XXX: I do not know why this and the former stuff is w/o cpu lock
-  //      but the counting needs it?
-  //      Actually this function is always called with taken CPU lock.
   _d.clear();
-
-  // XXX: we use clear, we seemingly worked through the whole list
-  //_d.head(l);
-
-    {
-      // auto guard = lock_guard(cpu_lock); -- See function precondition
-      _len -= count;
-    }
+  _len -= count;
 
   return need_resched;
 }
