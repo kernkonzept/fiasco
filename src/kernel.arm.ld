@@ -52,7 +52,7 @@ PHDRS {
 #if defined NEED_EXCPT
   excpt PT_LOAD;
 #endif
-  initcall_data PT_LOAD;
+  kidata PT_LOAD;
 #if defined(CONFIG_MMU)
   dyn PT_DYNAMIC;
 #endif
@@ -296,13 +296,13 @@ SECTIONS {
   PROVIDE( _end = . );
 
   _initcall_start = .;
-  .initcall_data : AT (ADDR(.initcall_data) - phys_offset) {
+  .initcall.data : AT (ADDR(.initcall.data) - phys_offset) {
     *(.initcall.data*)
     PROVIDE (_alt_insns_begin = .);
     KEEP(*(SORT(.alt_insns)))
     PROVIDE (_alt_insns_end = .);
     . = ALIGN(PAGE_ALIGN);
-  } :initcall_data
+  } :kidata
   _initcall_end = .;
 
   /DISCARD/ :{
