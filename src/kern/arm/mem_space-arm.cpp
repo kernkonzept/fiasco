@@ -351,17 +351,19 @@ Mem_space::~Mem_space()
 {
   if (_dir)
     {
-
+      Address user_max = Mem_layout::user_max();
+      unsigned depth = Pdir::depth();
       // free all page tables we have allocated for this address space
       // except the ones in kernel space which are always shared
-      _dir->destroy(Virt_addr(0UL),
-                    Virt_addr(Mem_layout::user_max()), 0, Pdir::depth(),
+      _dir->destroy(Virt_addr(0UL), Virt_addr(user_max), 0, depth,
                     Kmem_alloc::q_allocator(_quota));
+
+      Address max_addr = Pdir::max_addr();
+      unsigned super_level = Pdir::super_level();
       // free all unshared page table levels for the kernel space
-      if (Virt_addr(Mem_layout::user_max()) < Virt_addr(Pdir::max_addr()))
-        _dir->destroy(Virt_addr(Mem_layout::user_max() + 1),
-                      Virt_addr(Pdir::max_addr()), 0, Pdir::super_level(),
-                      Kmem_alloc::q_allocator(_quota));
+      if (Virt_addr(user_max) < Virt_addr(max_addr))
+        _dir->destroy(Virt_addr(user_max + 1), Virt_addr(max_addr), 0,
+                      super_level, Kmem_alloc::q_allocator(_quota));
       _dir_alloc.q_free(ram_quota(), _dir);
     }
 }

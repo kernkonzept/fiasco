@@ -75,7 +75,8 @@ Pdir_t<PTE_PTR, TRAITS, VA>::virt_to_phys(Address virt) const
   if (!i.is_valid())
     return ~0;
 
-  return i.page_addr() | cxx::get_lsb(virt, i.page_order());
+  auto page_addr = i.page_addr();
+  return page_addr | cxx::get_lsb(virt, i.page_order());
 }
 
 //---------------------------------------------------------------------------
