@@ -1,13 +1,10 @@
 INTERFACE [arm && mmu]:
 
-#include "auto_quota.h"
-#include "kmem.h"		// for "_unused_*" virtual memory regions
-#include "kmem_slab.h"
-#include "member_offs.h"
-#include "paging.h"
-#include "types.h"
-#include "ram_quota.h"
 #include "config.h"
+#include "kmem_slab.h"
+#include "paging.h"
+#include "ram_quota.h"
+#include "types.h"
 
 EXTENSION class Mem_space
 {
