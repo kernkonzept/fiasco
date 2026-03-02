@@ -19,35 +19,38 @@
  */
 #define LINKER_INTERNAL		 100
 /**
- * Perform runtime code patching right after hand-over from bootstrap.
- * (See Icf53527490a73e81b21e2a2c58015e57adb31125 if we would ever need runtime
- * code patching depending on the content of the device tree.)
- */
-#define ALT_INSN_INIT_PRIO       DEPENDS_ON(LINKER_INTERNAL)
-/**
  * Only for variables with a type that satisfies `constinit`, which need to be
  * wrapped in Global_data<T>.
  */
-#define CONSTINIT_INIT_PRIO      DEPENDS_ON(ALT_INSN_INIT_PRIO)
+#define CONSTINIT_INIT_PRIO      DEPENDS_ON(LINKER_INTERNAL)
 #define BOOTSTRAP_INIT_PRIO      DEPENDS_ON(CONSTINIT_INIT_PRIO)
-#define EARLY_INIT_PRIO		 DEPENDS_ON(BOOTSTRAP_INIT_PRIO)
+/**
+ * Perform runtime code patching as early as possible.
+ * At least for nommu, this is _after_ the bootstrap services enabled the cache
+ * because sizeof(Alternative_insn) is not 4-byte aligned.
+ * (See Icf53527490a73e81b21e2a2c58015e57adb31125 if we would ever need runtime
+ * code patching depending on the content of the device tree.)
+ */
+#define ALT_INSN_INIT_PRIO       DEPENDS_ON(BOOTSTRAP_INIT_PRIO)
+#define EARLY_INIT_PRIO          DEPENDS_ON(ALT_INSN_INIT_PRIO)
 #define STARTUP1_INIT_PRIO       DEPENDS_ON(EARLY_INIT_PRIO)
 // at this stage spinlocks must be working
 #define ROOT_FACTORY_INIT_PRIO   DEPENDS_ON(STARTUP1_INIT_PRIO)
 #define GDB_INIT_PRIO            DEPENDS_ON(ROOT_FACTORY_INIT_PRIO)
 #define STARTUP_INIT_PRIO        DEPENDS_ON(GDB_INIT_PRIO)
 #define CPU_LOCAL_BASE_INIT_PRIO DEPENDS_ON(STARTUP_INIT_PRIO)
-#define CPU_LOCAL_INIT_PRIO	 DEPENDS_ON(CPU_LOCAL_BASE_INIT_PRIO)
+#define CPU_LOCAL_INIT_PRIO      DEPENDS_ON(CPU_LOCAL_BASE_INIT_PRIO)
 #define POST_CPU_LOCAL_INIT_PRIO DEPENDS_ON(CPU_LOCAL_INIT_PRIO)
-#define PERF_CNT_INIT_PRIO	 DEPENDS_ON(POST_CPU_LOCAL_INIT_PRIO)
-#define JDB_CATEGORY_INIT_PRIO	 DEPENDS_ON(POST_CPU_LOCAL_INIT_PRIO)
-#define JDB_MODULE_INIT_PRIO	 DEPENDS_ON(JDB_CATEGORY_INIT_PRIO)
+#define PERF_CNT_INIT_PRIO       DEPENDS_ON(POST_CPU_LOCAL_INIT_PRIO)
+#define JDB_CATEGORY_INIT_PRIO   DEPENDS_ON(POST_CPU_LOCAL_INIT_PRIO)
+#define JDB_MODULE_INIT_PRIO     DEPENDS_ON(JDB_CATEGORY_INIT_PRIO)
 
-#define WATCHDOG_INIT		 DEPENDS_ON(PERF_CNT_INIT_PRIO)
-#define JDB_INIT_PRIO		 DEPENDS_ON(JDB_MODULE_INIT_PRIO)
+#define WATCHDOG_INIT            DEPENDS_ON(PERF_CNT_INIT_PRIO)
+#define JDB_INIT_PRIO            DEPENDS_ON(JDB_MODULE_INIT_PRIO)
 
 #define IOMMU_INIT_PRIO          DEPENDS_ON(STARTUP_INIT_PRIO)
 #define DMAR_INIT_PRIO           DEPENDS_ON(IOMMU_INIT_PRIO)
+
 
 #define INIT_PRIORITY(a) __attribute__((init_priority(a)))
 
