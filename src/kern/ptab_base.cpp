@@ -261,30 +261,32 @@ namespace Ptab
 	{
 	  if (PTE_PTR(&le[n - 1], Depth).is_valid())
 	    need_flush = true;
-#if 0
-	  // This loop seems unnecessary, but remote_update is also used for
-	  // updating the long IPC window.
-	  // Now consider following scenario with super pages:
-	  // Sender A makes long IPC to receiver B.
-	  // A setups the IPC window by reading the pagedir slot from B in an 
-	  // temporary register. Now the sender is preempted by C. Then C unmaps 
-	  // the corresponding super page from B. C switch to A back, using 
-	  // switch_to, which clears the IPC window pde slots from A. BUT then A 
-	  // write the  content of the temporary register, which contain the now 
-	  // invalid pde slot, in his own page directory and starts the long IPC.
-	  // Because no pagefault will happen, A will write to now invalid memory.
-	  // So we compare after storing the pde slot, if the copy is still
-	  // valid. And this solution is much faster than grabbing the cpu lock,
-	  // when updating the ipc window.h 
-	  for (;;)
-	    {
-	      typename Traits::Raw const volatile *rr
-		= reinterpret_cast<typename Traits::Raw const *>(re + n - 1);
-	      le[n - 1] = *(Entry *)rr;
-	      if (EXPECT_TRUE(le[n - 1].raw() == *rr))
-		break;
-	    }
-#endif
+
+          /* This loop seems unnecessary, but remote_update is also used for
+           * updating the long IPC window.
+           * Now consider following scenario with super pages:
+           * Sender A makes long IPC to receiver B.
+           * A setups the IPC window by reading the pagedir slot from B in a
+           * temporary register. Now the sender is preempted by C. Then C
+           * unmaps the corresponding super page from B. C switch to A back,
+           * using switch_to, which clears the IPC window pde slots from A. BUT
+           * then A writes the content of the temporary register, which contain
+           * the now invalid pde slot, in his own page directory and starts the
+           * long IPC. Because no pagefault will happen, A will write to now
+           * invalid memory So we compare after storing the pde slot, if the
+           * copy is still valid. And this solution is much faster than
+           * grabbing the cpu lock when updating the ipc window.
+           *
+           * for (;;)
+           *   {
+           *     typename Traits::Raw const volatile *rr
+           *       = reinterpret_cast<typename Traits::Raw const *>(re + n - 1);
+           *     le[n - 1] = *(Entry *)rr;
+           *     if (EXPECT_TRUE(le[n - 1].raw() == *rr))
+           *       break;
+           *   }
+           */
+
           le[n - 1] = re[n - 1];
         }
 

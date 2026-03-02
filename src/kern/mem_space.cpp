@@ -597,13 +597,13 @@ IMPLEMENT_DEFAULT inline NEEDS["kmem.h", "logdefs.h"]
 void
 Mem_space::switchin_context(Mem_space *from, Switchin_flags flags)
 {
-  // FIXME: this optimization breaks SMP task deletion, an idle thread
-  // may run on an already deleted page table
-#if 0
-  // never switch to kernel space (context of the idle thread)
-  if (this == kernel_space())
-    return;
-#endif
+  /* The following optimization previously used breaks SMP task deletion,
+   * because an idle thread may run on an already deleted page table:
+   *
+   * // never switch to kernel space (context of the idle thread)
+   * if (this == kernel_space())
+   *   return;
+   */
 
   if (from != this)
     {

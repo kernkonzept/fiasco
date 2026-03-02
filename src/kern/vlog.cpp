@@ -90,17 +90,18 @@ Vlog::log_string(Utcb const *u)
     {
       int c = *str++;
 
-      // the kernel does this anyway
-#if 0
-      if (_o_flags & F_ONLCR && c == '\n')
-	putchar('\r');
-#endif
+      /* The kernel does this anyway. Leave the code here for documentation
+       * purposes:
+       *
+       * if (_o_flags & F_ONLCR && c == '\n')
+       *   putchar('\r');
+       */
 
       if (_o_flags & F_OCRNL && c == '\r')
-	c = '\n';
+        c = '\n';
 
       if (_o_flags & F_ONLRET && c == '\r')
-	continue;
+        continue;
 
       putchar(c);
     }
