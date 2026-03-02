@@ -39,17 +39,9 @@ Timeslice_timeout::expired() override
 
   if (sched)
     {
-#if 0
-      Context *owner = sched->owner();
-
-      // Ensure sched is owner's current timeslice
-      assert (owner->sched() == sched);
-#endif
       sched->replenish();
       rq.requeue(sched);
       rq.invalidate_sched();
-
-//      owner->switch_sched(sched);
     }
 
   return true;				// Force reschedule

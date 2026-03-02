@@ -675,10 +675,6 @@ Thread_object::sys_thread_switch(L4_msg_tag const & /*tag*/, Utcb const * /*utcb
   if (current_cpu() != home_cpu())
     return commit_result(0);
 
-#ifdef FIXME
-  Sched_context * const cs = current_sched();
-#endif
-
   if (curr != this && (state() & Thread_ready_mask))
     {
       curr->schedule_if(curr->switch_exec_locked(this, Not_Helping) != Switch::Ok);
@@ -686,13 +682,6 @@ Thread_object::sys_thread_switch(L4_msg_tag const & /*tag*/, Utcb const * /*utcb
       return commit_result(0, Utcb::Time_val::Words);
     }
 
-#if 0 // FIXME: provide API for multiple sched contexts
-      // Compute remaining quantum length of timeslice
-      regs->left(timeslice_timeout.cpu(cpu())->get_timeout(Timer::system_clock()));
-
-      // Yield current global timeslice
-      cs->owner()->switch_sched(cs->id() ? cs->next() : cs);
-#endif
   reinterpret_cast<Utcb::Time_val*>(out->values)->t
     = timeslice_timeout.current()->get_timeout(Timer::system_clock());
   curr->schedule();
