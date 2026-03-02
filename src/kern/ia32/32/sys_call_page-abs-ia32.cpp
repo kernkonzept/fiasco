@@ -31,10 +31,10 @@ enum
 extern char sys_call_##sysc, sys_call_##sysc##_end
 
 #define COPY_SYSCALL(sysc) do { \
-memcpy( reinterpret_cast<char*>(Mem_layout::Syscalls) + Offs_##sysc, &sys_call_##sysc, \
-        &sys_call_##sysc##_end- &sys_call_##sysc ); \
-memcpy( reinterpret_cast<char*>(Kip::k()) + Offs_kip_##sysc, &sys_call_##sysc, \
-        &sys_call_##sysc##_end- &sys_call_##sysc ); } while (0)
+memcpy(reinterpret_cast<char*>(Mem_layout::Syscalls) + Offs_##sysc, &sys_call_##sysc, \
+       mem_range_bytes(&sys_call_##sysc, &sys_call_##sysc##_end)); \
+memcpy(reinterpret_cast<char*>(Kip::k()) + Offs_kip_##sysc, &sys_call_##sysc, \
+       mem_range_bytes(&sys_call_##sysc, &sys_call_##sysc##_end)); } while (0)
 
 
 IMPLEMENT

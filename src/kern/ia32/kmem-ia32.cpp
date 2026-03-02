@@ -703,12 +703,11 @@ Kmem::prepare_kernel_entry_points(Lockless_alloc *cpu_m, Kpdir *)
   extern char const syscall_entry_code[];
   extern char const syscall_entry_code_end[];
 
-  void *sccode = cpu_m->alloc_bytes<void>(syscall_entry_code_end
-                                          - syscall_entry_code, Order(4));
+  size_t bytes = mem_range_bytes(syscall_entry_code, syscall_entry_code_end);
+  void *sccode = cpu_m->alloc_bytes<void>(bytes, Order(4));
   assert(reinterpret_cast<Address>(sccode) == Kentry_cpu_syscall_entry);
 
-  memcpy(sccode, syscall_entry_code, syscall_entry_code_end
-                                     - syscall_entry_code);
+  memcpy(sccode, syscall_entry_code, bytes);
 }
 
 //--------------------------------------------------------------------------

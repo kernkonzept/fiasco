@@ -32,7 +32,7 @@ __amp_main()
 {
   extern char __global_data_start[];
   extern char __global_data_end[];
-  size_t global_data_size = __global_data_end - __global_data_start;
+  size_t global_data_size = mem_range_bytes(__global_data_start, __global_data_end);
 
   Global_data_base::set_amp_offset(global_data_size * Amp_node::id());
 

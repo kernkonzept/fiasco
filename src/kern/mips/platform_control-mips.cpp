@@ -38,8 +38,7 @@ PRIVATE static inline NOEXPORT
 Unsigned32 *
 Platform_control::copy_code(Unsigned32 *dst, void const *s, void const *e)
 {
-  unsigned long sz =
-    static_cast<char const *>(e) - static_cast<char const *>(s);
+  size_t sz = mem_range_bytes(s, e);
   memcpy(dst, s, sz);
   return dst + (sz / 4);
 }

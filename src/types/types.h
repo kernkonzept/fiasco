@@ -463,6 +463,27 @@ write_consistent(cxx::enable_if_t<(sizeof(T) > sizeof(Mword)), T> *t,
     }
 }
 
+/**
+ * Determine the size of a memory range in bytes.
+ *
+ * \param start  Pointer to the start address of the memory range.
+ * \param end    Pointer to the first address after the memory range.
+ *
+ * \return Size in bytes of the memory range.
+ *
+ * \note This function shall be used in order to avoid undefined behavior for
+ *       pointer subtraction where both pointers don't point into or right after
+ *       the same array.
+ */
+inline size_t
+mem_range_bytes(void const *start, void const *end)
+{
+  uintptr_t start_addr = reinterpret_cast<uintptr_t>(start);
+  uintptr_t end_addr = reinterpret_cast<uintptr_t>(end);
+  assert(start_addr < end_addr);
+  return end_addr - start_addr;
+}
+
 namespace cxx {
 
 /** Return the number of elements of a fixed-sized C array. */

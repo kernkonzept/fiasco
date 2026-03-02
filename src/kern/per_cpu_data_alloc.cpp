@@ -45,10 +45,8 @@ bool Per_cpu_data_alloc::alloc(Cpu_number cpu)
       return true;
     }
 
-  unsigned size = _per_cpu_data_end - _per_cpu_data_start;
-
+  size_t size = mem_range_bytes(_per_cpu_data_start, _per_cpu_data_end);
   char *per_cpu = static_cast<char*>(Kmem_alloc::allocator()->alloc(Bytes(size)));
-
   if (!per_cpu)
     return false;
 
@@ -56,7 +54,7 @@ bool Per_cpu_data_alloc::alloc(Cpu_number cpu)
 
   _offsets[cpu] = per_cpu - _per_cpu_data_start;
   WARNX(Info,
-        "Allocate %u bytes (%u KiB) for CPU[%u] local storage (offset=%lx, %p-%p)\n",
+        "Allocate %zu bytes (%zu KiB) for CPU[%u] local storage (offset=%lx, %p-%p)\n",
         size, (size + 1023) / 1024, cxx::int_value<Cpu_number>(cpu),
         _offsets[cpu], _per_cpu_data_start + _offsets[cpu],
         _per_cpu_data_end + _offsets[cpu]);
