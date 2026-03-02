@@ -143,8 +143,6 @@ int Uart_pl011::get_char(bool blocking) const
     if (!blocking)
       return -1;
 
-  //_regs->write(UART011_ICR, UART011_RXIC | UART011_RTIC);
-
   int c = _regs->read<unsigned int>(UART01x_DR);
   _regs->write<unsigned int>(UART011_ECR, 0xff);
   return c;
