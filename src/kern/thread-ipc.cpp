@@ -196,7 +196,7 @@ Thread::ipc_send_msg(Receiver *receiver, bool open_wait) override
     {
       regs->tag(L4_msg_tag(regs->tag(), L4_msg_tag::Error));
       state_del = Thread_ipc_transfer; // handle Abt_ipc_in_progress in
-                                       // Thread::abort_send()
+                                       // the function Thread::abort_send()
       state_add = Thread_transfer_failed | Thread_ready;
     }
   if (xcpu_state_change(~state_del, state_add, true))
@@ -606,7 +606,7 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
         case Check_sender::Queued:
           // set _snd_regs to enable active receiving
           _snd_regs = regs;
-          ok = do_send_wait(partner, t.snd); // --- blocking point ---
+          ok = do_send_wait(partner, t.snd); // --- this is a blocking point ---
           current_cpu = ::current_cpu();
           break;
 

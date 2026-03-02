@@ -504,7 +504,7 @@ asm
 "     bl   relocate                    \n"
 "     mov  x0, x19                     \n"
 "     bl   bootstrap_main              \n"
-".p2align 3                            \n"  // running uncached -> align!
+".p2align 3                            \n"  // running uncached and need align!
 ".Lstack_offs: .8byte (_stack - _start)\n"
 ".previous                             \n"
 ".section .bss                         \n"

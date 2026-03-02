@@ -463,8 +463,10 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
                                       Mword irq_id, bool abandon)
 {
   int result;
-  bool requeue_revoked = false; // for Revoke_vcpu_state::Ok_was_pending
-  bool was_pending_again = false; // for Revoke_vcpu_state::Ok_was_active_and_queued
+  // for handling case Revoke_vcpu_state::Ok_was_pending before return
+  bool requeue_revoked = false;
+  // for handling case Revoke_vcpu_state::Ok_was_active_and_queued before return
+  bool was_pending_again = false;
 
   if (!old)
     {
