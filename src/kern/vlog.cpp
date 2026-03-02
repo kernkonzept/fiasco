@@ -205,7 +205,7 @@ Vlog::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
   if (!Ko::check_basics(&tag, L4_msg_tag::Label_log))
     return tag;
 
-  switch (Op{r_msg->values[0]})
+  switch (Op{r_msg->values[0] & 0xFFFF})
     {
     case Op::Write:
       log_string(r_msg);
@@ -214,8 +214,10 @@ Vlog::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
       return set_attr(rights, f, r_msg);
     case Op::Get_attr:
       return get_attr(rights, f, s_msg);
-    default: // Op::Read
+    case Op::Read:
       return get_input(rights, f, s_msg);
+    default:
+      return commit_result(-L4_err::ENosys);
     }
 }
 
