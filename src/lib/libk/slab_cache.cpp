@@ -198,7 +198,6 @@ virtual
 Slab_cache::~Slab_cache()
 {
   // the derived class should call destroy() before deleting us.
-  // assert(_first_slab == 0);
 }
 
 PROTECTED inline
