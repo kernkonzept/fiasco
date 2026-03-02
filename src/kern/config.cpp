@@ -186,7 +186,7 @@ Global_data<bool> Config::serial_esc(false);
 
 #ifdef CONFIG_MMU
 DEFINE_GLOBAL_CONSTINIT
-Global_data<unsigned> Config::tbuf_entries(0x20000 / sizeof(Mword)); //1024;
+Global_data<unsigned> Config::tbuf_entries(0x20000 / sizeof(Mword));
 #else
 // The Buddy_alloc can only allocate up to 128 KiB. So far only Arm is no-MMU
 // capable and we know the size of each tbuf entry.
