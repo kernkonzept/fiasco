@@ -25,7 +25,6 @@ raw_exit()
   puts("\nPress any key to reboot.");
   Kconsole::console()->getchar();
   puts("\033[1mRebooting.\033[m");
-  //  Cpu::busy_wait_ns(10000000);
   platform_reset();
 }
 
