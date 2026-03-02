@@ -74,9 +74,6 @@ int main()
   // thread
   set_exit_question(&exit_question);
 
-  // disallow all interrupts before we selectively enable them
-  //  pic_disable_all();
-
   // create kernel thread
   Kernel_thread *kernel = Kernel_thread::create_for_boot_cpu();
   assert((reinterpret_cast<Mword>(kernel->init_stack()) & 7) == 0);
