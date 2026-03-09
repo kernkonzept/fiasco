@@ -277,7 +277,7 @@ fail:
        "\033[1mUnhandled trap \033[m\n", static_cast<void *>(this));
 
 fail_nomsg:
-  if (Warn::is_enabled(Warning))
+  if (Warn::is_enabled(Warn_level::Warning))
     ts->dump();
 
   on_enter_irq_from_tickless();

@@ -4,7 +4,7 @@ INTERFACE:
 
 #include "config.h"
 
-enum Warn_level
+enum class Warn_level : int
 {
   Error   = 0,
   Warning = 1,
@@ -15,13 +15,13 @@ namespace Warn
 {
 
 constexpr bool is_enabled(Warn_level level)
-{ return level <= static_cast<int>(Config::Warn_level); }
+{ return level <= Warn_level{Config::Warn_level}; }
 
 }
 
 #define WARNX(level, ...) \
   do {                                                            \
-       if constexpr (Warn::is_enabled(level))                     \
+       if constexpr (Warn::is_enabled(Warn_level::level))         \
          printf("\n\033[31mKERNEL\033[m: " #level ": " __VA_ARGS__); \
      } while (0)
 

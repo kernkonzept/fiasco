@@ -950,7 +950,7 @@ public:
   enum
   {
     Debug      = 1,
-    Log_faults = Warn::is_enabled(Info),
+    Log_faults = Warn::is_enabled(Warn_level::Info),
   };
 };
 

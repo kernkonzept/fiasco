@@ -469,7 +469,7 @@ public:
           Inv_desc *desc = inv_desc(regs[Reg_64::Inv_q_head] / sizeof(Inv_desc));
 
           // Save error details for subsequent warn printf.
-          if (Warn::is_enabled(Warning))
+          if (Warn::is_enabled(Warn_level::Warning))
             {
               err = regs[Reg_32::Inv_q_error] & Inv_q_error_iqei;
               err_desc = *desc;
