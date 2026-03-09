@@ -80,10 +80,6 @@ public:
     explicit constexpr Rights(Value_enum v)
     : cxx::int_type_base<unsigned char, Rights>(v) {}
 
-    /// Explicit conversion to the Value_enum type
-    explicit constexpr operator Value_enum () const
-    { return static_cast<Value_enum>(_v); }
-
     constexpr bool empty() const { return _v == 0; }
 
     constexpr Rights apply(Rights r) const { return *this & r; }
