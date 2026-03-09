@@ -484,6 +484,28 @@ mem_range_bytes(void const *start, void const *end)
   return end_addr - start_addr;
 }
 
+/**
+ * Obtain copy of `ptr` decoupled from the lifetime of the pointed-to object.
+ *
+ * This is a pointer optimization barrier when doing bit-twiddeling with
+ * pointers, to prevent the compiler from making optimizations based on the
+ * lifetime of the object pointed to by `ptr`.
+ *
+ * For example when deriving a pointer to a Context from a pointer of an object
+ * that is allocated on its stack.
+ */
+template<typename T>
+inline T *
+separate_lifetime(T *ptr)
+{
+  // The asm statement with ptr as input and output argument forces the compiler
+  // to not make any assumptions about the return value based on the input
+  // argument. In other words, the relation between them becomes opaque to the
+  // compiler, which should prevent undesirable lifetime-based optimizations.
+  asm("" : [ptr] "+g"(ptr));
+  return ptr;
+}
+
 namespace cxx {
 
 /** Return the number of elements of a fixed-sized C array. */
