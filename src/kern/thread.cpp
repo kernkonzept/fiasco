@@ -552,12 +552,16 @@ Thread::do_kill()
   return true;
 }
 
+INTERFACE:
+
+[[noreturn]] extern void leave_and_kill_myself() asm ("leave_and_kill_myself");
+
+IMPLEMENTATION:
+
 PRIVATE inline
 void
 Thread::prepare_kill()
 {
-  [[noreturn]] extern void leave_and_kill_myself() asm ("leave_and_kill_myself");
-
   if (state() & (Thread_dying | Thread_dead))
     return;
 
