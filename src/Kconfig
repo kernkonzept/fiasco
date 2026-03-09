@@ -344,7 +344,6 @@ config IRQ_DIRECT_INJECT
 
 config PHYS_OBJ_SPACE_AVL
 	bool "Use AVL tree for object space"
-	depends on EXPERIMENTAL
 	help
 	  Usually objects in a space are stored in a page-based two-level
 	  tree. Depending on the distribution of the capabilites this might
