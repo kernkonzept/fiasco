@@ -286,7 +286,7 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
   utcb->buffers[1] = L4_fpage::all_spaces().raw();
 
   utcb->values[0] = PF::addr_to_msgword0(pfa, error_code);
-  utcb->values[1] = regs()->ip(); //PF::pc_to_msgword1 (regs()->ip(), error_code));
+  utcb->values[1] = regs()->ip();
 
   L4_timeout_pair timeout(L4_timeout::Never, L4_timeout::Never);
 

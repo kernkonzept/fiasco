@@ -7,11 +7,10 @@ INTERFACE:
 class PF
 {
 public:
-  static Mword is_translation_error( Mword error );
-  static Mword is_usermode_error( Mword error );
-  static Mword is_read_error( Mword error );
-  static Mword addr_to_msgword0( Address pfa, Mword error );
-  static Mword pc_to_msgword1( Address pc, Mword error );
+  static Mword is_translation_error(Mword error);
+  static Mword is_usermode_error(Mword error);
+  static Mword is_read_error(Mword error);
+  static Mword addr_to_msgword0(Address pfa, Mword error);
 };
 
 
@@ -49,12 +48,6 @@ IMPLEMENTATION:
 template<typename ALLOC>
 inline Pdir_alloc_simple<ALLOC> pdir_alloc(ALLOC *a)
 { return Pdir_alloc_simple<ALLOC>(a); }
-
-IMPLEMENT inline NEEDS[PF::is_usermode_error]
-Mword PF::pc_to_msgword1(Address pc, Mword error)
-{
-  return is_usermode_error(error) ? pc : Invalid_address;
-}
 
 PUBLIC template<typename PTE_PTR, typename TRAITS, typename VA>
 Phys_mem_addr
