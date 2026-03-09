@@ -205,7 +205,7 @@ Switch_lock::lock()
     {
       for (;;)
         {
-          Mword o = access_once(&_lock_owner);
+          o = access_once(&_lock_owner);
           if (o & 1)
             return Invalid;
 

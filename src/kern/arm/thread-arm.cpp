@@ -732,7 +732,7 @@ Thread::arm_esr_entry(Return_frame *rf)
     case 0x00: // Unknown reason, undefined opcode with HCR.TGE=1
         {
           ct->state_del(Thread_cancel);
-          Mword state = ct->state();
+          state = ct->state();
 
           if (state & (Thread_vcpu_user | Thread_alien))
             {
