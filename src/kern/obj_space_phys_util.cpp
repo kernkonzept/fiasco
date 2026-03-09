@@ -175,12 +175,20 @@ Obj_space_phys<SPACE>::alloc_dir()
 
 PRIVATE template< typename SPACE >
 typename Obj_space_phys<SPACE>::Entry *
-Obj_space_phys<SPACE>::get_cap(Cap_index index, bool alloc)
+Obj_space_phys<SPACE>::get_cap(Cap_index index, bool alloc,
+                               Page_order *order = nullptr)
 {
   if (auto e = get_cap(index))
     return e;
 
-  return alloc ? caps_alloc(index) : nullptr;
+  Entry *ret = alloc ? caps_alloc(index) : nullptr;
+
+  // Update order if cap slot is not available. Used by the mapping code to
+  // skip larger gaps.
+  if (EXPECT_FALSE(!ret && order))
+    *order = Page_order(Obj::Caps_per_page_ld2);
+
+  return ret;
 }
 
 PRIVATE template< typename SPACE >
@@ -258,6 +266,7 @@ Obj_space_phys<SPACE>::caps_free()
 //----------------------------------------------------------------------------
 IMPLEMENTATION [obj_space_phys_avl]:
 
+#include "arithmetic.h"
 #include "lock_guard.h"
 
 PUBLIC template< typename SPACE >
@@ -268,7 +277,8 @@ Obj_space_phys<SPACE>::Obj_space_phys()
 
 PRIVATE template< typename SPACE >
 typename Obj_space_phys<SPACE>::Entry *
-Obj_space_phys<SPACE>::get_cap(Cap_index index, bool alloc)
+Obj_space_phys<SPACE>::get_cap(Cap_index index, bool alloc,
+                               Page_order *order = nullptr)
 {
   auto guard = lock_guard(_lock);
 
@@ -276,14 +286,31 @@ Obj_space_phys<SPACE>::get_cap(Cap_index index, bool alloc)
   if (e)
     return const_cast<Entry*>(&e->second);
 
-  if (!alloc)
-    return nullptr;
+  Entry *ret = nullptr;
 
-  auto n = _map.emplace(index);
-  if (n.second == -Entries::E_nomem)
-    return nullptr;
+  if (alloc)
+    {
+      auto n = _map.emplace(index);
+      if (n.second != -Entries::E_nomem)
+        ret = &n.first->second;
+    }
 
-  return &n.first->second;
+  // Update order if cap slot is not available. Used by the mapping code to
+  // skip larger gaps.
+  if (EXPECT_FALSE(!ret && order))
+    {
+      Cap_index next(0);
+      if (auto n = _map.lower_bound_node(index))
+        next = n->first;
+
+      auto gap = cxx::int_value<Cap_diff>(next - index);
+      unsigned gap_order = gap ? cxx::log2u(gap) : 20;
+      auto index_val = cxx::int_value<Cap_index>(index);
+      unsigned max_order = index_val ? __builtin_ctzl(index_val) : 20;
+      *order = Page_order(min(gap_order, max_order));
+    }
+
+  return ret;
 }
 
 PUBLIC template< typename SPACE >
@@ -311,14 +338,10 @@ Obj_space_phys<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
 {
   if (order)
     *order = Page_order(0);
-  Entry *cap = get_cap(virt, false);
+  Entry *cap = get_cap(virt, false, order);
 
   if (EXPECT_FALSE(!cap))
-    {
-      if (order)
-        *order = Page_order(Obj::Caps_per_page_ld2);
-      return false;
-    }
+    return false;
 
   Capability c = cap->capability();
 
