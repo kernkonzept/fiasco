@@ -279,6 +279,7 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
 
   Pf_msg_utcb_saver saved_utcb_fields(utcb);
 
+  assert(PF::is_usermode_error(error_code));
 
   utcb->buf_desc = L4_buf_desc(0, 0, 0, L4_buf_desc::Inherit_fpu);
   utcb->buffers[0] = L4_buf_item::map().raw();
