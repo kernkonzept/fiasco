@@ -19,6 +19,7 @@ public:
     Aborted         = 14,
     R_aborted       = 15,
     Map_failed      = 16,
+    R_no_reply_cap  = 19,
   };
 
   enum Phase
