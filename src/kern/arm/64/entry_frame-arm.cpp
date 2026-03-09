@@ -69,8 +69,8 @@ public:
   Mword ip() const
   { return pc; }
 
-  void ip(Mword pc)
-  { this->pc = pc; }
+  void ip(Mword new_pc)
+  { pc = new_pc; }
 
   Syscall_frame *syscall_frame()
   { return reinterpret_cast<Syscall_frame *>(&r[0]); }
