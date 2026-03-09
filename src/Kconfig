@@ -519,6 +519,13 @@ config COV_OUTPUT_MEMBUF
       This is useful for simulators which have the option to dump a section
       of memory into a file.
 
+config COV_OUTPUT_ARM_SEMIHOSTING
+    bool "Output via Arm Semihosting" if ARM
+    help
+      With this mode coverage output is written to stdout using the Arm
+      Semihosting extension. This is useful when Fiasco is running inside a
+      simulator supporting this extension.
+
 endchoice
 
 config COV_OUTPUT_MEMBUF_START
