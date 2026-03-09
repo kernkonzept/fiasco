@@ -122,7 +122,7 @@ Kip_init::init_syscalls(Kip *kinfo)
     Mword w[0x1000 / sizeof(Mword)];
   };
   K *k = reinterpret_cast<K *>(kinfo);
-  k->w[OFFS__KIP_FN_SYSCALL / sizeof(Mword)] = 0xd65f03c0d4000001; // svc #0; ret
+  k->w[OFFS__KIP_FN_SYSCALL / sizeof(Mword)] = 0xd65f03c0d4000001U; // svc #0; ret
 }
 
 //--------------------------------------------------------------

@@ -51,7 +51,7 @@ public:
   // global kernel configuration
   enum
   {
-    Kernel_version_id = 0x87004444 | (FIASCO_KERNEL_SUBVERSION << 16), // "DD....."
+    Kernel_version_id = 0x87004444U | (FIASCO_KERNEL_SUBVERSION << 16), // "DD....."
     Kernel_prio = 0,
     Default_prio = 1,
 

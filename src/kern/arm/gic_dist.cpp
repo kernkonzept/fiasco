@@ -85,9 +85,9 @@ PUBLIC inline
 void
 Gic_dist::igroup_init(V2, unsigned num)
 {
-  Mword v = 0;
+  Unsigned32 v = 0;
   if constexpr (Config_tz_sec || Config_mxc_tzic)
-    v = 0xffffffff;
+    v = 0xffffffffU;
 
   for (unsigned i = 32; i < num; i += 32)
     _dist.write<Unsigned32>(v, GICD_IGROUPR + i / 8);
@@ -113,42 +113,42 @@ Gic_dist::cpu_init_v2()
   if constexpr (Config_tz_sec)
     sec_irqs = 0x00000f00;
 
-  _dist.write<Unsigned32>(0xffffffff, GICD_ICENABLER);
+  _dist.write<Unsigned32>(0xffffffffU, GICD_ICENABLER);
   if constexpr (Config_tz_sec)
     {
-      _dist.write<Unsigned32>(0x00000f00, GICD_ISENABLER);
+      _dist.write<Unsigned32>(0x00000f00U, GICD_ISENABLER);
       _dist.write<Unsigned32>(~sec_irqs, GICD_IGROUPR);
     }
   else
     {
-      _dist.write<Unsigned32>(0x0000001e, GICD_ISENABLER);
-      _dist.write<Unsigned32>(0, GICD_IGROUPR);
+      _dist.write<Unsigned32>(0x0000001eU, GICD_ISENABLER);
+      _dist.write<Unsigned32>(0U, GICD_IGROUPR);
     }
 
-  _dist.write<Unsigned32>(0xffffffff, GICD_ICPENDR);
+  _dist.write<Unsigned32>(0xffffffffU, GICD_ICPENDR);
 
-  _dist.write<Unsigned32>(0xffffffff, GICD_ICACTIVER); // clear active
-  _dist.write<Unsigned32>(0xffffffff, 0xf10); // sgi pending clear
-  _dist.write<Unsigned32>(0xffffffff, 0xf14); // sgi pending clear
-  _dist.write<Unsigned32>(0xffffffff, 0xf18); // sgi pending clear
-  _dist.write<Unsigned32>(0xffffffff, 0xf1c); // sgi pending clear
+  _dist.write<Unsigned32>(0xffffffffU, GICD_ICACTIVER); // clear active
+  _dist.write<Unsigned32>(0xffffffffU, 0xf10); // sgi pending clear
+  _dist.write<Unsigned32>(0xffffffffU, 0xf14); // sgi pending clear
+  _dist.write<Unsigned32>(0xffffffffU, 0xf18); // sgi pending clear
+  _dist.write<Unsigned32>(0xffffffffU, 0xf1c); // sgi pending clear
 
   for (unsigned g = 0; g < 32; g += 4)
     {
       if constexpr (Config_tz_sec)
         {
-          Mword v = 0;
+          Unsigned32 v = 0;
           unsigned b = (sec_irqs >> g) & 0xf;
 
           for (int i = 0; i < 4; ++i)
             if (b & (1 << i))
               v |= 0x40 << (i * 8);
             else
-              v |= 0xa0 << (i * 8);
+              v |= 0xa0U << (i * 8);
           _dist.write<Unsigned32>(v, GICD_IPRIORITYR + g);
         }
       else
-        _dist.write<Unsigned32>(0xa0a0a0a0, GICD_IPRIORITYR + g);
+        _dist.write<Unsigned32>(0xa0a0a0a0U, GICD_IPRIORITYR + g);
     }
 }
 
@@ -191,7 +191,7 @@ Unsigned64
 Gic_dist::cpu_to_irouter_entry(Cpu_number cpu)
 {
   auto phys_id = cxx::int_value<Cpu_phys_id>(Cpu::cpus.cpu(cpu).phys_id());
-  return Unsigned64{phys_id & 0xff000000} << 8 | (phys_id & 0xffffff);
+  return Unsigned64{phys_id & 0xff000000U} << 8 | (phys_id & 0xffffff);
 }
 
 PUBLIC inline
@@ -310,7 +310,7 @@ void
 Gic_dist::init_prio(unsigned from, unsigned to)
 {
   for (unsigned i = from; i < to; i += 4)
-    _dist.write<Unsigned32>(0xa0a0a0a0, GICD_IPRIORITYR + i);
+    _dist.write<Unsigned32>(0xa0a0a0a0U, GICD_IPRIORITYR + i);
 }
 
 PUBLIC inline
@@ -318,7 +318,7 @@ void
 Gic_dist::init_regs(unsigned from, unsigned to)
 {
   for (unsigned i = from; i < to; i += 32)
-    _dist.write<Unsigned32>(0xffffffff, GICD_ICENABLER + i * 4 / 32);
+    _dist.write<Unsigned32>(0xffffffffU, GICD_ICENABLER + i * 4 / 32);
 }
 
 PUBLIC inline NEEDS["l4_types.h", "lock_guard.h"]

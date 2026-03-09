@@ -126,16 +126,16 @@ Gic_redist::cpu_init()
         panic("GIC: redistributor did not awake\n");
     }
 
-  _redist.write<Unsigned32>(0xffffffff, GICR_ICENABLER0);
+  _redist.write<Unsigned32>(0xffffffffU, GICR_ICENABLER0);
 
-  _redist.write<Unsigned32>(0x0000001e, GICR_ISENABLER0);
-  _redist.write<Unsigned32>(0xffffffff, GICR_IGROUPR0);
+  _redist.write<Unsigned32>(0x0000001eU, GICR_ISENABLER0);
+  _redist.write<Unsigned32>(0xffffffffU, GICR_IGROUPR0);
 
-  _redist.write<Unsigned32>(0xffffffff, GICR_ICPENDR0);
-  _redist.write<Unsigned32>(0xffffffff, GICR_ICACTIVER0); // clear active
+  _redist.write<Unsigned32>(0xffffffffU, GICR_ICPENDR0);
+  _redist.write<Unsigned32>(0xffffffffU, GICR_ICACTIVER0); // clear active
 
   for (unsigned g = 0; g < 32; g += 4)
-    _redist.write<Unsigned32>(0xa0a0a0a0, GICR_IPRIORITYR0 + g);
+    _redist.write<Unsigned32>(0xa0a0a0a0U, GICR_IPRIORITYR0 + g);
 }
 
 PUBLIC

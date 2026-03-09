@@ -17,7 +17,7 @@ void Pic::init()
                                           Gic_dist::Size));
   // First, assume GICv2 with a 4 KiB region. Also detect KVM's GIC distributor.
   if (   (dist.read<Unsigned32>(0xfe8) & 0x0f0) == 0x20
-      || (dist.read<Unsigned32>(0x8) & 0xfff00fff) == 0x4b00043b)
+      || (dist.read<Unsigned32>(0x8) & 0xfff00fffU) == 0x4b00043b)
     {
       printf("GICv2\n");
       typedef Irq_mgr_single_chip<Gic_v2> Mgr;

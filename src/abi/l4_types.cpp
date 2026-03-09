@@ -279,7 +279,7 @@ public:
    * Get the flags for a full unmap.
    * \return A L4_map_mask for doing a full unmap operation.
    */
-  static L4_map_mask full() { return L4_map_mask(0xc0000002); }
+  static L4_map_mask full() { return L4_map_mask(0xc0000002UL); }
 
   /**
    * Get the raw binary representation for the map mask.
@@ -291,7 +291,7 @@ public:
    * Unmap from the calling task too.
    * \return true if the caller wishes to unmap from its own address space too.
    */
-  Mword self_unmap() const { return _raw & 0x80000000; }
+  Mword self_unmap() const { return _raw & 0x80000000UL; }
 
   /**
    * Shall the unmap delete the object if allowed?

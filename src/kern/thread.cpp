@@ -169,7 +169,7 @@ protected:
 
   // Debugging facilities
   unsigned _magic;
-  static const unsigned magic = 0xf001c001;
+  static const unsigned magic = 0xf001c001U;
 };
 
 // ------------------------------------------------------------------------

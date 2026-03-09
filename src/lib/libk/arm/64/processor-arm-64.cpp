@@ -70,7 +70,7 @@ Cpu_phys_id Proc::cpu_id()
 {
   Mword mpidr;
   __asm__("mrs %0, MPIDR_EL1" : "=r" (mpidr));
-  return Cpu_phys_id((mpidr & 0xffffff) | ((mpidr >> 8) & 0xff000000));
+  return Cpu_phys_id((mpidr & 0xffffffUL) | ((mpidr >> 8) & 0xff000000UL));
 }
 
 //--------------------------------------------------------------------
