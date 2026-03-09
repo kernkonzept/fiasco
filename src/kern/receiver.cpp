@@ -1,11 +1,13 @@
 INTERFACE:
 
+#include "atomic.h"
 #include "context.h"
 #include "l4_error.h"
 #include "member_offs.h"
 #include "timeout.h"
 #include "prio_list.h"
 #include "ref_obj.h"
+#include "reply_space.h"
 
 class Syscall_frame;
 class Sender;
@@ -75,6 +77,28 @@ public:
 
 private:
   /**
+   * Unconditionally reset a reply cap slot. If valid, also the
+   * `_partner_reply_cap` of the pointed to caller is reset.
+   *
+   * \pre Interrupts must be disabled.
+   *
+   * \param slot  Slot that shall be reset
+   * \return Value that was stored in reply cap slot prior to reset.
+   */
+  static inline Reply_cap reset_reply_cap_slot(Reply_cap_slot *slot)
+  {
+    Reply_cap old_reply_cap = slot->reset_atomic();
+    Receiver *caller = old_reply_cap.caller();
+
+    if (caller)
+      // The data dependency pairs with mp_wmb in Receiver::set_reply_cap(). No
+      // need for a Mem::mp_rmb().
+      ::cas<Reply_cap_slot *>(&caller->_partner_reply_cap, slot, nullptr);
+
+    return old_reply_cap;
+  }
+
+  /**
    * IPC partner this Receiver is waiting for/involved with.
    *
    * Not reset after a receive operation is finished, so it might contain an old
@@ -83,8 +107,30 @@ private:
    * Must never be dereferenced, only compared.
    */
   void const *_partner;
-  Syscall_frame *_rcv_regs; // registers used for receive
-  Mword _caller;
+
+  /**
+   * The caller remembers the reply cap slot that the callee used for the call
+   * for which the caller is currently waiting for a reply.
+   *
+   * Unlike `_partner` this must only be set while caller is waiting for callee
+   * to respond, otherwise nullptr. This is essential, because when aborting
+   * the wait for a call response, the caller uses `_partner_reply_cap` to
+   * detect if callee is still alive (was not deleted in the meantime). This is
+   * reset together with the reply cap slot its points to, either by the callee
+   * or the caller, whoever comes first.
+   *
+   * Furthermore, a Receiver (caller) may only be referenced by at most one
+   * reply cap slot, namely the one its `_partner_reply_cap` points to.
+   */
+  Reply_cap_slot *_partner_reply_cap = nullptr;
+
+  /// Registers used for receive.
+  Syscall_frame *_rcv_regs;
+
+  /// Implicit, per-receiver reply cap slot. Used if no explicit slot is
+  /// selected.
+  Reply_cap_slot _implicit_reply_cap;
+
   Iterable_prio_list _sender_list;
   // Tracks whether the IPC partner this Receiver is waiting for, as specified
   // in `_partner`, is enqueued in the Receiver's sender list.
@@ -111,57 +157,151 @@ IMPLEMENTATION:
 
 // Interface for receivers
 
-IMPLEMENT inline Receiver::~Receiver() {}
+IMPLEMENT inline Receiver::~Receiver()
+{
+  // Ensure _partner_reply_cap was reset before destruction.
+  assert(_partner_reply_cap == nullptr);
+}
 
 PROTECTED inline
 Receiver::Receiver()
-: Context(), _caller(0)
+: Context()
 {}
 
-PUBLIC inline
-Receiver *
-Receiver::caller() const
-{ return reinterpret_cast<Receiver*>(_caller & ~0x03UL); }
-
-PUBLIC inline
-L4_fpage::Rights
-Receiver::caller_rights() const
-{ return L4_fpage::Rights(_caller & 0x3); }
-
-
+/**
+ * Set up the reply cap slot in the callee's reply cap space and remember that
+ * reply cap slot in the caller's `_partner_reply_cap`.
+ *
+ * \pre Must only be invoked on the callee, either in the context of the caller
+ *      or of the callee, when both participants are blocking on one another,
+ *      transferring the IPC message, i.e. Thread_ipc_transfer flag is set on
+ *      the other participant.
+ * \pre The `caller` must not already be referenced by a reply cap slot.
+ * \pre Interrupts must be disabled.
+ *
+ * \param caller  Caller waiting for callee's response.
+ * \param rights  Rights callee has when responding to the caller.
+ *
+ * \note The prerequisite ensures that this function is never executed
+ *       concurrently with `reset_partner_reply_cap()` for a caller.
+ *       However, a reply cap slot can be reset at any time by an unrelated
+ *       thread, so concurrent execution with `reset_reply_cap()` is possible.
+ */
 PUBLIC inline
 void
-Receiver::set_caller(Receiver *caller, L4_fpage::Rights rights)
+Receiver::set_reply_cap(Receiver *caller, L4_fpage::Rights rights)
 {
-  Mword nv = reinterpret_cast<Mword>(caller)
-             | (cxx::int_value<L4_fpage::Rights>(rights) & 0x3);
-  reinterpret_cast<Mword volatile &>(_caller) = nv;
+  // If reply cap slot is already used, reset it first.
+  if (_implicit_reply_cap.is_used()) [[unlikely]]
+    reset_reply_cap_slot(&_implicit_reply_cap);
+
+  // It is crucial that at this point the caller is not referenced by any reply
+  // cap slot (see prerequisite). Otherwise concurrent execution of
+  // reset_reply_cap() on that reply cap slot could result in an inconsistent
+  // state, where we in the end successfully set up the reply cap slot with the
+  // cas below, but reset_reply_cap() overwrote our previous write to
+  // `caller->_partner_reply_cap` with nullptr, leaving us with a dangling
+  // pointer to caller in the reply cap slot.
+  assert(caller->_partner_reply_cap == nullptr);
+
+  // First record in the caller the reply cap slot used for the call.
+  atomic_store(&caller->_partner_reply_cap, &_implicit_reply_cap);
+
+  // Because someone unrelated can, at any time, reset the reply cap slot, we
+  // must ensure that this someone sees an up-to-date value of
+  // _partner_reply_cap, before they see our write to _implicit_reply_cap, so
+  // they can properly reset _partner_reply_cap. This is crucial to avoid a
+  // dangling pointer in _partner_reply_cap in case of concurrent reply cap
+  // slot usage.
+  Mem::mp_wmb(); // Pairs with data dependency in reset_reply_cap_slot().
+
+  Reply_cap new_value = Reply_cap(caller, rights);
+  _implicit_reply_cap.write_atomic(new_value);
 }
 
 /**
- * Reset the caller field to 0 iff the current value is `old_caller`.
+ * Reset the `_partner_reply_cap` of a caller. If valid, also the reply cap
+ * slot it referred to is reset.
+ *
+ * There are two use cases for this function:
+ *   - Caller aborted waiting for a response to a call (timed out or canceled).
+ *   - Callee sends to caller directly, without using the reply cap.
+ *
+ * \pre Must only be executed by the caller, or by a potential sender in the
+ *      context of the caller, if that sender has checked that caller is not in
+ *      an IPC operation with someone else (via `caller->is_partner(sender)`).
+ *      That ensures we do not interfere with an ongoing IPC operation of the
+ *      caller.
+ * \pre Interrupts must be disabled.
+ *
+ * \note The prerequisite ensures that this function is never executed
+ *       concurrently with `set_reply_cap()` for a caller.
+ *       However, a reply cap slot can be reset at any time by an unrelated
+ *       thread, so concurrent execution with `reset_reply_cap()` is possible.
  */
 PUBLIC inline NEEDS["atomic.h"]
 void
-Receiver::reset_caller(Receiver const *old_caller)
+Receiver::reset_partner_reply_cap()
 {
-  Mword ov = reinterpret_cast<Mword>(old_caller) | (_caller & 0x3);
-  // avoid exclusive access (do test, test-and-set)
-  if (_caller != ov)
-    return;
+  assert(cpu_lock.test());
 
-  cas(&_caller, ov, 0UL);
+  // Seeing an outdated value of _partner_reply_cap here does not matter. That
+  // could only ever happen, if someone else was faster than us in resetting
+  // _partner_reply_cap, in which case they are required to also take care of
+  // the pointed to reply cap slot. But since we use cas below there is no
+  // danger of creating an inconsistent state.
+
+  // And the RCU mechanism ensures that if we do not yet see the write, the
+  // object containing the pointed to reply cap slot must still be alive.
+  Reply_cap_slot *reply_cap_slot = atomic_load(&_partner_reply_cap);
+  if (reply_cap_slot != nullptr) [[unlikely]]
+    {
+      // Someone might concurrently reset this to nullptr, but that does
+      // not bother us, nullptr is nullptr.
+      atomic_store(&_partner_reply_cap, nullptr);
+
+      // This is safe, we only exchange if the reply cap refers to us (caller).
+      // There is no way we can end up in the reply cap again in the meantime,
+      // i.e. make another call by chance with the new callee using the same
+      // reply cap slot, as it would require our cooperation, which is
+      // impossible as this code is executing in our context.
+      Reply_cap old_value =
+        Reply_cap(this, reply_cap_slot->read_dirty().caller_rights());
+      // If the cas fails, the reply cap slot was reused/reset by someone else
+      // in the meantime, but that does not bother us.
+      reply_cap_slot->cas(old_value, Reply_cap::Empty());
+    }
 }
 
 /**
- * Unconditionally reset the caller.
+ * Get implicit reply cap.
+ *
+ * \note Only use for debugging purposes.
  */
 PUBLIC inline
-void
-Receiver::reset_caller()
+Reply_cap
+Receiver::get_reply_cap() const
 {
-  assert(_caller);
-  _caller = 0;
+  return _implicit_reply_cap.read_atomic();
+}
+
+/**
+ * Unconditionally reset the implicit reply cap slot. If valid, also the
+ * `_partner_reply_cap` of the pointed to caller is reset.
+ *
+ * \pre Must only be invoked by a callee on itself or in a context where the
+ *      callee is known to be prevented from executing concurrently.
+ * \pre Interrupts must be disabled.
+ *
+ * \return Value that was stored in reply cap slot prior to reset.
+ */
+PUBLIC inline
+Reply_cap
+Receiver::reset_reply_cap()
+{
+  assert(cpu_lock.test());
+
+  return reset_reply_cap_slot(&_implicit_reply_cap);
 }
 
 /**

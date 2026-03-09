@@ -488,6 +488,10 @@ Thread::do_kill()
       schedule();
     }
 
+  // In case we're engaged in a call. So far, we just detach us. The caller is
+  // left waiting forever...
+  reset_reply_cap();
+
   // If other threads want to send me IPC messages, abort these operations.
   // IMPORTANT: After the following code block, the cpu lock must not be
   //            released until the Thread_dead flag is set, otherwise new

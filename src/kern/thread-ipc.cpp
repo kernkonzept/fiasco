@@ -519,6 +519,33 @@ Thread::activate_ipc_partner(Thread *partner, Cpu_number current_cpu,
 }
 
 /**
+ * Reset reply cap set up for `old_caller`, if it currently waits for
+ * response from us, i.e. is in a call with us.
+ *
+ * Callee uses this before it sends to a caller without using reply cap
+ * (otherwise the reply cap was already reset in Obj_cap::deref).
+ *
+ * \pre Must only be executed on the home CPU of `old_caller` or in a DRQ
+ *      targeted at `old_caller`.
+ * \pre Interrupts must be disabled.
+ */
+PRIVATE inline
+void
+Thread::reset_caller(Thread *old_caller)
+{
+  assert(old_caller->home_cpu() == Cpu::invalid()
+         || old_caller->home_cpu() == ::current_cpu());
+
+  // We need to detect if the caller is in a call with us or with someone else.
+  // Since we are in the context of the caller, we know that the caller can not
+  // switch or be in the process of starting a different call.
+  if (!old_caller->is_partner(this))
+    return;
+
+  old_caller->reset_partner_reply_cap();
+}
+
+/**
  * Send an IPC message and/or receive an IPC message.
  *
  * \param tag           message tag; specifies details about the send phase
@@ -571,8 +598,6 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
 
   if (partner)
     {
-      reset_caller(partner);
-
       assert(!in_sender_list());
       do_switch = tag.do_switch();
 
@@ -582,8 +607,21 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
       _ipc_send_rights = rights;
       _from_spec = from_spec;
 
+      // The reply capability must be reset whenever the callee replies an IPC
+      // of the caller. This must hold, regardless how the callee sends to the
+      // caller. Obf_cap::deref() takes care of the case where the reply
+      // capability is used. For all other cases, we need to call
+      // reset_caller() here. This takes care of callees that send directly to
+      // the caller (e.g., via thread cap or an IPC gate).
+
       if (EXPECT_TRUE(current_cpu == partner->home_cpu()))
-        result = handshake_receiver(partner, t.snd);
+        {
+          // We are on home CPU of partner and IRQs are disabled, so it is safe
+          // to access the `Receiver` state.
+          reset_caller(partner);
+
+          result = handshake_receiver(partner, t.snd);
+        }
       else
         {
           // We have either per se X-CPU IPC or we ran into an IPC during
@@ -752,8 +790,17 @@ Thread::do_ipc_receive(bool have_receive, Thread *partner, Sender *sender,
       }
   }
 
+  // We no longer wait for a response from our callee. To prevent dangling
+  // pointers, we have to reset the callees reply cap slot. We have to do it
+  // here, in case the receive wait timed out, otherwise the callee already
+  // does it when replying to us, either in Obj_cap::deref or above in its send
+  // phase in do_ipc().
+  // NOTE: sender == partner checks that operation we did was an IPC call.
   if (sender && sender == partner)
-    partner->reset_caller(this);
+    reset_partner_reply_cap();
+
+  // FROM HEREUPON (or even earlier) partner and sender must no longer be
+  // dereferenced the pointers might be dangling!
 
   Mword state = this->state();
 
@@ -807,7 +854,7 @@ Thread::transfer_msg(L4_msg_tag tag, Thread *receiver,
 
   // setup the reply capability in case of a call
   if (success && open_wait && is_partner(receiver))
-    receiver->set_caller(this, rights);
+    receiver->set_reply_cap(this, rights);
 
   return success;
 }
@@ -1310,6 +1357,10 @@ PRIVATE inline NOEXPORT
 bool
 Thread::remote_ipc_send(Ipc_remote_request *rq)
 {
+  // We execute in the DRQ context of the partner and IRQs are disabled, so it
+  // is safe to access `Receiver` state.
+  reset_caller(rq->partner);
+
   Check_sender r = rq->partner->check_sender(this, rq->zero_timeout);
   switch (r.s)
     {

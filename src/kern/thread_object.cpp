@@ -45,11 +45,14 @@ Obj_cap::deref(L4_fpage::Rights *rights, bool dbg = false)
   Thread *current = current_thread();
   if (op() & L4_obj_ref::Ipc_reply)
     {
-      *rights = current->caller_rights();
-      Thread *ca = static_cast<Thread*>(current->caller());
-      if (EXPECT_TRUE(!dbg && ca))
-        current->reset_caller();
-      return ca;
+      Reply_cap reply_cap;
+      if (!dbg) [[likely]]
+        reply_cap = current->reset_reply_cap();
+      else
+        reply_cap = current->get_reply_cap();
+
+      *rights = reply_cap.caller_rights();
+      return static_cast<Thread*>(reply_cap.caller());
     }
 
   if (EXPECT_FALSE(special()))
