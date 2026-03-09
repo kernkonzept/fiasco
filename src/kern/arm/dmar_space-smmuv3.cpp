@@ -88,7 +88,7 @@ EXTENSION class Dmar_space
   public:
     static constexpr unsigned super_level() { return 2; }
     static constexpr unsigned max_level()   { return 3; }
-    using Pte_long_desc<Dmar_pte_ptr>::Pte_Long_desc;
+    using Pte_long_desc<Dmar_pte_ptr>::Pte_long_desc;
 
     unsigned char page_order() const
     {
