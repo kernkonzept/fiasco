@@ -234,12 +234,12 @@ PUBLIC inline NEEDS[Context::arm_hyp_load_non_vm_state,
 void
 Context::switch_vm_state(Context *t)
 {
-  Mword _state = state();
-  Mword _to_state = t->state();
+  Mword from_state = state();
+  Mword to_state = t->state();
 
-  bool const from_ext_vcpu_enabled = _state & Thread_ext_vcpu_enabled;
+  bool const from_ext_vcpu_enabled = from_state & Thread_ext_vcpu_enabled;
   bool const from_all_priv = !(_hyp.hcr & Cpu::Hcr_tge);
-  bool const to_ext_vcpu_enabled = _to_state & Thread_ext_vcpu_enabled;
+  bool const to_ext_vcpu_enabled = to_state & Thread_ext_vcpu_enabled;
   bool const to_all_priv = !(t->_hyp.hcr & Cpu::Hcr_tge);
 
   _hyp.save(from_all_priv || from_ext_vcpu_enabled);
@@ -265,7 +265,7 @@ Context::switch_vm_state(Context *t)
       Vm_state *v = vm_state(vcpu_state().access());
       save_ext_vcpu_state(v);
 
-      if (_state & Thread_vcpu_user)
+      if (from_state & Thread_vcpu_user)
         from_mode = Gic_h_global::gic->switch_from_vcpu(&v->gic);
     }
 
@@ -275,11 +275,11 @@ Context::switch_vm_state(Context *t)
       t->load_ext_vcpu_state(v);
 
       Gic_h_global::gic->switch_to_vcpu(&v->gic,
-                                        (_to_state & Thread_vcpu_user)
+                                        (to_state & Thread_vcpu_user)
                                           ? Gic_h::To_user_mode::Enabled
                                           : Gic_h::To_user_mode::Disabled,
                                         from_mode);
-      if (_to_state & Thread_vcpu_user)
+      if (to_state & Thread_vcpu_user)
         t->vcpu_prepare_vtimer();
     }
   else

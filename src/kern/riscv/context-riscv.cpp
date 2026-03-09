@@ -232,19 +232,19 @@ PROTECTED inline
 void
 Context::switchin_guest_context()
 {
-  Mword _state = state();
+  Mword from_state = state();
   // Extended vCPU is enabled
-  if (_state & Thread_ext_vcpu_enabled)
+  if (from_state & Thread_ext_vcpu_enabled)
     {
       // Extended vCPU is in guest mode (VM)
-      if (_state & Thread_vcpu_user)
+      if (from_state & Thread_vcpu_user)
         {
           // Switch to guest space
-          assert(_state & Thread_ext_vcpu_has_guest_space);
+          assert(from_state & Thread_ext_vcpu_has_guest_space);
           vcpu_user_space()->switchin_guest_space();
           return;
         }
-      else if (_state & Thread_ext_vcpu_has_guest_space)
+      else if (from_state & Thread_ext_vcpu_has_guest_space)
         {
           // Load g-stage page table for the VMM: hgatp and hstatus must be set
           // properly, even when switching to vCPU host mode, so that the user
@@ -265,15 +265,15 @@ PRIVATE inline
 void
 Context::switch_hyp_ext_state(Context *to)
 {
-  Mword _state = state();
-  Mword _to_state = to->state();
+  Mword from_state = state();
+  Mword to_state = to->state();
 
-  if ((_state & Thread_ext_vcpu_enabled) && (_state & Thread_vcpu_user))
+  if ((_state & Thread_ext_vcpu_enabled) && (from_state & Thread_vcpu_user))
     vm_state(vcpu_state().access())->save();
 
-  if ((_to_state & Thread_ext_vcpu_enabled))
+  if ((to_state & Thread_ext_vcpu_enabled))
     {
-      if (_to_state & Thread_vcpu_user)
+      if (to_state & Thread_vcpu_user)
         vm_state(to->vcpu_state().access())->load();
       else
         vm_state(to->vcpu_state().access())->load_vmm();
