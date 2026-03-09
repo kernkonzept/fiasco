@@ -102,10 +102,10 @@ IMPLEMENT
 void
 Observer_irq::unregister_irq()
 {
-  auto g = lock_guard(cpu_lock);
+  auto cpu_lock_guard = lock_guard(cpu_lock);
   if (Irq_base *observer = access_once(&_observer))
     {
-      auto g = lock_guard(observer->irq_lock());
+      auto irq_lock_guard = lock_guard(observer->irq_lock());
       observer->detach();
     }
 }

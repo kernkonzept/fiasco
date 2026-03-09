@@ -698,7 +698,7 @@ Irq_sender::destroy(Kobjects_list &reap_list) override
 {
   assert(!_send_state.is_invalidated());
 
-  auto g = lock_guard(cpu_lock);
+  auto cpu_lock_guard = lock_guard(cpu_lock);
   Irq::destroy(reap_list);
 
     {
