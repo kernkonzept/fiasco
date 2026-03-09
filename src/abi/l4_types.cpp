@@ -13,6 +13,14 @@ typedef Address Local_id;
 
 class Utcb;
 
+/// Difference between two reply capability indexes
+using Reply_cap_diff = cxx::int_type_order<Mword, struct Reply_cap_diff_t,
+                                           Order>;
+
+/// A reply capability index
+using Reply_cap_index = cxx::int_type_full<Mword, struct Reply_cap_index_t,
+                                           Reply_cap_diff, Order>;
+
 /**
  * A reference to a kernel object (capability selector),
  * as passed from user level.
@@ -131,20 +139,34 @@ public:
     Invalid      = 1UL << 11UL,
 
     /**
-     * Bit that flags a capability selector as special.
+     * Selector into the explicit reply cap space instead of the regular
+     * capability space.
+     *
+     * Send phase: The sender wants to use an explicit reply cap slot from its
+     * reply cap space, instead of the otherwise used per-thread implicit reply
+     * cap slot.
+     *
+     * Receive phase: The receiver wants to store the caller in an explicit
+     * reply cap slot from its reply cap space, instead of the otherwise used
+     * per-thread implicit reply cap slot.
+     *
+     * The sender/receiver provides the explicit reply cap slot index in
+     * L4_obj_ref::cap().
+     *
+     * \note Only valid in combination with Ipc_reply, Ipc_wait and
+     *       Ipc_reply_and_wait.
      */
-    Special_bit  = 1UL << 11UL,
+    Explicit_reply = 1UL << 10,
 
     /**
-     * Value for the self capability selector. This means, the invoking thread
-     * references itself.
+     * Bits that flags a capability selector as special.
      */
-    Self         = (~0UL) << 11UL,
+    Special_bits  = Invalid | Explicit_reply,
 
     /**
      * Mask for getting all bits of special capabilities.
      */
-    Special_mask = (~0UL) << 11UL,
+    Special_mask = (~0UL) << 10,
   };
 
   enum
@@ -176,7 +198,7 @@ public:
    *         capability table, or false if the selector is a special
    *         capability.
    */
-  bool valid() const { return !(_raw & Special_bit); }
+  bool valid() const { return !(_raw & Invalid); }
 
   /**
    * Is the capability selector a special capability (i.e., not an index
@@ -186,14 +208,20 @@ public:
    *         valid index into a capability table.
    *
    */
-  bool special() const { return _raw & Special_bit; }
+  bool special() const { return _raw & Special_bits; }
 
   /**
    * Is this capability selector the special `self` capability.
    * \return true if this capability is the special self capability for the
    *         invoking thread.
    */
-  bool self() const { return special(); }
+  bool self() const { return (_raw & Special_bits) == Invalid; }
+
+  /**
+   * Is this a capability selector into the reply capability table?
+   */
+  bool explicit_reply() const
+  { return (_raw & Special_bits) == Explicit_reply; }
 
   /**
    * Get the value of a special capability.
@@ -217,6 +245,13 @@ public:
    *         selector (i.e., the most significant bits of the selector).
    */
   Cap_index cap() const { return Cap_index(_raw >> Cap_shift); }
+
+  /**
+   * Get the index into the reply capability table.
+   * \pre valid() && explicit_reply()
+   */
+  Reply_cap_index reply_cap() const
+  { return Reply_cap_index(_raw >> Cap_shift); }
 
   /**
    * Get the operation stored in this selector (see L4_obj_ref::Operation).
