@@ -57,9 +57,7 @@ Obj_cap::deref(L4_fpage::Rights *rights, bool dbg = false)
 
   if (EXPECT_FALSE(special()))
     {
-      if (!self())
-        return nullptr;
-
+      // "self"
       *rights = L4_fpage::Rights::CWS();
       return current;
     }
