@@ -676,20 +676,21 @@ map(MAPDB* mapdb,
               || r_order > i_order)
             {
               // unmap dst
-              auto addr = SPACE::page_address(rcv_addr, r_order);
-              auto size = SPACE::to_size(r_order);
-              to->v_delete(addr, r_order, Page::Rights::FULL());
+              auto r_addr = SPACE::page_address(rcv_addr, r_order);
+              auto r_size = SPACE::to_size(r_order);
+              to->v_delete(r_addr, r_order, Page::Rights::FULL());
 
-              tlb.add_page(to_id, addr, r_order);
+              tlb.add_page(to_id, r_addr, r_order);
 
-              MAPDB::foreach_mapping(rcv_frame, SPACE::to_pfn(addr), SPACE::to_pfn(addr + size),
+              MAPDB::foreach_mapping(rcv_frame, SPACE::to_pfn(r_addr),
+                                     SPACE::to_pfn(r_addr + r_size),
                   [&tlb](typename MAPDB::Mapping *m, typename MAPDB::Order size)
                   {
                     v_delete<SPACE>(m, size, Page::Rights::FULL(), true, tlb);
                   });
 
-              mapdb->flush(rcv_frame, L4_map_mask::full(), SPACE::to_pfn(addr),
-                           SPACE::to_pfn(addr + size));
+              mapdb->flush(rcv_frame, L4_map_mask::full(), SPACE::to_pfn(r_addr),
+                           SPACE::to_pfn(r_addr + r_size));
               Map_traits<SPACE>::free_object(r_phys, reap_list);
 
               // Dst is equal to or an ancestor of src.
