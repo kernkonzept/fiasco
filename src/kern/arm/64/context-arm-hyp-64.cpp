@@ -286,7 +286,7 @@ Context::arm_ext_vcpu_load_guest_regs(Vcpu_state *vcpu, Vm_state *v, Unsigned64 
 
 PRIVATE inline
 void
-Arm_vtimer_ppi::mask()
+Arm_vtimer_ppi::mask_vtimer()
 {
   Mword v;
   asm volatile("mrs %0, cntv_ctl_el0\n"

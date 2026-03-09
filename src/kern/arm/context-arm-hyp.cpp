@@ -414,7 +414,7 @@ DEFINE_PER_CPU Per_cpu<bool> Arm_vtimer_ppi::_enabled;
  *   - the direct injection model where Fiasco handles all the details and
  *     keeps the PPI masked until the guest EOIed.
  */
-PUBLIC inline NEEDS[Arm_vtimer_ppi::mask] FIASCO_FLATTEN
+PUBLIC inline NEEDS[Arm_vtimer_ppi::mask_vtimer] FIASCO_FLATTEN
 void
 Arm_vtimer_ppi::handle(Upstream_irq const *ui)
 {
@@ -425,7 +425,7 @@ Arm_vtimer_ppi::handle(Upstream_irq const *ui)
       // Order is important here. The vcpu_vgic_upcall() will save the vtimer
       // state. The vtimer must be masked before, otherwise it will be unmasked
       // immediately when returning to the guest.
-      mask();
+      mask_vtimer();
       c->vcpu_vgic_upcall(1);
     }
   else
