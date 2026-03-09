@@ -148,7 +148,8 @@ Context::load_ext_vcpu_state(Vm_state const *v)
 
   asm volatile ("msr TCR_EL1, %x0"   : : "r"(v->tcr));
   asm volatile ("msr TTBR0_EL1, %x0" : : "r"(v->ttbr0));
-  asm volatile ("msr TTBR1_EL1, %x0" : : "r"(v->ttbr1));
+  if (EXPECT_TRUE(Cpu::boot_cpu_has_vmsa()))
+    asm volatile ("msr TTBR1_EL1, %x0" : : "r"(v->ttbr1));
 
   Unsigned32 sctlr = access_once(&v->sctlr);
   if (_hyp.hcr & (Cpu::Hcr_tge | Cpu::Hcr_dc))
