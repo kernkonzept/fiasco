@@ -53,8 +53,7 @@ EXTENSION class Dmar_space
   public:
     static constexpr unsigned super_level() { return 2; }
     static constexpr unsigned max_level()   { return 3; }
-    Dmar_pte_ptr() = default;
-    Dmar_pte_ptr(void *p, unsigned char level) : Pte_long_desc<Dmar_pte_ptr>(p, level) {}
+    using Pte_long_desc<Dmar_pte_ptr>::Pte_long_desc;
 
     unsigned char page_order() const
     {
@@ -89,8 +88,7 @@ EXTENSION class Dmar_space
   public:
     static constexpr unsigned super_level() { return 2; }
     static constexpr unsigned max_level()   { return 3; }
-    Dmar_pte_ptr() = default;
-    Dmar_pte_ptr(void *p, unsigned char level) : Pte_long_desc<Dmar_pte_ptr>(p, level) {}
+    using Pte_long_desc<Dmar_pte_ptr>::Pte_Long_desc;
 
     unsigned char page_order() const
     {

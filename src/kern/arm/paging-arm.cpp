@@ -753,9 +753,7 @@ class K_pte_ptr :
   public Pte_long_attribs<K_pte_ptr, Kernel_page_attr>
 {
 public:
-  K_pte_ptr() = default;
-  K_pte_ptr(void *p, unsigned char level)
-  : Pte_long_desc(p, level) {}
+  using Pte_long_desc::Pte_long_desc;
 };
 
 //---------------------------------------------------------------------------
@@ -827,8 +825,7 @@ class Pte_ptr_t :
   public Pte_generic<CLASS, Unsigned64>
 {
 public:
-  Pte_ptr_t() = default;
-  Pte_ptr_t(void *p, unsigned char level) : Pte_long_desc<CLASS>(p, level) {}
+  using Pte_long_desc<CLASS>::Pte_long_desc;
 };
 
 //---------------------------------------------------------------------------
