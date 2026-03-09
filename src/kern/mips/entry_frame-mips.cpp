@@ -72,11 +72,6 @@ public:
     C_l4_ipc_upcall     = 0x00000100,
     C_l4_sw_exception   = 0x00000101,
     C_l4_syscall_upcall = 0x00000102,
-
-    C_src_context_mask = 0x03, // use bits 0..1 to encode the source context
-    C_src_kern         = 0x00, ///< exception caused by user kernel mode
-    C_src_user         = 0x01, ///< exception caused by user mode
-    C_src_guest        = 0x02, ///< exception caused by guest mode
   };
 
   enum Status_bits
