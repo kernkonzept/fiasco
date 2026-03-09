@@ -138,6 +138,7 @@ mem_IMPL	:= mem mem-$(CONFIG_XARCH)
 reset_IMPL	:= reset-$(CONFIG_XARCH)
 uart_IMPL	:= uart uart-libuart
 CXXSRC_DRIVERS	:= glue_libc.cc
+CPPFLAGS        += $(if $(CONFIG_INPUT),,-DUART_WITHOUT_INPUT)
 
 #
 # FONTS subsystem
@@ -356,8 +357,7 @@ NOOPT		+= $(patsubst %.o, %, $(OBJ_LIBREGEX))
 #
 SUBSYSTEMS	+= LIBUART
 LIBUART_UART	 = -include uart_$(strip $(1)).h \
-		 -DFIASCO_UART_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1))) \
-		 $(if $(CONFIG_INPUT),,-DUART_WITHOUT_INPUT)
+		 -DFIASCO_UART_TYPE=L4::Uart_$(strip $(if $(2),$(2),$(1)))
 VPATH_LIBUART	:= $(srcdir)/lib/uart
 PRIVATE_INCDIR	+= lib/uart
 LIBUART		 = $(OBJECTS_LIBUART)
