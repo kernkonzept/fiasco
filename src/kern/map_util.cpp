@@ -276,8 +276,8 @@ template< typename SIZE_TYPE >
 static typename SIZE_TYPE::Order_type
 get_order_from_fp(L4_fpage const &fp, int base_order = 0)
 {
-  typedef cxx::underlying_type_t<SIZE_TYPE> Value;
-  typedef typename SIZE_TYPE::Order_type Order;
+  using Value = SIZE_TYPE::Value;
+  using Order = SIZE_TYPE::Order_type;
 
   enum : int {
     Bits = sizeof(Value) * 8 - 1,

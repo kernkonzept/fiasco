@@ -648,11 +648,5 @@ private:
   VALUE _d[SIZE];
 };
 
-template< typename T >
-struct underlying_type<T, cxx::enable_if_t<!cxx::is_same_v<typename T::Value, void>>>
-{
-  typedef typename T::Value type;
-};
-
 } // namespace cxx
 
