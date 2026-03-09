@@ -202,7 +202,6 @@ public:
    *         L4_obj_ref::Special.
    */
   Special special_cap() const { return Special(_raw & Special_mask); }
-  //bool self() const { return (_raw & Invalid_mask) == Self; }
 
   /**
    * Does the operation contain a receive phase?
