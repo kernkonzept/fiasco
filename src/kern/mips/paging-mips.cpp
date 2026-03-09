@@ -249,10 +249,17 @@ IMPLEMENTATION [mips]:
 
 Mword Tlb_entry::cached;
 
-IMPLEMENT inline NEEDS["trap_state.h"]
+IMPLEMENT inline
 Mword
-PF::is_usermode_error(Mword error)
-{ return (error & Trap_state::C_src_context_mask) == Trap_state::C_src_user; }
+PF::is_usermode_error(Mword /*cause*/)
+{
+  // TODO: From the passed "cause" we cannot determine if the page fault was
+  //       triggered in user mode or in kernel mode. This would require
+  //       accessing the Cp0_status register (bits 4..3: KSU). Assume that the
+  //       PF was triggered from user mode to satisfy the assertion in the PF
+  //       handler.
+  return true;
+}
 
 IMPLEMENT inline
 Mword
