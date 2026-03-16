@@ -415,6 +415,7 @@ void
 Irq_chip::detach(Irq_base *irq)
 {
   Irq_chip_soft::sw_chip->bind(irq, 0, true);
+  irq->switch_mode(true); // software chip is always edge triggered
 }
 
 /**

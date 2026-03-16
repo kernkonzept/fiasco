@@ -670,7 +670,10 @@ Irq_sender::Irq_sender(Ram_quota *q)
   // Capability reference (released when last capability to Irq_sender object is
   // dropped).
   inc_ref();
-  hit_func = &hit_level_irq;
+
+  // On construction Irq_base binds to Irq_chip_soft::sw_chip, software IRQs are
+  // always edge triggered, so set the hit function accordingly.
+  hit_func = &hit_edge_irq;
 }
 
 PUBLIC
