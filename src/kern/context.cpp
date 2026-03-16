@@ -1437,8 +1437,6 @@ Context::set_home_cpu(Cpu_number cpu)
  *          can preempt the currently running scheduling context) -- this can
  *          only happen if `add` has any bit of `Thread_ready_mask` set.
  *
- * \note This function is a preemption point.
- *
  * This function must be used to change the state of contexts that are
  * potentially running on a different CPU.
  */
