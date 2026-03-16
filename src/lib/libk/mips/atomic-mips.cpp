@@ -4,10 +4,12 @@ INTERFACE [mips]:
 
 // preprocess off
 #define ATOMIC_OP(name, op)                                                    \
-  inline                                                                       \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == sizeof(Mword)) inline                                  \
   void                                                                         \
-  local_atomic_##name(Mword *mem, Mword value)                                 \
+  __f_atomic_##name(T *mem, V value)                                           \
   {                                                                            \
+    T val = value;                                                             \
     Mword tmp;                                                                 \
                                                                                \
     do                                                                         \
@@ -17,16 +19,19 @@ INTERFACE [mips]:
             op    " %[tmp], %[val] \n"                                         \
             ASM_SC " %[tmp], %[mem]  \n"                                       \
             : [tmp] "=&r" (tmp), [mem] "+ZC" (*mem)                            \
-            : [val] "Ir" (value));                                             \
+            : [val] "Ir" (val));                                               \
       }                                                                        \
     while (!tmp);                                                              \
   }                                                                            \
                                                                                \
-  inline                                                                       \
-  Mword                                                                        \
-  __f_atomic_fetch_##name(Mword *mem, Mword value)                             \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == sizeof(Mword)) inline                                  \
+  T                                                                            \
+  __f_atomic_fetch_##name(T *mem, V value)                                     \
   {                                                                            \
-    Mword tmp, old;                                                            \
+    T val = value;                                                             \
+    T old;                                                                     \
+    Mword tmp;                                                                 \
                                                                                \
     do                                                                         \
       {                                                                        \
@@ -35,18 +40,21 @@ INTERFACE [mips]:
             "move      %[old], %[tmp]  \n"                                     \
             op      " %[tmp], %[val]    \n"                                    \
             ASM_SC   " %[tmp], %[ptr]  \n"                                     \
-            : [tmp] "=&r" (tmp), [ptr] "+ZC" (*mem), [old] "=&r"(old)            \
-            : [val] "Ir" (value));                                             \
+            : [tmp] "=&r" (tmp), [ptr] "+ZC" (*mem), [old] "=&r"(old)          \
+            : [val] "Ir" (val));                                               \
       }                                                                        \
     while (!tmp);                                                              \
     return old;                                                                \
   }                                                                            \
                                                                                \
-  inline                                                                       \
-  Mword                                                                        \
-  __f_atomic_##name##_fetch(Mword *mem, Mword value)                           \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == sizeof(Mword)) inline                                  \
+  T                                                                            \
+  __f_atomic_##name##_fetch(T *mem, V value)                                   \
   {                                                                            \
-    Mword tmp, res;                                                            \
+    T val = value;                                                             \
+    T res;                                                                     \
+    Mword tmp;                                                                 \
                                                                                \
     do                                                                         \
       {                                                                        \
@@ -56,7 +64,7 @@ INTERFACE [mips]:
             "move      %[res], %[tmp]  \n"                                     \
             ASM_SC   " %[tmp], %[ptr]  \n"                                     \
             : [tmp] "=&r" (tmp), [ptr] "+ZC" (*mem), [res] "=&r"(res)          \
-            : [val] "Ir" (value));                                             \
+            : [val] "Ir" (val));                                               \
       }                                                                        \
     while (!tmp);                                                              \
     return res;                                                                \
@@ -66,11 +74,14 @@ ATOMIC_OP(and, "and")
 ATOMIC_OP(add, ASM_ADDU)
 #undef ATOMIC_OP
 
-inline
-Mword
-__f_atomic_exchange(Mword *mem, Mword value)
+template<typename T, typename V>
+requires(sizeof(T) == sizeof(Mword)) inline
+T
+__f_atomic_exchange(T *mem, V value)
 {
-  Mword tmp, old;
+  T val = value;
+  T old;
+  Mword tmp;
 
   do
     {
@@ -79,7 +90,7 @@ __f_atomic_exchange(Mword *mem, Mword value)
           "move      %[tmp], %[val]  \n"
           ASM_SC   " %[tmp], %[ptr]  \n"
           : [tmp] "=&r" (tmp), [ptr] "+ZC" (*mem), [old] "=&r"(old)
-          : [val] "r" (value));
+          : [val] "r" (val));
     }
   while (!tmp);
   return old;
@@ -98,9 +109,8 @@ INTERFACE [mips && mp]:
   void                                                                         \
   atomic_##name(T *mem, V value)                                               \
   {                                                                            \
-    T val = value;                                                             \
     Mem::mp_mb();                                                              \
-    local_atomic_##name(mem, val);                                             \
+    __f_atomic_##name<T, V>(mem, value);                                       \
     Mem::mp_mb();                                                              \
   }                                                                            \
 
@@ -110,9 +120,8 @@ INTERFACE [mips && mp]:
   T                                                                            \
   atomic_##name(T *mem, V value)                                               \
   {                                                                            \
-    T val = value;                                                             \
     Mem::mp_mb();                                                              \
-    Mword res = __f_atomic_##name(mem, val);                                   \
+    T res = __f_atomic_##name<T, V>(mem, value);                           \
     Mem::mp_mb();                                                              \
     return res;                                                                \
   }
@@ -134,9 +143,8 @@ requires(sizeof(T) == sizeof(Mword)) inline
 T
 atomic_exchange(T *mem, V value)
 {
-  T val = value;
   Mem::mp_mb();
-  Mword res = __f_atomic_exchange(mem, val);
+  T res = __f_atomic_exchange<T, V>(mem, value);
   Mem::mp_mb();
   return res;
 }
@@ -154,8 +162,7 @@ INTERFACE [mips && !mp]:
   void                                                                         \
   atomic_##name(T *mem, V value)                                               \
   {                                                                            \
-    T val = value;                                                             \
-    local_atomic_##name(mem, val);                                             \
+    __f_atomic_##name<T, V>(mem, value);                                       \
   }                                                                            \
 
 #define ATOMIC_RET_OP_(name)                                                   \
@@ -164,8 +171,7 @@ INTERFACE [mips && !mp]:
   T                                                                            \
   atomic_##name(T *mem, V value)                                               \
   {                                                                            \
-    T val = value;                                                             \
-    return __f_atomic_##name(mem, val);                                        \
+    return __f_atomic_##name<T, V>(mem, value);                                \
   }
 
 #define ATOMIC_OP(name)                                                        \
@@ -182,11 +188,10 @@ ATOMIC_OP(add)
 
 template<typename T, typename V>
 requires(sizeof(T) == sizeof(Mword)) inline
-Mword
+T
 atomic_exchange(T *mem, V value)
 {
-  T val = value;
-  return __f_atomic_exchange(mem, val);
+  return __f_atomic_exchange<T, V>(mem, value);
 }
 // preprocess on
 
@@ -227,6 +232,27 @@ atomic_store(T *mem, V value)
       __asm__ __volatile__ ("sd %1, %0" : "=m" (*mem) : "r" (val));
       break;
     }
+}
+
+inline
+void
+local_atomic_and(Mword *mem, Mword mask)
+{
+  __f_atomic_and<Mword, Mword>(mem, mask);
+}
+
+inline
+void
+local_atomic_or(Mword *mem, Mword bits)
+{
+  __f_atomic_or<Mword, Mword>(mem, bits);
+}
+
+inline
+void
+local_atomic_add(Mword *mem, Mword value)
+{
+  __f_atomic_add<Mword, Mword>(mem, value);
 }
 
 // ``unsafe'' stands for no safety according to the size of the given type.
