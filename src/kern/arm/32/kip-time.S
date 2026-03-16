@@ -55,6 +55,25 @@
 #endif
 .endm
 
+.macro read_sync_and_convert scaler, shift
+        read_timer_counter
+        push    {r4, r5, r6, r7}
+        ldr     r6, \scaler     /* scaler */
+        ldr     r7, \shift      /* shift */
+        umull   r0, r3, r6, r0
+        umull   r4, r5, r6, r1
+        adds    r1, r4, r3
+        adc     r2, r5, #0      /* {r2,r1,r0} contains (timer * scaler) */
+        mov     r3, #32
+        sub     r3, r3, r7
+                                /* compute {r2,r1,r0} >> (32 - shift) */
+        lsr     r0, r0, r3
+        orr     r0, r0, r1, LSL r7 /* r0 = (r1<<shift) | (r0 >> (32-shift)) */
+        lsr     r1, r1, r3
+        orr     r1, r1, r2, LSL r7 /* r1 = (r2<<shift) | (r1 >> (32-shift)) */
+        pop     {r4, r5, r6, r7}
+.endm
+
         .section ".initcall.text", "ax"
 
 /**
@@ -74,25 +93,11 @@
  */
         .global kip_time_fn_read_us
         .global kip_time_fn_read_us_end
-#define KIP_VAL(v)      kip_time_fn_read_us + OFFS__ ##v - OFFS__KIP_FN_READ_US
+#define KIP_VAL(v) kip_time_fn_read_us + OFFS__ ##v - OFFS__KIP_FN_READ_US
 kip_time_fn_read_us:
 #ifdef CONFIG_SYNC_CLOCK
-        read_timer_counter
-        push    {r4, r5, r6, r7}
-        ldr     r6, KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US)  /* scaler */
-        ldr     r7, KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_US)   /* shift */
-        umull   r0, r3, r6, r0
-        umull   r4, r5, r6, r1
-        adds    r1, r4, r3
-        adc     r2, r5, #0      /* {r2,r1,r0} contains (timer * scaler) */
-        mov     r3, #32
-        sub     r3, r3, r7
-                                /* compute {r2,r1,r0} >> (32 - shift) */
-        lsr     r0, r0, r3
-        orr     r0, r0, r1, LSL r7 /* r0 = (r1<<shift) | (r0 >> (32-shift)) */
-        lsr     r1, r1, r3
-        orr     r1, r1, r2, LSL r7 /* r1 = (r2<<shift) | (r1 >> (32-shift)) */
-        pop     {r4, r5, r6, r7}
+        read_sync_and_convert KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US),\
+                              KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_US)
 #else
         read_64bit KIP_VAL(KIP_CLOCK)
 #endif
@@ -113,24 +118,11 @@ kip_time_fn_read_us_end:
  */
         .global kip_time_fn_read_ns
         .global kip_time_fn_read_ns_end
-#define KIP_VAL(v)      kip_time_fn_read_ns + OFFS__ ##v - OFFS__KIP_FN_READ_NS
+#define KIP_VAL(v) kip_time_fn_read_ns + OFFS__ ##v - OFFS__KIP_FN_READ_NS
 kip_time_fn_read_ns:
 #ifdef CONFIG_SYNC_CLOCK
-        read_timer_counter
-        push    {r4, r5, r6, r7}
-        ldr     r6, KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS)
-        ldr     r7, KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_NS)
-        umull   r0, r3, r6, r0
-        umull   r4, r5, r6, r1
-        adds    r1, r4, r3
-        adc     r2, r5, #0
-        mov     r3, #32
-        sub     r3, r3, r7
-        lsr     r0, r0, r3
-        orr     r0, r0, r1, LSL r7
-        lsr     r1, r1, r3
-        orr     r1, r1, r2, LSL r7
-        pop     {r4, r5, r6, r7}
+        read_sync_and_convert KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS),\
+                              KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_NS)
 #else
         read_64bit KIP_VAL(KIP_CLOCK)
         mov     r3, #1000
