@@ -76,6 +76,21 @@ inline constexpr TYPE
 int_value(TYPE const &v)
 { return v; }
 
+/**
+ * Get a value of type TYPE where all bits are set.
+ * The type needs to support the ~ operator.
+ */
+template< typename TYPE >
+inline constexpr cxx::enable_if_t<cxx::is_signed_v<TYPE>, TYPE>
+all_bits_set() { return TYPE{~cxx::make_unsigned_t<TYPE>{0}}; }
+
+/**
+ * Get a value of type TYPE where all bits are set.
+ * The type needs to support the ~ operator.
+ */
+template< typename TYPE >
+inline constexpr cxx::enable_if_t<!cxx::is_signed_v<TYPE>, TYPE>
+all_bits_set() { return TYPE{~TYPE{0}}; }
 
 /** Base class for type-safe integers.
  *
@@ -170,19 +185,19 @@ struct int_diff_ops : int_inc_ops<TYPE_T>
   typedef DIFF_T Diff_type;
 
   friend inline constexpr DIFF_T operator - (TYPE_T const &l, TYPE_T const &r)
-  { return DIFF_T(cxx::int_value<TYPE_T>(l) - cxx::int_value<TYPE_T>(r)); }
+  { return DIFF_T{cxx::int_value<TYPE_T>(l) - cxx::int_value<TYPE_T>(r)}; }
 
   friend inline constexpr TYPE_T operator + (TYPE_T const &l, DIFF_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) + cxx::int_value<DIFF_T>(r)); }
+  { return TYPE_T{cxx::int_value<TYPE_T>(l) + cxx::int_value<DIFF_T>(r)}; }
 
   friend inline constexpr TYPE_T operator + (DIFF_T const &l, TYPE_T const &r)
-  { return TYPE_T(cxx::int_value<DIFF_T>(l) + cxx::int_value<TYPE_T>(r)); }
+  { return TYPE_T{cxx::int_value<DIFF_T>(l) + cxx::int_value<TYPE_T>(r)}; }
 
   friend inline TYPE_T &operator += (TYPE_T &l, DIFF_T const &r)
   { TYPE_T::val(l) += cxx::int_value<DIFF_T>(r); return l; }
 
   friend inline constexpr TYPE_T operator - (TYPE_T const &l, DIFF_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) - cxx::int_value<DIFF_T>(r)); }
+  { return TYPE_T{cxx::int_value<TYPE_T>(l) - cxx::int_value<DIFF_T>(r)}; }
 
   friend inline TYPE_T &operator -= (TYPE_T &l, DIFF_T const &r)
   { TYPE_T::val(l) -= cxx::int_value<DIFF_T>(r); return l; }
@@ -205,13 +220,13 @@ struct int_diff_ops<TYPE_T, TYPE_T> : int_inc_ops<TYPE_T>
   typedef TYPE_T Diff_type;
 
   friend inline constexpr TYPE_T operator - (TYPE_T const &l, TYPE_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) - cxx::int_value<TYPE_T>(r)); }
+  { return TYPE_T{cxx::int_value<TYPE_T>(l) - cxx::int_value<TYPE_T>(r)}; }
 
   friend inline TYPE_T &operator -= (TYPE_T &l, TYPE_T const &r)
   { TYPE_T::val(l) -= cxx::int_value<TYPE_T>(r); return l; }
 
   friend inline constexpr TYPE_T operator + (TYPE_T const &l, TYPE_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) + cxx::int_value<TYPE_T>(r)); }
+  { return TYPE_T{cxx::int_value<TYPE_T>(l) + cxx::int_value<TYPE_T>(r)}; }
 
   friend inline TYPE_T &operator += (TYPE_T &l, TYPE_T const &r)
   { TYPE_T::val(l) += cxx::int_value<TYPE_T>(r); return l; }
@@ -228,25 +243,34 @@ template<typename TYPE_T>
 struct int_bit_ops_base
 {
   friend inline constexpr TYPE_T operator | (TYPE_T const &l, TYPE_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) | cxx::int_value<TYPE_T>(r)); }
+  {
+    return static_cast<TYPE_T>(cxx::int_value<TYPE_T>(l) |
+                               cxx::int_value<TYPE_T>(r));
+  }
 
   friend inline TYPE_T &operator |= (TYPE_T &l, TYPE_T const &r)
   { TYPE_T::val(l) |= cxx::int_value<TYPE_T>(r); return l; }
 
   friend inline constexpr TYPE_T operator & (TYPE_T const &l, TYPE_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) & cxx::int_value<TYPE_T>(r)); }
+  {
+    return static_cast<TYPE_T>(cxx::int_value<TYPE_T>(l) &
+                               cxx::int_value<TYPE_T>(r));
+  }
 
   friend inline TYPE_T &operator &= (TYPE_T &l, TYPE_T const &r)
   { TYPE_T::val(l) &= cxx::int_value<TYPE_T>(r); return l; }
 
   friend inline constexpr TYPE_T operator ^ (TYPE_T const &l, TYPE_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) ^ cxx::int_value<TYPE_T>(r)); }
+  {
+    return static_cast<TYPE_T>(cxx::int_value<TYPE_T>(l) ^
+                               cxx::int_value<TYPE_T>(r));
+  }
 
   friend inline TYPE_T &operator ^= (TYPE_T &l, TYPE_T const &r)
   { TYPE_T::val(l) ^= cxx::int_value<TYPE_T>(r); return l; }
 
   friend inline constexpr TYPE_T operator ~ (TYPE_T const &l)
-  { return TYPE_T(~cxx::int_value<TYPE_T>(l)); }
+  { return static_cast<TYPE_T>(~cxx::int_value<TYPE_T>(l)); }
 };
 
 /**
@@ -264,28 +288,28 @@ template<typename TYPE_T, typename DIFF_T = TYPE_T>
 struct int_bit_ops : int_bit_ops_base<TYPE_T>
 {
   friend inline constexpr TYPE_T operator | (TYPE_T const &l, DIFF_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) | cxx::int_value<DIFF_T>(r)); }
+  { return TYPE_T{cxx::int_value<TYPE_T>(l) | cxx::int_value<DIFF_T>(r)}; }
 
   friend inline constexpr TYPE_T operator | (DIFF_T const &l, TYPE_T const &r)
-  { return TYPE_T(cxx::int_value<DIFF_T>(l) | cxx::int_value<TYPE_T>(r)); }
+  { return TYPE_T{cxx::int_value<DIFF_T>(l) | cxx::int_value<TYPE_T>(r)}; }
 
   friend inline TYPE_T &operator |= (TYPE_T &l, DIFF_T const &r)
   { TYPE_T::val(l) |= cxx::int_value<DIFF_T>(r); return l; }
 
   friend inline constexpr DIFF_T operator & (DIFF_T const &l, TYPE_T const &r)
-  { return DIFF_T(cxx::int_value<DIFF_T>(l) & cxx::int_value<TYPE_T>(r)); }
+  { return DIFF_T{cxx::int_value<DIFF_T>(l) & cxx::int_value<TYPE_T>(r)}; }
 
   friend inline constexpr DIFF_T operator & (TYPE_T const &l, DIFF_T const &r)
-  { return DIFF_T(cxx::int_value<TYPE_T>(l) & cxx::int_value<DIFF_T>(r)); }
+  { return DIFF_T{cxx::int_value<TYPE_T>(l) & cxx::int_value<DIFF_T>(r)}; }
 
   friend inline TYPE_T &operator &= (TYPE_T &l, DIFF_T const &r)
   { TYPE_T::val(l) &= cxx::int_value<DIFF_T>(r); return l; }
 
   friend inline constexpr TYPE_T operator ^ (DIFF_T const &l, TYPE_T const &r)
-  { return TYPE_T(cxx::int_value<DIFF_T>(l) ^ cxx::int_value<TYPE_T>(r)); }
+  { return TYPE_T{cxx::int_value<DIFF_T>(l) ^ cxx::int_value<TYPE_T>(r)}; }
 
   friend inline constexpr TYPE_T operator ^ (TYPE_T const &l, DIFF_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) ^ cxx::int_value<DIFF_T>(r)); }
+  { return TYPE_T{cxx::int_value<TYPE_T>(l) ^ cxx::int_value<DIFF_T>(r)}; }
 
   friend inline TYPE_T &operator ^= (TYPE_T &l, DIFF_T const &r)
   { TYPE_T::val(l) ^= cxx::int_value<DIFF_T>(r); return l; }
@@ -318,13 +342,13 @@ struct int_shift_ops
   typedef ORDER_T Order_type;
 
   friend inline constexpr TYPE_T operator << (TYPE_T const &l, ORDER_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) << cxx::int_value<ORDER_T>(r)); }
+  { return TYPE_T{cxx::int_value<TYPE_T>(l) << cxx::int_value<ORDER_T>(r)}; }
 
   friend inline TYPE_T &operator <<= (TYPE_T &l, ORDER_T const &r)
   { TYPE_T::val(l) <<= cxx::int_value<ORDER_T>(r); return l; }
 
   friend inline constexpr TYPE_T operator >> (TYPE_T const &l, ORDER_T const &r)
-  { return TYPE_T(cxx::int_value<TYPE_T>(l) >> cxx::int_value<ORDER_T>(r)); }
+  { return TYPE_T{cxx::int_value<TYPE_T>(l) >> cxx::int_value<ORDER_T>(r)}; }
 
   friend inline TYPE_T &operator >>= (TYPE_T &l, ORDER_T const &r)
   { TYPE_T::val(l) >>= cxx::int_value<ORDER_T>(r); return l; }
@@ -502,7 +526,7 @@ template< typename TYPE, typename ORDER > inline
 constexpr cxx::enable_if_t<!cxx::is_enum_v<TYPE>, TYPE>
 mask_lsb(TYPE const &v, ORDER const &o)
 {
-  return v & (TYPE(~0) << o);
+  return v & (all_bits_set<TYPE>() << o);
 }
 
 /**
@@ -520,7 +544,7 @@ template< typename TYPE, typename ORDER > inline
 constexpr cxx::enable_if_t<cxx::is_enum_v<TYPE>, cxx::underlying_type_t<TYPE>>
 mask_lsb(TYPE const &v, ORDER const &o)
 {
-  return v & (TYPE(~0) << o);
+  return v & (all_bits_set<cxx::underlying_type_t<TYPE>>() << o);
 }
 
 /**
@@ -535,7 +559,7 @@ template< typename TYPE, typename ORDER > inline
 constexpr cxx::enable_if_t<!cxx::is_enum_v<TYPE>, TYPE>
 ceil_lsb(TYPE const &v, ORDER const &o)
 {
-  return mask_lsb(v + ((TYPE(1) << o) - TYPE(1)), o);
+  return mask_lsb(v + ((TYPE{1} << o) - TYPE{1}), o);
 }
 
 /**
@@ -553,7 +577,7 @@ template< typename TYPE, typename ORDER > inline
 constexpr cxx::enable_if_t<cxx::is_enum_v<TYPE>, cxx::underlying_type_t<TYPE>>
 ceil_lsb(TYPE const &v, ORDER const &o)
 {
-  return mask_lsb(v + ((TYPE(1) << o) - TYPE(1)), o);
+  return mask_lsb(v + ((TYPE{1} << o) - TYPE{1}), o);
 }
 
 /**
@@ -568,7 +592,7 @@ template< typename TYPE, typename ORDER > inline
 constexpr typename TYPE::Diff_type
 get_lsb(TYPE const &v, ORDER const &o)
 {
-  return v & ~(typename TYPE::Diff_type(~0) << o);
+  return v & ~(all_bits_set<typename TYPE::Diff_type>() << o);
 }
 
 /**
@@ -583,7 +607,7 @@ template< typename TYPE, typename ORDER > inline
 constexpr cxx::enable_if_t<cxx::is_integral_v<TYPE>, TYPE>
 get_lsb(TYPE const &v, ORDER const &o)
 {
-  return v & ~(TYPE(~0) << o);
+  return v & ~(all_bits_set<TYPE>() << o);
 }
 
 /**
@@ -601,7 +625,7 @@ template< typename TYPE, typename ORDER > inline
 constexpr cxx::enable_if_t<cxx::is_enum_v<TYPE>, cxx::underlying_type_t<TYPE>>
 get_lsb(TYPE const &v, ORDER const &o)
 {
-  return v & ~(TYPE(~0) << o);
+  return v & ~(all_bits_set<cxx::underlying_type_t<TYPE>>() << o);
 }
 
 template< typename TYPE > inline
@@ -642,7 +666,7 @@ public:
   const_iterator begin() const { return &_d[0]; }
   const_iterator end() const { return &_d[SIZE]; }
 
-  static INDEX size() { return INDEX(SIZE); }
+  static INDEX size() { return INDEX{SIZE}; }
 
 private:
   VALUE _d[SIZE];
