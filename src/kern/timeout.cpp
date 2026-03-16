@@ -5,9 +5,8 @@ INTERFACE:
 #include "per_cpu_data.h"
 
 /** A timeout basic object. It contains the necessary queues and handles
-    enqueuing, dequeuing and handling of timeouts. Real timeout classes
-    should overwrite expired(), which will do the real work, if an
-    timeout hits.
+    enqueuing, dequeuing and handling of timeouts. Real timeout classes must
+    override expired(), which then does the actual work when a timeout hits.
  */
 class Timeout : public cxx::H_list_item
 {
@@ -32,10 +31,10 @@ private:
   Timeout(const Timeout&);
 
   /**
-   * Overwritten timeout handler function.
+   * Timeout handler function to be overridden.
    * @return true if a reschedule is necessary, false otherwise.
    */
-  virtual bool expired();
+  virtual bool expired() = 0;
 
   struct
   {
@@ -91,7 +90,6 @@ IMPLEMENTATION:
 #include "static_init.h"
 #include <climits>
 #include "config.h"
-#include "kdb_ke.h"
 
 
 DEFINE_PER_CPU Per_cpu<Timeout_q> Timeout_q::timeout_queue;
@@ -145,17 +143,6 @@ Timeout::Timeout()
   _wakeup    = ULLONG_MAX;
   _flags.hit = 0;
   _flags.res = 0;
-}
-
-
-/* Yeah, i know, an derived and specialized timeout class for
-   the root node would be nicer. I already had done this, but
-   it was significantly slower than this solution */
-IMPLEMENT virtual bool
-Timeout::expired()
-{
-  kdb_ke("Wakeup List Terminator reached");
-  return false;
 }
 
 /**
