@@ -203,7 +203,10 @@ Receiver::set_reply_cap(Receiver *caller, L4_fpage::Rights rights)
   // multiple threads in the same space operate concurrently on the same slot,
   // see the cas below.
   if (_reply_cap->is_used()) [[unlikely]]
-    reset_reply_cap_slot(_reply_cap);
+    {
+      reset_reply_cap_slot(_reply_cap);
+      WARN("%p: Application bug: reply capability overwritten!\n", this);
+    }
 
   // It is crucial that at this point the caller is not referenced by any reply
   // cap slot (see prerequisite). Otherwise concurrent execution of
@@ -229,11 +232,16 @@ Receiver::set_reply_cap(Receiver *caller, L4_fpage::Rights rights)
   // allocation.
   Reply_cap new_value = Reply_cap(caller, rights);
   if (!_reply_cap->cas(Reply_cap::Empty(), new_value)) [[unlikely]]
-    // Both caller and callee are blocked, so the only thing that can happen
-    // is that the value in _reply_cap was changed concurrently by another
-    // receiver thread in the same task. In that case we cannot use the reply
-    // cap slot, so rollback our write to _partner_reply_cap from above.
-    atomic_store(&caller->_partner_reply_cap, nullptr);
+    {
+      // Both caller and callee are blocked, so the only thing that can happen
+      // is that the value in _reply_cap was changed concurrently by another
+      // receiver thread in the same task. In that case we cannot use the reply
+      // cap slot, so rollback our write to _partner_reply_cap from above.
+      atomic_store(&caller->_partner_reply_cap, nullptr);
+
+      WARN("%p: Concurrent usage of reply cap slot detected. "
+           "Broken reply cap allocator?\n", this);
+    }
 }
 
 /**
