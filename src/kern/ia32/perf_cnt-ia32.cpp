@@ -1186,7 +1186,7 @@ Perf_cnt::lookup_event(unsigned evntsel)
   if (perfctr_lookup_event != nullptr && perfctr_lookup_event(evntsel, &nr) != nullptr)
     return nr;
 
-  return static_cast<Mword>(-1);
+  return No_event;
 }
 
 PUBLIC static void

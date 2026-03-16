@@ -18,6 +18,8 @@ public:
     { None, Fixed, Exclusive, Bitmask, };
 
   typedef Mword (*Perf_read_fn)();
+
+  static constexpr Mword No_event = ~Mword{0U};
 };
 
 // -----------------------------------------------------------------------

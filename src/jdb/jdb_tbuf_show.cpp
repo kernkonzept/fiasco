@@ -278,7 +278,7 @@ Jdb_tbuf_show::select_perf_event(Mword event)
 
   if (nevents == 0)
     // libperfctr not linked
-    return Nil;
+    return Perf_cnt::No_event;
 
   unsigned evntsel;
   Mword unit_mask;
@@ -294,7 +294,7 @@ Jdb_tbuf_show::select_perf_event(Mword event)
     {
       Perf_cnt::split_event(event, &evntsel, &unit_mask);
       addy = Perf_cnt::lookup_event(evntsel);
-      if (addy == Nil)
+      if (addy == Perf_cnt::No_event)
         addy = 0;
       else
         addy += add_kcnt;
@@ -352,10 +352,10 @@ Jdb_tbuf_show::select_perf_event(Mword event)
                 }
               [[fallthrough]];
             case KEY_ESC:
-              return Nil;
+              return Perf_cnt::No_event;
             default:
               if (Jdb::is_toplevel_cmd(c))
-                return Nil;
+                return Perf_cnt::No_event;
             }
         }
     }
@@ -918,7 +918,7 @@ restart:
                     case 'e': edge = 1;                      break;
                     case '?':
                     case '_':
-                      if ((e = select_perf_event(event)) == Nil)
+                      if ((e = select_perf_event(event)) == Perf_cnt::No_event)
                         {
                           redraw = true;
                           break;
