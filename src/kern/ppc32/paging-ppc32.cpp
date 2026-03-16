@@ -10,7 +10,7 @@ class Pte_ptr
 {
 public:
   static constexpr Address super_level() { return 0; }
-  enum
+enum : Mword
   {
     Htab_entry    = 0x00000400,  ///< is raw entry of htab
     Valid         = 0x00000004,  ///< Valid

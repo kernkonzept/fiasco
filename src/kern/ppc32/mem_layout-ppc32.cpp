@@ -11,7 +11,8 @@ EXTENSION class Mem_layout
 public:
   static constexpr Address user_max() { return _User_max; }
 
-  enum Phys_layout {
+  enum Phys_layout : Address
+  {
     Utcb_ptr_page        = 0x3000,
     Syscalls_phys        = 0x4000,
     Tbuf_status_page     = 0x5000,
