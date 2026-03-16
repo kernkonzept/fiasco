@@ -90,6 +90,14 @@ protected:
   /// Create an empty tree.
   Bst() : _head(nullptr) {}
 
+  Bst(Bst const &) = delete;
+
+  Bst(Bst &&o)
+  : _head(o._head)
+  {
+    o._head = nullptr;
+  }
+
   /// Access the head node as object of type \a Node.
   Node *head() const { return static_cast<Node*>(_head); }
 
@@ -255,6 +263,15 @@ public:
     remove_tree(head, cxx::forward<FUNC>(callback));
   }
 
+  Bst &operator=(Bst const &) = delete;
+  Bst &operator=(Bst &&o) = delete;
+
+  void swap(Bst &o)
+  {
+    Bst_node *tmp = o._head;
+    o._head = _head;
+    _head = tmp;
+  }
 
   ///@}
 };

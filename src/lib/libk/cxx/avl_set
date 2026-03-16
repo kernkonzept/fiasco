@@ -281,6 +281,10 @@ public:
     : _tree(), _alloc(alloc)
   { deep_copy(o); }
 
+  Base_avl_set(Base_avl_set &&o)
+  : _tree(cxx::move(o._tree)), _alloc(o._alloc)
+  {}
+
   /**
    * Copy assignment operator of an AVL-tree based set.
    *
@@ -294,6 +298,17 @@ public:
       {
         clear();
         deep_copy(o);
+      }
+
+    return *this;
+  }
+
+  Base_avl_set &operator = (Base_avl_set &&o)
+  {
+    if (this != &o)
+      {
+        clear();
+        _tree.swap(o._tree);
       }
 
     return *this;
