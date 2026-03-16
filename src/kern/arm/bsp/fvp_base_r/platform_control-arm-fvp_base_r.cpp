@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------
-INTERFACE [arm && pf_fvp_base_r && mp]:
+INTERFACE [arm && pf_fvp_base_r && (mp || amp)]:
 
 EXTENSION class Platform_control
 {
