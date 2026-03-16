@@ -229,7 +229,8 @@ public:
    * \return the value of a special capability selector, see
    *         L4_obj_ref::Special.
    */
-  Special special_cap() const { return Special(_raw & Special_mask); }
+  Special special_cap() const
+  { return static_cast<Special>(_raw & Special_mask); }
 
   /**
    * Does the operation contain a receive phase?
@@ -258,7 +259,7 @@ public:
    * \return The operation encoded in the lower 4 bits of the capability
    *         selector, see L4_obj_ref::Operation.
    */
-  Operation op() const { return Operation(_raw & 0xf); }
+  Operation op() const { return static_cast<Operation>(_raw & 0xf); }
 
   /**
    * Get the raw binary representation of this capability selector.

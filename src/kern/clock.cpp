@@ -62,5 +62,5 @@ Clock::delta()
   Counter t = read_counter();
   Counter r = t - _last_value;
   _last_value = t;
-  return Time(r);
+  return Time{r};
 }
