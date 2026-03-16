@@ -564,15 +564,16 @@ Mem_space::v_lookup(Vaddr virt, Phys_addr *phys,
       return false;
     }
 
-  // We always need to report the smallest order. The disabled code below that
-  // tries to report the order more truthfully breaks mapdb.
   if (order)
     *order = Page_order(Config::PAGE_SHIFT);
-    //{
-    //  bool super_aligned = Super_pg::aligned(r->start() | (r->end() + 1U));
-    //  *order = super_aligned ? Page_order(Config::SUPERPAGE_SHIFT)
-    //                         : Page_order(Config::PAGE_SHIFT);
-    //}
+    /* We always need to report the smallest order. The following code that
+     * would report the order more truthfully breaks mapdb:
+     * {
+     *  bool super_aligned = Super_pg::aligned(r->start() | (r->end() + 1U));
+     *  *order = super_aligned ? Page_order(Config::SUPERPAGE_SHIFT)
+     *                         : Page_order(Config::PAGE_SHIFT);
+     * }
+     */
 
   if (phys)
     *phys = virt;
