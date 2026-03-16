@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "atomic.h"
 #include "l4_types.h"
+#include "mem.h"
 
 class Receiver;
 
