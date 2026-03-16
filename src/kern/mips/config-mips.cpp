@@ -33,6 +33,8 @@ public:
     default_console_uart = 0,
     default_console_uart_baudrate = 115200
   };
+
+  static constexpr size_t stable_cache_alignment = 64U;
 };
 
 //---------------------------------------------------------------------------

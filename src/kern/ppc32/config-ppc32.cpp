@@ -32,6 +32,8 @@ public:
     Default_time_slice	        = CONFIG_SCHED_DEF_TIME_SLICE * Scheduler_granularity,
   };
 
+  static constexpr size_t stable_cache_alignment = 128U;
+
   static unsigned const default_console_uart = 3;
   static unsigned const default_console_uart_baudrate = 115200;
 };

@@ -114,6 +114,8 @@ public:
     Ext_vcpu_infos_offset = 0x100,
     Ext_vcpu_state_offset = 0x180,
   };
+
+  static constexpr size_t stable_cache_alignment = 64U;
 };
 
 // -----------------------------------------------------------------------
@@ -128,6 +130,8 @@ public:
     Ext_vcpu_infos_offset = 0x200,
     Ext_vcpu_state_offset = 0x280,
   };
+
+  static constexpr size_t stable_cache_alignment = 256U;
 };
 
 // -----------------------------------------------------------------------

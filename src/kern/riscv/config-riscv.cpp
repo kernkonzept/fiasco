@@ -40,6 +40,8 @@ public:
     Irq_shortcut = 1,
   };
 
+  static constexpr size_t stable_cache_alignment = 64U;
+
   static unsigned const default_console_uart = 0;
   static unsigned const default_console_uart_baudrate = 115200;
 };

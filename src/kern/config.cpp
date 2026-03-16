@@ -103,6 +103,11 @@ public:
   static constexpr const char *kernel_warn_config_string() FIASCO_INIT;
 };
 
+#ifdef __GCC_DESTRUCTIVE_SIZE
+static_assert(Config::stable_cache_alignment >= __GCC_DESTRUCTIVE_SIZE,
+              "Stable cache alignment not sufficient");
+#endif // __GCC_DESTRUCTIVE_SIZE
+
 #define GREETING_COLOR_ANSI_TITLE  "\033[1;32m"
 #define GREETING_COLOR_ANSI_INFO   "\033[0;32m"
 

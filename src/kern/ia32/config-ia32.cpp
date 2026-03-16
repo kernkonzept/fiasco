@@ -58,6 +58,8 @@ public:
     Tsc_unified = TAG_ENABLED(tsc_unified),
   };
 
+  static constexpr size_t stable_cache_alignment = 64U;
+
   static bool apic;
 
 #ifdef CONFIG_WATCHDOG
