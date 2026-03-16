@@ -1,5 +1,5 @@
 // ------------------------------------------------------------------------
-INTERFACE [arm && (pf_sa1100 || pf_xscale)]:
+INTERFACE [arm && pf_xscale]:
 
 #include "kmem_mmio.h"
 #include "mmio_register_block.h"
@@ -28,7 +28,7 @@ private:
 
 
 // -------------------------------------------------------------
-IMPLEMENTATION [arm && (pf_sa1100 || pf_xscale)]:
+IMPLEMENTATION [arm && pf_xscale]:
 
 #include "config.h"
 #include "kip.h"
@@ -105,7 +105,7 @@ Timer::system_clock()
 }
 
 // -------------------------------------------------------------
-IMPLEMENTATION [arm && (pf_sa1100 || pf_xscale) && one_shot]:
+IMPLEMENTATION [arm && pf_xscale && one_shot]:
 
 IMPLEMENT inline NEEDS["config.h", "kip.h", Timer::timer_to_us,
                        Timer::us_to_timer]

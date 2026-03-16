@@ -17,27 +17,8 @@ public:
   };
 };
 
-INTERFACE [arm && pf_sa1100]: // ----------------------------------
-
-#include "initcalls.h"
-#include "kmem_mmio.h"
-
-EXTENSION class Pic
-{
-public:
-  typedef Mword Status;
-  enum {
-    ICIP = 0x00000,
-    ICMR = 0x00004,
-    ICLR = 0x00008,
-    ICCR = 0x0000c,
-    ICFP = 0x00010,
-    ICPR = 0x00020,
-  };
-};
-
 // -------------------------------------------------------------
-IMPLEMENTATION [arm && (pf_xscale || pf_sa1100)]:
+IMPLEMENTATION [arm && pf_xscale]:
 
 #include "assert.h"
 #include "config.h"
@@ -145,7 +126,7 @@ void irq_handler()
 }
 
 // -------------------------------------------------------------
-IMPLEMENTATION [arm && debug && (pf_sa1100 || pf_xscale)]:
+IMPLEMENTATION [arm && debug && pf_xscale]:
 
 PUBLIC
 char const *

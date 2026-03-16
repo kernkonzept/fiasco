@@ -2,16 +2,15 @@
 
 PREPROCESS_PARTS        += pxa vcache arm_v5
 RAM_PHYS_BASE           := 0xa0000000
-VPATH                   += kern/arm/bsp/pxa-sa
 OBJECTS_LIBUART         += uart_16550.o
 CXXFLAGS_uart-libuart   += $(call LIBUART_UART, 16550)
 CXXFLAGS_uart-libuart   += -DUART_16550_INIT_IER=0x40
 
-config_IMPL           += config-arm-pxa_sa1100
+config_IMPL           += config-arm-pxa
 mem_layout_IMPL       += mem_layout-arm-pxa
-pic_IMPL              += pic-arm-pxa_sa1100
+pic_IMPL              += pic-arm-pxa
 bootstrap_IMPL        += bootstrap-arm-pxa
-timer_IMPL            += timer-arm-pxa_sa1100
+timer_IMPL            += timer-arm-pxa
 timer_tick_IMPL       += timer_tick-single-vector
 reset_IMPL            += reset-arm-pxa
 timestamp_IMPL        += timestamp-generic

@@ -22,9 +22,6 @@
 config HAS_64BIT
 	bool
 
-config CAN_ARM_CPU_SA1100
-	bool
-
 config CAN_ARM_CPU_XSCALE
 	bool
 
@@ -202,10 +199,6 @@ choice
 config ARM_PXA
 	bool "Intel XScale"
 	depends on PF_XSCALE
-
-config ARM_SA
-	bool "Intel StrongARM"
-	depends on PF_SA1100
 
 config ARM_920T
 	bool "ARM 920T Processor"

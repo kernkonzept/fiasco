@@ -6,7 +6,6 @@ CROSS_COMPILE_DFL-$(CONFIG_BIT32) := arm-linux-gnueabihf-
 CROSS_COMPILE_DFL-$(CONFIG_BIT64) := aarch64-linux-gnu-
 CROSS_COMPILE                     ?= $(CROSS_COMPILE_DFL-y)
 SHARED_FLAGS-$(CONFIG_ARM_PXA)    += -mcpu=xscale
-SHARED_FLAGS-$(CONFIG_ARM_SA)     += -mcpu=strongarm1100
 SHARED_FLAGS-$(CONFIG_ARM_920T)   += -mcpu=arm920t
 SHARED_FLAGS-$(CONFIG_ARM_926)    += -mcpu=arm926ej-s
 SHARED_FLAGS-$(CONFIG_ARM_1136)   += -mcpu=arm1136jf-s

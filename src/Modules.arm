@@ -34,7 +34,7 @@ PREPROCESS_PARTS-$(CONFIG_IOMMU)                    += virtual_space_iface
 #
 # DRIVERS Subsystem
 #
-INTERFACES_DRIVERS 	+= sa1100 h3xxx io mmu ve_sysregs fb_console
+INTERFACES_DRIVERS 	+= io mmu ve_sysregs fb_console
 io_IMPL			:= io io-arm
 mmu_IMPL		:= mmu mmu-arm mmu-arm-$(BITS)
 reset_IMPL		:=
