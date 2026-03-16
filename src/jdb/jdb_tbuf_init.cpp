@@ -12,7 +12,6 @@ public:
   static void init();
 };
 
-
 IMPLEMENTATION:
 
 #include <cassert>

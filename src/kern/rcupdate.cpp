@@ -472,10 +472,10 @@ Rcu_data::process_callbacks(Rcu_glbl *rgp)
 
   if (!_n.empty() && _c.empty())
     {
-	{
-	  // auto guard = lock_guard(cpu_lock); -- See function precondition.
-	  _c = cxx::move(_n);
-	}
+        {
+          // auto guard = lock_guard(cpu_lock); -- See function precondition.
+          _c = cxx::move(_n);
+        }
 
       // start the next batch of callbacks
 
@@ -483,12 +483,12 @@ Rcu_data::process_callbacks(Rcu_glbl *rgp)
       Mem::mp_rmb();
 
       if (!rgp->_next_pending)
-	{
-	  // start the batch and schedule start if it's a new batch
-	  auto guard = lock_guard(rgp->_lock);
-	  rgp->_next_pending = true;
-	  rgp->start_batch();
-	}
+        {
+          // start the batch and schedule start if it's a new batch
+          auto guard = lock_guard(rgp->_lock);
+          rgp->_next_pending = true;
+          rgp->start_batch();
+        }
     }
 
   check_quiescent_state(rgp);

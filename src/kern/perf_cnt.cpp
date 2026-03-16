@@ -8,7 +8,8 @@ class Perf_cnt_arch;
 class Perf_cnt
 {
 public:
-  enum {
+  enum
+  {
     Max_slot = 2,
     Max_pmc  = 4,
   };

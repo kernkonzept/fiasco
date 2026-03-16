@@ -10,7 +10,6 @@ IMPLEMENTATION [log]:
 extern "C" void sys_ipc_wrapper(void);
 extern "C" void sys_ipc_log_wrapper(void);
 
-
 /** IPC logging.
     called from interrupt gate.
  */
@@ -33,26 +32,30 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
   if (do_log)
     {
       Mword dbg_id;
-	{
-	  Obj_cap r = ipc_regs->ref();
+
+        {
+          Obj_cap r = ipc_regs->ref();
+
           L4_fpage::Rights rights;
-	  Kobject_iface *o = r.deref(&rights, true);
-	  if (o)
-	    dbg_id = o->dbg_info()->dbg_id();
-	  else
-	    dbg_id = ~0UL;
-	}
+          Kobject_iface *o = r.deref(&rights, true);
+
+          if (o)
+            dbg_id = o->dbg_info()->dbg_id();
+          else
+            dbg_id = ~0UL;
+        }
+
       Tb_entry_ipc _local;
       Tb_entry_ipc *tb = EXPECT_TRUE(Jdb_ipc_trace::log_buf())
                        ? Jdb_tbuf::new_entry<Tb_entry_ipc>()
                        : &_local;
       tb->set(curr, regs->ip_syscall_user(), ipc_regs, utcb,
-	      dbg_id, curr->sched_context()->left());
+              dbg_id, curr->sched_context()->left());
 
       if (EXPECT_TRUE(Jdb_ipc_trace::log_buf()))
-	Jdb_tbuf::commit_entry(tb);
+        Jdb_tbuf::commit_entry(tb);
       else
-	Jdb_tbuf::direct_log_entry(tb, "IPC");
+        Jdb_tbuf::direct_log_entry(tb, "IPC");
 
       entry_event_num = tb->number();
     }
@@ -65,14 +68,14 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
     {
       Tb_entry_ipc_res _local;
       Tb_entry_ipc_res *tb = static_cast<Tb_entry_ipc_res*>
-	(EXPECT_TRUE(Jdb_ipc_trace::log_buf()) ? Jdb_tbuf::new_entry()
-					    : &_local);
+        (EXPECT_TRUE(Jdb_ipc_trace::log_buf()) ? Jdb_tbuf::new_entry()
+                                               : &_local);
       tb->set(curr, regs->ip_syscall_user(), ipc_regs, utcb, utcb->error.raw(),
-	      entry_event_num, have_snd, false);
+              entry_event_num, have_snd, false);
 
       if (EXPECT_TRUE(Jdb_ipc_trace::log_buf()))
-	Jdb_tbuf::commit_entry(tb);
+        Jdb_tbuf::commit_entry(tb);
       else
-	Jdb_tbuf::direct_log_entry(tb, "IPC result");
+        Jdb_tbuf::direct_log_entry(tb, "IPC result");
     }
 }

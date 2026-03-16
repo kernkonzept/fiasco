@@ -163,7 +163,6 @@ void
 Jdb_tbuf_output::print_entry(String_buffer *buf, int e_nr)
 {
   Tb_entry *tb = Jdb_tbuf::lookup(e_nr);
-
   if (tb)
     print_entry(buf, tb);
 }
@@ -209,24 +208,23 @@ bool
 Jdb_tbuf_output::set_filter(const char *filter_str, Mword *entries)
 {
   Jdb_regex regex;
-
   if (!regex.start(filter_str))
     return false;
 
   if (!*filter_str)
     {
-      for (Mword n=0; n<Jdb_tbuf::unfiltered_entries(); n++)
-	Jdb_tbuf::unfiltered_lookup(n)->unhide();
+      for (Mword n = 0; n < Jdb_tbuf::unfiltered_entries(); n++)
+        Jdb_tbuf::unfiltered_lookup(n)->unhide();
 
       Jdb_tbuf::disable_filter();
       if (entries)
-	*entries = Jdb_tbuf::unfiltered_entries();
+        *entries = Jdb_tbuf::unfiltered_entries();
+
       return true;
     }
 
   Mword cnt = 0;
-
-  for (Mword n=0; n<Jdb_tbuf::unfiltered_entries(); n++)
+  for (Mword n = 0; n < Jdb_tbuf::unfiltered_entries(); n++)
     {
       Tb_entry *e = Jdb_tbuf::unfiltered_lookup(n);
       String_buf<200> s;
@@ -243,12 +241,14 @@ Jdb_tbuf_output::set_filter(const char *filter_str, Mword *entries)
           e->unhide();
           cnt++;
           continue;
-	}
+        }
+
       e->hide();
     }
 
   if (entries)
     *entries = cnt;
+
   Jdb_tbuf::enable_filter();
   return true;
 }

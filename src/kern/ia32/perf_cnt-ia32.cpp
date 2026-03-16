@@ -1185,6 +1185,7 @@ Perf_cnt::lookup_event(unsigned evntsel)
 
   if (perfctr_lookup_event != nullptr && perfctr_lookup_event(evntsel, &nr) != nullptr)
     return nr;
+
   return static_cast<Mword>(-1);
 }
 
@@ -1212,11 +1213,11 @@ Perf_cnt::get_unit_mask(Mword nr, Unit_mask_type *type,
 }
 
 PUBLIC static void
-Perf_cnt::get_unit_mask_entry(Mword nr, Mword idx, 
-			      Mword *value, const char **desc)
+Perf_cnt::get_unit_mask_entry(Mword nr, Mword idx,
+                              Mword *value, const char **desc)
 {
   const struct perfctr_event *event = nullptr;
-  
+
   if (perfctr_index_event != nullptr)
     event = perfctr_index_event(nr);
 

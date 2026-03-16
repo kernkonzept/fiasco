@@ -112,4 +112,3 @@ struct Jobj_info
 };
 
 static_assert(sizeof(Jobj_info) == 64, "Size of Jobj_info");
-

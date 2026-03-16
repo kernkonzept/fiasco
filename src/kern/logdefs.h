@@ -1,8 +1,8 @@
 // ### How to create a tracebuffer entry ###
 //
 // If you only need a temporary debugging aid then you can use one of
-// the standard kernel logging events: 
-// 
+// the standard kernel logging events:
+//
 //   LOG_MSG(Context *context, const char *msg)
 //     - context is something like context_of(this) or current_context()
 //       or 0 if there is no context available
@@ -150,7 +150,3 @@
 #define CNT_IOBMAP_TLB_FLUSH	static_cast<void>(0)
 
 #endif // CONFIG_JDB && CONFIG_JDB_ACCOUNTING
-
-
-
-

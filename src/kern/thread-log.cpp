@@ -14,7 +14,6 @@ Thread::log_page_fault()
   return Jdb_pf_trace::log();
 }
 
-
 /** Page-fault logging.
  */
 void
@@ -31,9 +30,8 @@ Thread::page_fault_log(Address pfa, unsigned error_code, unsigned long eip)
       tb->set(this, eip, pfa, error_code, current()->space());
 
       if (EXPECT_TRUE(Jdb_pf_trace::log_buf()))
-	Jdb_tbuf::commit_entry(tb);
+        Jdb_tbuf::commit_entry(tb);
       else
-	Jdb_tbuf::direct_log_entry(tb, "PF");
+        Jdb_tbuf::direct_log_entry(tb, "PF");
     }
 }
-

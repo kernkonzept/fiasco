@@ -14,7 +14,7 @@ struct Tracebuffer_status;
 class Jdb_tbuf
 {
 public:
-  static void (*direct_log_entry)(Tb_entry*, const char*);
+  static void (*direct_log_entry)(Tb_entry *, const char *);
 
   enum
   {
@@ -49,7 +49,6 @@ protected:
 
 #endif // ! CONFIG_JDB_LOGGING
 
-
 IMPLEMENTATION:
 
 #include "atomic.h"
@@ -73,10 +72,10 @@ Mword Jdb_tbuf::_filter_enabled;
 Mword Jdb_tbuf::_number;
 
 
-static void direct_log_dummy(Tb_entry*, const char*)
+static void direct_log_dummy(Tb_entry *, const char *)
 {}
 
-void (*Jdb_tbuf::direct_log_entry)(Tb_entry*, const char*) = &direct_log_dummy;
+void (*Jdb_tbuf::direct_log_entry)(Tb_entry *, const char *) = &direct_log_dummy;
 
 PUBLIC static inline Tracebuffer_status *Jdb_tbuf::status() { return _status; }
 PROTECTED static inline Tb_entry_union *Jdb_tbuf::buffer() { return _buffer; }
@@ -97,7 +96,7 @@ Jdb_tbuf::clear_tbuf()
 
 /** Return pointer to new tracebuffer entry. */
 PUBLIC static
-Tb_entry*
+Tb_entry *
 Jdb_tbuf::new_entry()
 {
   Mword n;
@@ -122,11 +121,11 @@ Jdb_tbuf::new_entry()
 }
 
 PUBLIC template<typename T> static inline
-T*
+T *
 Jdb_tbuf::new_entry()
 {
   static_assert(sizeof(T) <= sizeof(Tb_entry_union), "tb entry T too big");
-  return static_cast<T*>(new_entry());
+  return static_cast<T *>(new_entry());
 }
 
 /** Commit tracebuffer entry.
@@ -191,7 +190,7 @@ Jdb_tbuf::event_valid(Mword idx)
  * event with idx == 0 is the last event queued in
  * event with idx == 1 is the event before */
 PUBLIC static
-Tb_entry*
+Tb_entry *
 Jdb_tbuf::unfiltered_lookup(Mword idx)
 {
   if (!event_valid(idx))
@@ -209,7 +208,7 @@ Jdb_tbuf::unfiltered_lookup(Mword idx)
  * event with idx == 0 is the last event queued in
  * event with idx == 1 is the event before */
 PUBLIC static
-Tb_entry*
+Tb_entry *
 Jdb_tbuf::lookup(Mword look_idx)
 {
   if (!_filter_enabled)
@@ -264,7 +263,7 @@ Jdb_tbuf::idx(Tb_entry const *e)
 
 /** Event number => Tb_entry. */
 PUBLIC static inline
-Tb_entry*
+Tb_entry *
 Jdb_tbuf::search(Mword nr)
 {
   Tb_entry *e;

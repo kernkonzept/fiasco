@@ -35,6 +35,7 @@ public:
     Tb_entry const *e;
     Mword y;
     Group_order order;
+
     Item() : e(nullptr), y(0), order(Group_order::none()) {}
   };
 
@@ -44,6 +45,7 @@ public:
   Item &operator [] (unsigned i) { return _i[i]; }
   unsigned size() const { return _c; }
   bool full() const { return _c >= Max_group_size; }
+
   unsigned push_back(Tb_entry const *e, Mword y, Group_order t)
   {
     unsigned p = _c++;
@@ -216,16 +218,16 @@ Jdb_tbuf_show::select_perf_event_unit_mask(Mword nr, Mword unit_mask)
           show_perf_event_unit_mask_entry(nr, i, unit_mask, exclusive);
           putchar('\n');
         }
-      for (; i<Jdb_screen::height() - Tbuf_start_line - 5; i++)
+      for (; i < Jdb_screen::height() - Tbuf_start_line - 5; i++)
         puts("\033[K");
 
-      for (bool redraw = false; !redraw; )
+      for (bool redraw = false; !redraw;)
         {
           int c;
           const char *dummy;
           Mword value;
 
-          Jdb::cursor(addy+Tbuf_start_line + 4, 1);
+          Jdb::cursor(addy + Tbuf_start_line + 4, 1);
           putstr(Jdb::esc_emph);
           show_perf_event_unit_mask_entry(nr, absy + addy, unit_mask, exclusive);
           putstr("\033[m");
@@ -311,13 +313,13 @@ Jdb_tbuf_show::select_perf_event(Mword event)
       Jdb::cursor(Tbuf_start_line + 2, 1);
       for (i = 0; i < lines; i++)
         {
-          show_perf_event(absy+i);
+          show_perf_event(absy + i);
           putchar('\n');
         }
-      for (; i<Jdb_screen::height() - Tbuf_start_line - 2; i++)
+      for (; i < Jdb_screen::height() - Tbuf_start_line - 2; i++)
         puts("\033[K");
 
-      for (bool redraw = false; !redraw; )
+      for (bool redraw = false; !redraw;)
         {
           const char *dummy;
 
@@ -358,7 +360,6 @@ Jdb_tbuf_show::select_perf_event(Mword event)
         }
     }
 }
-
 
 static void
 Jdb_tbuf_show::show_events(Mword n, Mword ref, Mword count, Unsigned8 mode,
@@ -513,7 +514,8 @@ Jdb_tbuf_show::show_events(Mword n, Mword ref, Mword count, Unsigned8 mode,
                 _buffer_str.begin() + y_offset, s.c_str(),
                 count != 1 ? "\n" : "");
         }
-       n++;
+
+      n++;
     }
 }
 
@@ -534,7 +536,8 @@ Jdb_tbuf_show::search(Mword start, Mword entries, const char *str,
       return found;
     }
 
-  for (Mword n=direction==1 ? start-1 : start+1; ; (direction==1) ? n-- : n++)
+  for (Mword n = direction == 1 ? start - 1 : start + 1;;
+       (direction == 1) ? n-- : n++)
     {
       static String_buf<256> buffer;
       buffer.reset();
@@ -543,6 +546,7 @@ Jdb_tbuf_show::search(Mword start, Mword entries, const char *str,
       // (should not happen due to the following check)
       if (n == start)
         break;
+
       // don't wrap around
       if (!Jdb_tbuf::event_valid(n))
         {
@@ -552,7 +556,7 @@ Jdb_tbuf_show::search(Mword start, Mword entries, const char *str,
         }
 
       if (!Jdb_tbuf::event_valid(n))
-        n = (direction==1) ? entries-1 : 0;
+        n = (direction == 1) ? entries - 1 : 0;
 
       Jdb_tbuf_output::print_entry(&buffer, n);
 
@@ -678,7 +682,7 @@ restart:
     }
 
   // Search mark {0..9}. If not found, set Nil.
-  for (n=0; n<10; n++)
+  for (n = 0; n < 10; n++)
     posy[n] = Jdb_tbuf::search_to_idx(_nr_pos[n]);
 
   // Search current position. If beyond buffer, goto first entry.
@@ -686,7 +690,8 @@ restart:
     addy -= _absy;
   else
     addy = _absy = 0;
-  if (addy >= lines-1)
+
+  if (addy >= lines - 1)
     addy = _absy = 0;
 
   for (;;)
@@ -733,6 +738,7 @@ restart:
           printf("\033[31m%3lu%% filtered\033[m\n",
                  entries * 100U / Jdb_tbuf::max_entries());
         }
+
       for (Mword i = 3; i < Tbuf_start_line; i++)
         puts("\033[K");
 
@@ -835,7 +841,7 @@ restart:
               if (y_offset < sizeof(_buffer_str) - 82)
                 y_offset += 10;
               else
-                y_offset = sizeof(_buffer_str)-72;
+                y_offset = sizeof(_buffer_str) - 72;
 
               redraw = true;
               break;
@@ -985,8 +991,10 @@ restart:
               _nr_cur = Nil;
               _nr_ref = Nil;
               entries = 0;
+
               for (n = 0; n < 10; n++)
                 _nr_pos[n] = Nil;
+
               goto restart;
             case 's': // set mark
               Jdb::printf_statline("tbuf", nullptr, "set mark [0-9] ");
@@ -997,6 +1005,7 @@ restart:
                   error("Invalid marker");
                   goto status_line;
                 }
+
               n = c - '0';
               posy[n]    = _absy + addy;
               _nr_pos[n] = Jdb_tbuf::lookup(_absy+addy)->number();
@@ -1029,6 +1038,7 @@ restart:
                   error("Mark not visible within current filter");
                   goto status_line;
                 }
+
               goto jump_index;
             case '?': // search backward
               d = 1;
@@ -1086,7 +1096,7 @@ restart:
     }
 
  exit:
-  _nr_cur = (e = Jdb_tbuf::lookup(_absy+addy)) ? e->number() : 0;
+  _nr_cur = (e = Jdb_tbuf::lookup(_absy + addy)) ? e->number() : 0;
 }
 
 PUBLIC

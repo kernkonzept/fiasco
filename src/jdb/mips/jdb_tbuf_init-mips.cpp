@@ -33,4 +33,3 @@ Jdb_tbuf_init::allocate(unsigned size)
 
   return size;
 }
-

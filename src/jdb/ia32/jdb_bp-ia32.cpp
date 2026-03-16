@@ -382,18 +382,18 @@ Breakpoint::test_log(Thread *t)
       Mword value = 0;
 
       if (mode == WRITE || mode == ACCESS)
-	{
-	  // If it's a write or access (read) breakpoint, we look at the
-	  // appropriate place and print the bytes we find there. We do
-	  // not need to look if the page is present because the x86 CPU
-	  // enters the debug exception immediately _after_ the memory
-	  // access was performed.
-	  if (len > sizeof(Mword))
-	    return;
+        {
+          // If it's a write or access (read) breakpoint, we look at the
+          // appropriate place and print the bytes we find there. We do
+          // not need to look if the page is present because the x86 CPU
+          // enters the debug exception immediately _after_ the memory
+          // access was performed.
+          if (len > sizeof(Mword))
+            return;
 
-	  if (Jdb::peek_task(addr, &value, len) != 0)
-	    return;
-	}
+          if (Jdb::peek_task(addr, &value, len) != 0)
+            return;
+        }
 
       // is called with disabled interrupts
       Tb_entry_bp *tb = static_cast<Tb_entry_bp*>(Jdb_tbuf::new_entry());
