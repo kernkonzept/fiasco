@@ -194,78 +194,61 @@ Task::map_ku_mem_chunk(User_ptr<void> *u_addr, void *k_addr, bool k_addr_pmem,
 }
 
 /**
+ * Allocate and map a chunk of kernel-user memory for this task.
+ *
  * \see Task::alloc_ku_mem(L4_fpage)
+ *
+ * \param[in,out] u_addr                 User address of the kernel-user
+ *                                       memory. On MMU-less platforms, it is
+ *                                       derived from the kernel address,
+ *                                       otherwise it is supplied by the
+ *                                       caller.
+ * \param[out]    k_addr                 Kernel address of the allocated
+ *                                       kernel-user memory.
+ * \param         size                   Number of bytes to allocate and map.
+ * \param         need_remote_tlb_flush  Whether the Task might be active on
+ *                                       another CPU and thus requires a
+ *                                       remote TLB flush after the mapping.
+ *
+ * \retval 0                 Allocation and mapping succeeded.
+ * \retval -L4_err::ENomem   Memory allocation failed.
+ * \retval -L4_err::EExists  Memory already mapped.
+ * \retval -L4_err::EInval   Other error conditions.
  */
 PRIVATE
 int
-Task::alloc_ku_mem_chunk(User_ptr<void> *u_addr, unsigned size, void **k_addr,
+Task::alloc_ku_mem_chunk(User_ptr<void> *u_addr, void **k_addr, size_t size,
                          bool need_remote_tlb_flush)
 {
   assert((size & (size - 1)) == 0);
   assert(size < Config::SUPERPAGE_SIZE);
 
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
-  void *p = alloc->q_alloc(ram_quota(), Bytes(size));
+  *k_addr = alloc->q_alloc(ram_quota(), Bytes(size));
 
-  if (!p) [[unlikely]]
+  if (!*k_addr) [[unlikely]]
     return -L4_err::ENomem;
 
-  memset(p, 0, size);
+  memset(*k_addr, 0, size);
 
-  Virt_addr base(p);
-  Mem_space::Page_order page_order(Config::PAGE_SHIFT);
+  auto res = map_ku_mem_chunk(u_addr, *k_addr, true, size,
+                              need_remote_tlb_flush, L4_fpage::Rights::URW());
+  if (res == Mem_space::Insert_ok)
+    return 0;
 
-  // Need to use physical address on systems without MMU
-  if constexpr (!Config::Have_mmu)
-    *u_addr = User_ptr<void>(p);
+  // On error, free the memory.
+  free_ku_mem_chunk(*k_addr, size);
 
-  for (Virt_size i = Virt_size(0); i < Virt_size(size);
-       i += Virt_size(1) << page_order)
+  // Handle error conditions.
+  switch (res)
     {
-      Virt_addr kern_va = base + i;
-      Virt_addr user_va = Virt_addr(u_addr->get()) + i;
-      Mem_space::Phys_addr pa(pmem_to_phys(cxx::int_value<Virt_addr>(kern_va)));
-
-      // must be valid physical address
-      assert(pa != Mem_space::Phys_addr(~0UL));
-
-      Mem_space::Status res =
-        static_cast<Mem_space*>(this)->v_insert(pa, user_va, page_order,
-            Mem_space::Attr::space_local(L4_fpage::Rights::URW()), true);
-
-      switch (res)
-        {
-        case Mem_space::Insert_ok: break;
-        case Mem_space::Insert_err_nomem:
-          free_ku_mem_chunk(p, *u_addr, size, cxx::int_value<Virt_size>(i),
-                            true, need_remote_tlb_flush);
-          return -L4_err::ENomem;
-
-        case Mem_space::Insert_err_exists:
-          free_ku_mem_chunk(p, *u_addr, size, cxx::int_value<Virt_size>(i),
-                            true, need_remote_tlb_flush);
-          return -L4_err::EExists;
-
-        default:
-          printf("UTCB mapping failed: va=%p, ph=%p, res=%d\n",
-                 static_cast<void *>(user_va), static_cast<void *>(kern_va), res);
-          kdb_ke("BUG in utcb allocation");
-          free_ku_mem_chunk(p, *u_addr, size, cxx::int_value<Virt_size>(i),
-                            true, need_remote_tlb_flush);
-          return 0;
-        }
+    case Mem_space::Insert_err_nomem:
+      return -L4_err::ENomem;
+    case Mem_space::Insert_err_exists:
+      return -L4_err::EExists;
     }
 
-  if constexpr (Mem_space::Need_insert_tlb_flush)
-    {
-      if (need_remote_tlb_flush)
-        static_cast<Mem_space*>(this)->tlb_flush_all_cpus();
-      else
-        static_cast<Mem_space*>(this)->tlb_flush_current_cpu();
-    }
-
-  *k_addr = p;
-  return 0;
+  return -L4_err::EInval;
 }
 
 /**
@@ -305,11 +288,12 @@ Task::check_ku_area_size(L4_fpage *ku_area)
 PRIVATE
 void
 Task::insert_ku_mem(L4_fpage *ku_area, Ku_mem *ku_mem, User_ptr<void> u_addr,
-                    void *k_addr, size_t size, [[maybe_unused]] bool k_alloc)
+                    void *k_addr, size_t size, bool k_alloc)
 {
   ku_mem->u_addr = u_addr;
   ku_mem->k_addr = k_addr;
   ku_mem->size = size;
+  ku_mem->k_alloc = k_alloc;
 
   *ku_area = L4_fpage::mem(reinterpret_cast<Mword>(u_addr.get()),
                            ku_area->order());
@@ -318,14 +302,14 @@ Task::insert_ku_mem(L4_fpage *ku_area, Ku_mem *ku_mem, User_ptr<void> u_addr,
 }
 
 /**
- * Allocate kernel user memory for this task.
+ * Allocate and map kernel-user memory for this task.
  *
  * \pre Not thread-safe, the caller must ensure that no one else modifies the
  *      page table of the Task at the same time, for example by acquiring the
  *      existence lock or knowing that no one else has a reference to the Task
  *      object.
- * \pre If `need_remote_tlb_flush == true`, the cpu lock must not be held (as
- *      the remote TLB flush might do cross-cpu call) and the caller must ensure
+ * \pre If `need_remote_tlb_flush == true`, the CPU lock must not be held (as
+ *      the remote TLB flush might do cross-CPU call) and the caller must ensure
  *      that the Task object does not get deleted.
  *
  * \param ku_area                Flexpage specifying the size and desired user
@@ -333,43 +317,40 @@ Task::insert_ku_mem(L4_fpage *ku_area, Ku_mem *ku_mem, User_ptr<void> u_addr,
  *                               allocate.
  * \param need_remote_tlb_flush  Whether the Task might be active on another CPU
  *                               and thus requires a remote TLB flush after
- *                               allocating kernel user memory.
+ *                               allocating kernel-user memory.
+ *
+ * \retval 0                 Allocation and mapping succeeded.
+ * \retval -L4_err::ENomem   Memory allocation failed.
+ * \retval -L4_err::EExists  Memory already mapped.
+ * \retval -L4_err::EInval   Invalid flexpage and other error conditions.
  */
 PUBLIC
 int
 Task::alloc_ku_mem(L4_fpage *ku_area, bool need_remote_tlb_flush)
 {
   // The limit comes from the kernel allocator (Buddy_alloc).
-  if (ku_area->order() < Config::PAGE_SHIFT || ku_area->order() > 17)
+  if (ku_area->order() > 17)
     return -L4_err::EInval;
 
-  Mword sz = 1UL << ku_area->order();
-
-  if (ku_area->mem_address() > Virt_addr(max_usable_user_address() - sz + 1))
+  size_t size = check_ku_area_size(ku_area);
+  if (size == 0)
     return -L4_err::EInval;
 
-  Ku_mem *m = new (ram_quota()) Ku_mem();
-
-  if (!m)
+  Ku_mem *ku_mem = new (ram_quota()) Ku_mem();
+  if (!ku_mem)
     return -L4_err::ENomem;
 
   User_ptr<void> u_addr(static_cast<void *>(ku_area->mem_address()));
+  void *k_addr = nullptr;
 
-  void *p = nullptr;
-  if (int e = alloc_ku_mem_chunk(&u_addr, sz, &p, need_remote_tlb_flush))
+  int res = alloc_ku_mem_chunk(&u_addr, &k_addr, size, need_remote_tlb_flush);
+  if (res)
     {
-      m->free(ram_quota());
-      return e;
+      ku_mem->free(ram_quota());
+      return res;
     }
 
-  m->u_addr = u_addr;
-  m->k_addr = p;
-  m->size = sz;
-  *ku_area = L4_fpage::mem(reinterpret_cast<Mword>(u_addr.get()),
-                           ku_area->order());
-
-  _ku_mem.add(m, cas<cxx::S_list_item*>);
-
+  insert_ku_mem(ku_area, ku_mem, u_addr, k_addr, size, true);
   return 0;
 }
 
@@ -436,14 +417,25 @@ Task::map_ku_mem(L4_fpage *ku_area, void *k_addr, bool k_addr_pmem,
 }
 
 /**
- * \see Task::free_ku_mem()
+ * Unmap and free kernel-user memory.
+ *
+ * \param m                      Kernel-user memory to unmap and free.
+ * \param need_tlb_flush         Need for CPU-local TLB flush of the removed
+ *                               mapping.
+ * \param need_remote_tlb_flush  Need for remote TLB flush of the removed
+ *                               mapping.
+ *
  */
 PRIVATE inline NOEXPORT
 void
 Task::free_ku_mem(Ku_mem *m, bool need_tlb_flush, bool need_remote_tlb_flush)
 {
-  free_ku_mem_chunk(m->k_addr, m->u_addr, m->size, m->size,
-                    need_tlb_flush, need_remote_tlb_flush);
+  unmap_ku_mem_chunk(m->u_addr, m->size, need_tlb_flush, need_remote_tlb_flush);
+
+  // Only free the kernel memory if it has been allocated.
+  if (m->k_alloc)
+    free_ku_mem_chunk(m->k_addr, m->size);
+
   m->free(ram_quota());
 }
 
@@ -483,45 +475,28 @@ Task::unmap_ku_mem_chunk(User_ptr<void> u_addr, size_t mapped_size,
 }
 
 /**
- * \see Task::free_ku_mem()
+ * Free kernel-user memory chunk.
+ *
+ * \param k_addr Kernel address of the kernel-user memory.
+ * \param size   Size of the kernel-user memory in bytes.
  */
 PRIVATE
 void
-Task::free_ku_mem_chunk(void *k_addr, User_ptr<void> u_addr, unsigned size,
-                        unsigned mapped_size, bool need_tlb_flush,
-                        bool need_remote_tlb_flush)
+Task::free_ku_mem_chunk(void *k_addr, size_t size)
 {
-  Kmem_alloc * const alloc = Kmem_alloc::allocator();
-  Mem_space::Page_order page_order(Config::PAGE_SHIFT);
-
-  for (Virt_size i = Virt_size(0); i < Virt_size(mapped_size);
-       i += Virt_size(1) << page_order)
-    {
-      Virt_addr user_va = Virt_addr(u_addr.get()) + i;
-      static_cast<Mem_space*>(this)->v_delete(user_va, page_order,
-                                              Page::Rights::FULL());
-    }
-
-  if (need_tlb_flush && mapped_size > 0)
-    {
-      if (need_remote_tlb_flush)
-        static_cast<Mem_space*>(this)->tlb_flush_all_cpus();
-      else
-        static_cast<Mem_space*>(this)->tlb_flush_current_cpu();
-    }
-
+  Kmem_alloc *const alloc = Kmem_alloc::allocator();
   alloc->q_free(ram_quota(), Bytes(size), k_addr);
 }
 
 /**
- * Free all kernel user memory of this Task.
+ * Free all kernel-user memory of this Task.
  *
  * \pre Not thread-safe, the caller must ensure that no one else modifies the
  *      page table of the Task at the same time, for example by acquiring the
  *      existence lock or knowing that no one else has a reference to the Task
  *      object.
- * \pre If `need_remote_tlb_flush == true`, the cpu lock must not be held (as
- *      the remote TLB flush might do cross-cpu call) and the caller must ensure
+ * \pre If `need_remote_tlb_flush == true`, the CPU lock must not be held (as
+ *      the remote TLB flush might do cross-CPU call) and the caller must ensure
  *      that the Task object does not get deleted.
  *
  * \param need_tlb_flush         Whether the Task requires a TLB flush after
@@ -858,7 +833,7 @@ Task::sys_caps_equal(Syscall_frame *, Utcb *utcb)
  */
 PRIVATE inline NOEXPORT
 L4_msg_tag
-Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb, Utcb *out)
+Task::sys_add_ku_mem(Syscall_frame *f, Utcb const *utcb, Utcb *out)
 {
   if (!(caps() & Task::Caps::kumem())) [[unlikely]]
     return commit_result(-L4_err::ENosys);

@@ -73,7 +73,8 @@ public:
   {
     User_ptr<void> u_addr;
     void *k_addr;
-    unsigned size;
+    size_t size;
+    bool k_alloc;
 
     void *operator new (size_t, Ram_quota *q) noexcept
     { return Space::alloc_ku_mem(q); }

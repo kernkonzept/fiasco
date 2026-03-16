@@ -189,7 +189,7 @@ Jdb_space::show(Task *t)
          Jdb::clear_to_eol_str());
 
   for (auto const &m : t->_ku_mem)
-    printf("  utcb area: user_va=%p kernel_va=%p size=%x%s\n",
+    printf("  utcb area: user_va=%p kernel_va=%p size=%zx%s\n",
            m->u_addr.get(), m->k_addr, m->size, Jdb::clear_to_eol_str());
 
   unsigned long m = t->ram_quota()->current();
