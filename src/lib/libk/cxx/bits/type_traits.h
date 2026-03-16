@@ -14,23 +14,15 @@ namespace cxx {
 class Null_type;
 
 template<bool flag, typename T, typename F>
-class Select 
-{
-public:
-  typedef T Type;
-};
+struct Select { using Type = T; };
 
 template<typename T, typename F>
-class Select<false, T, F> 
-{
-public:
-  typedef F Type;
-};
+struct Select<false, T, F> { using Type = F; };
 
 template<typename T, typename U>
 class Conversion
 {
-  typedef char S;
+  using S = char;
 
   class B { char dummy[2]; };
 
@@ -39,178 +31,222 @@ class Conversion
   static T make_T();
 
 public:
-  enum 
-  { 
-    exists = sizeof(test(make_T())) == sizeof(S),
-    two_way = exists && Conversion<U,T>::exists,
-    exists_2_way = two_way,
-    same_type = false
-  };
+  static constexpr bool exists = sizeof(test(make_T())) == sizeof(S);
+  static constexpr bool two_way = exists && Conversion<U, T>::exists;
+  static constexpr bool exists_2_way = two_way;
+  static constexpr bool same_type = false;
 };
 
 template<>
 class Conversion<void, void>
 {
 public:
-  enum { exists = 1, two_way = 1, exists_2_way = two_way, same_type = 1 };
+  static constexpr bool exists = true;
+  static constexpr bool two_way = true;
+  static constexpr bool exists_2_way = two_way;
+  static constexpr bool same_type = true;
 };
 
 template<typename T>
 class Conversion<T, T>
 {
 public:
-  enum { exists = 1, two_way = 1, exists_2_way = two_way, same_type = 1 };
+  static constexpr bool exists = true;
+  static constexpr bool two_way = true;
+  static constexpr bool exists_2_way = two_way;
+  static constexpr bool same_type = true;
 };
 
 template<typename T>
 class Conversion<void, T>
 {
 public:
-  enum { exists = 0, two_way = 0, exists_2_way = two_way, same_type = 0 };
+  static constexpr bool exists = false;
+  static constexpr bool two_way = false;
+  static constexpr bool exists_2_way = two_way;
+  static constexpr bool same_type = false;
 };
 
 template<typename T>
 class Conversion<T, void>
 {
 public:
-  enum { exists = 0, two_way = 0, exists_2_way = two_way, same_type = 0 };
-};
-
-template<int I>
-class Int_to_type
-{
-public:
-  enum { i = I };
+  static constexpr bool exists = false;
+  static constexpr bool two_way = false;
+  static constexpr bool exists_2_way = two_way;
+  static constexpr bool same_type = false;
 };
 
 namespace TT
 {
-  template<typename U> class Pointer_traits
+  template<typename U>
+  struct Pointer_traits
   {
-  public:
-    typedef Null_type Pointee;
-    enum { value = false };
+    using Pointee = Null_type;
+    static constexpr bool value = false;
   };
 
-  template<typename U> class Pointer_traits<U *>
+  template<typename U>
+  struct Pointer_traits<U *>
   {
-  public:
-    typedef U Pointee;
-    enum { value = true };
+    using Pointee = U;
+    static constexpr bool value = true;
   };
 
-  template<typename U> struct Ref_traits
+  template<typename U>
+  struct Ref_traits
   {
-    enum { value = false };
-    typedef U Referee;
+    using Referee = U;
+    static constexpr bool value = false;
   };
 
-  template<typename U> struct Ref_traits<U &>
+  template<typename U>
+  struct Ref_traits<U &>
   {
-    enum { value = true };
-    typedef U Referee;
+    using Referee = U;
+    static constexpr bool value = true;
   };
 
+  template<typename U>
+  struct Add_ref { using Type = U &; };
 
-  template<typename U> struct Add_ref { typedef U &Type; };
-  template<typename U> struct Add_ref<U &> { typedef U Type; };
+  template<typename U>
+  struct Add_ref<U &> { using Type = U; };
 
-  template<typename U> struct PMF_traits { enum { value = false }; };
-  template<typename U, typename F> struct PMF_traits<U F:: *> 
-  { enum { value = true }; };
+  template<typename U>
+  struct PMF_traits
+  { static constexpr bool value = false; };
 
+  template<typename U, typename F>
+  struct PMF_traits<U F:: *>
+  { static constexpr bool value = true; };
 
-  template<typename U> class Is_unsigned { public: enum { value = false }; };
-  template<> class Is_unsigned<unsigned> { public: enum { value = true }; };
-  template<> class Is_unsigned<unsigned char> { 
-    public: enum { value = true }; 
-  };
-  template<> class Is_unsigned<unsigned short> { 
-    public: enum { value = true }; 
-  };
-  template<> class Is_unsigned<unsigned long> { 
-    public: enum { value = true }; 
-  };
-  template<> class Is_unsigned<unsigned long long> { 
-    public: enum { value = true }; 
-  };
+  template<typename U>
+  struct Is_unsigned
+  { static constexpr bool value = false; };
 
-  template<typename U> class Is_signed { public: enum { value = false }; };
-  template<> class Is_signed<signed char> { public: enum { value = true }; };
-  template<> class Is_signed<signed short> { public: enum { value = true }; };
-  template<> class Is_signed<signed> { public: enum { value = true }; };
-  template<> class Is_signed<signed long> { public: enum { value = true }; };
-  template<> class Is_signed<signed long long> { 
-    public: enum { value = true }; 
-  };
-  
-  template<typename U> class Is_int { public: enum { value = false }; };
-  template<> class Is_int< char > { public: enum { value = true }; };
-  template<> class Is_int< bool > { public: enum { value = true }; };
-  template<> class Is_int< wchar_t > { public: enum { value = true }; };
-  
-  template<typename U> class Is_float { public: enum { value = false }; };
-  template<> class Is_float< float > { public: enum { value = true }; };
-  template<> class Is_float< double > { public: enum { value = true }; };
-  template<> class Is_float< long double > { public: enum { value = true }; };
+  template<>
+  struct Is_unsigned<unsigned>
+  { static constexpr bool value = true; };
 
-  template<typename T> class Const_traits
+  template<>
+  struct Is_unsigned<unsigned char>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_unsigned<unsigned short>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_unsigned<unsigned long>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_unsigned<unsigned long long>
+  { static constexpr bool value = true; };
+
+  template<typename U>
+  struct Is_signed
+  { static constexpr bool value = false; };
+
+  template<>
+  struct Is_signed<signed>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_signed<signed char>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_signed<signed short>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_signed<signed long>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_signed<signed long long>
+  { static constexpr bool value = true; };
+
+  template<typename U>
+  struct Is_int
+  { static constexpr bool value = false; };
+
+  template<>
+  struct Is_int<char>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_int<bool>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_int<wchar_t>
+  { static constexpr bool value = true; };
+
+  template<typename U>
+  struct Is_float
+  { static constexpr bool value = false; };
+
+  template<>
+  struct Is_float<float>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_float<double>
+  { static constexpr bool value = true; };
+
+  template<>
+  struct Is_float<long double>
+  { static constexpr bool value = true; };
+
+  template<typename T>
+  struct Const_traits
   {
-  public:
-    enum { value = false };
-    typedef T Type;
-    typedef const T Const_type;
+    using Type = T;
+    using Const_type = const T;
+    static constexpr bool value = false;
   };
 
-  template<typename T> class Const_traits<const T>
+  template<typename T>
+  struct Const_traits<const T>
   {
-  public:
-    enum { value = true };
-    typedef T Type;
-    typedef const T Const_type;
+    using Type = T;
+    using Const_type = const T;
+    static constexpr bool value = true;
   };
 };
 
 template<typename T>
-class Type_traits 
+struct Type_traits
 {
-public:
-  enum
-  {
-    is_unsigned = TT::Is_unsigned<T>::value,
-    is_signed   = TT::Is_signed<T>::value,
-    is_int      = TT::Is_int<T>::value,
-    is_float    = TT::Is_float<T>::value,
-    is_pointer  = TT::Pointer_traits<T>::value,
-    is_pointer_to_member = TT::PMF_traits<T>::value,
-    is_reference = TT::Ref_traits<T>::value,
-    is_scalar = is_unsigned || is_signed || is_int || is_pointer 
-      || is_pointer_to_member || is_reference,
-    is_fundamental = is_unsigned || is_signed || is_float 
-      || Conversion<T, void>::same_type,
-    is_const    = TT::Const_traits<T>::value,
+  static constexpr bool is_unsigned = TT::Is_unsigned<T>::value;
+  static constexpr bool is_signed = TT::Is_signed<T>::value;
 
-    alignment = 
-	(sizeof(T) >= sizeof(unsigned long) 
-	 ? sizeof(unsigned long)
-	 : (sizeof(T) >= sizeof(unsigned)
-	   ? sizeof(unsigned)
-	   : (sizeof(T) >= sizeof(short)
-	     ? sizeof(short)
-	     : 1)))
-  };
+  static constexpr bool is_int = TT::Is_int<T>::value;
+  static constexpr bool is_float = TT::Is_float<T>::value;
 
-  typedef typename Select<is_scalar, T, typename TT::Add_ref<typename TT::Const_traits<T>::Const_type>::Type>::Type Param_type;
-  typedef typename TT::Pointer_traits<T>::Pointee Pointee_type;
-  typedef typename TT::Ref_traits<T>::Referee Referee_type;
-  typedef typename TT::Const_traits<T>::Type Non_const_type;
-  typedef typename TT::Const_traits<T>::Const_type Const_type;
+  static constexpr bool is_pointer = TT::Pointer_traits<T>::value;
+  static constexpr bool is_pointer_to_member = TT::PMF_traits<T>::value;
+  static constexpr bool is_reference = TT::Ref_traits<T>::value;
 
-  static unsigned long align(unsigned long a)
-  {
-    return (a + static_cast<unsigned long>(alignment) - 1UL)
-            & ~(static_cast<unsigned long>(alignment) - 1UL);
-  }
+  static constexpr bool is_scalar = is_unsigned || is_signed || is_int
+    || is_pointer || is_pointer_to_member || is_reference;
+
+  static constexpr bool is_fundamental = is_unsigned || is_signed || is_float
+    || Conversion<T, void>::same_type;
+
+  static constexpr bool is_const = TT::Const_traits<T>::value;
+
+  using Param_type
+    = Select<is_scalar, T,
+             typename TT::Add_ref<typename TT::Const_traits<T>::Const_type>::Type>::Type;
+
+  using Pointee_type = TT::Pointer_traits<T>::Pointee;
+  using Referee_type = TT::Ref_traits<T>::Referee;
+  using Non_const_type = TT::Const_traits<T>::Type;
+  using Const_type = TT::Const_traits<T>::Const_type;
 };
 
 };
