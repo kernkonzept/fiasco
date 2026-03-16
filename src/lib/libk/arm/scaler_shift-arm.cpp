@@ -1,6 +1,6 @@
 IMPLEMENTATION [arm && 32bit]:
 
-IMPLEMENT inline
+IMPLEMENT
 Unsigned64
 Scaler_shift::transform(Unsigned64 value) const
 {

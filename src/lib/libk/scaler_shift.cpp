@@ -45,7 +45,7 @@ IMPLEMENTATION:
  * The shift value is important for low timer frequencies to keep a sane amount
  * of usable digits.
  */
-PUBLIC static inline
+PUBLIC static
 Scaler_shift
 Scaler_shift::calc(Unsigned32 from_freq, Unsigned32 to_freq)
 {
