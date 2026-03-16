@@ -311,7 +311,7 @@ PUBLIC static inline
 void
 Cpu::hcr(Unsigned64 hcr)
 {
-  asm volatile ("mcr p15, 4, %0, c1, c1, 0" : : "r"(hcr & 0xffffffff));
+  asm volatile ("mcr p15, 4, %0, c1, c1, 0" : : "r"(hcr & 0xffffffffU));
   asm volatile ("mcr p15, 4, %0, c1, c1, 4" : : "r"(hcr >> 32));
 }
 

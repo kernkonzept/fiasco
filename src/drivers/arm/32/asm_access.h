@@ -46,7 +46,7 @@ void
 write_non_atomic(Unsigned64 val, Unsigned64 *mem)
 {
   Unsigned32 *mem32 = reinterpret_cast<Unsigned32 *>(mem);
-  Unsigned32 lo = val & 0xffffffff;
+  Unsigned32 lo = val & 0xffffffffU;
   Unsigned32 hi = val >> 32;
 
   asm volatile ("str %[val], %[mem]" : [mem] "=m" (mem32[0]) : [val] "r" (lo));

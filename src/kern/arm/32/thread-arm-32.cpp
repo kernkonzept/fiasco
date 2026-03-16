@@ -380,14 +380,14 @@ Thread::check_and_handle_coproc_faults(Trap_state *ts)
 
   if (ts->psr & Proc::Status_thumb)
     {
-      if (   (opcode & 0xef000000) == 0xef000000 // A6.3.18
-          || (opcode & 0xff100000) == 0xf9000000)
+      if (   (opcode & 0xef000000U) == 0xef000000U // A6.3.18
+          || (opcode & 0xff100000U) == 0xf9000000U)
         return Thread::handle_fpu_trap(opcode, ts);
     }
   else
     {
-      if (   (opcode & 0xfe000000) == 0xf2000000 // A5.7.1
-          || (opcode & 0xff100000) == 0xf4000000)
+      if (   (opcode & 0xfe000000U) == 0xf2000000U // A5.7.1
+          || (opcode & 0xff100000U) == 0xf4000000U)
         return Thread::handle_fpu_trap(opcode, ts);
     }
 

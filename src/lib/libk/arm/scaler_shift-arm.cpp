@@ -4,7 +4,7 @@ IMPLEMENT inline
 Unsigned64
 Scaler_shift::transform(Unsigned64 value) const
 {
-  Mword lo = value & 0xffffffff;
+  Mword lo = value & 0xffffffffU;
   Mword hi = value >> 32;
   Mword dummy1, dummy2, dummy3, dummy4;
   // This code is written in Assembler so that it doesn't require libgcc. It
