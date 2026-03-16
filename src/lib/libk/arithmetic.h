@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cxx/type_traits"
+
 namespace cxx {
 
 /**
@@ -52,6 +54,58 @@ constexpr unsigned
 log2u(unsigned long long val)
 {
   return 8 * sizeof(val) - __builtin_clzll(val) - 1;
+}
+
+/**
+ * Computes the number of bits needed to store the given number.
+ *
+ * \param val  Number whose bit width to compute.
+ *
+ * \return The bit width of `val`.
+ */
+constexpr unsigned
+bit_width(unsigned val)
+{
+  if (val == 0)
+    return 0;
+
+  return 8 * sizeof(val) - __builtin_clz(val);
+}
+
+constexpr unsigned
+bit_width(unsigned long val)
+{
+  if (val == 0)
+    return 0;
+
+  return 8 * sizeof(val) - __builtin_clzl(val);
+}
+
+constexpr unsigned
+bit_width(unsigned long long val)
+{
+  if (val == 0)
+    return 0;
+
+  return 8 * sizeof(val) - __builtin_clzll(val);
+}
+
+/**
+ * Computes the smallest integral power of two that is not smaller than the
+ * given number.
+ *
+ * \param val  Number whose bit ceiling to compute.
+ *
+ * \return The bit ceiling of `val`.
+ */
+template<typename T>
+requires Type_traits<T>::is_unsigned
+constexpr T bit_ceil(T val)
+{
+  if (val <= T{1})
+    return T{1};
+
+  return T{1} << bit_width(T{val - 1});
 }
 
 }
