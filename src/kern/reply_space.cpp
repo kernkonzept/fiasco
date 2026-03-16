@@ -66,7 +66,7 @@ private:
 };
 
 //---------------------------------------------------------------------------
-INTERFACE[obj_space_phys_avl]:
+INTERFACE[explicit_reply_caps && obj_space_phys_avl]:
 
 #include "cxx/avl_map"
 #include "global_data.h"
@@ -148,12 +148,18 @@ private:
   {
     return static_cast<SPACE const *>(this)->ram_quota();
   }
+};
 
+//---------------------------------------------------------------------------
+INTERFACE[explicit_reply_caps]:
+
+EXTENSION class Reply_space
+{
   Mword _bound_threads = 0;
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION:
+IMPLEMENTATION[explicit_reply_caps]:
 
 /**
  * Add bound thread.
@@ -194,7 +200,7 @@ Reply_space<SPACE>::remove_bound_thread(DISPOSE dispose)
 }
 
 //---------------------------------------------------------------------------
-INTERFACE[!obj_space_phys_avl]:
+INTERFACE[explicit_reply_caps && !obj_space_phys_avl]:
 
 EXTENSION class Reply_space
 {
@@ -272,7 +278,7 @@ private:
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION[!obj_space_phys_avl]:
+IMPLEMENTATION[explicit_reply_caps && !obj_space_phys_avl]:
 
 PUBLIC template<typename SPACE>
 Reply_space<SPACE>::~Reply_space()
@@ -383,7 +389,7 @@ Reply_space<SPACE>::clear(DISPOSE dispose)
 }
 
 //---------------------------------------------------------------------------
-INTERFACE[obj_space_phys_avl]:
+INTERFACE[explicit_reply_caps && obj_space_phys_avl]:
 
 #include "spin_lock.h"
 
@@ -402,7 +408,7 @@ EXTENSION class Reply_space
 };
 
 //---------------------------------------------------------------------------
-IMPLEMENTATION[obj_space_phys_avl]:
+IMPLEMENTATION[explicit_reply_caps && obj_space_phys_avl]:
 
 template<>
 DEFINE_GLOBAL
@@ -483,3 +489,31 @@ Reply_space<SPACE>::clear(DISPOSE dispose)
   // Destroy map while interrupts are open. The data structure could be large!
   old.clear();
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION[!explicit_reply_caps]:
+
+PUBLIC template<typename SPACE> inline
+void
+Reply_space<SPACE>::add_bound_thread()
+{}
+
+PUBLIC template<typename SPACE> template<typename DISPOSE> inline
+void
+Reply_space<SPACE>::remove_bound_thread(DISPOSE)
+{}
+
+IMPLEMENT template<typename SPACE>
+Reply_cap_slot const *
+Reply_space<SPACE>::get_reply_cap(Reply_cap_index) const
+{ return nullptr; }
+
+IMPLEMENT template<typename SPACE>
+Reply_cap_slot *
+Reply_space<SPACE>::access_reply_cap(Reply_cap_index, bool)
+{ return nullptr; }
+
+IMPLEMENT template<typename SPACE> template<typename DISPOSE>
+void
+Reply_space<SPACE>::clear(DISPOSE)
+{}

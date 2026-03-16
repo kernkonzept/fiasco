@@ -131,10 +131,6 @@ private:
   /// Registers used for receive.
   Syscall_frame *_rcv_regs;
 
-  /// Chosen reply cap slot. Can either point to _implicit_reply_cap or an
-  /// explicit reply capability slot in the Reply_space of the receiver.
-  Reply_cap_slot *_reply_cap;
-
   /// Implicit, per-receiver reply cap slot. Used if no explicit slot is
   /// selected.
   Reply_cap_slot _implicit_reply_cap;
@@ -147,6 +143,37 @@ private:
 
 typedef Context_ptr_base<Receiver> Receiver_ptr;
 
+// ---------------------------------------------------------------------------
+INTERFACE[explicit_reply_caps]:
+
+EXTENSION class Receiver
+{
+private:
+  inline Reply_cap_slot *get_cur_reply_cap_slot()
+  { return _reply_cap; }
+
+  inline void set_cur_reply_cap_slot(Reply_cap_slot *cap)
+  { _reply_cap = cap; }
+
+  /// Chosen reply cap slot. Can either point to _implicit_reply_cap or an
+  /// explicit reply capability slot in the Reply_space of the receiver.
+  Reply_cap_slot *_reply_cap;
+};
+
+// ---------------------------------------------------------------------------
+INTERFACE[!explicit_reply_caps]:
+
+EXTENSION class Receiver
+{
+private:
+  inline Reply_cap_slot *get_cur_reply_cap_slot()
+  { return &_implicit_reply_cap; }
+
+  inline void set_cur_reply_cap_slot(Reply_cap_slot *)
+  {}
+};
+
+// ---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include "atomic.h"
@@ -199,10 +226,12 @@ PUBLIC inline
 void
 Receiver::set_reply_cap(Receiver *caller, L4_fpage::Rights rights)
 {
+  Reply_cap_slot *cur_slot = get_cur_reply_cap_slot();
+
   // If reply cap slot is already used, reset it first. For the case that
   // multiple threads in the same space operate concurrently on the same slot,
   // see the cas below.
-  if (_reply_cap->is_used()) [[unlikely]]
+  if (cur_slot->is_used()) [[unlikely]]
     {
       reset_reply_cap_slot(_reply_cap);
       WARN("%p: Application bug: reply capability overwritten!\n", this);
@@ -218,7 +247,7 @@ Receiver::set_reply_cap(Receiver *caller, L4_fpage::Rights rights)
   assert(caller->_partner_reply_cap == nullptr);
 
   // First record in the caller the reply cap slot used for the call.
-  atomic_store(&caller->_partner_reply_cap, _reply_cap);
+  atomic_store(&caller->_partner_reply_cap, cur_slot);
 
   // Because someone unrelated can, at any time, reset the reply cap slot, we
   // must ensure that this someone sees an up-to-date value of
@@ -227,21 +256,29 @@ Receiver::set_reply_cap(Receiver *caller, L4_fpage::Rights rights)
   // pointer in _partner_reply_cap in case of concurrent reply cap slot usage.
   Mem::mp_wmb(); // Pairs with data dependency in reset_reply_cap_slot().
 
-  // If the cas fails, someone else was faster, we give up, that is to be
-  // considered a user-space error. They messed up their reply cap slot
-  // allocation.
   Reply_cap new_value = Reply_cap(caller, rights);
-  if (!_reply_cap->cas(Reply_cap::Empty(), new_value)) [[unlikely]]
+  if constexpr (TAG_ENABLED(explicit_reply_caps))
     {
-      // Both caller and callee are blocked, so the only thing that can happen
-      // is that the value in _reply_cap was changed concurrently by another
-      // receiver thread in the same task. In that case we cannot use the reply
-      // cap slot, so rollback our write to _partner_reply_cap from above.
-      atomic_store(&caller->_partner_reply_cap, nullptr);
+      // If the cas fails, someone else was faster, we give up, that is to be
+      // considered a user-space error. They messed up their reply cap slot
+      // allocation.
+      if (!cur_slot->cas(Reply_cap::Empty(), new_value)) [[unlikely]]
+        {
+          // Both caller and callee are blocked, so the only thing that can
+          // happen is that the value in _reply_cap was changed concurrently by
+          // another receiver thread in the same task. In that case we cannot
+          // use the reply cap slot, so rollback our write to
+          // _partner_reply_cap from above.
+          atomic_store(&caller->_partner_reply_cap, nullptr);
 
-      WARN("%p: Concurrent usage of reply cap slot detected. "
-           "Broken reply cap allocator?\n", this);
+          WARN("%p: Concurrent usage of reply cap slot detected. "
+               "Broken reply cap allocator?\n", this);
+        }
     }
+  else
+    // Only the current thread can access the implicit reply cap slot. It is
+    // guaranteed to be available due to the reset_reply_cap_slot() above.
+    cur_slot->write_atomic(new_value);
 }
 
 /**
@@ -446,15 +483,21 @@ bool Receiver::prepare_receive(Sender *partner, Syscall_frame *regs)
   bool open_wait = !partner && regs;
   if (open_wait)
     {
+      Reply_cap_slot *slot = &_implicit_reply_cap;
       if (regs->ref().explicit_reply())
         {
-          auto reply_cap_index = regs->ref().reply_cap();
-          _reply_cap = space()->access_reply_cap(reply_cap_index, true);
-          if (_reply_cap == nullptr) [[unlikely]]
+          if constexpr (TAG_ENABLED(explicit_reply_caps))
+            {
+              auto reply_cap_index = regs->ref().reply_cap();
+              slot = space()->access_reply_cap(reply_cap_index, true);
+              if (slot == nullptr) [[unlikely]]
+                return false;
+            }
+          else
             return false;
         }
-      else
-        _reply_cap = &_implicit_reply_cap;
+
+      set_cur_reply_cap_slot(slot);
     }
 
   set_rcv_regs(regs);  // message should be poked in here
@@ -589,7 +632,7 @@ Receiver::vcpu_async_ipc(Sender const *sender) const
       );
 
   self->_rcv_regs = &vcpu->_ipc_regs;
-  self->_reply_cap = &self->_implicit_reply_cap;
+  self->set_cur_reply_cap_slot(&self->_implicit_reply_cap);
   vcpu->_regs.set_ipc_upcall();
   self->set_partner(const_cast<Sender*>(sender));
   self->state_add_dirty(Thread_receive_wait);
