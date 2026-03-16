@@ -1,4 +1,15 @@
-INTERFACE [arm]:
+INTERFACE [arm && !arm_psci]:
+
+#include <types.h>
+
+class Psci
+{
+public:
+    static void init(Cpu_number) {}
+};
+
+// ------------------------------------------------------------------------
+INTERFACE [arm && arm_psci]:
 
 #include <types.h>
 #include "std_macros.h"
@@ -53,14 +64,6 @@ private:
     Psci_stat_count          = 17,
   };
 };
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [arm && !arm_psci]:
-
-IMPLEMENT
-void
-Psci::init(Cpu_number)
-{}
 
 // ------------------------------------------------------------------------
 INTERFACE [arm && arm_psci && arm_psci_smc]:
