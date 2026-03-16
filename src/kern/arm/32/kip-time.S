@@ -63,8 +63,7 @@
         ldr     ip, \shift      /* ip = shift */
         adds    r1, r1, r2
         adc     r2, r3, #0      /* {r2,r1,r0} contains (timer * scaler) */
-        mov     r3, #32
-        sub     r3, r3, ip      /* r3 = 32 - shift */
+        rsb     r3, ip, #32     /* r3 = 32 - shift */
                                 /* compute {r2,r1,r0} >> (32 - shift) */
         lsr     r0, r0, r3
         orr     r0, r0, r1, LSL ip /* r0 = (r1<<shift) | (r0 >> (32-shift)) */

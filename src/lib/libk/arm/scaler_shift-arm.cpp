@@ -14,8 +14,7 @@ Scaler_shift::transform(Unsigned64 value) const
        "umull   %1, %3, %[scaler], %1   \n\t"
        "adds    %1, %1, %2              \n\t"
        "adc     %2, %3, #0              \n\t"
-       "mov     %3, #32                 \n\t"
-       "sub     %3, %3, %[shift]        \n\t"
+       "rsb     %3, %[shift], #32       \n\t"
 #ifdef __thumb__
        "lsl     %4, %1, %[shift]        \n\t"
        "lsr     %0, %0, %3              \n\t"
