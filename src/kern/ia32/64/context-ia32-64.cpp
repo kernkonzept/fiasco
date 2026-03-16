@@ -14,8 +14,7 @@ public:
 // ------------------------------------------------------------------------
 IMPLEMENTATION [amd64]:
 
-IMPLEMENT inline NEEDS [Context::update_consumed_time,
-			Context::store_segments]
+IMPLEMENT inline NEEDS [Context::store_segments]
 void
 Context::switch_cpu(Context *t)
 {
