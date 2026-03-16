@@ -57,7 +57,7 @@ kip_time_fn_read_us:
         add     x2, x2, x5
         lsr     x0, x0, x3      /* x0 = x0 >> (32 - shift) */
         lsl     x1, x1, x2      /* x1 = x1 << (32 + shift) */
-        orr     x0, x0, x1      /* OR the "out-shifted" bits to r0 */
+        orr     x0, x0, x1      /* OR the "out-shifted" bits to x0 */
 #else
         ldr     x0, KIP_VAL(KIP_CLOCK)
 #endif
