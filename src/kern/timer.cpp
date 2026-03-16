@@ -73,6 +73,11 @@ public:
    */
   static void enable();
 
+  /**
+   * disable the timer
+   */
+  static void disable();
+
   static void master_cpu(Cpu_number cpu) { _cpu = cpu; }
 
   static constexpr Unsigned64 Infinite_timeout = UINT64_MAX;
@@ -132,6 +137,11 @@ Timer::init_system_clock_ap(Cpu_number)
 IMPLEMENT_DEFAULT
 void
 Timer::enable()
+{}
+
+IMPLEMENT_DEFAULT
+void
+Timer::disable()
 {}
 
 IMPLEMENT_DEFAULT inline NEEDS["kip.h"]

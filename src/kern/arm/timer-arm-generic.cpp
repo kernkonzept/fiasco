@@ -60,7 +60,7 @@ Timer::init(Cpu_number cpu)
   if constexpr (Proc::Is_hyp)
     Generic_timer::T<Generic_timer::Virtual>::control(0);
 
-  Gtimer::control(0);
+  Timer::disable();
 
   bsp_init(cpu);
 
@@ -96,6 +96,13 @@ Timer::enable()
 {
   Gtimer::compare(Gtimer::counter() + _interval);
   Gtimer::control(CTL_ENABLE);
+}
+
+IMPLEMENT_OVERRIDE
+void
+Timer::disable()
+{
+  Gtimer::control(0);
 }
 
 PUBLIC static inline

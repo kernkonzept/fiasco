@@ -44,6 +44,7 @@ IMPLEMENT
 void
 Timer_tick::disable(Cpu_number cpu)
 {
+  Timer::disable();
   _glbl_timer->chip()->mask_percpu(cpu, _glbl_timer->pin());
 }
 
