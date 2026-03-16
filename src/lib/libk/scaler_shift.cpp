@@ -50,8 +50,8 @@ Scaler_shift
 Scaler_shift::calc(Unsigned32 from_freq, Unsigned32 to_freq)
 {
   Unsigned32 shift = 0;
-  while (shift < 31 && (to_freq / (1 << shift)) / from_freq > 0)
+  while (shift < 31 && (to_freq / (1 << shift)) >= from_freq)
     ++shift;
-  Unsigned32 scaler = (((1ULL << 32) / (1ULL << shift)) * to_freq) / from_freq;
+  Unsigned32 scaler = (Unsigned64{to_freq} << (32 - shift)) / from_freq;
   return Scaler_shift{scaler, shift};
 }
