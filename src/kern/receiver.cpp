@@ -233,7 +233,7 @@ Receiver::set_reply_cap(Receiver *caller, L4_fpage::Rights rights)
   // see the cas below.
   if (cur_slot->is_used()) [[unlikely]]
     {
-      reset_reply_cap_slot(_reply_cap);
+      reset_reply_cap_slot(cur_slot);
       WARN("%p: Application bug: reply capability overwritten!\n", this);
     }
 
