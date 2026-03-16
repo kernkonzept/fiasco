@@ -37,8 +37,10 @@ read_again\@:
         add     a2, t1, t2  /* {a2,a1,a0} contains (time * scaler) */
 
         /* compute {a2,a1,a0} >> (32 - shift) */
-        li      t0, 31      /* RISC-V only supports 5-bit shifts. Given that 0 <= shift <= 31, */
-        sub     t0, t0, a4  /* we can use a second constant shift-instruction as workaround. */
+        /* RISC-V supports only 5-bit shifts. Given that 0 <= shift <= 31,
+           use a second constant shift-instruction as workaround. */
+        li      t0, 31
+        sub     t0, t0, a4
         sll     t1, a1, a4
         sll     t2, a2, a4
         srli    a0, a0, 1
