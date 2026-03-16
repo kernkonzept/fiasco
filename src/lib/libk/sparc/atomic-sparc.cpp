@@ -35,3 +35,46 @@ local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
 
   //return __sync_bool_compare_and_swap(ptr, oldval, newval);
 }
+
+template<typename T, typename V> ALWAYS_INLINE inline
+void
+atomic_store(T *mem, V value)
+{
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  switch (sizeof(T))
+    {
+    case 4:
+      __atomic_store(reinterpret_cast<Unsigned32 *>(mem),
+	             reinterpret_cast<Unsigned32 *>(&value),
+		     __ATOMIC_SEQ_CST);
+      break;
+
+    case 8:
+      __atomic_store(reinterpret_cast<Unsigned64 *>(mem),
+	             reinterpret_cast<Unsigned64 *>(&value),
+		     __ATOMIC_SEQ_CST);
+      break;
+    }
+}
+
+template<typename T> ALWAYS_INLINE inline
+T
+atomic_load(T const *mem)
+{
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
+  T res;
+  switch (sizeof(T))
+    {
+    case 4:
+      __atomic_load(reinterpret_cast<Unsigned32 const *>(mem),
+	            reinterpret_cast<Unsigned32 *>(&res),
+		    __ATOMIC_SEQ_CST);
+      return res;
+
+    case 8:
+      __atomic_load(reinterpret_cast<Unsigned64 const *>(mem),
+	            reinterpret_cast<Unsigned64 *>(&res),
+		    __ATOMIC_SEQ_CST);
+      return res;
+    }
+}
