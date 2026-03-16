@@ -56,22 +56,20 @@
 .endm
 
 .macro read_sync_and_convert scaler, shift
+        ldr     ip, \scaler     /* ip = scaler */
         read_timer_counter
-        push    {r4, r5, r6, r7}
-        ldr     r6, \scaler     /* scaler */
-        ldr     r7, \shift      /* shift */
-        umull   r0, r3, r6, r0
-        umull   r4, r5, r6, r1
-        adds    r1, r4, r3
-        adc     r2, r5, #0      /* {r2,r1,r0} contains (timer * scaler) */
+        umull   r0, r2, ip, r0  /* {r2,r0} = ts.lo * scaler */
+        umull   r1, r3, ip, r1  /* {r3,r2} = (ts.hi * scaler) / 2^32 */
+        ldr     ip, \shift      /* ip = shift */
+        adds    r1, r1, r2
+        adc     r2, r3, #0      /* {r2,r1,r0} contains (timer * scaler) */
         mov     r3, #32
-        sub     r3, r3, r7
+        sub     r3, r3, ip      /* r3 = 32 - shift */
                                 /* compute {r2,r1,r0} >> (32 - shift) */
         lsr     r0, r0, r3
-        orr     r0, r0, r1, LSL r7 /* r0 = (r1<<shift) | (r0 >> (32-shift)) */
+        orr     r0, r0, r1, LSL ip /* r0 = (r1<<shift) | (r0 >> (32-shift)) */
         lsr     r1, r1, r3
-        orr     r1, r1, r2, LSL r7 /* r1 = (r2<<shift) | (r1 >> (32-shift)) */
-        pop     {r4, r5, r6, r7}
+        orr     r1, r1, r2, LSL ip /* r1 = (r2<<shift) | (r1 >> (32-shift)) */
 .endm
 
         .section ".initcall.text", "ax"
@@ -127,9 +125,9 @@ kip_time_fn_read_ns:
         read_64bit KIP_VAL(KIP_CLOCK)
         mov     r3, #1000
         umull   r0, r2, r3, r0  /* {r2,r0} = r3 * r0 */
-        umull   r1, r12, r3, r1 /* {r12,r1} = r3 * r1 */
+        umull   r1, ip, r3, r1  /* {ip,r1} = r3 * r1 */
         adds    r1, r1, r2
-        /* Just ignore the upper few bits in r12 and return {r1,r0}. */
+        /* Just ignore the upper few bits in ip/r12 and return {r1,r0}. */
 #endif
         bx      lr
 #undef KIP_VAL
