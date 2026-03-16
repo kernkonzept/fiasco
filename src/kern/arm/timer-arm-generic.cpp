@@ -67,7 +67,7 @@ Timer::init(Cpu_number cpu)
   if (!(TAG_ENABLED(mp)) || cpu == Cpu_number::boot_cpu())
     {
       _freq0 = frequency();
-      _interval = Unsigned64{_freq0} * Config::Scheduler_granularity / 1'000'000;
+      _interval = interval(Config::Scheduler_granularity);
       printf("ARM generic timer: freq=%ld interval=%ld cnt=%lld\n",
              _freq0.unwrap(), _interval.unwrap(), Gtimer::counter());
       assert(_freq0);
@@ -88,6 +88,13 @@ Timer::init(Cpu_number cpu)
   Unsigned64 v = Gtimer::counter();
   while (Gtimer::counter() == v)
     ;
+}
+
+PRIVATE static inline
+Unsigned32
+Timer::interval(Unsigned32 interval_us)
+{
+  return Unsigned64{_freq0} * interval_us / 1'000'000;
 }
 
 IMPLEMENT_OVERRIDE
@@ -135,33 +142,23 @@ Timer::update_timer(Unsigned64 wakeup)
   Gtimer::compare(gtimer);
 }
 
-// --------------------------------------------------------------------------
-INTERFACE [arm && arm_generic_timer && jdb]:
-
-EXTENSION class Timer
-{
-private:
-  static Mword _using_interval_jdb;
-};
-
-
 // --------------------------------------------------------------
 IMPLEMENTATION [arm && arm_generic_timer && jdb]:
-
-Mword Timer::_using_interval_jdb = false;
 
 IMPLEMENT_OVERRIDE
 void
 Timer::switch_freq_jdb()
 {
-  if (cas(&_using_interval_jdb, Mword{false}, Mword{true}))
-    _interval *= 10;
+  _interval = interval(50'000); // 20 Hz
 }
 
 IMPLEMENT_OVERRIDE
 void
 Timer::switch_freq_system()
 {
-  if (cas(&_using_interval_jdb, Mword{true}, Mword{false}))
-    _interval /= 10;
+  _interval = interval(Config::Scheduler_granularity);
+
+  // Frequency is going up, do not wait until slower jdb timer did hit
+  if constexpr (!Config::Scheduler_one_shot)
+    Gtimer::compare(Gtimer::compare() + _interval);
 }
