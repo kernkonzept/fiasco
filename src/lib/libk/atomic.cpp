@@ -233,3 +233,19 @@ ATOMIC_OP(or, |)
 ATOMIC_OP(add, +)
 #undef ATOMIC_OP
 // preprocess on
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION[generic_atomic && !mp]:
+
+template<typename T, typename V>
+requires(sizeof(T) == 4) inline
+T
+atomic_exchange(T *mem, V value)
+{
+  T val = value;
+  Proc::Status s = Proc::cli_save();
+  T old = *mem;
+  *mem = val;
+  Proc::sti_restore(s);
+  return old;
+}
