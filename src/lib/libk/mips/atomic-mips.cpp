@@ -65,6 +65,25 @@ ATOMIC_OP(or, "or")
 ATOMIC_OP(and, "and")
 ATOMIC_OP(add, ASM_ADDU)
 #undef ATOMIC_OP
+
+inline
+Mword
+__f_atomic_exchange(Mword *mem, Mword value)
+{
+  Mword tmp, old;
+
+  do
+    {
+      __asm__ __volatile__(
+          ASM_LL   " %[old], %[ptr]  \n"
+          "move      %[tmp], %[val]  \n"
+          ASM_SC   " %[tmp], %[ptr]  \n"
+          : [tmp] "=&r" (tmp), [ptr] "+ZC" (*mem), [old] "=&r"(old)
+          : [val] "r" (value));
+    }
+  while (!tmp);
+  return old;
+}
 // preprocess on
 
 //----------------------------------------------------------------------------
@@ -109,6 +128,18 @@ ATOMIC_OP(add)
 #undef ATOMIC_OP_
 #undef ATOMIC_RET_OP_
 #undef ATOMIC_OP
+
+template<typename T, typename V>
+requires(sizeof(T) == sizeof(Mword)) inline
+T
+atomic_exchange(T *mem, V value)
+{
+  T val = value;
+  Mem::mp_mb();
+  Mword res = __f_atomic_exchange(mem, val);
+  Mem::mp_mb();
+  return res;
+}
 // preprocess on
 
 //----------------------------------------------------------------------------
@@ -148,6 +179,15 @@ ATOMIC_OP(add)
 #undef ATOMIC_OP_
 #undef ATOMIC_RET_OP_
 #undef ATOMIC_OP
+
+template<typename T, typename V>
+requires(sizeof(T) == sizeof(Mword)) inline
+Mword
+atomic_exchange(T *mem, V value)
+{
+  T val = value;
+  return __f_atomic_exchange(mem, val);
+}
 // preprocess on
 
 //---------------------------------------------------------------------------
