@@ -44,6 +44,8 @@ public:
     void print(String_buffer *) const;
   };
   static_assert(sizeof(Log) <= Tb_entry::Tb_entry_size);
+
+  static void next_interval();
 };
 
 // ------------------------------------------------------------------------

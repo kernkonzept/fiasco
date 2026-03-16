@@ -120,6 +120,7 @@ Jdb::wfi_enter()
   g->irq_prio_bootcpu(tt->pin(), 0x00);
 
   Timer_tick::enable(Cpu_number::boot_cpu());
+  Timer_tick::next_interval();
 }
 
 PRIVATE static
@@ -146,6 +147,7 @@ Jdb::_wait_for_input()
     {
       kernel_uart_irq_ack();
       tt->ack();
+      tt->next_interval();
     }
   else
     {

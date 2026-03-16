@@ -101,8 +101,11 @@ IMPLEMENT_OVERRIDE
 void
 Timer::enable()
 {
-  Gtimer::compare(Gtimer::counter() + _interval);
-  Gtimer::control(CTL_ENABLE);
+  if constexpr (!Config::Scheduler_one_shot)
+    {
+      Gtimer::compare(Gtimer::counter() + _interval);
+      Gtimer::control(CTL_ENABLE);
+    }
 }
 
 IMPLEMENT_OVERRIDE
@@ -116,9 +119,10 @@ PUBLIC static inline
 void
 Timer::acknowledge()
 {
-  if constexpr (!Config::Scheduler_one_shot)
+  if constexpr (Config::Scheduler_one_shot)
+    Gtimer::control(CTL_ENABLE | CTL_IMASK);
+  else
     Gtimer::compare(Gtimer::compare() + _interval);
-  // else done in Timer::update_timer()
 }
 
 IMPLEMENT_OVERRIDE inline
@@ -133,13 +137,13 @@ IMPLEMENT
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  Unsigned64 gtimer;
   if (EXPECT_FALSE(wakeup == Infinite_timeout))
-    gtimer = 0xffffffffffffffffULL;
+    disable();
   else
-    gtimer = us_to_ts(wakeup);
-
-  Gtimer::compare(gtimer);
+    {
+      Gtimer::compare(us_to_ts(wakeup));
+      Gtimer::control(CTL_ENABLE);
+    }
 }
 
 // --------------------------------------------------------------
@@ -161,4 +165,15 @@ Timer::switch_freq_system()
   // Frequency is going up, do not wait until slower jdb timer did hit
   if constexpr (!Config::Scheduler_one_shot)
     Gtimer::compare(Gtimer::compare() + _interval);
+}
+
+// --------------------------------------------------------------
+IMPLEMENTATION [arm && arm_generic_timer && jdb && one_shot]:
+
+IMPLEMENT_OVERRIDE
+void
+Timer::next_interval()
+{
+  Gtimer::compare(Gtimer::compare() + _interval);
+  Gtimer::control(CTL_ENABLE);
 }

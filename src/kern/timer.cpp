@@ -112,6 +112,11 @@ public:
    * Return the timer frequency to normal (when leaving JDB).
    */
   static void switch_freq_system();
+
+  /**
+   * Program next interval timer tick.
+   */
+  static void next_interval();
 };
 
 
@@ -172,6 +177,11 @@ Timer::switch_freq_jdb()
 IMPLEMENT_DEFAULT
 void
 Timer::switch_freq_system()
+{}
+
+IMPLEMENT_DEFAULT
+void
+Timer::next_interval()
 {}
 
 //----------------------------------------------------------------------------

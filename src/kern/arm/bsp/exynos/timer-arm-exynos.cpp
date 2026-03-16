@@ -128,3 +128,14 @@ Timer::update_timer(Unsigned64 wakeup)
 
   timers.current()->set_interval(interval_mct);
 }
+
+// ------------------------------------------------------------------------
+IMPLEMENTATION [arm && exynos_mct && jdb]:
+
+IMPLEMENT_OVERRIDE
+void
+Timer::next_interval()
+{
+  if constexpr (Config::Scheduler_one_shot)
+    timers.current()->set_interval(us_to_mct(100000));
+}
