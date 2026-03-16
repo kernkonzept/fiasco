@@ -871,6 +871,60 @@ Task::sys_add_ku_mem(Syscall_frame *f, Utcb const *utcb, Utcb *out)
   return commit_result(0, words);
 }
 
+/**
+ * Map kernel-user memory.
+ *
+ * This is a backend routine for mapping kernel-user memory defined by the
+ * kernel into the task's address space via IPC calls of other objects.
+ *
+ * \param      utcb         Input arguments.
+ * \param[out] out          Output arguments. Can be nullptr.
+ * \param      k_addr       Kernel address of the kernel-user memory.
+ * \param      k_addr_pmem  Whether the kernel address is in pmem.
+ * \param      size         Size of the kernel-user memory (in bytes).
+ * \param      rights       What rights to use for mapping the memory.
+ *
+ * \return IPC tag.
+ */
+PUBLIC inline
+L4_msg_tag
+Task::ext_map_ku_mem(Utcb const *utcb, Utcb *out, void *k_addr,
+                     bool k_addr_pmem, size_t size, L4_fpage::Rights rights)
+{
+  if (!(caps() & Task::Caps::kumem())) [[unlikely]]
+    return commit_result(-L4_err::ENosys);
+
+  // Acquire reference to ensure the task is not deleted while we try to acquire
+  // its existence lock.
+  Ref_ptr self(this);
+
+  // Acquire existence lock to prevent concurrent modification of the task's
+  // page table.
+  auto guard_task = switch_lock_guard(existence_lock);
+  if (!guard_task.is_valid())
+    return commit_error(utcb, L4_error::Not_existent);
+
+  // The map_ku_mem() method must run with interrupts enabled (for potentially
+  // required remote TLB flushes).
+  auto guard_cpu = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
+
+  L4_fpage ku_area(utcb->values[1]);
+  if (!ku_area.is_valid() || !ku_area.is_mempage())
+    return commit_result(-L4_err::EInval);
+
+  auto res = map_ku_mem(&ku_area, k_addr, k_addr_pmem, size, true, rights);
+  if (res < 0)
+    return commit_result(res);
+
+  if (out)
+    {
+      out->values[0] = ku_area.raw();
+      return commit_result(0, 1);
+    }
+
+  return commit_result(0);
+}
+
 /*
  * L4-IFACE: kernel-task.task-cap_info, kernel-vm.task-cap_info
  * PROTOCOL: L4_PROTO_TASK
