@@ -36,7 +36,6 @@ public:
   };
 
   static Address Tbuf_buffer_area;
-  static Address Tbuf_ubuffer_area;
 };
 
 
@@ -45,8 +44,6 @@ public:
 IMPLEMENTATION [ppc32]:
 
 Address Mem_layout::Tbuf_buffer_area = 0;
-Address Mem_layout::Tbuf_ubuffer_area = 0;
-
 
 //no virtual memory in kernel mode
 IMPLEMENT static inline
@@ -98,7 +95,7 @@ Mem_layout::init()
 	  printf("TBuf  installed at: [%08lx; %08lx] - %lu KiB\n",
 	         r.start, r.end, alloc_size / 1024);
 
-	  Tbuf_buffer_area = Tbuf_ubuffer_area = r.start;
+	  Tbuf_buffer_area = r.start;
 	  break;
 	}
     }

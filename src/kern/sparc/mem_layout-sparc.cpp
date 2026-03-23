@@ -21,7 +21,6 @@ public:
     Utcb_ptr_page        = 0xe1000000ul,
     Tbuf_status_page     = 0xe1002000ul,
     Tbuf_buffer_area     = 0xec000000ul,
-    Tbuf_ubuffer_area    = Tbuf_buffer_area,
     Tbuf_end             = 0xec200000ul,
     Mmio_map_start       = 0xed000000ul,
     Mmio_map_end         = 0xef000000ul,
