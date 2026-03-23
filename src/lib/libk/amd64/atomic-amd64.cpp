@@ -120,40 +120,38 @@ atomic_exchange(T *mem, V value)
   return val;
 }
 
-template< typename T > ALWAYS_INLINE inline
+template< typename T > requires(sizeof(T) == 4) inline
 T
 atomic_load(T const *mem)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
   T res;
-  switch (sizeof(T))
-    {
-    case 4:
-      asm volatile ("movl %[mem], %[res]" : [res] "=r" (res) : [mem] "m" (*mem));
-      return res;
-
-    case 8:
-      asm volatile ("movq %[mem], %[res]" : [res] "=r" (res) : [mem] "m" (*mem));
-      return res;
-    }
+  asm volatile ("movl %[mem], %[res]" : [res] "=r" (res) : [mem] "m" (*mem));
+  return res;
 }
 
-template< typename T, typename V > ALWAYS_INLINE inline
+template< typename T> requires(sizeof(T) == 8) inline
+T
+atomic_load(T const *mem)
+{
+  T res;
+  asm volatile ("movq %[mem], %[res]" : [res] "=r" (res) : [mem] "m" (*mem));
+  return res;
+}
+
+template< typename T, typename V > requires(sizeof(T) == 4) inline
 void
 atomic_store(T *mem, V value)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
   T val = value;
-  switch (sizeof(T))
-    {
-    case 4:
-      asm volatile ("movl %[val], %[mem]" : [mem] "=m" (*mem) : [val] "ir" (val));
-      break;
+  asm volatile ("movl %[val], %[mem]" : [mem] "=m" (*mem) : [val] "ir" (val));
+}
 
-    case 8:
-      asm volatile ("movq %[val], %[mem]" : [mem] "=m" (*mem) : [val] "r" (val));
-      break;
-    }
+template< typename T, typename V > requires(sizeof(T) == 8) inline
+void
+atomic_store(T *mem, V value)
+{
+  T val = value;
+  asm volatile ("movq %[val], %[mem]" : [mem] "=m" (*mem) : [val] "r" (val));
 }
 
 inline

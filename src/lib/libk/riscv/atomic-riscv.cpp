@@ -90,40 +90,38 @@ IMPLEMENTATION [riscv]:
 
 #include "asm_riscv.h"
 
-template<typename T> ALWAYS_INLINE inline
+template<typename T> requires(sizeof(T) == 4) inline
 T
 atomic_load(T const *mem)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
   T res;
-  switch (sizeof(T))
-    {
-    case 4:
-      __asm__ __volatile__ ("lw %0, %1" : "=r" (res) : "m"(*mem));
-      return res;
-
-    case 8:
-      __asm__ __volatile__ ("ld %0, %1" : "=r" (res) : "m"(*mem));
-      return res;
-    }
+  __asm__ __volatile__ ("lw %0, %1" : "=r" (res) : "m"(*mem));
+  return res;
 }
 
-template<typename T, typename V> ALWAYS_INLINE inline
+template<typename T> requires(sizeof(T) == 8) inline
+T
+atomic_load(T const *mem)
+{
+  T res;
+  __asm__ __volatile__ ("ld %0, %1" : "=r" (res) : "m"(*mem));
+  return res;
+}
+
+template<typename T, typename V> requires(sizeof(T) == 4) inline
 void
 atomic_store(T *mem, V value)
 {
-  static_assert(sizeof(T) == 4 || sizeof(T) == 8);
   T val = value;
-  switch (sizeof(T))
-    {
-    case 4:
-      __asm__ __volatile__ ("sw %1, %0" : "=m" (*mem) : "r" (val));
-      break;
+  __asm__ __volatile__ ("sw %1, %0" : "=m" (*mem) : "r" (val));
+}
 
-    case 8:
-      __asm__ __volatile__ ("sd %1, %0" : "=m" (*mem) : "r" (val));
-      break;
-    }
+template<typename T, typename V> requires(sizeof(T) == 8) inline
+void
+atomic_store(T *mem, V value)
+{
+  T val = value;
+  __asm__ __volatile__ ("sd %1, %0" : "=m" (*mem) : "r" (val));
 }
 
 inline
