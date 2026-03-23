@@ -106,6 +106,94 @@ Task::put() override
 { return dec_ref() == 0; }
 
 /**
+ * Map a chunk of kernel-user memory to the task address space.
+ *
+ * \see Task::alloc_ku_mem(L4_fpage)
+ *
+ * \param[in,out] u_addr                 User address of the kernel-user
+ *                                       memory. On MMU-less platforms, it is
+ *                                       derived from the kernel address,
+ *                                       otherwise it is supplied by the
+ *                                       caller.
+ * \param         k_addr                 Kernel address of the kernel-user
+ *                                       memory.
+ * \param         k_addr_pmem            Whether the kernel address is in pmem.
+ * \param         size                   Number of bytes to map.
+ * \param         need_remote_tlb_flush  Whether the Task might be active on
+ *                                       another CPU and thus requires a
+ *                                       remote TLB flush after the mapping.
+ * \param         rights                 What rights to use for mapping the
+ *                                       memory.
+ *
+ * \return Status returned by #Mem_space::v_insert().
+ */
+PRIVATE
+Mem_space::Status
+Task::map_ku_mem_chunk(User_ptr<void> *u_addr, void *k_addr, bool k_addr_pmem,
+                       size_t size, bool need_remote_tlb_flush,
+                       L4_fpage::Rights rights)
+{
+  Virt_addr base(k_addr);
+  Mem_space::Page_order page_order(Config::PAGE_SHIFT);
+
+  // Need to use physical address on systems without MMU.
+  if constexpr (!Config::Have_mmu)
+    *u_addr = User_ptr<void>(k_addr);
+
+  for (Virt_size i = Virt_size(0); i < Virt_size(size);
+       i += Virt_size(1) << page_order)
+    {
+      Virt_addr kern_va = base + i;
+      Virt_addr user_va = Virt_addr(u_addr->get()) + i;
+
+      Address kern_va_raw = cxx::int_value<Virt_addr>(kern_va);
+      Mem_space::Phys_addr pa{k_addr_pmem
+        ? pmem_to_phys(kern_va_raw) : Kmem::kdir->virt_to_phys(kern_va_raw)};
+
+      // Must be valid physical address.
+      assert(pa != Mem_space::Phys_addr(~0UL));
+
+      auto res = static_cast<Mem_space *>(this)
+        ->v_insert(pa, user_va, page_order,
+                   Mem_space::Attr::space_local(rights), true);
+      if (res == Mem_space::Insert_ok)
+        continue;
+
+      // Handle error conditions.
+      switch (res)
+        {
+        case Mem_space::Insert_err_nomem:
+        case Mem_space::Insert_err_exists:
+          // Non-fatal error. Proceed with unmapping and stop.
+          break;
+        default:
+          // Fatal error. Enter the debugger, then proceed with unmapping
+          // and stop.
+          printf("KU memory mapping failed: user_va=%p kern_va=%p res=%u\n",
+                 static_cast<void *>(user_va), static_cast<void *>(kern_va),
+                 res);
+          kdb_ke("BUG in KU memory mapping");
+          break;
+        }
+
+      // On error, unmap what has been already mapped.
+      unmap_ku_mem_chunk(*u_addr, cxx::int_value<Virt_size>(i), true,
+                         need_remote_tlb_flush);
+      return res;
+    }
+
+  if constexpr (Mem_space::Need_insert_tlb_flush)
+    {
+      if (need_remote_tlb_flush)
+        static_cast<Mem_space *>(this)->tlb_flush_all_cpus();
+      else
+        static_cast<Mem_space *>(this)->tlb_flush_current_cpu();
+    }
+
+  return Mem_space::Insert_ok;
+}
+
+/**
  * \see Task::alloc_ku_mem(L4_fpage)
  */
 PRIVATE
@@ -181,6 +269,55 @@ Task::alloc_ku_mem_chunk(User_ptr<void> *u_addr, unsigned size, void **k_addr,
 }
 
 /**
+ * Check flexpage for being suitable for kernel-user memory and return its
+ * size in bytes.
+ *
+ * \param ku_area  Flexpage to check.
+ *
+ * \return Flexpage size in bytes or 0 if the flexpage does not pass the
+ *         checks.
+ */
+PRIVATE
+size_t
+Task::check_ku_area_size(L4_fpage *ku_area)
+{
+  if (ku_area->order() < Config::PAGE_SHIFT)
+    return 0;
+
+  size_t size = size_t{1U} << ku_area->order();
+
+  if (ku_area->mem_address() > Virt_addr(max_usable_user_address() - size + 1))
+    return 0;
+
+  return size;
+}
+
+/**
+ * Insert kernel-user memory into the list of kernel-user memories.
+ *
+ * \param ku_area  Flexpage of the kernel-user memory.
+ * \param ku_mem   Kernel-user memory to insert into the list.
+ * \param u_addr   User address of the kernel-user memory.
+ * \param k_addr   Kernel address of the kernel-user memory.
+ * \param size     Size of the kernel-user memory in bytes.
+ * \param k_alloc  Flag whether the kernel address has been allocated.
+ */
+PRIVATE
+void
+Task::insert_ku_mem(L4_fpage *ku_area, Ku_mem *ku_mem, User_ptr<void> u_addr,
+                    void *k_addr, size_t size, [[maybe_unused]] bool k_alloc)
+{
+  ku_mem->u_addr = u_addr;
+  ku_mem->k_addr = k_addr;
+  ku_mem->size = size;
+
+  *ku_area = L4_fpage::mem(reinterpret_cast<Mword>(u_addr.get()),
+                           ku_area->order());
+
+  _ku_mem.add(ku_mem, cas<cxx::S_list_item *>);
+}
+
+/**
  * Allocate kernel user memory for this task.
  *
  * \pre Not thread-safe, the caller must ensure that no one else modifies the
@@ -237,6 +374,68 @@ Task::alloc_ku_mem(L4_fpage *ku_area, bool need_remote_tlb_flush)
 }
 
 /**
+ * Map kernel-user memory for this task.
+ *
+ * \pre Not thread-safe, the caller must ensure that no one else modifies the
+ *      page table of the Task at the same time, for example by acquiring the
+ *      existence lock or knowing that no one else has a reference to the Task
+ *      object.
+ * \pre If `need_remote_tlb_flush == true`, the CPU lock must not be held (as
+ *      the remote TLB flush might do cross-CPU call) and the caller must ensure
+ *      that the Task object does not get deleted.
+ *
+ * \param ku_area                Flexpage specifying the size and desired user
+ *                               virtual address of the kernel user memory to
+ *                               map.
+ * \param k_addr                 Kernel address to map.
+ * \param k_addr_pmem            Whether the kernel address is in pmem.
+ * \param size_bound             Maximal size (in bytes) to map.
+ * \param need_remote_tlb_flush  Whether the Task might be active on another CPU
+ *                               and thus requires a remote TLB flush after
+ *                               mapping kernel-user memory.
+ * \param rights                 What rights to use for mapping the memory.
+ *
+ * \retval 0                 Mapping succeeded.
+ * \retval -L4_err::ENomem   Induced memory allocation failed.
+ * \retval -L4_err::EExists  Memory already mapped.
+ * \retval -L4_err::EInval   Invalid flexpage and other error conditions.
+ */
+PRIVATE
+int
+Task::map_ku_mem(L4_fpage *ku_area, void *k_addr, bool k_addr_pmem,
+                 size_t size_bound, bool need_remote_tlb_flush,
+                 L4_fpage::Rights rights)
+{
+  size_t size = check_ku_area_size(ku_area);
+  if (size == 0 || size > size_bound)
+    return -L4_err::EInval;
+
+  Ku_mem *ku_mem = new (ram_quota()) Ku_mem();
+  if (!ku_mem)
+    return -L4_err::ENomem;
+
+  User_ptr<void> u_addr(static_cast<void *>(ku_area->mem_address()));
+  auto res = map_ku_mem_chunk(&u_addr, k_addr, k_addr_pmem, size,
+                              need_remote_tlb_flush, rights);
+
+  // Handle error conditions.
+  switch (res)
+    {
+    case Mem_space::Insert_ok:
+      insert_ku_mem(ku_area, ku_mem, u_addr, k_addr, size, false);
+      return 0;
+    case Mem_space::Insert_err_nomem:
+      return -L4_err::ENomem;
+    case Mem_space::Insert_err_exists:
+      return -L4_err::EExists;
+    default:
+      break;
+    }
+
+  return -L4_err::EInval;
+}
+
+/**
  * \see Task::free_ku_mem()
  */
 PRIVATE inline NOEXPORT
@@ -246,6 +445,41 @@ Task::free_ku_mem(Ku_mem *m, bool need_tlb_flush, bool need_remote_tlb_flush)
   free_ku_mem_chunk(m->k_addr, m->u_addr, m->size, m->size,
                     need_tlb_flush, need_remote_tlb_flush);
   m->free(ram_quota());
+}
+
+/**
+ * Unmap kernel-user memory chunk.
+ *
+ * \param u_addr                 User address of the kernel-user memory.
+ * \param mapped_size            Mapped size of the kernel-user memory in
+ *                               bytes.
+ * \param need_tlb_flush         Need for CPU-local TLB flush of the removed
+ *                               mapping.
+ * \param need_remote_tlb_flush  Need for remote TLB flush of the removed
+ *                               mapping.
+ */
+PRIVATE
+void
+Task::unmap_ku_mem_chunk(User_ptr<void> u_addr, size_t mapped_size,
+                         bool need_tlb_flush, bool need_remote_tlb_flush)
+{
+  Mem_space::Page_order page_order(Config::PAGE_SHIFT);
+
+  for (Virt_size i = Virt_size(0); i < Virt_size(mapped_size);
+       i += Virt_size(1) << page_order)
+    {
+      Virt_addr user_va = Virt_addr(u_addr.get()) + i;
+      static_cast<Mem_space *>(this)->v_delete(user_va, page_order,
+                                               Page::Rights::FULL());
+    }
+
+  if (need_tlb_flush && mapped_size > 0)
+    {
+      if (need_remote_tlb_flush)
+        static_cast<Mem_space *>(this)->tlb_flush_all_cpus();
+      else
+        static_cast<Mem_space *>(this)->tlb_flush_current_cpu();
+    }
 }
 
 /**
