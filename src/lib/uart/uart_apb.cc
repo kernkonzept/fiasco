@@ -71,9 +71,9 @@ bool Uart_apb::change_mode(Transfer_mode, Baud_rate r)
   return true;
 }
 
-int Uart_apb::tx_avail() const
+bool Uart_apb::tx_avail() const
 {
-  return !(_regs->read<unsigned char>(STATE) & STATE_TX_FULL);
+  return (_regs->read<unsigned char>(STATE) & STATE_TX_FULL) == 0;
 }
 
 void Uart_apb::wait_tx_done() const

@@ -39,10 +39,10 @@ unsigned Uart_dcc_v6::get_status() const
 #endif
   }
 
-int Uart_dcc_v6::tx_avail() const
+bool Uart_dcc_v6::tx_avail() const
 {
 #ifdef __arm__
-  return !(get_status() & DCC_STATUS_TX);
+  return (get_status() & DCC_STATUS_TX) == 0;
 #else
   return true;
 #endif

@@ -114,9 +114,9 @@ void Uart_geni::shutdown()
 bool Uart_geni::change_mode(Transfer_mode, Baud_rate)
 { return true; }
 
-int Uart_geni::tx_avail() const
+bool Uart_geni::tx_avail() const
 {
-  return !(_regs->read32(STATUS) & STATUS_M_GENI_CMD_ACTIVE);
+  return (_regs->read32(STATUS) & STATUS_M_GENI_CMD_ACTIVE) == 0;
 }
 
 void Uart_geni::wait_tx_done() const

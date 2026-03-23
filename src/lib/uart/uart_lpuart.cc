@@ -69,9 +69,9 @@ bool Uart_lpuart::change_mode(Transfer_mode, Baud_rate r)
   return true;
 }
 
-int Uart_lpuart::tx_avail() const
+bool Uart_lpuart::tx_avail() const
 {
-  return _regs->read<unsigned>(FIFO) & FIFO_TXEMPT;
+  return (_regs->read<unsigned>(FIFO) & FIFO_TXEMPT) != 0;
 }
 
 void Uart_lpuart::out_char(char c) const

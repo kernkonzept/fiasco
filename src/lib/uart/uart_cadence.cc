@@ -80,9 +80,9 @@ bool Uart_cadence::change_mode(Transfer_mode, Baud_rate r)
   return true;
 }
 
-int Uart_cadence::tx_avail() const
+bool Uart_cadence::tx_avail() const
 {
-  return !(_regs->read<unsigned>(SR) & IXR_TXFULL);
+  return (_regs->read<unsigned>(SR) & IXR_TXFULL) == 0;
 }
 
 void Uart_cadence::out_char(char c) const

@@ -141,7 +141,7 @@ bool Uart_s3c::change_mode(Transfer_mode, Baud_rate r)
   return true;
 }
 
-int Uart_s3c::tx_avail() const
+bool Uart_s3c::tx_avail() const
 {
   return is_tx_fifo_not_full();
 }
@@ -196,9 +196,9 @@ unsigned Uart_s3c2410::is_rx_fifo_non_empty() const
   return _regs->read<unsigned int>(UFSTAT) & (UFSTAT_2410_Rx_COUNT_MASK | UFSTAT_2410_RxFULL);
 }
 
-unsigned Uart_s3c2410::is_tx_fifo_not_full() const
+bool Uart_s3c2410::is_tx_fifo_not_full() const
 {
-  return !(_regs->read<unsigned int>(UFSTAT) & UFSTAT_2410_TxFULL);
+  return (_regs->read<unsigned int>(UFSTAT) & UFSTAT_2410_TxFULL) == 0;
 }
 
 void Uart_s3c2410::auto_flow_control(bool on)
@@ -220,9 +220,9 @@ unsigned Uart_s3c64xx::is_rx_fifo_non_empty() const
   return _regs->read<unsigned int>(UFSTAT) & (UFSTAT_64XX_Rx_COUNT_MASK | UFSTAT_64XX_RxFULL);
 }
 
-unsigned Uart_s3c64xx::is_tx_fifo_not_full() const
+bool Uart_s3c64xx::is_tx_fifo_not_full() const
 {
-  return !(_regs->read<unsigned int>(UFSTAT) & UFSTAT_64XX_TxFULL);
+  return (_regs->read<unsigned int>(UFSTAT) & UFSTAT_64XX_TxFULL) == 0;
 }
 
 void Uart_s3c64xx::ack_rx_irq() const
@@ -244,9 +244,9 @@ unsigned Uart_s5pv210::is_rx_fifo_non_empty() const
   return _regs->read<unsigned int>(UFSTAT) & (UFSTAT_S5PV210_Rx_COUNT_MASK | UFSTAT_S5PV210_RxFULL);
 }
 
-unsigned Uart_s5pv210::is_tx_fifo_not_full() const
+bool Uart_s5pv210::is_tx_fifo_not_full() const
 {
-  return !(_regs->read<unsigned int>(UFSTAT) & UFSTAT_S5PV210_TxFULL);
+  return (_regs->read<unsigned int>(UFSTAT) & UFSTAT_S5PV210_TxFULL) == 0;
 }
 
 void Uart_s5pv210::ack_rx_irq() const

@@ -67,9 +67,9 @@ bool Uart_omap35x::change_mode(Transfer_mode, Baud_rate r)
   return true;
 }
 
-int Uart_omap35x::tx_avail() const
+bool Uart_omap35x::tx_avail() const
 {
-  return _regs->read<unsigned int>(LSR_REG) & LSR_REG_TX_FIFO_E;
+  return (_regs->read<unsigned int>(LSR_REG) & LSR_REG_TX_FIFO_E) != 0;
 }
 
 void Uart_omap35x::wait_tx_done() const

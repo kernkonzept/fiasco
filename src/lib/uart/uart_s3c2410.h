@@ -27,7 +27,7 @@ public:
   bool startup(Io_register_block const *) override;
   void shutdown() override;
   bool change_mode(Transfer_mode m, Baud_rate r) override;
-  int tx_avail() const;
+  bool tx_avail() const;
   void wait_tx_done() const;
   inline void out_char(char c) const;
   int write(char const *s, unsigned long count,
@@ -43,7 +43,7 @@ protected:
   virtual void ack_rx_irq() const = 0;
   virtual void wait_for_empty_tx_fifo() const = 0;
   virtual unsigned is_rx_fifo_non_empty() const = 0;
-  virtual unsigned is_tx_fifo_not_full() const = 0;
+  virtual bool is_tx_fifo_not_full() const = 0;
 
 private:
   Uart_type _type;
@@ -59,7 +59,7 @@ protected:
   void ack_rx_irq() const override {}
   void wait_for_empty_tx_fifo() const override;
   unsigned is_rx_fifo_non_empty() const override;
-  unsigned is_tx_fifo_not_full() const override;
+  bool is_tx_fifo_not_full() const override;
 
   void auto_flow_control(bool on);
 };
@@ -74,7 +74,7 @@ protected:
   void ack_rx_irq() const override;
   void wait_for_empty_tx_fifo() const override;
   unsigned is_rx_fifo_non_empty() const override;
-  unsigned is_tx_fifo_not_full() const override;
+  bool is_tx_fifo_not_full() const override;
 };
 
 class Uart_s5pv210 : public Uart_s3c
@@ -87,7 +87,7 @@ protected:
   void ack_rx_irq() const override;
   void wait_for_empty_tx_fifo() const override;
   unsigned is_rx_fifo_non_empty() const override;
-  unsigned is_tx_fifo_not_full() const override;
+  bool is_tx_fifo_not_full() const override;
 };
 
 } // namespace L4

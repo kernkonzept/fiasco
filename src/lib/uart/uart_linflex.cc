@@ -147,11 +147,11 @@ bool Uart_linflex::change_mode(Transfer_mode, Baud_rate)
   return true;
 }
 
-int Uart_linflex::tx_avail() const
+bool Uart_linflex::tx_avail() const
 {
   if (is_tx_fifo_enabled())
     // UARTSR_TFF=1: TX FIFO full.
-    return !(_regs->read<unsigned>(UARTSR) & UARTSR_TFF);
+    return (_regs->read<unsigned>(UARTSR) & UARTSR_TFF) == 0;
   else
     // UARTSR_DTF indicating that the character was transmitted was
     // immediately cleared in out_char() after transmission.

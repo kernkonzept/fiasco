@@ -52,7 +52,7 @@ void Uart_of::out_char(char c) const
 
 /* UNIMPLEMENTED */
 bool Uart_of::change_mode(Transfer_mode, Baud_rate){ return true; }
-int  Uart_of::tx_avail() const { return 1; }
+bool Uart_of::tx_avail() const { return true; }
 
 #ifndef UART_WITHOUT_INPUT
 

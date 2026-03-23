@@ -32,9 +32,9 @@ void Uart_tegra_tcu::shutdown()
 bool Uart_tegra_tcu::change_mode(Transfer_mode, Baud_rate)
 { return true; }
 
-int Uart_tegra_tcu::tx_avail() const
+bool Uart_tegra_tcu::tx_avail() const
 {
-  return !(_regs->read<unsigned>(0) & Busy);
+  return (_regs->read<unsigned>(0) & Busy) == 0;
 }
 
 void Uart_tegra_tcu::out_char(char c) const

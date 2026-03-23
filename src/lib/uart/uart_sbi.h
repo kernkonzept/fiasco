@@ -18,7 +18,7 @@ public:
   bool startup(Io_register_block const *) override;
   void shutdown() override;
   bool change_mode(Transfer_mode m, Baud_rate r) override;
-  int tx_avail() const { return true; }
+  bool tx_avail() const { return true; }
   void wait_tx_done() const {}
   inline void out_char(char c) const;
   int write(char const *s, unsigned long count,

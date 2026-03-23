@@ -61,9 +61,9 @@ bool Uart_sh::change_mode(Transfer_mode, Baud_rate r)
   return true;
 }
 
-int Uart_sh::tx_avail() const
+bool Uart_sh::tx_avail() const
 {
-  return _regs->read<unsigned short>(SCFSR) & SR_TDFE;
+  return (_regs->read<unsigned short>(SCFSR) & SR_TDFE) != 0;
 }
 
 void Uart_sh::out_char(char c) const

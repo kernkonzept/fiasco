@@ -79,9 +79,9 @@ bool Uart_dm::change_mode(Transfer_mode, Baud_rate)
   return true;
 }
 
-int Uart_dm::tx_avail() const
+bool Uart_dm::tx_avail() const
 {
-  return _regs->read32(DM_SR) & DM_SR_TXRDY;
+  return (_regs->read32(DM_SR) & DM_SR_TXRDY) != 0;
 }
 
 void Uart_dm::out_char(char c) const

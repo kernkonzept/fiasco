@@ -93,9 +93,9 @@ bool Uart_16550::change_mode(Transfer_mode m, Baud_rate r)
   return true;
 }
 
-int Uart_16550::tx_avail() const
+bool Uart_16550::tx_avail() const
 {
-  return _regs->read<unsigned char>(LSR) & LSR_THRE;
+  return (_regs->read<unsigned char>(LSR) & LSR_THRE) != 0;
 }
 
 void Uart_16550::wait_tx_done() const

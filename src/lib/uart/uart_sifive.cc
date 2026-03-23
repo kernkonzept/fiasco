@@ -65,9 +65,9 @@ bool Uart_sifive::change_mode(Transfer_mode, Baud_rate r)
   return true;
 }
 
-int Uart_sifive::tx_avail() const
+bool Uart_sifive::tx_avail() const
 {
-  return !(_regs->read<unsigned>(UARTSFV_TXDATA) & UARTSFV_TXDATA_FULL);
+  return (_regs->read<unsigned>(UARTSFV_TXDATA) & UARTSFV_TXDATA_FULL) == 0;
 }
 
 void Uart_sifive::wait_tx_done() const

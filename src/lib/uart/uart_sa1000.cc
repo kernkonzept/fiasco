@@ -138,9 +138,9 @@ bool Uart_sa1000::change_mode(Transfer_mode m, Baud_rate baud)
 
 }
 
-int Uart_sa1000::tx_avail() const
+bool Uart_sa1000::tx_avail() const
 {
-  return _regs->read<unsigned int>(UTSR1) & UTSR1_TNF;
+  return (_regs->read<unsigned int>(UTSR1) & UTSR1_TNF) != 0;
 }
 
 void Uart_sa1000::wait_tx_done() const

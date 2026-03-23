@@ -72,9 +72,9 @@ bool Uart_leon3::change_mode(Transfer_mode, Baud_rate r)
   return true;
 }
 
-int Uart_leon3::tx_avail() const
+bool Uart_leon3::tx_avail() const
 {
-  return !(_regs->read<unsigned int>(STATUS_REG) & STATUS_TF);
+  return (_regs->read<unsigned int>(STATUS_REG) & STATUS_TF) == 0;
 }
 
 void Uart_leon3::wait_tx_done() const

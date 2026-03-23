@@ -137,9 +137,9 @@ void Uart_imx::shutdown()
 bool Uart_imx::change_mode(Transfer_mode, Baud_rate)
 { return true; }
 
-int Uart_imx::tx_avail() const
+bool Uart_imx::tx_avail() const
 {
-  return _regs->read<unsigned int>(USR1) & USR1_TRDY;
+  return (_regs->read<unsigned int>(USR1) & USR1_TRDY) != 0;
 }
 
 void Uart_imx::wait_tx_done() const

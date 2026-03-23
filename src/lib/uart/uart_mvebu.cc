@@ -47,9 +47,9 @@ bool Uart_mvebu::change_mode(Transfer_mode, Baud_rate r)
   return true;
 }
 
-int Uart_mvebu::tx_avail() const
+bool Uart_mvebu::tx_avail() const
 {
-  return !(_regs->read<unsigned>(STAT) & STAT_TXFIFO_FULL);
+  return (_regs->read<unsigned>(STAT) & STAT_TXFIFO_FULL) == 0;
 }
 
 void Uart_mvebu::out_char(char c) const

@@ -93,9 +93,9 @@ bool Uart_pl011::change_mode(Transfer_mode, Baud_rate r)
   return true;
 }
 
-int Uart_pl011::tx_avail() const
+bool Uart_pl011::tx_avail() const
 {
-  return !(_regs->read<unsigned int>(UART01x_FR) & UART01x_FR_TXFF);
+  return (_regs->read<unsigned int>(UART01x_FR) & UART01x_FR_TXFF) == 0;
 }
 
 void Uart_pl011::wait_tx_done() const
