@@ -45,13 +45,12 @@ IMPLEMENTATION:
  * The shift value is important for low timer frequencies to keep a sane amount
  * of usable digits.
  */
-PUBLIC static
-Scaler_shift
-Scaler_shift::calc(Unsigned32 from_freq, Unsigned32 to_freq)
+PUBLIC
+void
+Scaler_shift::init(Unsigned32 from_freq, Unsigned32 to_freq)
 {
-  Unsigned32 shift = 0;
+  shift = 0;
   while (shift < 31 && (to_freq / (1 << shift)) >= from_freq)
     ++shift;
-  Unsigned32 scaler = (Unsigned64{to_freq} << (32 - shift)) / from_freq;
-  return Scaler_shift{scaler, shift};
+  scaler = (Unsigned64{to_freq} << (32 - shift)) / from_freq;
 }

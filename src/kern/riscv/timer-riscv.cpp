@@ -75,9 +75,9 @@ Timer::init(Cpu_number cpu)
       if (freq == 0)
         panic("Invalid timer frequency!");
 
-      _scaler_shift_us_to_ts = Scaler_shift::calc(Microsec_per_sec, freq);
-      _scaler_shift_ts_to_us = Scaler_shift::calc(freq, Microsec_per_sec);
-      _scaler_shift_ts_to_ns = Scaler_shift::calc(freq, Nanosec_per_sec);
+      _scaler_shift_us_to_ts.init(Microsec_per_sec, freq);
+      _scaler_shift_ts_to_us.init(freq, Microsec_per_sec);
+      _scaler_shift_ts_to_ns.init(freq, Nanosec_per_sec);
 
       if constexpr (!Config::Scheduler_one_shot)
         _timer_period = us_to_ts(Config::Scheduler_granularity);
