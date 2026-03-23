@@ -489,7 +489,7 @@ config ARM_ENABLE_SWP
 
 config ARM_LPAE
 	bool "Use LPAE page table format"
-	depends on ARM_CORTEX_A15 || ARM_CORTEX_A7 || ARM_V8
+	depends on ARM_CORTEX_A15 || ARM_CORTEX_A7 || ARM_V7A_GENERIC || ARM_V8
 	depends on MMU
 	help
 	  Use the extended page table format (LPAE).
