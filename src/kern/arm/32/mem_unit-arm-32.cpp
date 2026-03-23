@@ -210,7 +210,8 @@ Mem_unit::make_coherent_to_pou(void const *start, size_t size)
 {
   unsigned long start_addr = reinterpret_cast<unsigned long>(start);
   unsigned long end_addr = start_addr + size;
-  unsigned long is = icache_line_size(), ds = dcache_line_size();
+  unsigned long is = icache_line_size();
+  unsigned long ds = dcache_line_size();
 
   for (auto i = start_addr & ~(ds - 1U); i < end_addr; i += ds)
     __asm__ __volatile__ ("mcr p15, 0, %0, c7, c11, 1" : : "r"(i));  // DCCMVAU

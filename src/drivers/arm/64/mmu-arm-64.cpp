@@ -21,7 +21,8 @@ void Mmu::flush_cache(void const *start, void const *end)
 {
   unsigned long s = reinterpret_cast<unsigned long>(start);
   unsigned long e = reinterpret_cast<unsigned long>(end);
-  unsigned long is = icache_line_size(), ds = dcache_line_size();
+  unsigned long is = icache_line_size();
+  unsigned long ds = dcache_line_size();
 
   for (unsigned long i = s & ~(ds - 1U); i < e; i += ds)
     __asm__ __volatile__ ("dc civac, %0" : : "r"(i));

@@ -599,7 +599,8 @@ map(MAPDB* mapdb,
       // receiver address spaces.
 
       // Sender lookup.
-      typename SPACE::Phys_addr s_phys, i_phys;
+      typename SPACE::Phys_addr s_phys;
+      typename SPACE::Phys_addr i_phys;
       Page_order s_order;
       Attr i_attribs;
 

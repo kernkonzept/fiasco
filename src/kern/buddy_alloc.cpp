@@ -167,8 +167,8 @@ Buddy_t_base<A,B>::free(void *block, unsigned long size)
   // no need to look for a buddy if we already have the biggest block size
   while (size_index + 1 < Num_sizes)
     {
-      Head *n, *b;
-      b = buddy(block, size_index, &n);
+      Head *n;
+      Head *b = buddy(block, size_index, &n);
       if (b)
 	{
 	//if (!_b && _debug) dump();

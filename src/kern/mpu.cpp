@@ -361,7 +361,8 @@ Mpu_regions::add(Mword start, Mword end, Mpu_region_attr attr, bool join = true,
 {
   // Find existing regions left and right of the new region. In case of a
   // collision the existing regions need to be extended and optimized.
-  Mpu_region *left = nullptr, *right = nullptr;
+  Mpu_region *left = nullptr;
+  Mpu_region *right = nullptr;
   for (Mpu_region *i : _used_list)
     {
       if (i->end() < start)

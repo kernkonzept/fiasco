@@ -66,7 +66,8 @@ Kmem_alloc::Kmem_alloc()
   // The kernel memory regions are added to the KIP as `Kernel_tmp`. Later, in
   // setup_kmem_from_kip_md_tmp(), these regions are added as kernel memory
   // (a()->add_mem()) and marked as "Reserved".
-  unsigned long min_virt = ~0UL, max_virt = 0UL;
+  unsigned long min_virt = ~0UL;
+  unsigned long max_virt = 0UL;
   for (int i = map.length() - 1; i >= 0 && alloc_size > 0; --i)
     {
       Mem_region f = map[i];
