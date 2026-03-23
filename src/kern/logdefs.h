@@ -99,7 +99,7 @@
  */
 #define LOG_MSG(context, text)                                          \
   do {                                                                  \
-    Tb_entry_ke *tb = static_cast<Tb_entry_ke*>(Jdb_tbuf::new_entry()); \
+    Tb_entry_ke *tb = Jdb_tbuf::new_entry<Tb_entry_ke>();               \
     tb->set(context, Proc::program_counter());                          \
     tb->msg.set_const(text);                                            \
     Jdb_tbuf::commit_entry(tb);                                         \
