@@ -150,8 +150,8 @@ IMPLEMENT
 void
 Kip_init::map_kip(Kip *k)
 {
-  extern char _kernel_image_start;
-  extern char _kernel_kip_end;
+  extern char _kernel_image_start[];
+  extern char _kernel_kip_end[];
 
   auto diff = Kmem::kdir->del(reinterpret_cast<Mword>(&_kernel_image_start),
                               reinterpret_cast<Mword>(&_kernel_kip_end) - 1U);
