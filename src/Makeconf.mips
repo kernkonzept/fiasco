@@ -1,7 +1,7 @@
 # -*- makefile -*-
 # vi:se ft=make:
 
-CROSS_COMPILE_mips        ?= mips-linux-
+CROSS_COMPILE_mips        ?= mipsel-linux-gnu-
 
 LD_EMULATION_CHOICE-$(CONFIG_MIPS_LITTLE_ENDIAN) := elf$(BITS)ltsmip
 LD_EMULATION_CHOICE-$(CONFIG_MIPS_BIG_ENDIAN)    := elf$(BITS)btsmip

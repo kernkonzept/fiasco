@@ -1,7 +1,7 @@
 # -*- makefile -*-
 # vi:se ft=make:
 
-CROSS_COMPILE_sparc		?= sparc-linux-
+CROSS_COMPILE_sparc		?= sparc64-linux-gnu-
 LD_EMULATION_CHOICE             := elf32_sparc
 # why does leon3 not work?
 SHARED_FLAGS                    += -mcpu=leon -m32
