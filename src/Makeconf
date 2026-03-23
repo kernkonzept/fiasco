@@ -92,6 +92,20 @@ include $(srcdir)/Makeconf.$(CONFIG_XARCH)
 get_cc_version_part = $\
   $(shell echo $(1) | $(filter-out $(CCACHE),$(CC)) -E -xc - | tail -1)
 
+# Use same architecture names as user-level build
+CROSS_COMPILE_MAP_amd64_64 = amd64
+CROSS_COMPILE_MAP_ia32_32  = x86
+CROSS_COMPILE_MAP_arm_32   = arm
+CROSS_COMPILE_MAP_arm_64   = arm64
+CROSS_COMPILE_MAP_mips_32  = mips
+CROSS_COMPILE_MAP_mips_64  = mips
+CROSS_COMPILE_MAP_ppc32_32 = ppc32
+CROSS_COMPILE_MAP_sparc_32 = sparc
+CROSS_COMPILE_MAP_riscv_32 = riscv
+CROSS_COMPILE_MAP_riscv_64 = riscv
+
+CROSS_COMPILE ?= $(CROSS_COMPILE_$(CROSS_COMPILE_MAP_$(CONFIG_XARCH)_$(BITS)))
+
 ifneq ($(CCXX_VERSION),)
   CCXX_SUFFIX := -$(CCXX_VERSION)
 endif

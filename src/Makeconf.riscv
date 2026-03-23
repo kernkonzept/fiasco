@@ -1,7 +1,7 @@
 # -*- makefile -*-
 # vi:se ft=make:
 
-CROSS_COMPILE             ?= riscv64-linux-gnu-
+CROSS_COMPILE_riscv       ?= riscv64-linux-gnu-
 
 LD_EMULATION_CHOICE       := elf$(BITS)lriscv
 
