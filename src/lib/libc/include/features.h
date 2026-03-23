@@ -17,24 +17,13 @@
 #endif
 
 #if !defined(__cplusplus)
-#if __STDC_VERSION__ >= 199901L
 #define __restrict restrict
-#elif !defined(__GNUC__)
-#define __restrict
-#endif
 #endif // c++
 
-#if (defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L) || defined(__cplusplus)
 #define __inline inline
-#elif !defined(__GNUC__)
-#define __inline
-#endif
 
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-#elif defined(__GNUC__)
-#define _Noreturn __attribute__((__noreturn__))
-#else
-#define _Noreturn
+#if defined(__cplusplus)
+#define _Noreturn [[noreturn]]
 #endif
 
 #define __REDIR(x,y) __typeof__(x) x __asm__(#y)

@@ -12,7 +12,7 @@ typedef uint32_t uint_fast32_t;
 #define UINT_FAST16_MAX UINT32_MAX
 #define UINT_FAST32_MAX UINT32_MAX
 
-#if __LONG_MAX == 0x7fffffffL
+#if __SIZEOF_LONG__ == 4
 #define INTPTR_MIN      INT32_MIN
 #define INTPTR_MAX      INT32_MAX
 #define UINTPTR_MAX     UINT32_MAX

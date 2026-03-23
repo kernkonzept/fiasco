@@ -7,10 +7,8 @@ extern "C" {
 
 #include <features.h>
 
-#if defined(__cplusplus) && __cplusplus >= 201103L
+#if defined(__cplusplus)
 #define NULL nullptr
-#elif defined(__cplusplus)
-#define NULL 0L
 #else
 #define NULL ((void*)0)
 #endif
@@ -43,13 +41,9 @@ void *realloc (void *, size_t);
 void free (void *);
 void *aligned_alloc(size_t, size_t);
 
-_Noreturn void abort (void);
 int atexit (void (*) (void));
 _Noreturn void exit (int);
-_Noreturn void _Exit (int);
 _Noreturn void _exit (int); // Fiasco added
-int at_quick_exit (void (*) (void));
-_Noreturn void quick_exit (int);
 
 char *getenv (const char *);
 

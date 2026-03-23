@@ -55,7 +55,7 @@
 #define TTY_NAME_MAX 32
 #define HOST_NAME_MAX 255
 
-#if LONG_MAX == 0x7fffffffL
+#if __SIZEOF_LONG__ == 4
 #define LONG_BIT 32
 #else
 #define LONG_BIT 64
