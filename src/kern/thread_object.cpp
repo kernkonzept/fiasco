@@ -671,7 +671,7 @@ Thread_object::sys_ex_regs(L4_msg_tag const &tag, Utcb *utcb, Utcb *out)
 PRIVATE inline NOEXPORT NEEDS["timer.h"]
 L4_msg_tag
 Thread_object::sys_thread_switch(L4_msg_tag const & /*tag*/, Utcb const * /*utcb*/,
-                                 Utcb *out)
+                                 Utcb * /*out*/)
 {
   Context *curr = current();
 
@@ -681,18 +681,12 @@ Thread_object::sys_thread_switch(L4_msg_tag const & /*tag*/, Utcb const * /*utcb
   if (current_cpu() != home_cpu())
     return commit_result(0);
 
-  if (curr != this && (state() & Thread_ready_mask))
-    {
-      curr->schedule_if(curr->switch_exec_locked(this, Not_Helping) != Switch::Ok);
-      reinterpret_cast<Utcb::Time_val*>(out->values)->t = 0; // Assume timeslice was used up
-      return commit_result(0, Utcb::Time_val::Words);
-    }
+  if (state() & Thread_ready_mask)
+    curr->schedule_if(curr->switch_exec_locked(this, Not_Helping) != Switch::Ok);
+  else
+    curr->schedule();
 
-  reinterpret_cast<Utcb::Time_val*>(out->values)->t
-    = timeslice_timeout.current()->get_timeout(Timer::system_clock());
-  curr->schedule();
-
-  return commit_result(0, Utcb::Time_val::Words);
+  return commit_result(0);
 }
 
 
