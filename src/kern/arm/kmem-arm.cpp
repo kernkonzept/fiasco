@@ -58,10 +58,10 @@ Kmem::kernel_remap()
   extern Pdir kernel_l0_dir;
   Pdir *udir = &kernel_l0_dir;
 
-  extern char *_kernel_image_start;
+  extern char _kernel_image_start[];
   extern char *_rx_start;
   extern char *_rx_end;
-  extern char *_initcall_end;
+  extern char _initcall_end[];
 
   Address kernel_start = reinterpret_cast<Address>(&_kernel_image_start);
   Address rx_start = reinterpret_cast<Address>(&_rx_start);
@@ -94,10 +94,10 @@ static
 void
 Kmem::kernel_remap()
 {
-  extern char *_kernel_image_start;
+  extern char _kernel_image_start[];
   extern char *_rx_start;
   extern char *_rx_end;
-  extern char *_initcall_end;
+  extern char _initcall_end[];
 
   Address kernel_start = reinterpret_cast<Address>(&_kernel_image_start);
   Address rx_start = reinterpret_cast<Address>(&_rx_start);

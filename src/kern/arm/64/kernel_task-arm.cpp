@@ -3,7 +3,7 @@ IMPLEMENTATION[arm && mmu]:
 #include "globals.h"
 #include "kmem_space.h"
 
-extern char kernel_l0_dir[[]];
+extern K_ptab_array kernel_l0_dir;
 
 PRIVATE
 Kernel_task::Kernel_task()

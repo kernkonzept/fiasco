@@ -3,19 +3,20 @@ IMPLEMENTATION [arm && mmu]:
 #include "config.h"
 #include "kmem.h"
 
+// -----------------------------------------------------------------
+INTERFACE [arm && mmu]:
+
 namespace Boot_paging
 {
   constexpr unsigned Num_scratch_pages = 8;
   constexpr unsigned Pdir_size = Config::PAGE_SIZE;
 }
+
 union K_ptab_array
 {
   Kpdir kpdir;
   Unsigned8 storage[Boot_paging::Pdir_size];
 } __attribute__((aligned(0x1000)));
-
-// initialize the kernel space (page table)
-IMPLEMENT inline void Kmem_space::init() {}
 
 // -----------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && !cpu_virt]:
@@ -65,7 +66,7 @@ static Boot_paging_info FIASCO_BOOT_PAGING_INFO _bs_pgin_dta =
 };
 
 // -----------------------------------------------------------------
-IMPLEMENTATION [arm && !mmu]:
+IMPLEMENTATION [arm]:
 
 IMPLEMENT inline
 void Kmem_space::init()
