@@ -1,0 +1,275 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use File::Temp qw(tempfile);
+use FindBin qw($Dir);
+use Getopt::Long;
+use File::Basename;
+use File::Copy;
+use Cwd qw(realpath);
+
+use constant {
+  UNSET => bless({},"UNSET"),
+};
+
+sub slurpfile {
+  my ($file) = @_;
+
+  open(my $fh, "<", $file)
+    or die "Cannot open file '$file'\n";
+  my $content = do { local $/ = undef; <$fh> };
+  close($fh);
+
+  return $content;
+}
+
+sub dumpfile {
+  my ($file, $content) = @_;
+
+  open(my $fh, ">", $file)
+    or die "Cannot open file '$file'\n";
+  print $fh $content;
+  close($fh);
+}
+
+sub read_kconfig {
+  my ($string) = @_;
+
+  my @lines;
+  my %options;
+  my @order;
+
+  foreach my $line (split /\n/,$string)
+    {
+      chomp $line;
+
+      $line =~ s/^\s+|\s+$//g;
+      push @lines, $line;
+      my $line_idx = @lines - 1;
+
+      if ($line =~ /^# (.+) is not set$/)
+        {
+          $options{$1} = { value => UNSET, idx => $line_idx };
+          push @order, $1;
+        }
+      elsif ($line =~ /^([^=]+)=(.*)$/)
+        {
+          $options{$1} = { value => $2, idx => $line_idx };
+          push @order, $1;
+        }
+      elsif ($line =~ /^\s*(#.*)?$/)
+        {
+          # Ignore
+        }
+      else
+        {
+          die "Can't parse line '$line'\n";
+        }
+    }
+
+  return {
+    options => \%options,
+    lines => \@lines,
+    order => \@order,
+  };
+}
+
+sub write_kconfig
+{
+  my ($config) = @_;
+  return join "", map { "$_\n" } grep { defined $_ } @{$config->{lines}};
+}
+
+sub match_migration
+{
+  my ($config, $match) = @_;
+
+  foreach my $key (@{$match->{order}})
+    {
+      return 0 unless exists($config->{options}{$key});
+
+      my $config_value = $config->{options}{$key}{value};
+      my $match_value = $match->{options}{$key}{value};
+
+      my $config_is_unset = ref($config_value) eq "UNSET";
+      my $match_is_unset = ref($match_value) eq "UNSET";
+
+      if ($config_is_unset || $match_is_unset)
+        {
+          return 0 unless $config_is_unset && $match_is_unset;
+        }
+      else
+        {
+          return 0 unless $config_value eq $match_value;
+        }
+    }
+
+  return 1;
+}
+
+sub apply_migration
+{
+  my ($config, $match, $replace) = @_;
+
+  foreach my $key (@{$match->{order}})
+    {
+      # Do not remove if we replace it anyway.
+      next if exists $replace->{options}{$key};
+
+      # Remove line
+      splice @{$config->{lines}}, $config->{options}{$key}{idx}, 1, undef;
+
+      # Remove parsed option
+      delete $config->{options}{$key};
+
+      # Don't update order, doesn't matter for $config
+    }
+
+  foreach my $key (@{$replace->{order}})
+    {
+      my $updated_line = $replace->{lines}->[$replace->{options}{$key}{idx}];
+      my $line_idx;
+      # Option exists already, overwrite in-place
+      if (exists($config->{options}{$key}))
+        {
+          # Replace line
+          splice @{$config->{lines}}, $config->{options}{$key}{idx}, 1, $updated_line;
+
+          $line_idx = $config->{options}{$key}{idx};
+        }
+      else
+        {
+          # Option didn't exist yet. Append line to bottom
+          push @{$config->{lines}}, $updated_line;
+
+          $line_idx = @{$config->{lines}} - 1;
+        }
+
+      $config->{options}{$key} = {
+        value => $replace->{options}{$key}{value},
+        idx => $line_idx,
+      };
+    }
+}
+
+my $yes;
+my $interactive = -t STDIN;
+my $no_keep_orig;
+my $migrationfile = "$Dir/migrate_kconfig.settings";
+
+sub confirm_prompt
+{
+  my ($prompt) = @_;
+
+  print "$prompt (y/n)? ";
+
+  if ($interactive && !$yes)
+    {
+      my $answer = <STDIN>;
+      chomp $answer;
+
+      return lc($answer) eq "y";
+    }
+  else
+    {
+      print (($yes ? "y" : "n") . "\n");
+      return $yes;
+    }
+}
+
+Getopt::Long::Configure("bundling");
+GetOptions(
+  "y|yes" => \$yes,
+  "i|interactive" => sub { $interactive = 1; },
+  "no-interactive" => sub { $interactive = 0; },
+  "no-keep-orig" => \$no_keep_orig,
+  "m|migration=s" => \$migrationfile,
+) or die "Usage: migrate_kconfig [-y|--yes] [--no-interactive] [--no-keep-orig] [-m|--migration migration.cfg] <globalconfig.out>\n";
+
+my $auto_confirm = $yes;
+$auto_confirm //= 0 unless $interactive;
+
+my ($configfile) = @ARGV;
+
+die "Missing config file" unless defined($configfile);
+die "Cannot read config file '$configfile'" unless -r $configfile;
+
+# Load migration config
+my $migrations = do (realpath($migrationfile));
+
+my $configcontent = slurpfile($configfile);
+my $config = read_kconfig($configcontent);
+
+my $anychanges = 0;
+
+my $spec_idx = 0;
+foreach my $spec (@$migrations)
+  {
+    die "Invalid migration (Index $spec_idx)" unless $spec->{match} && $spec->{replace};
+    $spec_idx++;
+
+    my $match = read_kconfig($spec->{match});
+    my $replace = read_kconfig($spec->{replace});
+    my $prompt = $spec->{prompt};
+
+    if (match_migration($config, $match))
+      {
+        if (!defined($prompt) || confirm_prompt($prompt))
+          {
+            apply_migration($config, $match, $replace);
+            $anychanges = 1;
+          }
+      }
+  }
+
+unless ($anychanges)
+  {
+    print "Nothing to migrate.\n";
+    exit(0);
+  }
+
+my ($tmpfh, $tempfile) = tempfile( basename($configfile) . ".XXXXXXX", TMPDIR => 1);
+print $tmpfh write_kconfig($config);
+close($tmpfh);
+
+system("diff", $interactive ? "--color=always" : (), "--unified", $configfile, $tempfile);
+my $exit_code = $? >> 8;
+
+print "\n";
+
+if ($exit_code == 0) # Diff tool says nothing changed. Nothing to do.
+  {
+    print "Migrations applied, nothing changed.\n";
+    exit(0);
+  }
+elsif ($exit_code != 1) # Exit code 1 means there's a difference. Not an error.
+  {
+    die "Diff tool exited with exit code $exit_code. Aborting.\n";
+  }
+
+if ($interactive)
+  {
+    # Disable auto-confirm from now on.
+    $yes = undef;
+
+    unless (confirm_prompt("Apply diff"))
+      {
+        print "Aborted.\n";
+        exit(1);
+      }
+  }
+
+if (!$no_keep_orig)
+  {
+    # Save original as backup
+    print "Saving original content to ${configfile}.orig\n";
+    copy("$configfile", "${configfile}.orig") or
+      die "Unable to save backup '${configfile}.orig'. Aborting.\n";
+  }
+
+copy($tempfile, $configfile) or
+  die "Unable to write file '$configfile'\n";
+
+print "$configfile migrated.\n";

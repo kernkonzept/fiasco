@@ -1,0 +1,7 @@
+# This file configures the migrate_kconfig tool. It contains a list of
+# migrations, with a prompt for interactive use, a match section with options
+# that are matched (and then removed), as well as a replace section with options
+# that are added as a replacement for the former options.
+#
+# No migrations yet.
+[]

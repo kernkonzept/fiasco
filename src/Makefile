@@ -224,6 +224,10 @@ kconfig_call = $(MAKE) -C $(tooldir)/kconfig O=$(objbase) \
 update_globalconfig_tags = \
 	     @$(tooldir)/config-tags globalconfig.out > globalconfig.tags
 
+migrate_kconfig = \
+	     @$(tooldir)/migrate_kconfig globalconfig.out \
+	     --yes --no-interactive
+
 # save config file dependencies to detect BSP removals
 .$(KCONFIG_FILE).parts: FORCE
 	@echo '$(KCONFIG_PART_FILES)' | cmp -s - $@ || echo '$(KCONFIG_PART_FILES)' > $@
@@ -238,9 +242,11 @@ $(KCONFIG_FILE): $(KCONFIG_SRC_FILE) $(KCONFIG_PART_FILES) .$(KCONFIG_FILE).part
 ifeq ($(filter cleanall mrproper,$(MAKECMDGOALS)),)
 
 globalconfig.out: $(KCONFIG_FILE)
+	+$(VERBOSE)$(migrate_kconfig)
 	+$(VERBOSE)$(kconfig_call) oldconfig
 
 globalconfig.h globalconfig.tags: globalconfig.out
+	+$(VERBOSE)$(migrate_kconfig)
 	+$(VERBOSE)$(kconfig_call) syncconfig
 	+$(VERBOSE)$(update_globalconfig_tags)
 
@@ -252,28 +258,34 @@ globalconfig.out:
 endif
 
 config: $(KCONFIG_FILE)
+	+$(VERBOSE)$(migrate_kconfig)
 	+$(VERBOSE)$(kconfig_call) menuconfig
 	+$(VERBOSE)$(kconfig_call) syncconfig
 	+$(VERBOSE)$(update_globalconfig_tags)
 
 textconfig: $(KCONFIG_FILE)
+	+$(VERBOSE)$(migrate_kconfig)
 	+$(VERBOSE)$(kconfig_call) config syncconfig
 	+$(VERBOSE)$(update_globalconfig_tags)
 
 menuconfig oldconfig xconfig gconfig nconfig randconfig allyesconfig allnoconfig: $(KCONFIG_FILE)
+	+$(VERBOSE)$(migrate_kconfig)
 	+$(VERBOSE)$(kconfig_call) $@
 	+$(VERBOSE)$(kconfig_call) syncconfig
 	+$(VERBOSE)$(update_globalconfig_tags)
 
 olddefconfig oldnoconfig: $(KCONFIG_FILE)
+	+$(VERBOSE)$(migrate_kconfig)
 	+$(VERBOSE)$(kconfig_call) $@
 	+$(VERBOSE)$(update_globalconfig_tags)
 
 oldaskconfig: $(KCONFIG_FILE)
+	+$(VERBOSE)$(migrate_kconfig)
 	+$(VERBOSE)$(kconfig_call) config
 	+$(VERBOSE)$(update_globalconfig_tags)
 
 listnewconfig savedefconfig: $(KCONFIG_FILE)
+	+$(VERBOSE)$(migrate_kconfig)
 	+$(VERBOSE)$(kconfig_call) $@
 
 ifneq ($(filter clean cleanall mrproper,$(MAKECMDGOALS)),)
