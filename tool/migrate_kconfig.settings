@@ -2,6 +2,21 @@
 # migrations, with a prompt for interactive use, a match section with options
 # that are matched (and then removed), as well as a replace section with options
 # that are added as a replacement for the former options.
-#
-# No migrations yet.
-[]
+[
+  {
+    prompt => "Convert from platform imx_8mp to arm_gen",
+    match => q(
+      CONFIG_PF_IMX=y
+      CONFIG_PF_IMX_8MP=y
+    ),
+    replace => q(
+      # CONFIG_PF_IMX is not set
+      # CONFIG_PF_IMX_8MP is not set
+      CONFIG_PF_ARM_GEN=y
+      # CONFIG_IOMMU is not set
+      # CONFIG_ARM_V7A_GENERIC is not set
+      CONFIG_ARM_V8A_GENERIC=y
+      # CONFIG_PF_ARM_GEN_SELECT_SUPPORT is not set
+    ),
+  },
+]
