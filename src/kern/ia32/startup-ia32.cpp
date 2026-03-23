@@ -134,7 +134,6 @@ Startup::stage2()
     }
 
   Idt::set_vectors_run();
-  Timer::master_cpu(Cpu_number::boot_cpu());
   Platform_control::init(Cpu_number::boot_cpu());
 //  Cpu::init_global_features();
 }
