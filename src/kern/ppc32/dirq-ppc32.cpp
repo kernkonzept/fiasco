@@ -9,7 +9,7 @@ extern "C"
 void irq_handler()
 {
   Return_frame *rf = nonull_static_cast<Return_frame*>(current()->regs());
-  if (EXPECT_TRUE(rf->user_mode()))
+  if (rf->user_mode()) [[likely]]
     rf->srr1 = Proc::wake(rf->srr1);
 
   Pic::main->post_pending_irqs();

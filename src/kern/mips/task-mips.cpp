@@ -25,7 +25,7 @@ Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
   ctxt->copy_and_sanitize_trap_state(&ts, &vcpu->_regs.s);
 
   // prevent VZ guest entry with a normal Task
-  if (EXPECT_FALSE(ts.status & (1 << 3)))
+  if (ts.status & (1 << 3)) [[unlikely]]
     return -L4_err::EInval;
 
   if (user_mode)
@@ -55,7 +55,7 @@ int
 Vz_vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) override
 {
   // prevent non-VZ execution in VZ VM
-  if (EXPECT_FALSE(!user_mode))
+  if (!user_mode) [[unlikely]]
     return -L4_err::EInval;
 
   Trap_state ts;
@@ -65,7 +65,7 @@ Vz_vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) override
   // test for guest mode. Note, using ts->status is ok since
   // Thread_ext_vcpu_enabled is checked by copy_and_sanitize_trap_state
   // already and reflected in ts->status
-  if (EXPECT_FALSE(!(ts.status & (1 << 3))))
+  if (!(ts.status & (1 << 3))) [[unlikely]]
     return -L4_err::EInval;
 
   ctxt->state_add_dirty(Thread_vcpu_user);

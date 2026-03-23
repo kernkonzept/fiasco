@@ -339,7 +339,7 @@ Thread::get_fault_pfa(Arm_esr hsr, bool insn_abt, bool ext_vcpu)
   else
     asm ("mrc p15, 4, %0, c6, c0, 0" : "=r" (far));
 
-  if (EXPECT_TRUE(!ext_vcpu))
+  if (!ext_vcpu) [[likely]]
     return far;
 
   Unsigned32 sctlr;
@@ -382,7 +382,7 @@ Thread::peek_user(T const *adr, Context *c)
   asm ("mcr p15, 0, %1, c7, c8, 6 \n"
        "mrc p15, 0, %0, c7, c4, 0 \n"
        : "=r" (pa) : "r"(adr) );
-  if (EXPECT_TRUE(!(pa & 1)))
+  if (!(pa & 1)) [[likely]]
     return *reinterpret_cast<T const *>(
               cxx::mask_lsb(pa, 12)
               | cxx::get_lsb(reinterpret_cast<Address>(adr), 12));

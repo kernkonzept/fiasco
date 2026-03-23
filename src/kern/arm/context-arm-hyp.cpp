@@ -493,7 +493,7 @@ Context::arch_inject_vcpu_irq(Mword irq_id, Vcpu_irq_list_item *irq)
   //    possible. The Irq_sender should only ever call us on the Idle->Queued
   //    transition and without a callback to vcpu_soi(), this transition cannot
   //    happen twice.
-  if (EXPECT_FALSE(Vcpu_irq_list::in_list(irq)))
+  if (Vcpu_irq_list::in_list(irq)) [[unlikely]]
     {
       assert(irq->lr && !irq->queued);
       irq->queued = true;
@@ -545,7 +545,7 @@ Context::arch_revoke_vcpu_irq(Vcpu_irq_list_item *irq, bool abandon)
       bool load = current() == this;
       bool active = Gic_h_global::gic->revoke(&v->gic, irq->lr - 1U, load,
                                               abandon);
-      if (EXPECT_FALSE(active && !abandon))
+      if (active && !abandon) [[unlikely]]
         return Revoke_vcpu_state::Fail_is_active;
 
       bool queued = irq->queued;
@@ -642,7 +642,7 @@ Context::vcpu_vgic_maintenance(unsigned virq)
               it = _injected_irqs.erase(it);
               irq->vcpu_eoi();
               irq->lr = 0;
-              if (EXPECT_FALSE(irq->queued))
+              if (irq->queued) [[unlikely]]
                 {
                   irq->queued = false;
                   _pending_irqs.push_back(irq);

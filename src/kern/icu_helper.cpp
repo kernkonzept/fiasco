@@ -152,7 +152,7 @@ Icu_h<REAL_ICU>::icu_mask_irq(bool mask, unsigned pin)
 {
   Irq_base *irq = this_icu()->icu_irq(pin);
 
-  if (EXPECT_FALSE(!irq))
+  if (!irq) [[unlikely]]
     return;
 
   if (mask)
@@ -268,7 +268,7 @@ Icu_h<REAL_ICU>::icu_invoke(L4_obj_ref, L4_fpage::Rights /*rights*/,
   L4_msg_tag tag = f->tag();
 
   // Ko::check_basics()
-  if (EXPECT_FALSE(tag.words() < 1))
+  if (tag.words() < 1) [[unlikely]]
     return Kobject_iface::commit_result(-L4_err::EMsgtooshort);
 
   switch (Icu_h_base::Op{utcb->values[0]})

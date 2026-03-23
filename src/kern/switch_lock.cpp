@@ -143,7 +143,7 @@ Switch_lock::test() const
 {
   auto guard = lock_guard(cpu_lock);
   Address o = access_once(&_lock_owner);
-  if (EXPECT_FALSE(o & 1))
+  if (o & 1) [[unlikely]]
     return Invalid;
   return o ? Locked : Not_locked;
 }
@@ -194,7 +194,7 @@ Switch_lock::lock()
     guard = lock_guard(cpu_lock);
 
   Mword o = access_once(&_lock_owner);
-  if (EXPECT_FALSE(o & 1))
+  if (o & 1) [[unlikely]]
     return Invalid;
 
   Context *c = current();
@@ -284,15 +284,15 @@ Switch_lock::set_lock_owner(Context *o)
   if (have_no_locks)
     {
       assert(current_cpu() == o->home_cpu());
-      while (EXPECT_FALSE(!o->_running_under_lock.try_dispatch()))
-        ;
+      while (!o->_running_under_lock.try_dispatch())
+        [[unlikely]] ;
     }
   else
     assert (o->_running_under_lock);
 
   Mem::mp_wmb();
 
-  if (EXPECT_FALSE(!cas(&_lock_owner, Address{0}, reinterpret_cast<Address>(o))))
+  if (!cas(&_lock_owner, Address{0}, reinterpret_cast<Address>(o))) [[unlikely]]
     {
       if (have_no_locks)
         {
@@ -380,16 +380,16 @@ Switch_lock::switch_dirty(Lock_context const &c)
   bool need_sched = false;
 
   if (h != curr)
-    if (   EXPECT_FALSE(h->home_cpu() != current_cpu())
-        || EXPECT_FALSE(curr->switch_exec_locked(h, Context::Ignore_Helping)
-                        != Context::Switch::Ok))
+    if (h->home_cpu() != current_cpu()
+        || curr->switch_exec_locked(h, Context::Ignore_Helping)
+           != Context::Switch::Ok) [[unlikely]]
       need_sched = true;
 
   if (!need_sched)
     need_sched = (   curr->lock_cnt() == 0
                   && curr->home_cpu() != current_cpu());
 
-  if (EXPECT_FALSE(need_sched))
+  if (need_sched) [[unlikely]]
     schedule(curr);
 }
 
@@ -435,7 +435,7 @@ Switch_lock::wait_free()
 
   assert (!valid());
 
-  if (EXPECT_FALSE(lock_owner() == c))
+  if (lock_owner() == c) [[unlikely]]
     panic("Current thread owns Switch_lock and attempts to destroy it");
 
   for(;;)

@@ -47,12 +47,12 @@ public:
   void invoke(L4_obj_ref self, L4_fpage::Rights rights, Syscall_frame *f, Utcb *u) override
   {
     L4_msg_tag res(no_reply());
-    if (EXPECT_TRUE(self.op() & L4_obj_ref::Ipc_send))
+    if (self.op() & L4_obj_ref::Ipc_send) [[likely]]
       res = static_cast<T*>(this)->T::kinvoke(
               self, rights, f, u,
               self.have_recv() ? u : Kobject_helper_base::utcb_dummy());
 
-    if (EXPECT_FALSE(res.has_error()))
+    if (res.has_error()) [[unlikely]]
       {
         f->tag(res);
         return;

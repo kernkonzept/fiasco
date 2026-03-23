@@ -300,7 +300,7 @@ PUBLIC
 void
 Rcu_data::enter_idle(Rcu_glbl *rgp)
 {
-  if (EXPECT_TRUE(!_idle))
+  if (!_idle) [[likely]]
     {
       LOG_TRACE("Rcu idle", "rcu", ::current(), Rcu::Log_rcu,
           l->cpu = _cpu;
@@ -334,7 +334,7 @@ void
 Rcu::leave_idle(Cpu_number cpu)
 {
   Rcu_data *rdp = &_rcu_data.cpu(cpu);
-  if (EXPECT_FALSE(rdp->_idle))
+  if (rdp->_idle) [[unlikely]]
     {
       LOG_TRACE("Rcu idle", "rcu", ::current(), Rcu::Log_rcu,
           l->cpu = cpu;
@@ -404,7 +404,7 @@ Rcu_data::check_quiescent_state(Rcu_glbl *rgp)
 
   auto guard = lock_guard(rgp->_lock);
 
-  if (EXPECT_TRUE(_q_batch == rgp->_current))
+  if (_q_batch == rgp->_current) [[likely]]
     rgp->cpu_quiet(_cpu);
 }
 

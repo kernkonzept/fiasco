@@ -17,7 +17,7 @@ Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
   assert(cpu_lock.test());
 
   // Prevent execution in regular task with virtualization enabled context.
-  if (EXPECT_FALSE(ctxt->state(true) & Thread_ext_vcpu_enabled))
+  if (ctxt->state(true) & Thread_ext_vcpu_enabled) [[unlikely]]
       return -L4_err::EInval;
 
   if (user_mode)
@@ -139,11 +139,11 @@ Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) override
   assert(cpu_lock.test());
 
   // Prevent non-virtualization mode execution in VMM task.
-  if (EXPECT_FALSE(!user_mode))
+  if (!user_mode) [[unlikely]]
     return -L4_err::EInval;
 
   // Prevent execution in VM task with non-virtualization enabled context.
-  if (EXPECT_FALSE(!(ctxt->state(true) & Thread_ext_vcpu_enabled)))
+  if (!(ctxt->state(true) & Thread_ext_vcpu_enabled)) [[unlikely]]
     return -L4_err::EInval;
 
   // Switching from vCPU host mode to user mode.

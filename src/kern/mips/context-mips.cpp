@@ -220,7 +220,7 @@ void Context::vcpu_pv_switch_to_kernel(Vcpu_state *vs, bool current)
     return;
 
   auto *r = regs();
-  if (EXPECT_FALSE(!(r->status & (1UL << 3))))
+  if (!(r->status & (1UL << 3))) [[unlikely]]
     return; // not coming from guest
 
   vm_state(vs)->save_on_exit(r->cause);

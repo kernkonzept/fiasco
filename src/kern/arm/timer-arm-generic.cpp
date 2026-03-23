@@ -137,8 +137,10 @@ IMPLEMENT
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  if (EXPECT_FALSE(wakeup == Infinite_timeout))
-    disable();
+  if (wakeup == Infinite_timeout) [[unlikely]]
+    {
+      disable();
+    }
   else
     {
       Gtimer::compare(us_to_ts(wakeup));

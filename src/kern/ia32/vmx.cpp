@@ -751,13 +751,13 @@ private:
       : "cc"
     );
 
-    if (EXPECT_FALSE(flags & 0x01))
+    if (flags & 0x01) [[unlikely]]
       {
         WARNX(Info, "VMX: VMfailInvalid vmwrite(0x%04lx, %llx) => %lx\n",
               field, static_cast<Unsigned64>(value), flags);
         vmwrite_failure.current() = true;
       }
-    else if (EXPECT_FALSE(flags & 0x40))
+    else if (flags & 0x40) [[unlikely]]
       {
         WARNX(Info, "VMX: VMfailValid vmwrite(0x%04lx, %llx) => %lx, "
                     "insn error: 0x%x\n", field, static_cast<Unsigned64>(value),
@@ -2499,7 +2499,7 @@ Vmx_vm_state_t<HOST_STATE>::setup_vmcs(Context *ctxt)
       Vmx_vmcs *vmx_vmcs
         = cxx::dyn_cast<Vmx_vmcs *>(space->lookup_local(_vmcs.cap(), &rights));
 
-      if (EXPECT_FALSE(vmx_vmcs && !(rights & L4_fpage::Rights::CS())))
+      if (vmx_vmcs && !(rights & L4_fpage::Rights::CS())) [[unlikely]]
         return -L4_err::EPerm;
 
       Vmx_vmcs *prev = ctxt->vmcs();
@@ -2864,20 +2864,20 @@ PUBLIC inline NEEDS[Vmx::initialize_current_vmcs, Vmx::vmclear, Vmx::vmptrld]
 int
 Vmx::load_vmx_vmcs(Vmx_vmcs *vmx_vmcs)
 {
-  if (EXPECT_FALSE(!vmx_vmcs))
+  if (!vmx_vmcs) [[unlikely]]
     return -L4_err::EInval;
 
   // When the existence lock of an VMCS object is invalid, the VMCS region is
   // about to be cleared and eventually removed. Therefore we cannot make
   // the VMCS region active again, as that would break the correctness of the
   // VMCS object deletion.
-  if (EXPECT_FALSE(!vmx_vmcs->existence_lock.valid()))
+  if (!vmx_vmcs->existence_lock.valid()) [[unlikely]]
     return -L4_err::EInval;
 
   Cpu_number active = vmx_vmcs->active();
   Cpu_number cpu = current_cpu();
 
-  if (EXPECT_FALSE(active != Cpu_number::nil() && active != cpu))
+  if (active != Cpu_number::nil() && active != cpu) [[unlikely]]
     return -L4_err::EBusy;
 
   if (_current_vmcs != vmx_vmcs)
@@ -2889,23 +2889,23 @@ Vmx::load_vmx_vmcs(Vmx_vmcs *vmx_vmcs)
       bool initialized = *revision != 0;
 
       // Clear the VMCS before loading for the first time.
-      if (EXPECT_FALSE(!initialized))
+      if (!initialized) [[unlikely]]
         {
           *revision = info.basic & 0x7fffffffU;
           vmclear(vmcs_pa);
         }
 
-      if (EXPECT_FALSE(!vmptrld(vmcs_pa)))
+      if (!vmptrld(vmcs_pa)) [[unlikely]]
         return -L4_err::ENodev;
 
       vmx_vmcs->set_active(cpu);
       _current_vmcs = vmx_vmcs;
 
       // Initialize the VMCS which has been loaded for the first time.
-      if (EXPECT_FALSE(!initialized))
+      if (!initialized) [[unlikely]]
         {
           initialize_current_vmcs();
-          if (EXPECT_FALSE(vmwrite_failure.current()))
+          if (vmwrite_failure.current()) [[unlikely]]
             return -L4_err::ENodev;
         }
     }
@@ -3234,7 +3234,7 @@ void
 Vmx_vmcs::invoke(L4_obj_ref, L4_fpage::Rights, Syscall_frame *frame,
                  Utcb *) override
 {
-  if (EXPECT_FALSE(frame->tag().proto() != L4_msg_tag::Label_vcpu_context))
+  if (frame->tag().proto() != L4_msg_tag::Label_vcpu_context) [[unlikely]]
     {
       frame->tag(commit_result(-L4_err::EBadproto));
       return;

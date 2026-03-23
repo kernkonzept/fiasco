@@ -120,7 +120,7 @@ Context_hyp::save(bool from_privileged)
   asm volatile ("mrs %x0, SPSR_EL1"  : "=r"(spsr_svc));
   asm volatile ("mrs %x0, CSSELR_EL1": "=r"(csselr));
 
-  if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
+  if (Cpu::has_aarch32_el1()) [[likely]]
     {
       // If AArch32 is not supported, these registers are actually RES0
       // so strictly speaking, we could read them unconditionally.
@@ -166,7 +166,7 @@ Context_hyp::load(bool from_privileged, bool to_privileged)
   asm volatile ("msr SPSR_EL1, %x0"       : : "r"(spsr_svc));
   asm volatile ("msr CSSELR_EL1, %x0"     : : "r"(csselr));
 
-  if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
+  if (Cpu::has_aarch32_el1()) [[likely]]
     {
       // If AArch32 is not supported, these registers are actually RES0
       // so strictly speaking, we could write them unconditionally.

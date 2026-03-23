@@ -231,7 +231,7 @@ Dmar_space::initialize()
     return false;
 
   b = Kmem_alloc::allocator()->q_alloc(ram_quota(), Config::page_order());
-  if (EXPECT_FALSE(!b))
+  if (!b) [[unlikely]]
     return false;
 
   _dmarpt = static_cast<Dmar_pt *>(b);
@@ -388,16 +388,16 @@ Dmar_space::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
   auto i = _dmarpt->walk(virt, level, false,
                          Kmem_alloc::q_allocator(ram_quota()));
 
-  if (EXPECT_FALSE(!i.is_valid() && i.level != level))
+  if (!i.is_valid() && i.level != level) [[unlikely]]
     return Mem_space::Insert_err_nomem;
 
-  if (EXPECT_FALSE(i.is_valid()
-      && (i.level != level || Mem_space::Phys_addr(i.page_addr()) != phys)))
+  if (i.is_valid()
+      && (i.level != level || Mem_space::Phys_addr(i.page_addr()) != phys)) [[unlikely]]
     return Mem_space::Insert_err_exists;
 
   if (i.is_valid())
     {
-      if (EXPECT_FALSE(!i.add_attribs(page_attribs)))
+      if (!i.add_attribs(page_attribs)) [[unlikely]]
         return Mem_space::Insert_warn_exists;
 
       return Mem_space::Insert_warn_attrib_upgrade;
@@ -418,10 +418,10 @@ Dmar_space::v_delete(Mem_space::Vaddr virt, Mem_space::Page_order order,
 
   auto pte = _dmarpt->walk(virt);
 
-  if (EXPECT_FALSE(!pte.is_valid()))
+  if (!pte.is_valid()) [[unlikely]]
     return Page::Flags::None();
 
-  if (EXPECT_FALSE(Mem_space::Page_order(pte.page_order()) != order))
+  if (Mem_space::Page_order(pte.page_order()) != order) [[unlikely]]
     return Page::Flags::None();
 
   Page::Flags flags = pte.access_flags();

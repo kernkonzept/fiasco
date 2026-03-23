@@ -59,7 +59,7 @@ Obj_cap::deref(L4_fpage::Rights *rights, bool dbg = false)
       return static_cast<Thread*>(reply_cap.caller());
     }
 
-  if (EXPECT_FALSE(special()))
+  if (special()) [[unlikely]]
     {
       // "self" or "explicit reply capability".
       *rights = L4_fpage::Rights::CWS();
@@ -130,7 +130,7 @@ Thread_object::invoke(L4_obj_ref self, L4_fpage::Rights rights,
       Thread *partner = nullptr;
       bool have_rcv = false;
 
-      if (EXPECT_FALSE(!check_sys_ipc(op, &partner, &sender, &have_rcv)))
+      if (!check_sys_ipc(op, &partner, &sender, &have_rcv)) [[unlikely]]
         {
           f->tag(commit_error(utcb, L4_error::Not_existent));
           return;
@@ -141,7 +141,7 @@ Thread_object::invoke(L4_obj_ref self, L4_fpage::Rights rights,
       return;
     }
 
-  if (EXPECT_FALSE(f->tag().words() < 1))
+  if (f->tag().words() < 1) [[unlikely]]
     {
       f->tag(commit_result(-L4_err::EMsgtooshort));
       return;
@@ -210,7 +210,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
       Task *task = cxx::dyn_cast<Task*>(s->lookup_local(user_task.cap(),
                                                          &task_rights));
 
-      if (EXPECT_FALSE(task && !(task_rights & L4_fpage::Rights::CS())))
+      if (task && !(task_rights & L4_fpage::Rights::CS())) [[unlikely]]
         return commit_result(-L4_err::EPerm);
 
       if (task != vcpu_user_space())
@@ -249,7 +249,7 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
 
           cpu_lock.lock();
 
-          if (EXPECT_FALSE(!err.ok()))
+          if (!err.ok()) [[unlikely]]
             return commit_error(utcb, err);
         }
     }
@@ -264,8 +264,9 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
 
       vcpu = vcpu_state().access(true);
 
-      if (EXPECT_TRUE(!vcpu->_ipc_regs.tag().has_error()
-                      || this->utcb().access(true)->error.error() == L4_error::R_timeout))
+      if (!vcpu->_ipc_regs.tag().has_error()
+          || this->utcb().access(true)->error.error() == L4_error::R_timeout)
+          [[likely]]
         {
           vcpu->_regs.set_ipc_upcall();
 
@@ -403,7 +404,7 @@ Thread_object::sys_register_delete_irq(L4_msg_tag tag, Utcb const *in, Utcb * /*
   if (!irq)
     return tag;
 
-  if (EXPECT_FALSE(!(irq_rights & L4_fpage::Rights::CW())))
+  if (!(irq_rights & L4_fpage::Rights::CW())) [[unlikely]]
     return Kobject_iface::commit_result(-L4_err::EPerm);
 
   if (register_delete_irq(irq))
@@ -423,10 +424,10 @@ L4_msg_tag
 Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
                            Utcb const *utcb, Utcb *out)
 {
-  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
+  if (!(rights & L4_fpage::Rights::CS())) [[unlikely]]
     return commit_result(-L4_err::EPerm);
 
-  if (EXPECT_FALSE(tag.words() < 6))
+  if (tag.words() < 6) [[unlikely]]
     return commit_result(-L4_err::EInval);
 
   Mword flags = utcb->values[0];
@@ -450,16 +451,16 @@ Thread_object::sys_control(L4_fpage::Rights rights, L4_msg_tag tag,
       if (!task)
         return tag;
 
-      if (EXPECT_FALSE(!(task_rights & L4_fpage::Rights::CS())))
+      if (!(task_rights & L4_fpage::Rights::CS())) [[unlikely]]
         return commit_result(-L4_err::EPerm);
 
-      if (EXPECT_FALSE(!(task->caps() & Task::Caps::threads())))
+      if (!(task->caps() & Task::Caps::threads())) [[unlikely]]
         return commit_result(-L4_err::EInval);
 
       User_ptr<Utcb> utcb_addr =
         User_ptr<Utcb>(reinterpret_cast<Utcb*>(utcb->values[5]));
 
-      if (EXPECT_FALSE(!bind(task, utcb_addr)))
+      if (!bind(task, utcb_addr)) [[unlikely]]
         return commit_result(-L4_err::EInval); // unbind first !!
     }
 
@@ -785,7 +786,7 @@ Thread_object::sys_register_doorbell_irq(L4_msg_tag tag, Utcb const *in)
   if (!irq)
     return tag;
 
-  if (EXPECT_FALSE(!(irq_rights & L4_fpage::Rights::CW())))
+  if (!(irq_rights & L4_fpage::Rights::CW())) [[unlikely]]
     return Kobject_iface::commit_result(-L4_err::EPerm);
 
   if (register_doorbell_irq(irq))

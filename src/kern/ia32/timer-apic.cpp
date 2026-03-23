@@ -55,14 +55,14 @@ Timer::update_timer(Unsigned64 wakeup)
 {
   Unsigned32 apic;
   Unsigned64 now = system_clock();
-  if (EXPECT_FALSE(wakeup == Infinite_timeout))
+  if (wakeup == Infinite_timeout) [[unlikely]]
     apic = 0; // Stop timer for infinite timeout.
-  else if (EXPECT_FALSE(wakeup <= now))
+  else if (wakeup <= now) [[unlikely]]
     apic = Apic::Timer_min;
   else
     {
       apic = Apic::us_to_apic(wakeup - now);
-      if (EXPECT_FALSE(apic < Apic::Timer_min))
+      if (apic < Apic::Timer_min) [[unlikely]]
         apic = Apic::Timer_min;
     }
 

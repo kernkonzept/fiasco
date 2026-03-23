@@ -108,8 +108,7 @@ Kobject_iface::manufacture(long label, Ram_quota *q,
                            int *err, unsigned *words)
 {
   *err = L4_err::ENodev;
-  if (EXPECT_FALSE(label > 0 || -label > Max_factory_index
-                   || !factory[-label]))
+  if (label > 0 || -label > Max_factory_index || !factory[-label]) [[unlikely]]
     return nullptr;
 
   return factory[-label](q, current_space, tag, utcb, out, err, words);

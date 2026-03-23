@@ -63,17 +63,16 @@ Ipc_sender_base::handle_shortcut(Syscall_frame *dst_regs, Receiver *receiver)
 {
   auto &rq = Sched_context::rq.current();
 
-  if (EXPECT_TRUE
-      ((current() != receiver
-        && rq.deblock(receiver->sched(), current()->sched(), true)
-        // avoid race in do_ipc() after Thread_send_in_progress
-        // flag was deleted from receiver's thread state
-        // also: no shortcut for alien threads, they need to see the
-        // after-syscall exception
-        && !(receiver->state()
-          & (Thread_drq_wait | Thread_ready_mask | Thread_alien
-             | Thread_switch_hazards))
-        && !rq.schedule_in_progress))) // no schedule in progress
+  if ((current() != receiver
+       && rq.deblock(receiver->sched(), current()->sched(), true)
+       // avoid race in do_ipc() after Thread_send_in_progress
+       // flag was deleted from receiver's thread state
+       // also: no shortcut for alien threads, they need to see the
+       // after-syscall exception
+       && !(receiver->state()
+            & (Thread_drq_wait | Thread_ready_mask | Thread_alien
+            | Thread_switch_hazards))
+       && !rq.schedule_in_progress)) [[likely]] // no schedule in progress
     {
       // we don't need to manipulate the state in a safe way
       // because we are still running with interrupts turned off

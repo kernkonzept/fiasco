@@ -132,7 +132,7 @@ Vm_svm::get_vm_cr3(Vmcb *v)
   //    bits in the PDPE and it thus works there...
   assert_opt (this);
   Address vm_cr3 = static_cast<Mem_space*>(this)->dir()->walk(Virt_addr(0), 0).next_level();
-  if (EXPECT_FALSE(!vm_cr3))
+  if (!vm_cr3) [[unlikely]]
     {
       // force allocation of new secondary page-table level
       static_cast<Mem_space*>(this)->dir()
@@ -140,7 +140,7 @@ Vm_svm::get_vm_cr3(Vmcb *v)
       vm_cr3 = static_cast<Mem_space*>(this)->dir()->walk(Virt_addr(0), 0).next_level();
     }
 
-  if (EXPECT_FALSE(vm_cr3 >= 1UL << 32))
+  if (vm_cr3 >= 1UL << 32) [[unlikely]]
     {
       WARN("svm: Host page-table not under 4G, sorry.\n");
       return 0;
@@ -367,7 +367,7 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
   Svm &s = Svm::cpus.current();
 
   // FIXME: this can be an assertion I think, however, think about MP
-  if (EXPECT_FALSE(!s.svm_enabled()))
+  if (!s.svm_enabled()) [[unlikely]]
     {
       WARN("svm: not supported/enabled\n");
       return -L4_err::EInval;
@@ -440,7 +440,7 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
   // barrier for the whole state save area and control area
   asm volatile ("" : "=m" (*vmcb_s));
 
-  if (EXPECT_FALSE(!clean.np() && kernel_vmcb_s->np_enabled() && !s.has_npt()))
+  if (!clean.np() && kernel_vmcb_s->np_enabled() && !s.has_npt()) [[unlikely]]
     {
       WARN("svm: No NPT available\n");
       return -L4_err::EInval;
@@ -449,19 +449,19 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
   // needs EFER in vmcb
   Address vm_cr3 = get_vm_cr3(kernel_vmcb_s);
   // can only fail on 64bit, will be optimized away on 32bit
-  if (EXPECT_FALSE(is_64bit() && !vm_cr3))
+  if (is_64bit() && !vm_cr3) [[unlikely]]
     return -L4_err::ENomem;
 
   // neither EFER.LME nor EFER.LMA must be set
-  if (EXPECT_FALSE(!is_64bit()
-	           && (kernel_vmcb_s->state_save_area.efer & (EFER_LME | EFER_LMA))))
+  if (!is_64bit()
+      && (kernel_vmcb_s->state_save_area.efer & (EFER_LME | EFER_LMA))) [[unlikely]]
     {
       WARN("svm: EFER invalid %llx\n", kernel_vmcb_s->state_save_area.efer);
       return -L4_err::EInval;
     }
 
   // EFER.SVME must be set
-  if (EXPECT_FALSE(!(kernel_vmcb_s->state_save_area.efer & 0x1000)))
+  if (!(kernel_vmcb_s->state_save_area.efer & 0x1000)) [[unlikely]]
     {
       WARN("svm: EFER invalid %llx\n", kernel_vmcb_s->state_save_area.efer);
       return -L4_err::EInval;
@@ -531,7 +531,7 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
   kernel_vmcb_s->control_area.eventinj = 0;
 #endif
 
-  if (EXPECT_TRUE(kernel_vmcb_s->np_enabled()))
+  if (kernel_vmcb_s->np_enabled()) [[likely]]
     {
       if (!clean.crx())
         {
@@ -652,7 +652,7 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
   vmcb_s->state_save_area.dr7 = kernel_vmcb_s->state_save_area.dr7;
   vmcb_s->state_save_area.dr6 = kernel_vmcb_s->state_save_area.dr6;
 
-  if (EXPECT_TRUE(kernel_vmcb_s->np_enabled()))
+  if (kernel_vmcb_s->np_enabled()) [[likely]]
     {
       vmcb_s->state_save_area.cr3 = kernel_vmcb_s->state_save_area.cr3;
       vmcb_s->state_save_area.cr4 = kernel_vmcb_s->state_save_area.cr4;
@@ -682,7 +682,7 @@ Vm_svm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode) override
   (void)user_mode;
   assert (user_mode);
 
-  if (EXPECT_FALSE(!(ctxt->state(true) & Thread_ext_vcpu_enabled)))
+  if (!(ctxt->state(true) & Thread_ext_vcpu_enabled)) [[unlikely]]
     {
       ctxt->arch_load_vcpu_kern_state(vcpu, true);
       force_kern_entry_vcpu_state(vcpu);

@@ -147,7 +147,7 @@ private:
    */
   void do_flush_cpu_op(Cpu_number cpu)
   {
-    if (EXPECT_FALSE(_cpu_tlb.all))
+    if (_cpu_tlb.all) [[unlikely]]
       {
         // flush all CPU-local TLBs, e.g. MMU, ept, npt
         Tlb::flush_all_cpu(cpu);
@@ -201,10 +201,10 @@ private:
    */
   void do_flush_iommu()
   {
-    if (EXPECT_TRUE(_iommu_tlb.empty))
+    if (_iommu_tlb.empty) [[likely]]
       return;
 
-    if (EXPECT_FALSE(_iommu_tlb.all))
+    if (_iommu_tlb.all) [[unlikely]]
       {
         // flush all CPU-independent TLBs, e.g IOMMU
         Tlb::flush_all_iommu();
@@ -218,7 +218,7 @@ public:
   {
     /* At a later stage, also use the addresses given here. */
 
-    if (EXPECT_FALSE(space->tlb_type() == Mem_space::Tlb_iommu))
+    if (space->tlb_type() == Mem_space::Tlb_iommu) [[unlikely]]
       _iommu_tlb.add_space(space);
     else
       _cpu_tlb.add_space(space);
@@ -515,8 +515,7 @@ map_lookup_src(SPACE* from,
   // fully-constructed page table, and it can fabricate mappings
   // for all physical addresses.
   typename SPACE::Attr s_attribs;
-  if (EXPECT_FALSE(! from->v_fabricate(snd_addr, s_phys,
-                                       s_order, &s_attribs)))
+  if (!from->v_fabricate(snd_addr, s_phys, s_order, &s_attribs)) [[unlikely]]
     return false;
 
   // Compute attributes for to-be-inserted frame
@@ -524,7 +523,7 @@ map_lookup_src(SPACE* from,
   *i_phys = SPACE::subpage_address(*s_phys, page_offset);
 
   *i_attribs = Mt::apply_attribs(s_attribs, *i_phys, attribs);
-  if (EXPECT_FALSE(i_attribs->empty()))
+  if (i_attribs->empty()) [[unlikely]]
     return false;
 
   return true;
@@ -607,8 +606,8 @@ map(MAPDB* mapdb,
       // Sigma0 special case: Sigma0 doesn't need to have a
       // fully-constructed page table, and it can fabricate mappings
       // for all physical addresses.
-      if (EXPECT_FALSE(! map_lookup_src(from, snd_addr, &s_phys, &i_phys,
-                                        &s_order, &i_attribs, attribs)))
+      if (!map_lookup_src(from, snd_addr, &s_phys, &i_phys, &s_order,
+                          &i_attribs, attribs)) [[unlikely]]
         {
           size = SPACE::to_size(s_order) - SPACE::subpage_offset(snd_addr, s_order);
           if (size >= snd_size)
@@ -756,8 +755,8 @@ map(MAPDB* mapdb,
               {
                 if (grant)
                   {
-                    if (EXPECT_FALSE(!mapdb->grant(sender_frame, to_id,
-                                                   SPACE::to_pfn(rcv_addr))))
+                    if (!mapdb->grant(sender_frame, to_id,
+                                      SPACE::to_pfn(rcv_addr))) [[unlikely]]
                       {
                         // Error -- remove mapping again.
                         to->v_delete(rcv_addr, i_order, Page::Rights::FULL());
@@ -824,7 +823,7 @@ map(MAPDB* mapdb,
     }
 
   // FIXME: make this debugging code optional
-  if (EXPECT_FALSE(no_page_mapped))
+  if (no_page_mapped) [[unlikely]]
     WARN("nothing mapped: (%s) from [%p]: " L4_PTR_FMT
          " size: " L4_PTR_FMT " to [%p]\n", SPACE::name,
          static_cast<void *>(from_id),

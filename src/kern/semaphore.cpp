@@ -164,7 +164,7 @@ PRIVATE inline NEEDS["assert_opt.h"] NOEXPORT ALWAYS_INLINE
 L4_msg_tag
 Semaphore::sys_down(L4_fpage::Rights rights, L4_timeout t, Utcb const *utcb)
 {
-  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
+  if (!(rights & L4_fpage::Rights::CS())) [[unlikely]]
     return commit_result(-L4_err::EPerm);
 
   Thread *const c_thread = ::current_thread();
@@ -201,7 +201,7 @@ Semaphore::sys_down(L4_fpage::Rights rights, L4_timeout t, Utcb const *utcb)
       c_thread->set_partner(nullptr);
     }
 
-  if (EXPECT_FALSE(s & (Thread_cancel | Thread_timeout)))
+  if (s & (Thread_cancel | Thread_timeout)) [[unlikely]]
     {
       if (c_thread->wait_queue())
         {
@@ -260,7 +260,7 @@ Semaphore::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
   L4_msg_tag tag = f->tag();
   Mword op = get_irq_opcode(tag, utcb);
 
-  if (EXPECT_FALSE(op == ~0UL))
+  if (op == ~0UL) [[unlikely]]
     return commit_result(-L4_err::EInval);
 
   switch (tag.proto())

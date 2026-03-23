@@ -747,7 +747,7 @@ private:
       bool write(T const &item, Index *wait_index = nullptr)
       {
         T *slot = this->next_slot();
-        if (EXPECT_FALSE(!slot))
+        if (!slot) [[unlikely]]
           return false;
 
         *slot = item;
@@ -1178,7 +1178,7 @@ Iommu::send_cmds(Cmd const (&cmds)[N])
   Wait_warn_timeout wait_warn_timeout;
   Cmd_queue::Index wait_index;
   for (Cmd cmd : cmds)
-    while (EXPECT_FALSE(!_cmd_queue.write(cmd, &wait_index)))
+    while (!_cmd_queue.write(cmd, &wait_index)) [[unlikely]]
       {
         // Allow preemption, then retry to write the command.
         g.reset();
@@ -1401,7 +1401,7 @@ Iommu::acquire_ste(Ste_ptr ste)
 
   Ste_state state = ste_state(old.v(), old.config());
   // Usually the STE we want to acquire is going to be Invalid.
-  if (EXPECT_TRUE(state == Ste_state::Invalid))
+  if (state == Ste_state::Invalid) [[likely]]
     {
       if (ste.atomic_acquire_ste(old))
         // Acquired an invalid STE.
@@ -1450,7 +1450,7 @@ Iommu::acquire_ste_if_bound(Ste_ptr ste, Iommu_domain const &domain,
   auto g = lock_guard(_ste_invalidate_lock);
 
   // Recheck under lock that the STE is still in Valid state.
-  if (EXPECT_FALSE(ste_state(ste) != Ste_state::Valid))
+  if (ste_state(ste) != Ste_state::Valid) [[unlikely]]
     // Someone modified the STE in the meantime.
     return false;
 
@@ -2025,7 +2025,7 @@ Iommu_domain::add_binding(Iommu const *iommu)
 {
   auto g = lock_guard(_lock);
 
-  if (EXPECT_FALSE(_bindings[iommu->idx()] >= Max_bindings_per_iommu))
+  if (_bindings[iommu->idx()] >= Max_bindings_per_iommu) [[unlikely]]
     return false;
 
   atomic_store(&_bindings[iommu->idx()], _bindings[iommu->idx()] + 1);
@@ -2038,7 +2038,7 @@ Iommu_domain::del_binding(Iommu const *iommu)
 {
   auto g = lock_guard(_lock);
 
-  if (EXPECT_TRUE(_bindings[iommu->idx()] > 0))
+  if (_bindings[iommu->idx()] > 0) [[likely]]
     {
       auto new_count = _bindings[iommu->idx()] - 1;
       atomic_store(&_bindings[iommu->idx()], new_count);

@@ -148,12 +148,12 @@ Ready_queue_wfq<E>::enqueue(E *i, bool /*is_current_sched**/)
   assert(cpu_lock.test());
 
   // Don't enqueue threads which are already enqueued
-  if (EXPECT_FALSE (i->in_ready_list()))
+  if (i->in_ready_list()) [[unlikely]]
     return;
 
   unsigned n = _cnt++;
 
-  if (EXPECT_FALSE(n >= cxx::size(_heap)))
+  if (n >= cxx::size(_heap)) [[unlikely]]
     panic("WFQ scheduler: Too many threads ready");
 
   E *&h = _heap[n];
@@ -174,7 +174,7 @@ Ready_queue_wfq<E>::dequeue(E *i)
   assert (cpu_lock.test());
 
   // Don't dequeue threads which aren't enqueued
-  if (EXPECT_FALSE (!i->in_ready_list() || i == idle))
+  if (!i->in_ready_list() || i == idle) [[unlikely]]
     return;
 
   unsigned x = _e(i)->_ready_link - _heap;
@@ -210,7 +210,7 @@ void
 Ready_queue_wfq<E>::deblock_refill(E *sc)
 {
   Unsigned64 da = 0;
-  if (EXPECT_TRUE(_current_sched != 0))
+  if (_current_sched != 0) [[likely]]
     da = _e(_current_sched)->_dl;
 
   if (_e(sc)->_dl >= da)

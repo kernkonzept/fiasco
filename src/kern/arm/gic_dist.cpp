@@ -243,7 +243,7 @@ Gic_dist::sync_rwp(V3)
   while (i.test(_dist.read<Unsigned32>(GICD_CTRL) & GICD_CTRL_RWP))
     Proc::pause();
 
-  if (EXPECT_FALSE(i.timed_out()))
+  if (i.timed_out()) [[unlikely]]
     WARNX(Error, "GICD: RWP timed out!\n");
 }
 

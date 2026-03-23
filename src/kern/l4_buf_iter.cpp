@@ -68,14 +68,14 @@ IMPLEMENT inline
 bool
 L4_buf_iter::next()
 {
-  if (EXPECT_FALSE(_buf >= _max))
+  if (_buf >= _max) [[unlikely]]
     {
       c.b = L4_buf_item(0);
       return false;
     }
 
   c.b = L4_buf_item(_buf[0]);
-  if (EXPECT_FALSE(c.b.is_void()))
+  if (c.b.is_void()) [[unlikely]]
     return false;
 
   if (c.b.type() == L4_msg_item::Map && c.b.is_small_obj())
@@ -83,7 +83,7 @@ L4_buf_iter::next()
   else
     {
       ++_buf;
-      if (EXPECT_FALSE(_buf >= _max))
+      if (_buf >= _max) [[unlikely]]
         {
           c.b = L4_buf_item(0);
           return false;
@@ -93,10 +93,10 @@ L4_buf_iter::next()
     }
 
   // The last word specifies the destination task.
-  if (EXPECT_FALSE(c.b.forward_mappings()))
+  if (c.b.forward_mappings()) [[unlikely]]
     {
       ++_buf;
-      if (EXPECT_FALSE(_buf >= _max))
+      if (_buf >= _max) [[unlikely]]
         {
           c.b = L4_buf_item(0);
           return false;
@@ -113,7 +113,7 @@ IMPLEMENT inline
 bool
 L4_snd_item_iter::next()
 {
-  if (EXPECT_FALSE(_buf >= _max))
+  if (_buf >= _max) [[unlikely]]
     {
       c.b = L4_snd_item(0);
       return false;
@@ -124,9 +124,9 @@ L4_snd_item_iter::next()
 
   ++_buf;
 
-  if (EXPECT_TRUE(!c.b.is_void()))
+  if (!c.b.is_void()) [[likely]]
     {
-      if (EXPECT_FALSE(_buf >= _max))
+      if (_buf >= _max) [[unlikely]]
         return false;
 
       c.d = _buf[0];

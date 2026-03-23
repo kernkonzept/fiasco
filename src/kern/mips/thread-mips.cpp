@@ -142,7 +142,7 @@ Thread::user_invoke()
 
   ts->r[4] = 0;
 
-  if (EXPECT_FALSE(current_thread()->mem_space()->is_sigma0()))
+  if (current_thread()->mem_space()->is_sigma0()) [[unlikely]]
     ts->r[4] = Mem_layout::pmem_to_phys(Kip::k());
 
   // FIXME: do we really need this or should the user be
@@ -224,7 +224,7 @@ Thread::handle_slow_trap(Trap_state::Cause cause, Trap_state *ts,
   if (from_user && _space.user_mode() && send_exception(ts))
     return 0;
 
-  if (EXPECT_FALSE(!from_user))
+  if (!from_user) [[unlikely]]
     return Thread::call_nested_trap_handler(ts);
 
   // FIXME: HACK trap 'break' to JDB even from user mode
@@ -289,10 +289,9 @@ thread_handle_tlb_fault(Mword cause, Trap_state *ts, Mword pfa)
   bool need_probe = !(cause & 1);
   bool guest = ts->status & (1 << 3);
 
-  if (EXPECT_FALSE(PF::is_tlb_rights_error(cause)
-                   || !s->add_tlb_entry(Virt_addr(pfa),
-                                        !PF::is_read_error(cause), need_probe,
-                                        guest)))
+  if (PF::is_tlb_rights_error(cause)
+      || !s->add_tlb_entry(Virt_addr(pfa),!PF::is_read_error(cause), need_probe,
+                           guest)) [[unlikely]]
     {
       // TODO: Think about t->state_del(Thread_cancel); and sync with
       // at least ARM
@@ -369,7 +368,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
   // only a complete state will be used.
-  if (EXPECT_FALSE(tag.words() < (sizeof(Trex) / sizeof(Mword))))
+  if (tag.words() < (sizeof(Trex) / sizeof(Mword))) [[unlikely]]
     return true;
 
   Trap_state *ts = static_cast<Trap_state*>(rcv->_utcb_handler);
@@ -615,7 +614,7 @@ thread_handle_gva_tlb_fault(Mword cause, Trap_state *ts, Mword pfa)
     }
 
   Space *s = t->vcpu_aware_space();
-  if (EXPECT_TRUE(s->add_tlb_entry(Virt_addr(pfa), !PF::is_read_error(cause), true, true)))
+  if (s->add_tlb_entry(Virt_addr(pfa), !PF::is_read_error(cause), true, true)) [[likely]]
     return;
 
   Thread::save_bad_instr(ts);
@@ -636,7 +635,7 @@ thread_handle_tlb_fault_vz(Mword cause, Trap_state *ts, Mword pfa)
   if (ts->status & (1 << 3))
     {
       Mword c = Mips::mfc0_32(Mips::Cp0_guest_ctl_0);
-      if (EXPECT_FALSE(((c >> 2) & 0x1f) == 8))
+      if (((c >> 2) & 0x1f) == 8) [[unlikely]]
         {
           thread_handle_gva_tlb_fault(cause, ts, pfa);
           return;

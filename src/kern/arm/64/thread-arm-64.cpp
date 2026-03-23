@@ -164,7 +164,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
   // only a complete state will be used.
-  if (EXPECT_FALSE(tag.words() < (sizeof(Trex) / sizeof(Mword))))
+  if (tag.words() < (sizeof(Trex) / sizeof(Mword))) [[unlikely]]
     return true;
 
   Trap_state *ts = static_cast<Trap_state*>(rcv->_utcb_handler);
@@ -326,7 +326,7 @@ PRIVATE static inline
 Address
 Thread::get_fault_pfa(Arm_esr hsr, bool /*insn_abt*/, bool /*ext_vcpu*/)
 {
-  if (EXPECT_FALSE(hsr.pf_fnv())) // bit is RES0 on IFSC!=0x10 / DFSC!=0x10
+  if (hsr.pf_fnv()) [[unlikely]] // bit is RES0 on IFSC!=0x10 / DFSC!=0x10
     return ~0UL;
 
   Address a;
@@ -350,7 +350,7 @@ PRIVATE static inline
 Address
 Thread::get_fault_pfa(Arm_esr hsr, bool /*insn_abt*/, bool ext_vcpu)
 {
-  if (EXPECT_FALSE(hsr.pf_fnv())) // bit is RES0 on IFSC!=0x10 / DFSC!=0x10
+  if (hsr.pf_fnv()) [[unlikely]] // bit is RES0 on IFSC!=0x10 / DFSC!=0x10
     return ~0UL;
 
   Address a;

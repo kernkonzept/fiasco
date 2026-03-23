@@ -214,7 +214,7 @@ public:
      */
     void del()
     {
-      if (EXPECT_TRUE(empty()))
+      if (empty()) [[likely]]
         return;
 
       auto c_lock = lock_guard<Lock_guard_inverse_policy>(cpu_lock);

@@ -19,11 +19,11 @@ void irq_handler()
 
   Mword irq;
 
-  if(EXPECT_TRUE(rf->user_mode()))
+  if (rf->user_mode()) [[likely]]
     rf->srr1 = Proc::wake(rf->srr1);
 
   irq = Pic::pending();
-  if(EXPECT_FALSE(irq == Pic::No_irq_pending))
+  if (irq == Pic::No_irq_pending) [[unlikely]]
     return;
 
   Irq *i = nonull_static_cast<Irq*>(Pic::main->irq(irq));

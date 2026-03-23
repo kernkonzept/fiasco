@@ -11,7 +11,7 @@ PUBLIC static inline
 Mword
 Thread::mangle_kernel_lib_page_fault(Mword pc, Mword error_code)
 {
-  if (EXPECT_FALSE((pc & Kmem::Kern_lib_base) == Kmem::Kern_lib_base))
+  if ((pc & Kmem::Kern_lib_base) == Kmem::Kern_lib_base) [[unlikely]]
     return error_code | (1UL << 6);
 
   return error_code;
@@ -87,14 +87,14 @@ Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
   // if the message is too short just skip the whole copy in
-  if (EXPECT_FALSE(tag.words() < (sizeof(Trex) / sizeof(Mword))))
+  if (tag.words() < (sizeof(Trex) / sizeof(Mword))) [[unlikely]]
     return true;
 
   Trap_state *ts = static_cast<Trap_state*>(rcv->_utcb_handler);
   Utcb *snd_utcb = snd->utcb().access();
   Trex const *sregs = reinterpret_cast<Trex const *>(snd_utcb->values);
 
-  if (EXPECT_FALSE(rcv->exception_triggered()))
+  if (rcv->exception_triggered()) [[unlikely]]
     {
       // triggered exception pending -- copy pf_address, esr, r0..r12
       Mem::memcpy_mwords(ts, snd_utcb->values, 15);
@@ -144,7 +144,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag, Thread *snd, Thread *rcv,
     snd->_exc_cont.get(d, ts);
 
 
-    if (EXPECT_TRUE(!snd->exception_triggered()))
+    if (!snd->exception_triggered()) [[likely]]
       {
         rcv_utcb->values[18] = ts->pc;
         rcv_utcb->values[19] = ts->psr;
@@ -294,8 +294,8 @@ Thread::check_and_handle_mem_op_fault(Mword error_code, Return_frame *ret_frame)
 {
   // cache operations we carry out for user space might cause PFs, we just
   // ignore those
-  if (EXPECT_FALSE(!PF::is_usermode_error(error_code))
-      && EXPECT_FALSE(is_ignore_mem_op_in_progress()))
+  if (!PF::is_usermode_error(error_code)
+      && is_ignore_mem_op_in_progress()) [[unlikely]]
     {
       set_kernel_mem_op_hit();
       ret_frame->pc += 4;
@@ -362,7 +362,7 @@ Thread::check_and_handle_coproc_faults(Trap_state *ts)
       Unsigned16 v =
         Thread::peek_user(reinterpret_cast<Unsigned16 *>(ts->pc), this);
 
-      if (EXPECT_FALSE(is_kernel_mem_op_hit_and_clear()))
+      if (is_kernel_mem_op_hit_and_clear()) [[unlikely]]
         return true;
 
       if ((v >> 11) <= 0x1c)
@@ -375,7 +375,7 @@ Thread::check_and_handle_coproc_faults(Trap_state *ts)
   else
     opcode = Thread::peek_user(reinterpret_cast<Unsigned32 *>(ts->pc), this);
 
-  if (EXPECT_FALSE(is_kernel_mem_op_hit_and_clear()))
+  if (is_kernel_mem_op_hit_and_clear()) [[unlikely]]
     return true;
 
   if (ts->psr & Proc::Status_thumb)
@@ -450,7 +450,7 @@ void
 Thread::handle_svc(Trap_state *ts)
 {
   Unsigned32 r5 = ts->r[5];
-  if (EXPECT_FALSE(r5 > 1))
+  if (r5 > 1) [[unlikely]]
     {
       // Adjust PC to point to trapped bogus syscall instruction.
       ts->pc -= Arm_esr(ts->error_code).il() ? 4 : 2;

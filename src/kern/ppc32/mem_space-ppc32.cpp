@@ -87,8 +87,8 @@ bool
 Mem_space::initialize()
 {
   void *b;
-  if (EXPECT_FALSE(!(b = Kmem_alloc::allocator()
-	  ->q_alloc(_quota, Config::page_order()))))
+  if (!(b = Kmem_alloc::allocator()
+              ->q_alloc(_quota, Config::page_order()))) [[unlikely]]
     return false;
 
   _dir = static_cast<Dir_type*>(b);
@@ -258,7 +258,7 @@ Mem_space::try_htab_fault(Address virt)
      status = v_insert_htab(phys, virt, &pte_ptr, &evict);
 
      // something had to be replaced update  in cache-page table
-     if(EXPECT_FALSE(status == Insert_err_nomem)) 
+     if (status == Insert_err_nomem) [[unlikely]]
       {
         Pte_base e(evict.phys);
         e.to_htab_entry();
@@ -268,7 +268,7 @@ Mem_space::try_htab_fault(Address virt)
   }
 
 
-  if(EXPECT_FALSE(status != Insert_ok))
+  if (status != Insert_ok) [[unlikely]]
     return false;
 
   // set pointer in cache
@@ -278,7 +278,7 @@ Mem_space::try_htab_fault(Address virt)
 
   status  = v_insert_cache(&e, virt, Config::PAGE_SIZE, 0, dir);
 
-  if(EXPECT_FALSE(status != Insert_ok))
+  if (status != Insert_ok) [[unlikely]]
 #endif
     return false;
 

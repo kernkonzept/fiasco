@@ -400,14 +400,14 @@ Vz::State::save_full(int guest_id)
   auto c_map = current_cp0_map;
   write_now(&current_cp0_map, static_cast<Unsigned32>(~0));
 
-  if (EXPECT_TRUE(!(c_map & M_ctl_0)))
+  if (!(c_map & M_ctl_0)) [[likely]]
     save_ctl();
 
-  if (EXPECT_TRUE(!(c_map & M_status)))
+  if (!(c_map & M_status)) [[likely]]
     mfgc0_32(&g_status, Mips::Cp0_status);
 
   // 12, 2 .. 3 SRSxxx not implemented (disabled in guest_config)
-  if (EXPECT_TRUE(!(c_map & M_cause)))
+  if (!(c_map & M_cause)) [[likely]]
     {
       // need the timestamp when we save the cause register
       _saved_cause_timestamp = Timer::get_current_counter();
@@ -416,10 +416,10 @@ Vz::State::save_full(int guest_id)
       mfgc0_32(&g_cause, Cp0_cause);
     }
 
-  if (EXPECT_TRUE(!(c_map & M_compare)))
+  if (!(c_map & M_compare)) [[likely]]
     mfgc0_32(&g_compare, Cp0_compare);
 
-  if (EXPECT_TRUE(!(c_map & M_mmu)))
+  if (!(c_map & M_mmu)) [[likely]]
     {
       mfgc0_32(&g_index, Cp0_index);
       mfgc0(&g_entry_lo[0], Cp0_entry_lo1);
@@ -433,7 +433,7 @@ Vz::State::save_full(int guest_id)
       mfgc0(&g_entry_hi, Cp0_entry_hi);
 
       w &= 0xff;
-      if (EXPECT_FALSE(w > Max_guest_wired))
+      if (w > Max_guest_wired) [[unlikely]]
         w = Max_guest_wired;
 
       if constexpr (0)
@@ -446,7 +446,7 @@ Vz::State::save_full(int guest_id)
     }
 
   // 4, 1 ContextConfig not supported
-  if (EXPECT_TRUE(!(c_map & M_xlat)))
+  if (!(c_map & M_xlat)) [[likely]]
     {
       mfgc0_32(&g_page_grain, Cp0_page_grain);
 
@@ -458,36 +458,42 @@ Vz::State::save_full(int guest_id)
         }
     }
 
-  if (EXPECT_TRUE(!(c_map & M_pw)) && guest_cfg.r<3>().pw())
+  if (!(c_map & M_pw)) [[likely]]
     {
-      mfgc0(&g_pw_base, Cp0_pw_base);
-      mfgc0(&g_pw_field, Cp0_pw_field);
-      mfgc0(&g_pw_size, Cp0_pw_size);
-      mfgc0_32(&g_pw_ctl, Cp0_pw_ctl);
+      if (guest_cfg.r<3>().pw())
+        {
+          mfgc0(&g_pw_base, Cp0_pw_base);
+          mfgc0(&g_pw_field, Cp0_pw_field);
+          mfgc0(&g_pw_size, Cp0_pw_size);
+          mfgc0_32(&g_pw_ctl, Cp0_pw_ctl);
+        }
     }
 
-  if (EXPECT_TRUE(!(c_map & M_intctl)))
+  if (!(c_map & M_intctl)) [[likely]]
     mfgc0_32(&g_intctl, Cp0_int_ctl);
 
-  if (EXPECT_TRUE(!(c_map & M_ulr)) && guest_cfg.r<3>().ulri())
-    mfgc0(&g_ulr, Cp0_user_local);
+  if (!(c_map & M_ulr)) [[likely]]
+    {
+      if (guest_cfg.r<3>().ulri())
+        mfgc0(&g_ulr, Cp0_user_local);
+    }
 
 
   // 13, 5 NestedExc not supported in guest
-  if (EXPECT_TRUE(!(c_map & M_epc)))
+  if (!(c_map & M_epc)) [[likely]]
     {
       mfgc0(&g_epc, Cp0_epc);
       mfgc0(&g_error_epc, Cp0_err_epc);
     }
 
-  if (EXPECT_TRUE(!(c_map & M_ebase)))
+  if (!(c_map & M_ebase)) [[likely]]
     mfgc0(&g_ebase, Cp0_ebase);
 
 
-  if (EXPECT_TRUE(!(c_map & M_hwrena)))
+  if (!(c_map & M_hwrena)) [[likely]]
     mfgc0_32(&g_hwrena, Cp0_hw_rena);
 
-  if (EXPECT_TRUE(!(c_map & M_bad)))
+  if (!(c_map & M_bad)) [[likely]]
     {
       mfgc0(&g_bad_v_addr, Cp0_bad_v_addr);
 
@@ -501,7 +507,7 @@ Vz::State::save_full(int guest_id)
   // FIXME: Think about Tag and Data registers
 
   auto kscr_n = guest_cfg.r<4>().k_scr_num();
-  if (EXPECT_TRUE(!(c_map & M_kscr)))
+  if (!(c_map & M_kscr)) [[likely]]
     {
       mfg_kscr(kscr_n, 2);
       mfg_kscr(kscr_n, 3);
@@ -622,7 +628,7 @@ Vz::State::load_full(int guest_id)
   mtgc0_32(w, Cp0_wired);
 
   w &= 0xff;
-  if (EXPECT_FALSE(w > Max_guest_wired))
+  if (w > Max_guest_wired) [[unlikely]]
     w = Max_guest_wired;
 
   if constexpr (0)
@@ -699,7 +705,7 @@ Vz::State::load_selective(int guest_id)
   auto mod_map = modified_cp0_map;
   write_now(&modified_cp0_map, 0);
 
-  if (EXPECT_FALSE(mod_map & M_ctl_0))
+  if (mod_map & M_ctl_0) [[unlikely]]
     {
       auto c0 = access_once(&ctl_0);
       c0 &= Ctl_0_mbz;
@@ -707,36 +713,42 @@ Vz::State::load_selective(int guest_id)
       mtc0_32(c0, Cp0_guest_ctl_0);
     }
 
-  if (EXPECT_FALSE(mod_map & M_status))
+  if (mod_map & M_status) [[unlikely]]
     mtgc0_32(g_status, Mips::Cp0_status);
 
-  if (EXPECT_FALSE(mod_map & M_gtoffset))
+  if (mod_map & M_gtoffset) [[unlikely]]
     mtc0_32(ctl_gtoffset, Cp0_gt_offset);
 
-  if (EXPECT_FALSE(mod_map & M_compare))
+  if (mod_map & M_compare) [[unlikely]]
     mtgc0_32(g_compare, Cp0_compare); // Compare (must be loaded before load_cause)
 
-  if (EXPECT_FALSE(mod_map & M_cause))
+  if (mod_map & M_cause) [[unlikely]]
     load_cause();
 
 
-  if (EXPECT_FALSE(mod_map & M_ctl_0_ext) && Vz::options.ctl_0_ext)
+  if (mod_map & M_ctl_0_ext) [[unlikely]]
     {
-      auto c0 = access_once(&ctl_0_ext);
-      c0 &= Ctl_0_ext_mbz;
-      c0 |= Ctl_0_ext_mb1;
-      mtc0_32(c0, Cp0_guest_ctl_0_ext);
+      if (Vz::options.ctl_0_ext)
+        {
+          auto c0 = access_once(&ctl_0_ext);
+          c0 &= Ctl_0_ext_mbz;
+          c0 |= Ctl_0_ext_mb1;
+          mtc0_32(c0, Cp0_guest_ctl_0_ext);
+        }
     }
 
-  if (EXPECT_FALSE(mod_map & M_ctl_2) && Vz::options.ctl_2)
+  if (mod_map & M_ctl_2) [[unlikely]]
     {
-      auto c2 = access_once(&ctl_2);
-      c2 &= Ctl_2_mbz;
-      mtc0_32(c2, Cp0_guest_ctl_2);
+      if (Vz::options.ctl_2)
+        {
+          auto c2 = access_once(&ctl_2);
+          c2 &= Ctl_2_mbz;
+          mtc0_32(c2, Cp0_guest_ctl_2);
+        }
     }
 
   // Guest config
-  if (EXPECT_FALSE(mod_map & M_cfg))
+  if (mod_map & M_cfg) [[unlikely]]
     {
       mtg_cfg(0);
       mtg_cfg(1);
@@ -747,13 +759,13 @@ Vz::State::load_selective(int guest_id)
     }
 
   // Guest MMU
-  if (EXPECT_FALSE(mod_map & M_mmu))
+  if (mod_map & M_mmu) [[unlikely]]
     {
       unsigned w = access_once(&g_wired);
       mtgc0_32(w, Cp0_wired);
 
       w &= 0xff;
-      if (EXPECT_FALSE(w > Max_guest_wired))
+      if (w > Max_guest_wired) [[unlikely]]
         w = Max_guest_wired;
 
       if constexpr (0)
@@ -773,7 +785,7 @@ Vz::State::load_selective(int guest_id)
     }
 
   // Address Translation segmentation
-  if (EXPECT_FALSE(mod_map & M_xlat))
+  if (mod_map & M_xlat) [[unlikely]]
     {
       mtgc0_32(g_page_grain, Cp0_page_grain);
 
@@ -785,35 +797,39 @@ Vz::State::load_selective(int guest_id)
         }
     }
 
-  if (EXPECT_FALSE(mod_map & M_pw)
-      && guest_cfg.r<3>().pw())
+  if (mod_map & M_pw) [[unlikely]]
     {
-      mtgc0(g_pw_base, Cp0_pw_base);
-      mtgc0(g_pw_field, Cp0_pw_field);
-      mtgc0(g_pw_size, Cp0_pw_size);
-      mtgc0_32(g_pw_ctl, Cp0_pw_ctl);
+      if (guest_cfg.r<3>().pw())
+        {
+          mtgc0(g_pw_base, Cp0_pw_base);
+          mtgc0(g_pw_field, Cp0_pw_field);
+          mtgc0(g_pw_size, Cp0_pw_size);
+          mtgc0_32(g_pw_ctl, Cp0_pw_ctl);
+        }
     }
 
-  if (EXPECT_FALSE(mod_map & M_intctl))
+  if (mod_map & M_intctl) [[unlikely]]
     mtgc0_32(g_intctl, Cp0_int_ctl);
 
-  if (EXPECT_FALSE(mod_map & M_ulr)
-      && guest_cfg.r<3>().ulri())
-    mtgc0(g_ulr, Cp0_user_local);
+  if (mod_map & M_ulr) [[unlikely]]
+    {
+      if (guest_cfg.r<3>().ulri())
+        mtgc0(g_ulr, Cp0_user_local);
+    }
 
-  if (EXPECT_FALSE(mod_map & M_epc))
+  if (mod_map & M_epc) [[unlikely]]
     {
       mtgc0(g_epc, Cp0_epc);
       mtgc0(g_error_epc, Cp0_err_epc);
     }
 
-  if (EXPECT_FALSE(mod_map & M_ebase))
+  if (mod_map & M_ebase) [[unlikely]]
     mtgc0(g_ebase, Cp0_ebase);
 
-  if (EXPECT_FALSE(mod_map & M_hwrena))
+  if (mod_map & M_hwrena) [[unlikely]]
     mtgc0_32(g_hwrena, Cp0_hw_rena);
 
-  if (EXPECT_FALSE(mod_map & M_bad))
+  if (mod_map & M_bad) [[unlikely]]
     {
       mtgc0(g_bad_v_addr, Cp0_bad_v_addr);
 
@@ -824,7 +840,7 @@ Vz::State::load_selective(int guest_id)
         mtgc0_32(g_bad_instr_p, Cp0_bad_instr_p);
     }
 
-  if (EXPECT_FALSE(mod_map & M_llbit))
+  if (mod_map & M_llbit) [[unlikely]]
     if (guest_cfg.r<5>().llb())
       mtgc0(0, Cp0_load_linked_addr);
 
@@ -833,7 +849,7 @@ Vz::State::load_selective(int guest_id)
   // FIXME: Think about Tag and Data registers
 
   auto kscr_n = guest_cfg.r<4>().k_scr_num();
-  if (EXPECT_FALSE(mod_map & M_kscr))
+  if (mod_map & M_kscr) [[unlikely]]
     {
       mtg_kscr(kscr_n, 2);
       mtg_kscr(kscr_n, 3);

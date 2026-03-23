@@ -29,8 +29,8 @@ Task::invoke_arch(L4_msg_tag &tag, Utcb *utcb)
             Utcb_values_per_ldt_entry
               = Cpu::Ldt_entry_size / sizeof(utcb->values[0]),
           };
-          if (EXPECT_FALSE(tag.words() < 3
-                           || tag.words() % Utcb_values_per_ldt_entry))
+          if (tag.words() < 3
+              || tag.words() % Utcb_values_per_ldt_entry) [[unlikely]]
             {
               tag = commit_result(-L4_err::EInval);
               return true;

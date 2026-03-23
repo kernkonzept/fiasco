@@ -29,7 +29,7 @@ IMPLEMENT extern "C" void FIASCO_FLATTEN sys_ipc_wrapper()
 
   L4_fpage::Rights rights;
   Kobject_iface *o = obj.deref(&rights);
-  if (EXPECT_TRUE(o!=nullptr))
+  if (o != nullptr) [[likely]]
     o->invoke(obj, rights, f, utcb);
   else
     f->tag(curr->commit_error(utcb, L4_error::Not_existent));

@@ -121,7 +121,7 @@ Timer::update_timer(Unsigned64 wakeup)
 {
   Unsigned64 now = Kip::k()->clock();
   Mword interval_mct;
-  if (EXPECT_FALSE(wakeup <= now))
+  if (wakeup <= now) [[unlikely]]
     interval_mct = 1;
   else
     interval_mct = us_to_mct(wakeup - now);

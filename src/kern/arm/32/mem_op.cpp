@@ -156,7 +156,7 @@ IMPLEMENTATION [arm]:
 PUBLIC static void
 Mem_op::arm_mem_cache_maint(Op_cache op, void const *start, void const *end)
 {
-  if (EXPECT_FALSE(start > end))
+  if (start > end) [[unlikely]]
     return;
 
   Context *c = current();
@@ -223,7 +223,7 @@ Mem_op::arm_mem_access(Mword *r)
 extern "C" void sys_arm_mem_op()
 {
   Entry_frame *e = current()->regs();
-  if (EXPECT_FALSE(e->r[0] & 0x10))
+  if (e->r[0] & 0x10) [[unlikely]]
     Mem_op::arm_mem_access(e->r);
   else
     Mem_op::arm_mem_cache_maint(Mem_op::Op_cache{e->r[0]},

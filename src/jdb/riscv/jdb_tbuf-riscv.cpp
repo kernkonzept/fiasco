@@ -19,7 +19,7 @@ INTERFACE [riscv && 32bit && jdb_logging]:
         ".popsection                           \n" \
         : "=r"(__do_log__)                         \
         : [xfmt] "i" (&Tb_entry_formatter_t<fmt>::singleton));  \
-      if (EXPECT_FALSE( __do_log__ ))              \
+      if (__do_log__) [[unlikely]]                 \
   {
 
 //----------------------------------------------------------------------------
@@ -44,5 +44,5 @@ INTERFACE [riscv && 64bit && jdb_logging]:
         ".popsection                           \n" \
         : "=r"(__do_log__)                         \
         : [xfmt] "i" (&Tb_entry_formatter_t<fmt>::singleton));  \
-      if (EXPECT_FALSE( __do_log__ ))              \
+      if (__do_log__) [[unlikely]]                 \
   {

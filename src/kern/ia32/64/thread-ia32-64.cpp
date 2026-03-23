@@ -221,7 +221,7 @@ bool
 Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
-  if (EXPECT_FALSE((tag.words() * sizeof(Mword)) < sizeof(Trex)))
+  if ((tag.words() * sizeof(Mword)) < sizeof(Trex)) [[unlikely]]
     return true;
 
   Trap_state *ts = static_cast<Trap_state*>(rcv->_utcb_handler);
@@ -229,7 +229,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   Utcb *snd_utcb = snd->utcb().access();
   Trex const *src = reinterpret_cast<Trex const *>(snd_utcb->values);
 
-  if (EXPECT_FALSE(rcv->exception_triggered()))
+  if (rcv->exception_triggered()) [[unlikely]]
     {
       // triggered exception pending
       Mem::memcpy_mwords(ts, &src->s, Ts::Reg_words);
@@ -289,7 +289,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
       dst->fs_base = snd->_fs_base;
       dst->gs_base = snd->_gs_base;
 
-      if (EXPECT_FALSE(snd->exception_triggered()))
+      if (snd->exception_triggered()) [[unlikely]]
         {
           Mem::memcpy_mwords(&dst->s, ts, Ts::Reg_words + Ts::Code_words);
           Continuation::User_return_frame *d

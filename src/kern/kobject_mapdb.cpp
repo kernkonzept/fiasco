@@ -101,7 +101,7 @@ Kobject_mapdb::lock_obj(Kobject_iface *obj, // Phys_addr
   auto holds_same_obj = [obj, cap_slot]()
     {
       // Entry got invalidated?
-      if (EXPECT_FALSE(!cap_slot->valid()))
+      if (!cap_slot->valid()) [[unlikely]]
         return false;
 
       // Entry still points to the same object?
@@ -116,13 +116,13 @@ Kobject_mapdb::lock_obj(Kobject_iface *obj, // Phys_addr
       // The only thing that MUST NOT happen is that we work on an invalid cap
       // slot or on freed `obj` memory that has been reallocated for something
       // entirely else, which is prevented by this and the subsequent checks.
-      if (EXPECT_FALSE(cap_slot->obj() != obj))
+      if (cap_slot->obj() != obj) [[unlikely]]
         return false;
 
       return true;
     };
 
-  if (EXPECT_FALSE(!holds_same_obj()))
+  if (!holds_same_obj()) [[unlikely]]
     return nullptr;
 
   // The cap_slot is still valid, because of RCU we know that obj is alive and
@@ -139,11 +139,11 @@ Kobject_mapdb::lock_obj(Kobject_iface *obj, // Phys_addr
       // point, which is why we set `RETURN_AFTER_HELPING=true`.
       auto status = obj_mappable->_lock.lock</* RETURN_AFTER_HELPING = */ true>();
 
-      if (EXPECT_FALSE(status == Switch_lock::Invalid))
+      if (status == Switch_lock::Invalid) [[unlikely]]
         // Someone removed the object from the cap slot.
         return nullptr;
 
-      if (EXPECT_TRUE(status != Switch_lock::Retry))
+      if (status != Switch_lock::Retry) [[likely]]
         break;
 
       // After a possible preemption:
@@ -161,7 +161,7 @@ Kobject_mapdb::lock_obj(Kobject_iface *obj, // Phys_addr
 
   // Successfully acquired lock, now need to recheck if cap slot still
   // points to object.
-  if (EXPECT_TRUE(holds_same_obj()))
+  if (holds_same_obj()) [[likely]]
     return obj_mappable;
 
   // Otherwise, someone replaced the object in the cap slot, so unlock

@@ -526,16 +526,16 @@ Treemap::create(Order parent_page_shift, Space *owner_id,
   Page key_end = Page(1) << (parent_page_shift - page_shift);
   Auto_quota<Ram_quota> quota(Mapping_tree::quota(owner_id), quota_size(key_end));
 
-  if (EXPECT_FALSE(!quota))
+  if (!quota) [[unlikely]]
     return nullptr;
 
   Physframe *pf = Physframe::alloc(cxx::int_value<Page>(key_end));
 
-  if (EXPECT_FALSE(!pf))
+  if (!pf) [[unlikely]]
     return nullptr;
 
   void *m = alloc();
-  if (EXPECT_FALSE(!m))
+  if (!m) [[unlikely]]
     {
       Physframe::free(pf, cxx::int_value<Page>(key_end), owner_id);
       return nullptr;
@@ -842,7 +842,7 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
     {
       Iterator free = frame->tree()->allocate(Mapping_tree::quota(space),
                                               parent);
-      if (EXPECT_FALSE(!*free))
+      if (!*free) [[unlikely]]
         return nullptr;
 
       free->set_space(space);
@@ -861,7 +861,7 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
       Ram_quota *payer = Mapping_tree::quota(parent_space);
 
       Iterator free = frame->tree()->allocate_submap(payer, parent);
-      if (EXPECT_FALSE(!*free))
+      if (!*free) [[unlikely]]
         return nullptr;
 
       assert (_sub_shifts_num > 0);

@@ -23,7 +23,7 @@ public:
   template<typename ARG>
   Id_type alloc(Owner_type *owner, ARG &&arg)
   {
-    if (EXPECT_TRUE(Id_ops::valid(owner, arg)))
+    if (Id_ops::valid(owner, arg)) [[likely]]
       return Id_ops::get_id(owner, arg);
 
     Id_type new_id = next_id();

@@ -81,7 +81,7 @@ bool
 Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
-  if (EXPECT_FALSE((tag.words() * sizeof(Mword)) < sizeof(Trex)))
+  if ((tag.words() * sizeof(Mword)) < sizeof(Trex)) [[unlikely]]
     return true;
 
   Trap_state *ts = static_cast<Trap_state*>(rcv->_utcb_handler);
@@ -91,7 +91,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
 
   // XXX: check that gs and fs point to valid user_entry only, for gdt and
   // ldt!
-  if (EXPECT_FALSE(rcv->exception_triggered()))
+  if (rcv->exception_triggered()) [[unlikely]]
     {
       // triggered exception pending, skip ip, cs, flags, and sp
       Mem::memcpy_mwords(ts, &src->s, Ts::Reg_words);
@@ -138,7 +138,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
   Trex *dst = reinterpret_cast<Trex *>(rcv_utcb->values);
     {
       auto guard = lock_guard(cpu_lock);
-      if (EXPECT_FALSE(snd->exception_triggered()))
+      if (snd->exception_triggered()) [[unlikely]]
         {
           Mem::memcpy_mwords(&dst->s, ts, Ts::Reg_words + Ts::Code_words);
           Continuation::User_return_frame *d
@@ -170,19 +170,19 @@ PRIVATE inline
 int
 Thread::check_trap13_kernel(Trap_state *ts)
 {
-  if (EXPECT_FALSE(ts->_trapno == 13 && (ts->_err & 3) == 0))
+  if (ts->_trapno == 13 && (ts->_err & 3) == 0) [[unlikely]]
     {
       // First check if user loaded a segment register with 0 because the
       // resulting exception #13 can be raised from user _and_ kernel. If
       // the user tried to load another segment selector, the thread gets
       // killed.
       // XXX Should we emulate this too? Michael Hohmuth: Yes, we should.
-      if (EXPECT_FALSE(!(ts->_ds & 0xffff)))
+      if (!(ts->_ds & 0xffff)) [[unlikely]]
         {
           Cpu::set_ds(Gdt::data_segment());
           return 0;
         }
-      if (EXPECT_FALSE(!(ts->_es & 0xffff)))
+      if (!(ts->_es & 0xffff)) [[unlikely]]
         {
           Cpu::set_es(Gdt::data_segment());
           return 0;

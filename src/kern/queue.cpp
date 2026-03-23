@@ -63,7 +63,7 @@ Queue::dequeue(Queue_item *i)
   assert (_m.head().test());
   assert (i->queued());
 
-  if (EXPECT_FALSE(i->_q != this))
+  if (i->_q != this) [[unlikely]]
     return false;
 
   _m.remove(i);

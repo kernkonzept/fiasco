@@ -244,7 +244,7 @@ Thread::bind(Task *t, User_ptr<Utcb> utcb)
   // _utcb == 0 for all kernel threads
   Space::Ku_mem const *u = t->find_ku_mem(utcb, sizeof(Utcb), alignof(Utcb));
 
-  if (EXPECT_FALSE(!u))
+  if (!u) [[unlikely]]
     return false;
 
   auto guard = lock_guard(_space.lock());
@@ -494,7 +494,7 @@ Thread::do_kill()
    * example by `Thread::prepare_kill()`.
    * Regular threads should never run into this case.
    */
-  while (EXPECT_FALSE(state() & Thread_ipc_transfer))
+  while (state() & Thread_ipc_transfer) [[unlikely]]
     {
       state_del_dirty(Thread_ready);
       schedule();
@@ -838,8 +838,8 @@ Thread::switchin_fpu(bool alloc_new_fpu = true)
   // Allocate FPU state slab if we didn't already have one
   if (!fpu_state().valid())
     {
-      if (EXPECT_FALSE(!alloc_new_fpu
-                       || !Fpu_alloc::alloc_state(_quota, fpu_state())))
+      if (!alloc_new_fpu
+          || !Fpu_alloc::alloc_state(_quota, fpu_state())) [[unlikely]]
         return 0;
     }
 
@@ -886,7 +886,7 @@ Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
 
   f.disable(); // it will be reenabled in switch_fpu
 
-  if (EXPECT_FALSE(f.owner() == to))
+  if (f.owner() == to) [[unlikely]]
     {
       assert (to->state() & Thread_fpu_owner);
 
@@ -901,7 +901,7 @@ Thread::transfer_fpu(Thread *to) //, Trap_state *trap_state, Utcb *to_utcb)
 
       to->state_add_dirty (Thread_fpu_owner);
       f.set_owner(to);
-      if (EXPECT_FALSE(current() == to))
+      if (current() == to) [[unlikely]]
         f.enable();
     }
 }
@@ -1343,11 +1343,13 @@ Thread::migrate_to(Cpu_number target_cpu)
       Queue &q = _pending_rqq.cpu(target_cpu);
       auto g = lock_guard(q.q_lock());
 
-      if (access_once(&_home_cpu) == target_cpu
-          && EXPECT_FALSE(!Cpu::online(target_cpu)))
+      if (access_once(&_home_cpu) == target_cpu)
         {
-          handle_drq();
-          return false;
+          if (!Cpu::online(target_cpu)) [[unlikely]]
+            {
+              handle_drq();
+              return false;
+            }
         }
 
       // migrated meanwhile
@@ -1565,7 +1567,7 @@ void
 leave_by_vcpu_upcall_async_ipc(Trap_state *ts)
 {
   Thread *ct = current_thread();
-  while (EXPECT_FALSE(ct->state() & Thread_ipc_transfer))
+  while (ct->state() & Thread_ipc_transfer) [[unlikely]]
     {
       ct->state_del_dirty(Thread_ready);
       ct->schedule();
@@ -1586,7 +1588,7 @@ void
 thread_wait_async_ipc()
 {
   Thread *ct = current_thread();
-  while (EXPECT_FALSE(ct->state() & Thread_ipc_transfer))
+  while (ct->state() & Thread_ipc_transfer) [[unlikely]]
     {
       ct->state_del_dirty(Thread_ready);
       ct->schedule();

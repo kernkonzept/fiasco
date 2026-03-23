@@ -63,7 +63,7 @@ PUBLIC inline NEEDS["std_macros.h"]
 Helping_lock::Status NO_INSTRUMENT
 Helping_lock::test_and_set ()
 {
-  if (EXPECT_FALSE(!threading_system_active)) // still initializing?
+  if (!threading_system_active) [[unlikely]] // still initializing?
     return Not_locked;
 
   return Switch_lock::test_and_set();
@@ -75,7 +75,7 @@ inline NEEDS["std_macros.h"]
 Helping_lock::Status NO_INSTRUMENT
 Helping_lock::lock ()
 {
-  if (EXPECT_FALSE(!threading_system_active)) // still initializing?
+  if (!threading_system_active) [[unlikely]] // still initializing?
     return Not_locked;
 
   return Switch_lock::lock<RETURN_AFTER_HELPING>();
@@ -91,7 +91,7 @@ PUBLIC inline NEEDS["std_macros.h"]
 Helping_lock::Status NO_INSTRUMENT
 Helping_lock::test ()
 {
-  if (EXPECT_FALSE( ! threading_system_active) ) // still initializing?
+  if (!threading_system_active) [[unlikely]] // still initializing?
     return Not_locked;
 
   return Switch_lock::test();
@@ -102,7 +102,7 @@ PUBLIC inline NEEDS["std_macros.h"]
 void NO_INSTRUMENT
 Helping_lock::clear()
 {
-  if (EXPECT_FALSE( ! threading_system_active) ) // still initializing?
+  if (!threading_system_active) [[unlikely]] // still initializing?
     return;
 
   Switch_lock::clear();

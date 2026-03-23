@@ -15,7 +15,7 @@ public:
       assert(cpu_lock.test());
 
       // Don't enqueue threads which are already enqueued
-      if (EXPECT_FALSE (sc->in_ready_list()))
+      if (sc->in_ready_list()) [[unlikely]]
         return;
 
       enqueue(sc, true);
@@ -26,7 +26,7 @@ public:
       assert (cpu_lock.test());
 
       // Don't dequeue threads which aren't enqueued
-      if (EXPECT_FALSE (!sc->in_ready_list()))
+      if (!sc->in_ready_list()) [[unlikely]]
         return;
 
       dequeue(sc);

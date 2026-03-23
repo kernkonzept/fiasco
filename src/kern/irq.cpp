@@ -311,7 +311,7 @@ Irq::get_irq_opcode(L4_msg_tag tag, Utcb const *utcb)
 {
   if (tag.proto() == L4_msg_tag::Label_irq && tag.words() == 0)
     return static_cast<Mword>(Op::Trigger);
-  if (EXPECT_FALSE(tag.words() < 1))
+  if (tag.words() < 1) [[unlikely]]
     return ~0UL;
 
   return access_once(utcb->values) & 0xffff;
@@ -476,7 +476,7 @@ Irq_sender::finish_replace_irq_thread(Irq_thread old, Irq_thread target,
           // Try to transition from Pending -> Queued, so that we can later
           // forward the pending IRQ to the new target.
           _send_state.clear(Irq_send_state::Pending);
-          if (EXPECT_TRUE(queue()))
+          if (queue()) [[likely]]
             result = Detach_pending;
           else
             // IPC send was already queued, i.e. the IRQ was triggered between
@@ -754,7 +754,7 @@ Irq_sender::finish_send()
 
   _send_state.clear(Irq_send_state::Queued);
 
-  if (EXPECT_FALSE(_send_state.is_invalidated()))
+  if (_send_state.is_invalidated()) [[unlikely]]
     {
       if (_send_state.attempt_destroy())
         {
@@ -768,7 +768,7 @@ Irq_sender::finish_send()
           return;
         }
     }
-  else if (EXPECT_FALSE(_send_state.is_masked()))
+  else if (_send_state.is_masked()) [[unlikely]]
     {
       _send_state.clear(Irq_send_state::Masked);
       unmask();
@@ -945,12 +945,12 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
   irq->migrate(current_cpu());
 
   auto t = access_once(&irq->_irq_thread);
-  if (EXPECT_TRUE(t == target))
+  if (t == target) [[likely]]
     {
-      if (EXPECT_TRUE(irq->send_local(t, true)))
+      if (irq->send_local(t, true)) [[likely]]
         return Context::Drq::no_answer_resched();
     }
-  else if (EXPECT_TRUE(t.is_bound()))
+  else if (t.is_bound()) [[likely]]
     t->drq(&irq->_drq, handle_remote_hit, irq, Context::Drq::No_wait);
   else
     irq->reject_send(nullptr);
@@ -988,7 +988,7 @@ PRIVATE inline
 void
 Irq_sender::send(Irq_thread t)
 {
-  if (EXPECT_FALSE(t->home_cpu() != current_cpu()))
+  if (t->home_cpu() != current_cpu()) [[unlikely]]
     t->drq(&_drq, handle_remote_hit, this, Context::Drq::No_wait);
   else
     send_local(t, false);
@@ -1036,7 +1036,7 @@ Irq_sender::_hit_edge_irq(Upstream_irq const *ui)
   auto g = lock_guard<No_cpu_lock_policy>(_irq_lock);
 
   auto t = _irq_thread; // access under lock
-  if (EXPECT_FALSE(!t.is_bound()))
+  if (!t.is_bound()) [[unlikely]]
     {
       // If we get an interrupt without a thread bound, we mask the IRQ. After
       // user-space binds a thread, it must unmask the IRQ. The pending state
@@ -1045,7 +1045,7 @@ Irq_sender::_hit_edge_irq(Upstream_irq const *ui)
       // Except for the unlikely case that an unbound Irq_sender still is
       // enqueued in an IPC send, where instead the eventual reject_send
       // transitions from Queued->Pending.
-      if (EXPECT_TRUE(!_send_state.is_queued()))
+      if (!_send_state.is_queued()) [[likely]]
         _send_state.set(Irq_send_state::Pending);
 
       _send_state.set(Irq_send_state::Masked);
@@ -1090,7 +1090,7 @@ L4_msg_tag
 Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
                      Utcb *utcb_out, bool to_vcpu)
 {
-  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
+  if (!(rights & L4_fpage::Rights::CS())) [[unlikely]]
     return commit_result(-L4_err::EPerm);
 
   Thread *thread;
@@ -1100,7 +1100,7 @@ Irq_sender::sys_bind(L4_msg_tag tag, L4_fpage::Rights rights, Utcb const *utcb,
   if (!thread)
     return tag;
 
-  if (EXPECT_FALSE(!(t_rights & L4_fpage::Rights::CS())))
+  if (!(t_rights & L4_fpage::Rights::CS())) [[unlikely]]
     return commit_result(-L4_err::EPerm);
 
   Irq_thread t = Irq_thread(thread, to_vcpu);
@@ -1116,7 +1116,7 @@ PRIVATE
 L4_msg_tag
 Irq_sender::sys_detach(L4_fpage::Rights rights, Utcb * /*utcb_out*/)
 {
-  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
+  if (!(rights & L4_fpage::Rights::CS())) [[unlikely]]
     return commit_result(-L4_err::EPerm);
 
   // The following operation is a preemption point, so we have to hold a
@@ -1138,7 +1138,7 @@ Irq_sender::kinvoke(L4_obj_ref, L4_fpage::Rights rights, Syscall_frame *f,
   L4_msg_tag tag = f->tag();
   Mword op = get_irq_opcode(tag, utcb);
 
-  if (EXPECT_FALSE(op == ~0UL))
+  if (op == ~0UL) [[unlikely]]
     return commit_result(-L4_err::EInval);
 
   switch (tag.proto())

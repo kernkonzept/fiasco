@@ -81,8 +81,8 @@ bool
 Mem_space::initialize()
 {
   void *b;
-  if (EXPECT_FALSE(!(b = Kmem_alloc::allocator()
-	  ->q_alloc(_quota, Config::page_order()))))
+  if (!(b = Kmem_alloc::allocator()
+              ->q_alloc(_quota, Config::page_order()))) [[unlikely]]
     return false;
 
   _dir = static_cast<Dir_type*>(b);
@@ -220,16 +220,16 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order size,
   auto i = _dir->walk(virt, level, Pte_ptr::need_cache_write_back(flush),
                       Kmem_alloc::q_allocator(_quota));
 
-  if (EXPECT_FALSE(!i.is_valid() && i.level != level))
+  if (!i.is_valid() && i.level != level) [[unlikely]]
     return Insert_err_nomem;
 
-  if (EXPECT_FALSE(i.is_valid()
-                   && (i.level != level || Phys_addr(i.page_addr()) != phys)))
+  if (i.is_valid()
+      && (i.level != level || Phys_addr(i.page_addr()) != phys)) [[unlikely]]
     return Insert_err_exists;
 
   if (i.is_valid())
     {
-      if (EXPECT_FALSE(!i.add_attribs(page_attribs)))
+      if (!i.add_attribs(page_attribs)) [[unlikely]]
         return Insert_warn_exists;
 
       //i.write_back_if(flush, c_asid());

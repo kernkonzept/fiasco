@@ -203,7 +203,7 @@ Gic_redist::sync_rwp()
   while (i.test(Ctrl(_redist.read<Unsigned32>(GICR_CTRL)).rwp()))
     Proc::pause();
 
-  if (EXPECT_FALSE(i.timed_out()))
+  if (i.timed_out()) [[unlikely]]
     WARNX(Error, "GICR: RWP timed out!\n");
 }
 

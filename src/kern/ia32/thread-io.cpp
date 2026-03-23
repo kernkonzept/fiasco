@@ -221,7 +221,7 @@ Thread::handle_io_fault(Trap_state *ts)
 
           CNT_IO_FAULT;
 
-          if (EXPECT_FALSE(log_page_fault()))
+          if (log_page_fault()) [[unlikely]]
             page_fault_log(io_page, io_error_code, eip);
 
           // Treat it as a page fault in the region above 0xf0000000.
@@ -244,7 +244,7 @@ Thread::handle_io_fault(Trap_state *ts)
           else
             do_send_exception = vcpu_exceptions_enabled(vcpu_state().access());
 
-          if (EXPECT_FALSE(do_send_exception))
+          if (do_send_exception) [[unlikely]]
             {
               // Special case for alien threads and thread in extended vCPU
               // user mode: Don't generate fault but send exception to pager.

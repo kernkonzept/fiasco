@@ -161,14 +161,14 @@ Thread::handle_slow_trap(Trap_state *ts)
   int from_user = ts->cs() & 3;
   Io_return res_iopf;
 
-  if (EXPECT_FALSE(ts->_trapno == 0xee)) //debug IPI
+  if (ts->_trapno == 0xee) [[unlikely]] //debug IPI
     {
       on_enter_irq_from_tickless();
       Ipi::eoi(Ipi::Debug, current_cpu());
       goto generic_debug;
     }
 
-  if (EXPECT_FALSE(ts->_trapno == 2))
+  if (ts->_trapno == 2) [[unlikely]]
     goto generic_debug;        // NMI always enters kernel debugger
 
   if (from_user && _space.user_mode())
@@ -190,7 +190,7 @@ Thread::handle_slow_trap(Trap_state *ts)
   if (!check_trap13_kernel(ts))
     return 0;
 
-  if (EXPECT_FALSE(!from_user))
+  if (!from_user) [[unlikely]]
     {
       if (!check_unknown_irq(ts))
         return 0;
@@ -219,7 +219,7 @@ Thread::handle_slow_trap(Trap_state *ts)
       goto generic_debug;      // we were in kernel mode -- nothing to emulate
     }
 
-  if (EXPECT_FALSE(ts->_trapno == 0xffffffff))
+  if (ts->_trapno == 0xffffffff) [[unlikely]]
     goto generic_debug;        // debugger interrupt
 
   check_f00f_bug(ts);
@@ -234,7 +234,7 @@ Thread::handle_slow_trap(Trap_state *ts)
   // page fault, kill the thread.
   jmp_buf pf_recovery;
   unsigned error;
-  if (EXPECT_FALSE ((error = setjmp(pf_recovery)) != 0) )
+  if ((error = setjmp(pf_recovery)) != 0) [[unlikely]]
     {
       WARN("%p killed:\n"
            "\033[1mUnhandled page fault, code=%08x\033[m\n",
@@ -360,17 +360,17 @@ Thread::update_local_map(Address pfa, Mword /*error_code*/)
                 "Mem_layout::Caps_end - 1 must lie in 512G slot 259.");
 
   unsigned idx = (pfa >> 39) & 0x1ff;
-  if (EXPECT_FALSE((idx > 255) && idx != 259))
+  if ((idx > 255) && idx != 259) [[unlikely]]
     return false;
 
   auto *m = Kmem::pte_map();
-  if (EXPECT_FALSE((*m)[idx]))
+  if ((*m)[idx]) [[unlikely]]
     return false;
 
   auto s = Kmem::current_cpu_udir()->walk(Virt_addr(pfa), 0);
   assert (!s.is_valid());
   auto r = vcpu_aware_space()->dir()->walk(Virt_addr(pfa), 0);
-  if (EXPECT_FALSE(!r.is_valid()))
+  if (!r.is_valid()) [[unlikely]]
     return false;
 
   m->set_bit(idx);
@@ -406,7 +406,7 @@ thread_page_fault(Address pfa, Mword error_code, Address ip, Mword flags,
   // XXX: need to do in a different way, if on debug stack e.g.
 #if 0
   // If we're in the GDB stub -- let generic handler handle it
-  if (EXPECT_FALSE (!in_context_area((void*)Proc::stack_pointer())))
+  if (!in_context_area((void*)Proc::stack_pointer())) [[unlikely]]
     return false;
 #endif
 
@@ -416,9 +416,11 @@ thread_page_fault(Address pfa, Mword error_code, Address ip, Mword flags,
     return 1;
 
   // Pagefault in user mode or interrupts were enabled
-  if (EXPECT_TRUE(PF::is_usermode_error(error_code))
-      && t->vcpu_pagefault(pfa, error_code, ip))
-    return 1;
+  if (PF::is_usermode_error(error_code)) [[likely]]
+    {
+      if (t->vcpu_pagefault(pfa, error_code, ip))
+        return 1;
+    }
 
   if(EXPECT_TRUE(PF::is_usermode_error(error_code))
      || (flags & EFLAGS_IF)
@@ -543,7 +545,7 @@ L4_msg_tag
 Thread::sys_gdt_x86(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
 {
   // if no words given then return the first gdt entry
-  if (EXPECT_FALSE(tag.words() == 1))
+  if (tag.words() == 1) [[unlikely]]
     {
       out->values[0] = Gdt::gdt_user_entry1 >> 3;
       return Kobject_iface::commit_result(0, 1);

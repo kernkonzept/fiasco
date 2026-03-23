@@ -94,8 +94,8 @@ PUBLIC inline NEEDS["regdefs.h", "gdt.h"]
 void
 Trap_state::sanitize_user_state()
 {
-  if (EXPECT_FALSE(   (_cs != (Gdt::gdt_code_user | Gdt::Selector_user))
-                   && (_cs != (Gdt::gdt_code_user32 | Gdt::Selector_user))))
+  if ((_cs != (Gdt::gdt_code_user | Gdt::Selector_user))
+      && (_cs != (Gdt::gdt_code_user32 | Gdt::Selector_user))) [[unlikely]]
     _cs = Gdt::gdt_code_user | Gdt::Selector_user;
   _flags = (_flags & ~(EFLAGS_IOPL | EFLAGS_NT)) | EFLAGS_IF;
 }

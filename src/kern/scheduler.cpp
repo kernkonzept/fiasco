@@ -66,7 +66,7 @@ Scheduler::sys_run(L4_fpage::Rights, Syscall_frame *f, Utcb const *utcb)
   Cpu_number const curr_cpu = current_cpu();
 
   unsigned long sz = tag.words() * sizeof(Mword);
-  if (EXPECT_FALSE(sz < sizeof(L4_sched_param) + sizeof(Mword)))
+  if (sz < sizeof(L4_sched_param) + sizeof(Mword)) [[unlikely]]
     return commit_result(-L4_err::EInval);
   sz -= sizeof(Mword); // skip first Mword containing the Opcode
 
@@ -81,14 +81,14 @@ Scheduler::sys_run(L4_fpage::Rights, Syscall_frame *f, Utcb const *utcb)
   auto *sched_param = reinterpret_cast<L4_sched_param const *>(_store);
 
   if (!sched_param->is_legacy())
-    if (EXPECT_FALSE(sched_param->length > sz))
+    if (sched_param->length > sz) [[unlikely]]
       return commit_result(-L4_err::EInval);
 
   static_assert(sizeof(L4_sched_param_legacy) <= sizeof(L4_sched_param),
                 "Adapt above check");
 
   int ret = Sched_context::check_param(sched_param);
-  if (EXPECT_FALSE(ret < 0))
+  if (ret < 0) [[unlikely]]
     return commit_result(ret);
 
   Thread::Migration info;
@@ -125,7 +125,7 @@ L4_msg_tag
 Scheduler::op_sched_idle(L4_cpu_set const &cpus, Cpu_time *time)
 {
   Cpu_number const cpu = cpus.first(Cpu::online_mask(), Config::max_num_cpus());
-  if (EXPECT_FALSE(cpu == Config::max_num_cpus()))
+  if (cpu == Config::max_num_cpus()) [[unlikely]]
     return commit_result(-L4_err::EInval);
 
   *time = Context::kernel_context(cpu)->consumed_time();

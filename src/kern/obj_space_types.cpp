@@ -217,7 +217,7 @@ namespace Obj
   {
     Dbg_page_info *info = new Dbg_page_info(Virt_addr(p));
 
-    if (EXPECT_FALSE(!info))
+    if (!info) [[unlikely]]
       {
         WARN("oom: could not allocate debug info fo page %p\n", p);
         return;

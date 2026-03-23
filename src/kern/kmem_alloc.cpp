@@ -91,11 +91,11 @@ public:
   void *alloc(Bytes size) const
   {
     Auto_quota<Q> q(_q, size);
-    if (EXPECT_FALSE(!q))
+    if (!q) [[unlikely]]
       return nullptr;
 
     void *b;
-    if (EXPECT_FALSE(!(b = _a->alloc(size))))
+    if (!(b = _a->alloc(size))) [[unlikely]]
       return nullptr;
 
     q.release();
@@ -383,7 +383,7 @@ Kmem_alloc::alloc(Bytes size)
       ret = a->alloc(sz);
     }
 
-  if (EXPECT_FALSE(!ret))
+  if (!ret) [[unlikely]]
     WARNX(Error, "Out of memory requesting 0x%lx bytes!\n",
           cxx::int_value<Bytes>(size));
 
@@ -552,11 +552,11 @@ void *
 Kmem_alloc::q_alloc(Q *quota, Order order)
 {
   Auto_quota<Q> q(quota, order);
-  if (EXPECT_FALSE(!q))
+  if (!q) [[unlikely]]
     return nullptr;
 
   void *b = alloc(order);
-  if (EXPECT_FALSE(!b))
+  if (!b) [[unlikely]]
     return nullptr;
 
   q.release();
@@ -569,11 +569,11 @@ void *
 Kmem_alloc::q_alloc(Q *quota, Bytes size)
 {
   Auto_quota<Q> q(quota, size);
-  if (EXPECT_FALSE(!q))
+  if (!q) [[unlikely]]
     return nullptr;
 
   void *b;
-  if (EXPECT_FALSE(!(b = alloc(size))))
+  if (!(b = alloc(size))) [[unlikely]]
     return nullptr;
 
   q.release();

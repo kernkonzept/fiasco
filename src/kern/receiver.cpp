@@ -470,7 +470,7 @@ PUBLIC inline
 void
 Receiver::reset_timeout()
 {
-  if (EXPECT_TRUE(!_timeout))
+  if (!_timeout) [[likely]]
     return;
 
   _timeout->reset();
@@ -584,17 +584,16 @@ Receiver::sender_ok(const Sender *sender) const
   unsigned ipc_state = state() & Thread_ipc_mask;
 
   // If Thread_send_in_progress is still set, we're still in the send phase
-  if (EXPECT_FALSE(ipc_state != Thread_receive_wait))
+  if (ipc_state != Thread_receive_wait) [[unlikely]]
     return vcpu_async_ipc(sender);
 
   // Check open wait; test if this sender is really the first in queue
-  if (EXPECT_TRUE(!_partner
-                  && (_sender_list.empty()
-		    || sender->is_head_of(&_sender_list))))
+  if (!_partner
+      && (_sender_list.empty() || sender->is_head_of(&_sender_list))) [[likely]]
     return Rcv_state::Ipc_open_wait;
 
   // Check closed wait; test if this sender is really who we specified
-  if (EXPECT_TRUE(sender == _partner))
+  if (sender == _partner) [[likely]]
     return Rcv_state::Ipc_receive;
 
   return Rcv_state::Not_receiving;
@@ -607,12 +606,12 @@ PRIVATE inline NEEDS["logdefs.h"]
 Receiver::Rcv_state
 Receiver::vcpu_async_ipc(Sender const *sender) const
 {
-  if (EXPECT_FALSE(state() & Thread_ipc_mask))
+  if (state() & Thread_ipc_mask) [[unlikely]]
     return Rcv_state::Not_receiving;
 
   Vcpu_state *vcpu = vcpu_state().access();
 
-  if (EXPECT_FALSE(!vcpu_irqs_enabled(vcpu)))
+  if (!vcpu_irqs_enabled(vcpu)) [[unlikely]]
     return Rcv_state::Not_receiving;
 
   Receiver *self = const_cast<Receiver*>(this);
@@ -644,7 +643,7 @@ PUBLIC inline
 void
 Receiver::vcpu_update_state()
 {
-  if (EXPECT_TRUE(!(state() & Thread_vcpu_enabled)))
+  if (!(state() & Thread_vcpu_enabled)) [[likely]]
     return;
 
   if (sender_list()->empty())

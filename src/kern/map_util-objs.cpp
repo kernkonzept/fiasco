@@ -99,7 +99,7 @@ map_obj_initially(Kobject_iface *o, Obj_space* to, Space *to_id,
   typedef Obj_space::V_pfn Addr;
   typedef Obj_space::Page_order Size;
 
-  if (EXPECT_FALSE(rcv_addr >= to->map_max_address()))
+  if (rcv_addr >= to->map_max_address()) [[unlikely]]
     return 0;
 
   // Receiver lookup.

@@ -302,7 +302,7 @@ private:
     if (asid.is_valid() && _reserved[asid.asid()])
       {
         Asid update = asid.asid() | generation.a;
-        if (EXPECT_TRUE(check_and_update_reserved(asid, update)))
+        if (check_and_update_reserved(asid, update)) [[likely]]
           {
             // This ASID was active during a roll over and therefore is still
             // valid. Return the ASID with its updated generation.
@@ -312,11 +312,11 @@ private:
 
     // Get a new ASID
     unsigned new_asid = _reserved.find_next();
-    if (EXPECT_FALSE(new_asid == Asid_bitmap::asid_num()))
+    if (new_asid == Asid_bitmap::asid_num()) [[unlikely]]
       {
         generation = atomic_add_fetch(&_gen, Asid::Generation_inc);
 
-        if (EXPECT_FALSE(generation.is_invalid_generation()))
+        if (generation.is_invalid_generation()) [[unlikely]]
           {
             // Skip problematic generation value
             generation = atomic_add_fetch(&_gen, Asid::Generation_inc);

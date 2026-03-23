@@ -75,7 +75,7 @@ Timer::init(Cpu_number ncpu)
       _set_compare(t->_current_cmp);
       // See explanation in Timer::acknowledge().
       Unsigned32 cnt = _get_counter();
-      if (EXPECT_TRUE(static_cast<Signed32>(t->_current_cmp - cnt) > 0))
+      if (static_cast<Signed32>(t->_current_cmp - cnt) > 0) [[likely]]
         break;
       t->_current_cmp = cnt + Adj_time;
       t->_last_counter = t->_current_cmp;
@@ -116,7 +116,7 @@ Timer::acknowledge()
       // counter again. Note that we don't update _current_cmp here because
       // otherwise we would skip timer interrupts.
       cnt = _get_counter();
-      if (EXPECT_TRUE(static_cast<Signed32>(new_cmp - cnt) > 0))
+      if (static_cast<Signed32>(new_cmp - cnt) > 0) [[likely]]
         break;
       new_cmp = cnt + Adj_time;
     }

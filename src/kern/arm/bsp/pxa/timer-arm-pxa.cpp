@@ -118,17 +118,17 @@ Timer::update_timer(Unsigned64 wakeup)
   static_assert(Config::Kip_clock_uses_timer == false);
   Unsigned64 now = Kip::k()->clock();
 
-  if (EXPECT_FALSE (wakeup <= now) )
+  if (wakeup <= now) [[unlikely]]
     // already expired
     apic = 1;
   else
     {
       apic = us_to_timer(wakeup - now);
-      if (EXPECT_FALSE(apic > 0x0ffffffff))
-  apic = 0x0ffffffff;
-      if (EXPECT_FALSE (apic < 1) )
-  // timeout too small
-  apic = 1;
+      if (apic > 0x0ffffffff) [[unlikely]]
+        apic = 0x0ffffffff;
+      if (apic < 1) [[unlikely]]
+        // timeout too small
+        apic = 1;
     }
 
   //printf("%15lld: Set Timer to %lld [%08x]\n", now, wakeup, apic);

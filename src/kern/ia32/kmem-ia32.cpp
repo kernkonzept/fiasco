@@ -104,10 +104,10 @@ Kmem::virt_to_phys(const void *addr)
 {
   Address a = reinterpret_cast<Address>(addr);
 
-  if (EXPECT_TRUE(Mem_layout::in_pmem(a)))
+  if (Mem_layout::in_pmem(a)) [[likely]]
     return Mem_layout::pmem_to_phys(a);
 
-  if (EXPECT_TRUE(Mem_layout::in_kernel_image(a)))
+  if (Mem_layout::in_kernel_image(a)) [[likely]]
     return a - Mem_layout::Kernel_image_offset;
 
   return kdir->virt_to_phys(a);

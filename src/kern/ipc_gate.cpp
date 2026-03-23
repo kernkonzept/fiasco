@@ -148,7 +148,7 @@ Ipc_gate_obj::unblock_all(bool abort)
       Thread *sender;
         {
           auto g2 = lock_guard(_wait_q.lock());
-          if (EXPECT_FALSE(h != _wait_q.first()))
+          if (h != _wait_q.first()) [[unlikely]]
             continue;
 
           sender = static_cast<Thread*>(Sender::cast(h));
@@ -182,7 +182,7 @@ Ipc_gate_obj::abort_all_unblocked()
     {
       auto guard = lock_guard(_wait_q.lock());
 
-      if (EXPECT_FALSE(h != _unblocked_q.first()))
+      if (h != _unblocked_q.first()) [[unlikely]]
         continue;
 
       Thread *sender = static_cast<Thread*>(Sender::cast(h));
@@ -268,11 +268,11 @@ Ipc_gate::create(Ram_quota *q, Thread *t, Mword id)
 {
   Auto_quota<Ram_quota> quota(q, sizeof(Ipc_gate_obj));
 
-  if (EXPECT_FALSE(!quota))
+  if (!quota) [[unlikely]]
     return nullptr;
 
   void *nq = Ipc_gate_obj::alloc();
-  if (EXPECT_FALSE(!nq))
+  if (!nq) [[unlikely]]
     return nullptr;
 
   quota.release();
@@ -301,7 +301,7 @@ L4_msg_tag
 Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
                           Syscall_frame *f, Utcb const *in, Utcb *)
 {
-  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
+  if (!(rights & L4_fpage::Rights::CS())) [[unlikely]]
     return commit_result(-L4_err::EPerm);
 
   L4_msg_tag tag = f->tag();
@@ -310,7 +310,7 @@ Ipc_gate_ctl::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
     return commit_result(-L4_err::EMsgtooshort);
 
   Mword id = access_once(&in->values[1]);
-  if (EXPECT_FALSE(id & cxx::int_value<L4_fpage::Rights>(L4_fpage::Rights::CWS())))
+  if (id & cxx::int_value<L4_fpage::Rights>(L4_fpage::Rights::CWS())) [[unlikely]]
     return commit_result(-L4_err::EInval);
 
   L4_fpage::Rights t_rights(0);
@@ -381,7 +381,7 @@ Ipc_gate_ctl::kinvoke(L4_obj_ref self, L4_fpage::Rights rights,
 
   // Check for 'L4_msg_tag::Label_kobject' protocol in Ipc_gate_ctl::invoke().
 
-  if (EXPECT_FALSE(tag.words() < 1))
+  if (tag.words() < 1) [[unlikely]]
     return commit_result(-L4_err::EInval);
 
   switch (Op{in->values[0]})
@@ -432,7 +432,7 @@ Ipc_gate::block(Thread *ct, L4_timeout const &to, Utcb *u)
   Mword state = ct->state_change(~Thread_full_ipc_mask, Thread_ready);
   ct->reset_timeout();
 
-  if (EXPECT_FALSE(!ct->wait_queue()))
+  if (!ct->wait_queue()) [[unlikely]]
     return L4_error::Not_existent; // IPC gate was deleted while we waited
 
   {
@@ -476,7 +476,7 @@ Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
   bool have_rcv = false;
 
   Thread *t = access_once(&_thread);
-  if (EXPECT_FALSE(!t))
+  if (!t) [[unlikely]]
     {
       L4_error e = block(ct, f->timeout().snd, utcb);
       if (!e.ok())
@@ -486,7 +486,7 @@ Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
 	}
 
       t = access_once(&_thread);
-      if (EXPECT_FALSE(!t))
+      if (!t) [[unlikely]]
 	{
 	  f->tag(commit_error(utcb, L4_error::Not_existent));
 	  return;
@@ -503,7 +503,7 @@ Ipc_gate::invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
       l->label = _id | cxx::int_value<L4_fpage::Rights>(rights);
   );
 
-  if (EXPECT_FALSE(!ipc))
+  if (!ipc) [[unlikely]]
     f->tag(commit_error(utcb, L4_error::Not_existent));
   else
     {
@@ -527,33 +527,33 @@ ipc_gate_factory(Ram_quota *q, Space *space,
     {
       L4_fpage bind_thread(snd_items.get()->d);
       *err = L4_err::EInval;
-      if (EXPECT_FALSE(!bind_thread.is_objpage()))
+      if (!bind_thread.is_objpage()) [[unlikely]]
         return nullptr;
 
       L4_fpage::Rights thread_rights = L4_fpage::Rights(0);
       thread = cxx::dyn_cast<Thread*>(space->lookup_local(bind_thread.obj_index(),
                                                           &thread_rights));
 
-      if (EXPECT_FALSE(!thread))
+      if (!thread) [[unlikely]]
         {
           *err = L4_err::EInval;
           return nullptr;
         }
 
-      if (EXPECT_FALSE(!(thread_rights & L4_fpage::Rights::CS())))
+      if (!(thread_rights & L4_fpage::Rights::CS())) [[unlikely]]
         {
           *err = L4_err::EPerm;
           return nullptr;
         }
 
-      if (EXPECT_FALSE(tag.words() < 3))
+      if (tag.words() < 3) [[unlikely]]
         {
           *err = L4_err::EMsgtooshort;
           return nullptr;
         }
 
       id = access_once(&utcb->values[2]);
-      if (EXPECT_FALSE(id & cxx::int_value<L4_fpage::Rights>(L4_fpage::Rights::CWS())))
+      if (id & cxx::int_value<L4_fpage::Rights>(L4_fpage::Rights::CWS())) [[unlikely]]
         {
           *err = L4_err::EInval;
           return nullptr;

@@ -23,22 +23,22 @@ Context::switch_cpu(Context *t)
   t->load_gdt_user_entries(this);
 
   _ds = Cpu::get_ds();
-  if (EXPECT_FALSE(_ds | t->_ds))
+  if (_ds | t->_ds) [[unlikely]]
     Cpu::set_ds(t->_ds);
 
   _es = Cpu::get_es();
-  if (EXPECT_FALSE(_es | t->_es))
+  if (_es | t->_es) [[unlikely]]
     Cpu::set_es(t->_es);
 
   _fs = Cpu::get_fs();
-  if (EXPECT_FALSE(_fs | _fs_base | t->_fs))
+  if (_fs | _fs_base | t->_fs) [[unlikely]]
     Cpu::set_fs(t->_fs);
 
   if (!t->_fs)
     Cpu::set_fs_base(&t->_fs_base);
 
   _gs = Cpu::get_gs();
-  if (EXPECT_FALSE(_gs | _gs_base | t->_gs))
+  if (_gs | _gs_base | t->_gs) [[unlikely]]
     Cpu::set_gs(t->_gs);
 
   if (!t->_gs)
@@ -111,10 +111,10 @@ Context::fill_user_state()
   Cpu::set_fs(_fs);
   Cpu::set_gs(_gs);
 
-  if (EXPECT_TRUE(!_fs))
+  if (!_fs) [[likely]]
     Cpu::set_fs_base(&_fs_base);
 
-  if (EXPECT_TRUE(!_gs))
+  if (!_gs) [[likely]]
     Cpu::set_gs_base(&_gs_base);
 }
 
@@ -131,29 +131,29 @@ Context::vcpu_pv_switch_to_kernel(Vcpu_state *vcpu, bool current)
   vcpu->_regs.gs = _gs;
 
   unsigned tmp = access_once(&vcpu->host.ds);
-  if (EXPECT_FALSE(current && (_ds | tmp)))
+  if (current && (_ds | tmp)) [[unlikely]]
     Cpu::set_ds(tmp);
   _ds = tmp;
 
   tmp = access_once(&vcpu->host.es);
-  if (EXPECT_FALSE(current && (_es | tmp)))
+  if (current && (_es | tmp)) [[unlikely]]
     Cpu::set_es(tmp);
   _es = tmp;
 
   tmp = access_once(&vcpu->host.fs);
-  if (EXPECT_FALSE(current && (_fs | tmp)))
+  if (current && (_fs | tmp)) [[unlikely]]
     Cpu::set_fs(tmp);
   _fs = tmp;
 
-  if (EXPECT_TRUE(current && !tmp))
+  if (current && !tmp) [[likely]]
     Cpu::set_fs_base(&_fs_base);
 
   tmp = access_once(&vcpu->host.gs);
-  if (EXPECT_FALSE(current && (_gs | tmp)))
+  if (current && (_gs | tmp)) [[unlikely]]
     Cpu::set_gs(tmp);
   _gs = tmp;
 
-  if (EXPECT_TRUE(current && !tmp))
+  if (current && !tmp) [[likely]]
     Cpu::set_gs_base(&_gs_base);
 }
 
@@ -165,28 +165,28 @@ Context::vcpu_pv_switch_to_user(Vcpu_state *vcpu, bool current)
   _gs_base = access_once(&vcpu->_regs.gs_base);
 
   unsigned tmp = access_once(&vcpu->_regs.ds);
-  if (EXPECT_FALSE(current && (_ds | tmp)))
+  if (current && (_ds | tmp)) [[unlikely]]
     Cpu::set_ds(tmp);
   _ds = tmp;
 
   tmp = access_once(&vcpu->_regs.es);
-  if (EXPECT_FALSE(current && (_es | tmp)))
+  if (current && (_es | tmp)) [[unlikely]]
     Cpu::set_es(tmp);
   _es = tmp;
 
   tmp = access_once(&vcpu->_regs.fs);
-  if (EXPECT_FALSE(current && (_fs | tmp)))
+  if (current && (_fs | tmp)) [[unlikely]]
     Cpu::set_fs(tmp);
   _fs = tmp;
 
-  if (EXPECT_TRUE(current && !tmp))
+  if (current && !tmp) [[likely]]
     Cpu::set_fs_base(&_fs_base);
 
   tmp = access_once(&vcpu->_regs.gs);
-  if (EXPECT_FALSE(current && (_gs | tmp)))
+  if (current && (_gs | tmp)) [[unlikely]]
     Cpu::set_gs(tmp);
   _gs = tmp;
 
-  if (EXPECT_TRUE(current && !tmp))
+  if (current && !tmp) [[likely]]
     Cpu::set_gs_base(&_gs_base);
 }

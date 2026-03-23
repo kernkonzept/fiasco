@@ -84,8 +84,9 @@ Thread::user_invoke()
   assert(current()->state() & Thread_ready);
 
   Return_frame *r = nonull_static_cast<Return_frame*>(current()->regs());
-  Kip *kip = (EXPECT_FALSE(current_thread()->mem_space()->is_sigma0())) ?
-             Kip::k() : 0;
+  Kip *kip = nullptr;
+  if (current_thread()->mem_space()->is_sigma0()) [[unlikely]]
+    kip = kip::k();
 
   /* DEBUGGING */
   Mword vsid, utcb;
@@ -165,7 +166,7 @@ extern "C" {
                         const Mword pc, Return_frame *ret_frame)
   {
     //printf("Page fault at %08lx (%s)\n", pfa, PF::is_read_error(error_code)?"ro":"rw" );
-    if(EXPECT_TRUE(PF::is_usermode_error(error_code)))
+    if (PF::is_usermode_error(error_code)) [[likely]]
       {
 	if (current_thread()->vcpu_pagefault(pfa, error_code, pc))
 	  return 1;
@@ -201,7 +202,7 @@ extern "C"
   {
     Return_frame *rf = nonull_static_cast<Return_frame*>(current()->regs());
     //disable power savings mode, when we come from privileged mode
-    if(EXPECT_FALSE(rf->user_mode()))
+    if (rf->user_mode()) [[unlikely]]
       rf->srr1 = Proc::wake(rf->srr1);
 
     Timer::update_system_clock(current_cpu());

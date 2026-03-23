@@ -154,7 +154,7 @@ Vm::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, [[maybe_unused]] bool user_mode
 
   assert(cpu_lock.test());
 
-  if (EXPECT_FALSE(!(ctxt->state(true) & Thread_ext_vcpu_enabled)))
+  if (!(ctxt->state(true) & Thread_ext_vcpu_enabled)) [[unlikely]]
     {
       ctxt->arch_load_vcpu_kern_state(vcpu, true);
       return -L4_err::EInval;

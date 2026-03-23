@@ -141,8 +141,8 @@ bool
 Mem_space::initialize()
 {
   void *b;
-  if (EXPECT_FALSE(!(b = Kmem_alloc::allocator()
-	  ->q_alloc(_quota, Config::page_order()))))
+  if (!(b = Kmem_alloc::allocator()
+	  ->q_alloc(_quota, Config::page_order()))) [[unlikely]]
     return false;
 
   _dir = static_cast<Dir_type*>(b);
@@ -203,11 +203,11 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order order,
   auto i = _dir->walk(virt, level, false,
                             Kmem_alloc::q_allocator(_quota));
 
-  if (EXPECT_FALSE(!i.is_valid() && i.level != level))
+  if (!i.is_valid() && i.level != level) [[unlikely]]
     return Insert_err_nomem;
 
-  if (EXPECT_FALSE(i.is_valid()
-                   && (i.level != level || Phys_addr(i.page_addr()) != phys)))
+  if (i.is_valid()
+      && (i.level != level || Phys_addr(i.page_addr()) != phys)) [[unlikely]]
     return Insert_err_exists;
 
   bool const valid = i.is_valid();
@@ -218,7 +218,7 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order order,
 
   if (valid)
     {
-      if (EXPECT_FALSE(i.entry() == entry))
+      if (i.entry() == entry) [[unlikely]]
         return Insert_warn_exists;
 
       i.set_page(entry);
@@ -237,7 +237,7 @@ void
 Mem_space::v_add_access_flags(Vaddr virt, Page::Flags flags)
 {
   auto pte = _dir->walk(virt);
-  if (EXPECT_FALSE(!pte.is_valid()))
+  if (!pte.is_valid()) [[unlikely]]
     return;
 
   pte.add_flags(flags);
@@ -282,7 +282,7 @@ Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order order,
 
   auto pte = _dir->walk(virt);
 
-  if (EXPECT_FALSE(!pte.is_valid()))
+  if (!pte.is_valid()) [[unlikely]]
     return Page::Flags::None();
 
   assert(!(*pte.pte & Pt_entry::global())); // Cannot unmap shared pages

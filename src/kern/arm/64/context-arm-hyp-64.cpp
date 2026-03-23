@@ -92,8 +92,10 @@ Context::save_ext_vcpu_state(Vm_state *v)
   // asm volatile ("mrs %0, ACTLR_EL1"  : "=r"(v->actlr));
   asm volatile ("mrs %x0, TCR_EL1"   : "=r"(v->tcr));
   asm volatile ("mrs %x0, TTBR0_EL1" : "=r"(v->ttbr0));
-  if (EXPECT_TRUE(Cpu::boot_cpu_has_vmsa()))
-    asm volatile ("mrs %x0, TTBR1_EL1" : "=r"(v->ttbr1));
+  if (Cpu::boot_cpu_has_vmsa()) [[likely]]
+    {
+      asm volatile ("mrs %x0, TTBR1_EL1" : "=r"(v->ttbr1));
+    }
 
   asm volatile ("mrs %x0, SCTLR_EL1" : "=r"(v->sctlr));
   asm volatile ("mrs %x0, ESR_EL1"   : "=r"(v->esr));
@@ -106,7 +108,7 @@ Context::save_ext_vcpu_state(Vm_state *v)
   asm volatile ("mrs %x0, AFSR0_EL1" : "=r"(v->afsr[0]));
   asm volatile ("mrs %x0, AFSR1_EL1" : "=r"(v->afsr[1]));
 
-  if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
+  if (Cpu::has_aarch32_el1()) [[likely]]
     {
       asm volatile ("mrs %x0, DACR32_EL2" : "=r"(v->dacr32));
       //asm volatile ("mrs %x0, FPEXC32_EL2" : "=r"(v->fpexc32));
@@ -148,8 +150,10 @@ Context::load_ext_vcpu_state(Vm_state const *v)
 
   asm volatile ("msr TCR_EL1, %x0"   : : "r"(v->tcr));
   asm volatile ("msr TTBR0_EL1, %x0" : : "r"(v->ttbr0));
-  if (EXPECT_TRUE(Cpu::boot_cpu_has_vmsa()))
-    asm volatile ("msr TTBR1_EL1, %x0" : : "r"(v->ttbr1));
+  if (Cpu::boot_cpu_has_vmsa()) [[likely]]
+    {
+      asm volatile ("msr TTBR1_EL1, %x0" : : "r"(v->ttbr1));
+    }
 
   Unsigned32 sctlr = access_once(&v->sctlr);
   if (_hyp.hcr & (Cpu::Hcr_tge | Cpu::Hcr_dc))
@@ -157,7 +161,7 @@ Context::load_ext_vcpu_state(Vm_state const *v)
 
   // Workaround for errata #852523 (Cortex-A57) and #853709 (Cortex-A72):
   // Do this before writing to SCTLR_EL1.
-  if (EXPECT_TRUE(Cpu::has_aarch32_el1()))
+  if (Cpu::has_aarch32_el1()) [[likely]]
     {
       asm volatile ("msr DACR32_EL2, %x0"  : : "r"(v->dacr32));
       //asm volatile ("msr FPEXC32_EL2, %x0" : : "r"(v->fpexc32));

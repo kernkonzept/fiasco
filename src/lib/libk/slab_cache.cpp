@@ -248,7 +248,7 @@ Slab_cache::alloc()	// request initialized member from cache
 
       Slab *s = get_available_locked();
 
-      if (EXPECT_FALSE(!s))
+      if (!s) [[unlikely]]
 	{
 	  guard.reset();
 
@@ -298,11 +298,11 @@ void *
 Slab_cache::q_alloc(Q *quota)
 {
   Auto_quota<Q> q(quota, _entry_size);
-  if (EXPECT_FALSE(!q))
+  if (!q) [[unlikely]]
     return nullptr;
 
   void *r;
-  if (EXPECT_FALSE(!(r=alloc())))
+  if (!(r=alloc())) [[unlikely]]
     return nullptr;
 
   q.release();

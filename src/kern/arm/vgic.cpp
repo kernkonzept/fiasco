@@ -281,7 +281,7 @@ public:
     // Only report saved/loaded LR registers as free
     g->elsr = self()->elsr() & ((1U << Arm_vgic::N_lregs) - 1U);
     // Hide any pending maintenance of injected interrupts from user space!
-    if (EXPECT_FALSE(g->injected))
+    if (g->injected) [[unlikely]]
       {
         g->eisr &= ~g->injected;
         if (g->eisr == 0)

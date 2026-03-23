@@ -247,7 +247,7 @@ Irq_chip_rmsi::unmask(Mword pin) override
   irte = entry;
   clean_dcache(&irte);
   // Invalidate if the IOMMUs cache non-present entries.
-  if (EXPECT_FALSE(_cache_invalid))
+  if (_cache_invalid) [[unlikely]]
     inv_iec(vect);
 }
 
@@ -320,9 +320,13 @@ Io_apic_remapped::attach(Irq_base *irq, Mword pin, bool init = true) override
   // set_cpu), directly assign a valid destination CPU ID here.
   irte.set_dst(::Apic::apic.cpu(Cpu_number::boot_cpu())->cpu_id());
 
-  _iommu->set_irq_mapping(irte, v, EXPECT_FALSE(_iommu->caps.cm())
-                                   ? Intel::Io_mmu::Flush_op::Flush_and_wait
-                                   : Intel::Io_mmu::Flush_op::No_flush);
+  Intel::Io_mmu::Flush_op op;
+  if (_iommu->caps.cm()) [[unlikely]]
+    op = Intel::Io_mmu::Flush_op::Flush_and_wait;
+  else
+    op = Intel::Io_mmu::Flush_op::No_flush;
+
+  _iommu->set_irq_mapping(irte, v, op);
 
   entry.format() = 1;
   entry.vector() = v;
@@ -352,7 +356,7 @@ Io_apic_remapped::set_mode(Mword pin, Mode mode) override
   Io_apic::set_mode(pin, mode);
 
   unsigned vect = vector(pin);
-  if (EXPECT_FALSE(vect == 0))
+  if (vect == 0) [[unlikely]]
     return 0;
 
   Intel::Io_mmu::Irte irte = _iommu->get_irq_mapping(vect);

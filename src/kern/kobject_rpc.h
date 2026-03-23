@@ -41,7 +41,7 @@ inline bool
 check_rights(Rights rights, Rights need, L4_msg_tag *tag = nullptr)
 {
   need &= Rights::CS() | Rights::CW();
-  if (EXPECT_TRUE((rights & need) == need))
+  if ((rights & need) == need) [[likely]]
     return true;
 
   if (tag)
@@ -56,16 +56,16 @@ check_rights(Rights rights, Rights need, L4_msg_tag *tag = nullptr)
 inline bool
 check_basics(L4_msg_tag *tag, Rights rights, long label, Rights need)
 {
-  if (EXPECT_FALSE(tag->proto() != label))
+  if (tag->proto() != label) [[unlikely]]
     {
       *tag = commit_result(-L4_err::EBadproto);
       return false;
     }
 
-  if (EXPECT_FALSE(!check_rights(rights, need, tag)))
+  if (!check_rights(rights, need, tag)) [[unlikely]]
     return false;
 
-  if (EXPECT_FALSE(tag->words() < 1))
+  if (tag->words() < 1) [[unlikely]]
     {
       *tag = commit_result(-L4_err::EMsgtooshort);
       return false;
@@ -97,14 +97,14 @@ OBJ *deref_next(L4_msg_tag *tag, Utcb const *utcb,
     }
 
   L4_fpage fp(snd_items.get()->d);
-  if (EXPECT_FALSE(!fp.is_objpage()))
+  if (!fp.is_objpage()) [[unlikely]]
     {
       *tag = commit_error(utcb, L4_error::Overflow);
       return nullptr;
     }
 
   OBJ *o = cxx::dyn_cast<OBJ*>(space->lookup_local(fp.obj_index(), rights));
-  if (EXPECT_FALSE(!o))
+  if (!o) [[unlikely]]
     {
       *tag = commit_result(-L4_err::EInval);
       return nullptr;
@@ -448,10 +448,10 @@ struct Msg : Detail::R_msg<Detail::Msg_start_state, ARGS...>
       = Detail::Call<Msg>::call(msg, func, cxx::forward<EXTRA>(args)...);
 
     // !do_switch means do not send an answer...
-    if (EXPECT_FALSE(t.has_error() || !t.do_switch()))
+    if (t.has_error() || !t.do_switch()) [[unlikely]]
       return t;
 
-    if (EXPECT_FALSE(t.proto() < 0))
+    if (t.proto() < 0) [[unlikely]]
       return t;
 
     return L4_msg_tag(message_words(msg.out_total_size), msg.out_total_items,

@@ -119,7 +119,7 @@ Task::alloc_ku_mem_chunk(User_ptr<void> *u_addr, unsigned size, void **k_addr,
   Kmem_alloc *const alloc = Kmem_alloc::allocator();
   void *p = alloc->q_alloc(ram_quota(), Bytes(size));
 
-  if (EXPECT_FALSE(!p))
+  if (!p) [[unlikely]]
     return -L4_err::ENomem;
 
   memset(p, 0, size);
@@ -386,19 +386,22 @@ Task::create(Ram_quota *q,
 {
   static_assert(UTCB_AREA_MR == 0 || UTCB_AREA_MR >= 2,
                 "invalid value for UTCB_AREA_MR");
-  if (UTCB_AREA_MR >= 2 && EXPECT_FALSE(t.words() <= UTCB_AREA_MR))
+  if (UTCB_AREA_MR >= 2)
     {
-      *err = L4_err::EInval;
-      return nullptr;
+      if (t.words() <= UTCB_AREA_MR) [[unlikely]]
+        {
+          *err = L4_err::EInval;
+          return nullptr;
+        }
     }
 
   *err = L4_err::ENomem;
   cxx::unique_ptr<TASK_TYPE> v(TASK_TYPE::alloc(q));
 
-  if (EXPECT_FALSE(!v))
+  if (!v) [[unlikely]]
     return nullptr;
 
-  if (EXPECT_FALSE(!v->initialize()))
+  if (!v->initialize()) [[unlikely]]
     return nullptr;
 
   if (MUST_SYNC_KERNEL && (v->sync_kernel() < 0))
@@ -477,7 +480,7 @@ Task::sys_map(L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb)
       l->mask  = utcb->values[1];
       l->fpage = utcb->values[2]);
 
-  if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CW())))
+  if (!(rights & L4_fpage::Rights::CW())) [[unlikely]]
     return commit_result(-L4_err::EPerm);
 
   L4_msg_tag tag = f->tag();
@@ -590,7 +593,7 @@ Task::sys_cap_valid(Syscall_frame *, Utcb *utcb)
     return commit_result(0);
 
   Obj_space::Capability cap = lookup(obj.cap());
-  if (EXPECT_TRUE(cap.valid()))
+  if (cap.valid()) [[likely]]
     return commit_result(1);
   else
     return commit_result(0);
@@ -623,7 +626,7 @@ PRIVATE inline NOEXPORT
 L4_msg_tag
 Task::sys_add_ku_mem(Syscall_frame *f, Utcb *utcb, Utcb *out)
 {
-  if (EXPECT_FALSE(!(caps() & Task::Caps::kumem())))
+  if (!(caps() & Task::Caps::kumem())) [[unlikely]]
     return commit_result(-L4_err::ENosys);
 
   // Acquire reference to ensure the task is not deleted while we try to acquire
@@ -682,7 +685,7 @@ PUBLIC
 void
 Task::invoke(L4_obj_ref self, L4_fpage::Rights rights, Syscall_frame *f, Utcb *utcb) override
 {
-  if (EXPECT_FALSE(f->tag().proto() != L4_msg_tag::Label_task))
+  if (f->tag().proto() != L4_msg_tag::Label_task) [[unlikely]]
     {
       f->tag(commit_result(-L4_err::EBadproto));
       return;

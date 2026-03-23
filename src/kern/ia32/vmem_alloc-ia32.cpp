@@ -23,13 +23,13 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
 
   vpage = Kmem_alloc::allocator()->alloc(Config::page_order());
 
-  if (EXPECT_FALSE(!vpage))
+  if (!vpage) [[unlikely]]
     return nullptr;
 
   // insert page into master page table
   auto e = Kmem::kdir->walk(Virt_addr(address), Pdir::Depth,
                             false, pdir_alloc(Kmem_alloc::allocator()));
-  if (EXPECT_FALSE(e.is_valid()))
+  if (e.is_valid()) [[unlikely]]
     {
       kdb_ke("page_alloc: address already mapped");
       goto error;

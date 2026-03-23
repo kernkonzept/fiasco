@@ -581,7 +581,7 @@ Mpu::update(Mpu_regions const &regions)
   // We don't support more than 32 regions. Between 17 and 32 regions we have
   // to switch banks.
   int idx = regions.size() - 1;
-  if (EXPECT_TRUE(idx > 15 && Mem_layout::Mpu_regions > 16))
+  if (idx > 15 && Mem_layout::Mpu_regions > 16) [[likely]]
     {
       // There is an ISB in Mpu_arm::prselr() below that synchronizes the above
       // Mpu_arm::prenr() update too.

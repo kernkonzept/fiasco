@@ -166,7 +166,7 @@ Dmar::op_bind(Ko::Rights, Unsigned64 src_id, Ko::Cap<Dmar_space> space_cap)
 
   Dmar_space::Did did = space->get_did();
   // no free domain id left
-  if (EXPECT_FALSE(did == Dmar_space::Invalid_did))
+  if (did == Dmar_space::Invalid_did) [[unlikely]]
     return Kobject_iface::commit_result(-L4_err::ENomem);
 
   auto aw = mmu->aw();

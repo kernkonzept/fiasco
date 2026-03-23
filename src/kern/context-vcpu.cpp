@@ -129,7 +129,7 @@ PUBLIC inline
 Mword
 Context::vcpu_disable_irqs()
 {
-  if (EXPECT_FALSE(state() & Thread_vcpu_enabled))
+  if (state() & Thread_vcpu_enabled) [[unlikely]]
     {
       Vcpu_state *vcpu = vcpu_state().access();
       Mword s = vcpu->state;
@@ -143,8 +143,8 @@ PUBLIC inline
 void
 Context::vcpu_restore_irqs(Mword irqs)
 {
-  if (EXPECT_FALSE((irqs & Vcpu_state::F_irqs)
-                   && (state() & Thread_vcpu_enabled)))
+  if ((irqs & Vcpu_state::F_irqs)
+      && (state() & Thread_vcpu_enabled)) [[unlikely]]
     vcpu_state().access()->state |= Vcpu_state::F_irqs;
 }
 
@@ -172,7 +172,7 @@ bool
 Context::vcpu_enter_kernel_mode(Vcpu_state *vcpu)
 {
   unsigned s = state();
-  if (EXPECT_FALSE(s & Thread_vcpu_enabled))
+  if (s & Thread_vcpu_enabled) [[unlikely]]
     {
       vcpu->_saved_state = vcpu->state;
       Mword flags = Vcpu_state::F_traps
@@ -242,7 +242,7 @@ PUBLIC inline
 void
 Context::vcpu_set_irq_pending()
 {
-  if (EXPECT_FALSE(state() & Thread_vcpu_enabled))
+  if (state() & Thread_vcpu_enabled) [[unlikely]]
     vcpu_state().access()->sticky_flags |= Vcpu_state::Sf_irq_pending;
 }
 

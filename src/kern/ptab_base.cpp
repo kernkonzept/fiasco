@@ -282,7 +282,7 @@ namespace Ptab
            *     typename Traits::Raw const volatile *rr
            *       = reinterpret_cast<typename Traits::Raw const *>(re + n - 1);
            *     le[n - 1] = *(Entry *)rr;
-           *     if (EXPECT_TRUE(le[n - 1].raw() == *rr))
+           *     if (le[n - 1].raw() == *rr) [[likely]]
            *       break;
            *   }
            */
@@ -324,7 +324,7 @@ namespace Ptab
     Next *alloc_next(PTE_PTR e, _Alloc &&a, bool force_write_back)
     {
       Next *n = static_cast<Next*>(a.alloc(Bytes(sizeof(Next))));
-      if (EXPECT_FALSE(!n))
+      if (!n) [[unlikely]]
         return nullptr;
 
       n->clear(force_write_back);

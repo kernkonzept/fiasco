@@ -229,11 +229,11 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order order,
   auto i = _dir->walk(virt, level, Pte_ptr::need_cache_write_back(flush),
                       Kmem_alloc::q_allocator(_quota));
 
-  if (EXPECT_FALSE(!i.is_valid() && i.level != level))
+  if (!i.is_valid() && i.level != level) [[unlikely]]
     return Insert_err_nomem;
 
-  if (EXPECT_FALSE(i.is_valid()
-                   && (i.level != level || Phys_addr(i.page_addr()) != phys)))
+  if (i.is_valid()
+      && (i.level != level || Phys_addr(i.page_addr()) != phys)) [[unlikely]]
     return Insert_err_exists;
 
   bool const valid = i.is_valid();
@@ -244,7 +244,7 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order order,
 
   if (valid)
     {
-      if (EXPECT_FALSE(i.entry() == entry))
+      if (i.entry() == entry) [[unlikely]]
         return Insert_warn_exists;
 
       // Does the attribute upgrade require a break-before-make sequence?
@@ -326,7 +326,7 @@ Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order order,
 
   auto pte = _dir->walk(virt);
 
-  if (EXPECT_FALSE(!pte.is_valid()))
+  if (!pte.is_valid()) [[unlikely]]
     return Page::Flags::None();
 
   Page::Flags flags = pte.access_flags();
@@ -463,7 +463,7 @@ Mem_space::v_insert([[maybe_unused]] Phys_addr phys,
   bool const writeback = _current.current() == this && mpu_state_in_sync();
 
   auto touched = _dir->add(start, end, attr);
-  if (EXPECT_FALSE(!touched))
+  if (!touched) [[unlikely]]
     {
       if (touched.error() == Mpu_regions_update::Error_no_mem)
         {
@@ -491,7 +491,7 @@ Mem_space::v_insert([[maybe_unused]] Phys_addr phys,
           touched = _dir->del(start, end, &old_attr);
           attr.add_rights(old_attr.rights());
           auto added = _dir->add(start, end, attr);
-          if (EXPECT_FALSE(!added))
+          if (!added) [[unlikely]]
             {
               WARN("Mem_space::v_insert(%p): dropped [" L4_MWORD_FMT ":"
                    L4_MWORD_FMT "]\n", this, start, end);
@@ -604,7 +604,7 @@ Mem_space::v_delete(Vaddr virt, Page_order order,
 
   auto touched = _dir->del(start, end, &attr);
   assert(touched); // Deleting regions must never fail.
-  if (EXPECT_FALSE(touched.value().is_empty()))
+  if (touched.value().is_empty()) [[unlikely]]
     return Page::Flags::None();
 
   mpu_state_mark_dirty();
@@ -616,7 +616,7 @@ Mem_space::v_delete(Vaddr virt, Page_order order,
       Mpu_region_attr new_attr = attr;
       new_attr.del_rights(rights);
       auto added = _dir->add(start, end, new_attr);
-      if (EXPECT_FALSE(!added))
+      if (!added) [[unlikely]]
         WARN("Mem_space::v_delete(%p): dropped [" L4_MWORD_FMT ":" L4_MWORD_FMT "]\n",
              this, start, end);
       else
@@ -676,7 +676,7 @@ Mem_space::sync_mpu_state()
   if (_current.current() == this)
     {
       auto guard = lock_guard(_lock);
-      if (EXPECT_TRUE(!mpu_state_in_sync()))
+      if (!mpu_state_in_sync()) [[likely]]
         {
           Mpu::update(*_dir);
           mpu_state_mark_in_sync();
@@ -857,7 +857,7 @@ Mem_space::c_asid() const
 {
   Asid asid = atomic_load(&_asid);
 
-  if (EXPECT_TRUE(asid.is_valid()))
+  if (asid.is_valid()) [[likely]]
     return asid.asid();
   else
     return Mem_unit::Asid_invalid;

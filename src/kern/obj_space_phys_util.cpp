@@ -185,7 +185,7 @@ Obj_space_phys<SPACE>::get_cap(Cap_index index, bool alloc,
 
   // Update order if cap slot is not available. Used by the mapping code to
   // skip larger gaps.
-  if (EXPECT_FALSE(!ret && order))
+  if (!ret && order) [[unlikely]]
     *order = Page_order(Obj::Caps_per_page_ld2);
 
   return ret;
@@ -195,16 +195,16 @@ PRIVATE template< typename SPACE >
 typename Obj_space_phys<SPACE>::Entry *
 Obj_space_phys<SPACE>::get_cap(Cap_index index)
 {
-  if (EXPECT_FALSE(!_dir))
+  if (!_dir) [[unlikely]]
     return nullptr;
 
   unsigned d_idx = cxx::int_value<Cap_index>(index) >> Obj::Caps_per_page_ld2;
-  if (EXPECT_FALSE(d_idx >= Slots_per_dir))
+  if (d_idx >= Slots_per_dir) [[unlikely]]
     return nullptr;
 
   Cap_table *tab = _dir->d[d_idx];
 
-  if (EXPECT_FALSE(!tab))
+  if (!tab) [[unlikely]]
     return nullptr;
 
   unsigned offs  = cxx::get_lsb(cxx::int_value<Cap_index>(index), Obj::Caps_per_page_ld2);
@@ -215,12 +215,12 @@ PRIVATE template< typename SPACE >
 typename Obj_space_phys<SPACE>::Entry *
 Obj_space_phys<SPACE>::caps_alloc(Cap_index virt)
 {
-  if (EXPECT_FALSE(!_dir && !alloc_dir()))
+  if (!_dir && !alloc_dir()) [[unlikely]]
     return nullptr;
 
   static_assert(sizeof(Cap_table) == Config::PAGE_SIZE, "cap table size mismatch");
   unsigned d_idx = cxx::int_value<Cap_index>(virt) >> Obj::Caps_per_page_ld2;
-  if (EXPECT_FALSE(d_idx >= Slots_per_dir))
+  if (d_idx >= Slots_per_dir) [[unlikely]]
     return nullptr;
 
   void *mem = Kmem_alloc::allocator()->q_alloc(ram_quota(), Config::page_size());
@@ -297,7 +297,7 @@ Obj_space_phys<SPACE>::get_cap(Cap_index index, bool alloc,
 
   // Update order if cap slot is not available. Used by the mapping code to
   // skip larger gaps.
-  if (EXPECT_FALSE(!ret && order))
+  if (!ret && order) [[unlikely]]
     {
       Cap_index next(0);
       if (auto n = _map.lower_bound_node(index))
@@ -340,7 +340,7 @@ Obj_space_phys<SPACE>::v_lookup(V_pfn const &virt, Phys_addr *phys,
     *order = Page_order(0);
   Entry *cap = get_cap(virt, false, order);
 
-  if (EXPECT_FALSE(!cap))
+  if (!cap) [[unlikely]]
     return false;
 
   Capability c = cap->capability();
@@ -360,7 +360,7 @@ Obj_space_phys<SPACE>::lookup(Cap_index virt)
 {
   Entry *c = get_cap(virt, false);
 
-  if (EXPECT_FALSE(!c))
+  if (!c) [[unlikely]]
     return Capability(0); // void
 
   return c->capability();
@@ -372,7 +372,7 @@ Kobject_iface * __attribute__((nonnull))
 Obj_space_phys<SPACE>::lookup_local(Cap_index virt, L4_fpage::Rights *rights)
 {
   Entry *c = get_cap(virt, false);
-  if (EXPECT_FALSE(!c))
+  if (!c) [[unlikely]]
     return nullptr;
 
   Capability cap = c->capability();
@@ -421,7 +421,7 @@ Obj_space_phys<SPACE>::v_insert(
     {
       if (c->obj() == phys)
 	{
-	  if (EXPECT_FALSE(c->rights() == page_attribs))
+	  if (c->rights() == page_attribs) [[unlikely]]
 	    return Obj::Insert_warn_exists;
 
 	  c->add_rights(page_attribs);

@@ -627,8 +627,8 @@ IMPLEMENTATION[32bit]:
 PUBLIC inline void Tb_entry_ipc::set_abs_timeout(Utcb *utcb)
 {
   // store absolute timeouts in _dword[0,1] iff send phase omitted
-  if (EXPECT_FALSE(_timeout.rcv.is_absolute()
-                   && !(ipc_type() & L4_obj_ref::Ipc_send)))
+  if (_timeout.rcv.is_absolute() &&
+      !(ipc_type() & L4_obj_ref::Ipc_send)) [[unlikely]]
     {
       Unsigned64 to_abs_rcv = _timeout.rcv.microsecs_abs(utcb);
       _dword[0] = to_abs_rcv;

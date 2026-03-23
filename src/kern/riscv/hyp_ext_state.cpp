@@ -129,7 +129,7 @@ PUBLIC
 void
 Hyp_ext_state::process_remote_fence()
 {
-  if (EXPECT_TRUE(remote_fence == Rfnc_none))
+  if (remote_fence == Rfnc_none) [[likely]]
     return;
 
   Mword cpu_mask = remote_fence_hart_mask;

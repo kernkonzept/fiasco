@@ -107,7 +107,7 @@ public:
 
     // Otherwise try to allocate an ID.
     Id new_id = alloc_id();
-    if (EXPECT_FALSE(new_id == Invalid_id))
+    if (new_id == Invalid_id) [[unlikely]]
       return Invalid_id;
 
     if (!cas<Id>(id_storage, Invalid_id, new_id))

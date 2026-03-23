@@ -745,7 +745,7 @@ Gic_its::alloc_cmd_slot()
   while (i.test(next_write_off == cmd_queue_read_off()))
     Proc::pause();
 
-  if (EXPECT_FALSE(i.timed_out()))
+  if (i.timed_out()) [[unlikely]]
     {
       WARNX(Error, "ITS: Command slot allocation timed out!\n");
       return nullptr;
@@ -797,14 +797,14 @@ Gic_its::send_cmd(Cmd const &cmd, Collection const *col = nullptr)
   auto guard = lock_guard(_cmd_queue_lock);
 
   unsigned num_cmds = 1;
-  if (EXPECT_FALSE(!enqueue_cmd(cmd)))
+  if (!enqueue_cmd(cmd)) [[unlikely]]
     return;
 
   if (col)
     {
       assert(col->is_valid());
 
-      if (EXPECT_TRUE(enqueue_cmd(Cmd::sync(col->redist_base))))
+      if (enqueue_cmd(Cmd::sync(col->redist_base))) [[likely]]
         num_cmds++;
     }
   // Inform ITS about the submitted commands.
@@ -820,7 +820,7 @@ Gic_its::send_cmd(Cmd const &cmd, Collection const *col = nullptr)
   while (i.test(!is_cmd_complete(wait_off, num_cmds)))
     Proc::pause();
 
-  if (EXPECT_FALSE(i.timed_out()))
+  if (i.timed_out()) [[unlikely]]
     WARNX(Error, "ITS: Command execution timed out!\n");
 }
 
@@ -988,7 +988,7 @@ void
 Gic_its::assign_lpi_to_cpu(Lpi &lpi, Cpu_number cpu)
 {
   Collection const *col = get_col(cpu);
-  if (EXPECT_FALSE(!col->is_valid()))
+  if (!col->is_valid()) [[unlikely]]
     {
       WARN("ITS: Tried to assign LPI %u to uninitialized CPU %u.\n",
            lpi.intid(), cxx::int_value<Cpu_number>(cpu));

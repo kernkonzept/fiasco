@@ -133,7 +133,7 @@ public:
     Unsigned32 num = pending();
 
     // INTIDs 1020 - 1023 are spurious on GIC v2 and v3 and do not need an EOI
-    if (EXPECT_FALSE((num & 0xfffffffcU) == 0x3fc))
+    if ((num & 0xfffffffcU) == 0x3fc) [[unlikely]]
       return;
 
     handle_irq<IMPL>(num, u);

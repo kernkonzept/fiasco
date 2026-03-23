@@ -553,12 +553,13 @@ Context::check_for_current_cpu() const
 {
   Cpu_number hc = access_once(&_home_cpu);
   bool r = hc == current_cpu() || !Cpu::online(hc);
-  if constexpr (0 && EXPECT_FALSE(!r)) // debug output disabled
-    printf("FAIL: cpu=%u (current=%u) %p current=%p\n",
-           cxx::int_value<Cpu_number>(hc),
-           cxx::int_value<Cpu_number>(current_cpu()),
-           static_cast<void const *>(this),
-           static_cast<void *>(current()));
+  if constexpr (0) // debug output disabled
+    if (!r) [[unlikely]]
+      printf("FAIL: cpu=%u (current=%u) %p current=%p\n",
+             cxx::int_value<Cpu_number>(hc),
+             cxx::int_value<Cpu_number>(current_cpu()),
+             static_cast<void const *>(this),
+             static_cast<void *>(current()));
   return r;
 }
 
@@ -764,13 +765,13 @@ Context::schedule()
   assert (!Sched_context::rq.current().schedule_in_progress);
 
   // we give up the CPU as a helpee, so we have no helper anymore
-  if (EXPECT_FALSE(helper() != this))
+  if (helper() != this) [[unlikely]]
     set_helper(Not_Helping);
 
   // if we are a thread on a foreign CPU we must ask the kernel context to
   // schedule for us
   Cpu_number current_cpu = ::current_cpu();
-  while (EXPECT_FALSE(current_cpu != access_once(&_home_cpu)))
+  while (current_cpu != access_once(&_home_cpu)) [[unlikely]]
     {
       Context *kc = Context::kernel_context(current_cpu);
       assert (this != kc);
@@ -811,7 +812,7 @@ Context::schedule()
       // Ensure ready-list sanity
       assert (next_to_run);
 
-      if (EXPECT_FALSE(!(next_to_run->state() & Thread_ready_mask)))
+      if (!(next_to_run->state() & Thread_ready_mask)) [[unlikely]]
         rq->ready_dequeue(next_to_run->sched());
       else switch (schedule_switch_to_locked(next_to_run))
         {
@@ -831,7 +832,7 @@ Context::schedule()
 
       rq->schedule_in_progress = this;
       Proc::preemption_point();
-      if (EXPECT_TRUE(current_cpu == ::current_cpu()))
+      if (current_cpu == ::current_cpu()) [[likely]]
         rq->schedule_in_progress = nullptr;
       else
         return; // we got migrated and selected on our new CPU, so we may run
@@ -1023,7 +1024,7 @@ Context::schedule_switch_to_locked(Context *t)
   if (rq.current_sched() != t->sched())
     rq.set_current_sched(t->sched());
 
-  if (EXPECT_FALSE(t == this))
+  if (t == this) [[unlikely]]
     return switch_handle_drq();
 
   return switch_exec_locked(t, Not_Helping);
@@ -1040,7 +1041,7 @@ PUBLIC inline NEEDS [Context::schedule_switch_to_locked]
 void
 Context::switch_to_locked(Context *t)
 {
-  if (EXPECT_FALSE(schedule_switch_to_locked(t) != Switch::Ok))
+  if (schedule_switch_to_locked(t) != Switch::Ok) [[unlikely]]
     schedule();
 }
 
@@ -1089,7 +1090,7 @@ Context::switch_exec_locked(Context *t, enum Helping_mode mode)
   assert (current() == this);
 
   // Is t temporarily running on a foreign CPU, due to being helped?
-  if (EXPECT_FALSE(t->running_on_different_cpu()))
+  if (t->running_on_different_cpu()) [[unlikely]]
     {
       // When t currently executes on a foreign CPU, it must of course not
       // execute on its home CPU at the same time. Let the switch fail, and
@@ -1139,7 +1140,7 @@ Context::_switch_exec_common(Context *t, Helping_mode mode)
   // Can only switch to ready threads!
   // Do not require CPU locality here when accessing thread state, as t may
   // temporarily execute on a foreign CPU due being helped.
-  if (EXPECT_FALSE (!(t->state(false) & Thread_ready_mask)))
+  if (!(t->state(false) & Thread_ready_mask)) [[unlikely]]
     {
       assert (state(false) & Thread_ready_mask);
       return Switch::Failed;
@@ -1148,7 +1149,7 @@ Context::_switch_exec_common(Context *t, Helping_mode mode)
   // Ensure kernel stack pointer is non-null if thread is ready
   assert (t->_kernel_sp);
 
-  if (EXPECT_TRUE(get_current_cpu() == home_cpu()))
+  if (get_current_cpu() == home_cpu()) [[likely]]
     update_ready_list();
 
   t->set_helper(mode);
@@ -1217,7 +1218,7 @@ Context::Drq_q::execute_request(Drq *r, bool local)
       );
 
       Drq::Result answer = Drq::done();
-      if (EXPECT_TRUE(r->func != nullptr))
+      if (r->func != nullptr) [[likely]]
         {
           self->handle_remote_state_change();
           answer = r->func(r, self, r->arg);
@@ -1327,7 +1328,7 @@ Context::handle_drq()
 
   bool resched = false;
   Mword st = state();
-  if (EXPECT_FALSE(st & Thread_switch_hazards))
+  if (st & Thread_switch_hazards) [[unlikely]]
     {
       state_del_dirty(Thread_switch_hazards);
       if (st & Thread_finish_migration)
@@ -1337,7 +1338,7 @@ Context::handle_drq()
         resched = true;
     }
 
-  if (EXPECT_TRUE(!drq_pending()))
+  if (!drq_pending()) [[likely]]
     return resched;
 
   Mem::barrier();
@@ -1445,10 +1446,10 @@ bool
 Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
 {
   Cpu_number current_cpu = ::current_cpu();
-  if (EXPECT_FALSE(access_once(&_home_cpu) != current_cpu))
+  if (access_once(&_home_cpu) != current_cpu) [[unlikely]]
     {
       auto guard = lock_guard(_remote_state_change.lock);
-      if (EXPECT_TRUE(access_once(&_home_cpu) != current_cpu))
+      if (access_once(&_home_cpu) != current_cpu) [[likely]]
         {
           _remote_state_change.add = (_remote_state_change.add & mask) | add;
           _remote_state_change.del = (_remote_state_change.del & ~add)  | ~mask;
@@ -1543,7 +1544,7 @@ PUBLIC
 bool
 Context::kernel_context_drq(Drq::Request_func *func, void *arg)
 {
-  if (EXPECT_TRUE(home_cpu() == get_current_cpu()))
+  if (home_cpu() == get_current_cpu()) [[likely]]
     update_ready_list();
 
   Context *kc = kernel_context(current_cpu());
@@ -1899,7 +1900,7 @@ Context::dec_lock_cnt()
 {
   int ncnt = _lock_cnt - 1;
   write_now(&_lock_cnt, ncnt);
-  if (EXPECT_TRUE(ncnt == 0 && home_cpu() == current_cpu()))
+  if (ncnt == 0 && home_cpu() == current_cpu()) [[likely]]
     {
       Mem::mp_wmb();
       _running_under_lock.reset();
@@ -1910,14 +1911,14 @@ PRIVATE inline
 bool
 Context::running_on_different_cpu()
 {
-  if (   EXPECT_TRUE(access_once(&_lock_cnt) == 0)
-      && EXPECT_TRUE(!access_once(&_running_under_lock)))
+  if (access_once(&_lock_cnt) == 0
+      && !access_once(&_running_under_lock)) [[likely]]
     return false;
 
-  if (EXPECT_FALSE(!_running_under_lock.try_dispatch()))
+  if (!_running_under_lock.try_dispatch()) [[unlikely]]
     return true;
 
-  if (EXPECT_FALSE(access_once(&_lock_cnt) == 0))
+  if (access_once(&_lock_cnt) == 0) [[unlikely]]
     _running_under_lock.reset();
 
   return false;
@@ -1927,11 +1928,11 @@ PRIVATE inline
 bool
 Context::need_help(Mword const *lock, Mword val)
 {
-  if (EXPECT_FALSE(!_running_under_lock.try_to_help()))
+  if (!_running_under_lock.try_to_help()) [[unlikely]]
     return false;
 
   // double check if the lock is held by us
-  if (EXPECT_TRUE(access_once(&_lock_cnt) != 0 && access_once(lock) == val))
+  if (access_once(&_lock_cnt) != 0 && access_once(lock) == val) [[likely]]
     {
       _running_under_lock.help();
       return true;
@@ -1973,7 +1974,7 @@ Context::Pending_rqq::handle_requests(Context **mq)
       assert(c->check_for_current_cpu());
 
       c->handle_remote_state_change();
-      if (EXPECT_FALSE(c->_migration != nullptr))
+      if (c->_migration != nullptr) [[unlikely]]
         {
           // if the currently executing thread shall be migrated we must defer
           // this until we have handled the whole request queue, otherwise we
@@ -1993,15 +1994,15 @@ Context::Pending_rqq::handle_requests(Context **mq)
       else
         c->try_finish_migration();
 
-      if (EXPECT_TRUE(c->drq_pending()))
+      if (c->drq_pending()) [[likely]]
         {
-          if (EXPECT_TRUE(c != curr))
+          if (c != curr) [[likely]]
             c->state_add(Thread_drq_ready);
           else
             resched |= c->handle_drq();
         }
 
-      if (EXPECT_TRUE(c != curr && (c->state() & Thread_ready_mask)))
+      if (c != curr && (c->state() & Thread_ready_mask)) [[likely]]
         {
           Sched_context *cs = (curr->home_cpu() == curr->get_current_cpu())
                             ? curr->sched()
@@ -2136,12 +2137,12 @@ Context::_execute_drq(Drq *rq, bool offline_cpu = false)
   // The DRQ function executed above might be preemptible in the case
   // of local execution. For example the IRQ shortcut in
   // Irq_sender::handle_remote_hit().
-  if (EXPECT_FALSE(!offline_cpu && home_cpu() != current_cpu()))
+  if (!offline_cpu && home_cpu() != current_cpu()) [[unlikely]]
     return false;
 
   if (!in_ready_list() && (state(false) & Thread_ready_mask))
     {
-      if (EXPECT_FALSE(offline_cpu))
+      if (offline_cpu) [[unlikely]]
         Sched_context::rq.cpu(home_cpu()).ready_enqueue(sched());
       else
         Sched_context::rq.current().ready_enqueue(sched());
@@ -2174,8 +2175,11 @@ Context::_deq_exec_drq(Drq *rq, bool offline_cpu = false)
   if (!_drq_q.dequeue(rq))
     return false; // already handled
 
-  if (!drq_pending() && EXPECT_FALSE(state(false) & Thread_drq_ready))
-    state_del_dirty(Thread_drq_ready);
+  if (!drq_pending())
+    {
+      if (state(false) & Thread_drq_ready) [[unlikely]]
+        state_del_dirty(Thread_drq_ready);
+    }
 
   return _execute_drq(rq, offline_cpu);
 }
@@ -2200,7 +2204,7 @@ Context::enqueue_drq(Drq *rq)
       l->rq = rq;
   );
 
-  if (EXPECT_FALSE(cpu == current_cpu))
+  if (cpu == current_cpu) [[unlikely]]
     return _execute_drq(rq);
 
   _drq_q.enq(rq);
@@ -2211,7 +2215,7 @@ Context::enqueue_drq(Drq *rq)
 
   // check if we migrated to the current_cpu, in this case we have to execute
   // the DRQ directly
-  if (EXPECT_FALSE(cpu == current_cpu))
+  if (cpu == current_cpu) [[unlikely]]
     return _deq_exec_drq(rq);
 
   bool ipi = false;
@@ -2225,7 +2229,7 @@ Context::enqueue_drq(Drq *rq)
       if (access_once(&_home_cpu) != cpu)
         return false;
 
-      if (EXPECT_FALSE(!Cpu::online(cpu)))
+      if (!Cpu::online(cpu)) [[unlikely]]
         return _deq_exec_drq(rq, true);
 
       if (!_pending_rq.queued())

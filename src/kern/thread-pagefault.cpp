@@ -36,19 +36,19 @@ int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
   CNT_PAGE_FAULT;
 
   // TODO: put this into a debug_page_fault_handler
-  if (EXPECT_FALSE(log_page_fault()))
+  if (log_page_fault()) [[unlikely]]
     page_fault_log(pfa, error_code, pc);
 
   L4_msg_tag ipc_code = L4_msg_tag(0, 0, 0, 0);
 
   // Check for page fault in user memory area
-  if (EXPECT_TRUE(!Kmem::is_kmem_page_fault(pfa, error_code)))
+  if (!Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
     {
       // Make sure that we do not handle page faults that do not
       // belong to this thread.
       //assert (mem_space() == current_mem_space());
 
-      if (EXPECT_FALSE(mem_space()->is_sigma0()))
+      if (mem_space()->is_sigma0()) [[unlikely]]
         {
           // special case: sigma0 can map in anything from the kernel
 	  if(handle_sigma0_page_fault(pfa))
@@ -67,7 +67,7 @@ int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
     }
 
   // don't allow page fault in kernel memory region caused by user mode
-  else if (EXPECT_FALSE(PF::is_usermode_error(error_code)))
+  else if (PF::is_usermode_error(error_code)) [[unlikely]]
     return 0;
 
   // We're in kernel code faulting on a kernel memory region

@@ -300,7 +300,7 @@ Cpu_call::remote_call(Cpu_number cpu)
   q.enq(this);
 
   Mem::mp_mb();
-  if (EXPECT_FALSE(!Cpu::online(cpu)))
+  if (!Cpu::online(cpu)) [[unlikely]]
     {
       Mem::mp_mb();
       if (q.dequeue(this))

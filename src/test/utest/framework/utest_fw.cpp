@@ -855,7 +855,7 @@ PUBLIC static inline
 void
 Utest_fw::chk(bool result, char const *msg)
 {
-  if (EXPECT_FALSE(!result))
+  if (!result) [[unlikely]]
     Utest_fw::tap_log->check_failed(msg);
 }
 
@@ -872,7 +872,7 @@ PUBLIC static inline
 void
 Utest_fw::chk(bool result, Utest_fmt const &msg)
 {
-  if (EXPECT_FALSE(!result))
+  if (!result) [[unlikely]]
     Utest_fw::tap_log->check_failed(msg());
 }
 

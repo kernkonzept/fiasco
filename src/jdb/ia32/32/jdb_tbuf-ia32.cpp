@@ -15,6 +15,6 @@ INTERFACE [ia32 && jdb_logging]:
 		    ".popsection			\n\t"	\
 		    : "=b"(__do_log__)                          \
                     : [xfmt] "i" (&Tb_entry_formatter_t<fmt>::singleton));  \
-      if (EXPECT_FALSE( __do_log__ ))				\
+      if (__do_log__) [[unlikely]]				\
 	{
 

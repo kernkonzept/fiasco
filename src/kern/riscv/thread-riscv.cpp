@@ -175,7 +175,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
   // only a complete state will be used.
-  if (EXPECT_FALSE(tag.words() < (sizeof(Trex) / sizeof(Mword))))
+  if (tag.words() < (sizeof(Trex) / sizeof(Mword))) [[unlikely]]
     return true;
 
   Trap_state *ts = reinterpret_cast<Trap_state*>(rcv->_utcb_handler);
@@ -370,9 +370,11 @@ Thread::handle_page_fault_riscv(Mword cause, Mword pfa, Return_frame *ret_frame)
     }
 
   // Pagefault in user mode
-  if (EXPECT_TRUE(PF::is_usermode_error(error_code))
-      && vcpu_pagefault(pfa, cause, ret_frame->ip()))
-    return 1;
+  if (PF::is_usermode_error(error_code)) [[likely]]
+    {
+      if (vcpu_pagefault(pfa, cause, ret_frame->ip()))
+        return 1;
+    }
 
   // Enable interrupts, except for kernel page faults in TCB area.
   Lock_guard<Cpu_lock, Lock_guard_inverse_policy> guard;

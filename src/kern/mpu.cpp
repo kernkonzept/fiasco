@@ -371,7 +371,7 @@ Mpu_regions::add(Mword start, Mword end, Mpu_region_attr attr, bool join = true,
           right = i;
           break;
         }
-      else if (EXPECT_TRUE(join))
+      else if (join) [[likely]]
         return extend(i, attr, start, end); // Slow path in case of collisions
       else
         return Mpu_regions_update(Mpu_regions_update::Error_collision);

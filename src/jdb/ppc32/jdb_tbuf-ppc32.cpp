@@ -5,6 +5,6 @@ INTERFACE [ppc32 && jdb_logging]:
   do								\
     {								\
       Unsigned8 __do_log__ = 0;					\
-      if (EXPECT_FALSE( __do_log__ ))				\
+      if (__do_log__) [[unlikely]]				\
 	{
 

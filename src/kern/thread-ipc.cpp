@@ -174,7 +174,7 @@ Thread::ipc_send_msg(Receiver *receiver, bool open_wait) override
 {
   Syscall_frame *regs = _snd_regs;
 
-  if (EXPECT_FALSE(home_cpu() != receiver->home_cpu() && regs->tag().transfer_fpu()))
+  if (home_cpu() != receiver->home_cpu() && regs->tag().transfer_fpu()) [[unlikely]]
     nonull_static_cast<Thread*>(receiver)->prepare_xcpu_ipc_transfer_fpu();
 
   sender_dequeue(receiver->sender_list());
@@ -184,7 +184,7 @@ Thread::ipc_send_msg(Receiver *receiver, bool open_wait) override
 
   Mword state_del;
   Mword state_add;
-  if (EXPECT_TRUE(success))
+  if (success) [[likely]]
     {
       regs->tag(L4_msg_tag(regs->tag(), 0));
       state_del = Thread_ipc_mask | Thread_ipc_transfer;
@@ -241,7 +241,7 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
                                 L4_msg_tag::Protocol protocol)
 {
   if constexpr (TAG_ENABLED(alien))
-    if (EXPECT_FALSE((state() & Thread_alien)))
+    if ((state() & Thread_alien)) [[unlikely]]
       return false;
 
   auto guard = lock_guard(cpu_lock);
@@ -301,7 +301,7 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
 
   bool success = true;
 
-  if (EXPECT_FALSE(r.tag().has_error()))
+  if (r.tag().has_error()) [[unlikely]]
     {
       if (utcb->error.snd_phase()
           && (utcb->error.error() == L4_error::Not_existent)
@@ -314,7 +314,7 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
   else // no error
     {
       // If the pager rejects the mapping, it replies with a negative label
-      if (EXPECT_FALSE (r.tag().proto() < 0))
+      if (r.tag().proto() < 0) [[unlikely]]
         success = false;
     }
 
@@ -340,7 +340,7 @@ PRIVATE inline
 Thread::Check_sender
 Thread::check_sender(Thread *sender, bool zero_timeout)
 {
-  if (EXPECT_FALSE(is_invalid()))
+  if (is_invalid()) [[unlikely]]
     {
       sender->utcb().access()->error = L4_error::Not_existent;
       return Check_sender::Failed;
@@ -381,10 +381,10 @@ PUBLIC inline NEEDS["timer.h"]
 bool
 Thread::setup_timer(L4_timeout timeout, Utcb const *utcb, Timeout *timer)
 {
-  if (EXPECT_TRUE(timeout.is_never()))
+  if (timeout.is_never()) [[likely]]
     return true;
 
-  if (EXPECT_FALSE(timeout.is_zero()))
+  if (timeout.is_zero()) [[unlikely]]
     {
       state_add_dirty(Thread_ready | Thread_timeout);
       return false;
@@ -395,7 +395,7 @@ Thread::setup_timer(L4_timeout timeout, Utcb const *utcb, Timeout *timer)
   Unsigned64 clock = Timer::system_clock();
   Unsigned64 tval = timeout.microsecs(clock, utcb);
 
-  if (EXPECT_TRUE((tval > clock)))
+  if ((tval > clock)) [[likely]]
     {
       set_timeout(timer, tval);
       return true;
@@ -480,7 +480,7 @@ Thread::get_next_sender(Sender *sender)
   if (sender) // closed wait
     {
       assert(is_partner(sender));
-      if (EXPECT_TRUE(partner_in_sender_list()))
+      if (partner_in_sender_list()) [[likely]]
         {
           assert(sender->in_sender_list() && sender_list() == sender->wait_queue());
           return sender;
@@ -620,7 +620,7 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
       // reset_caller() here. This takes care of callees that send directly to
       // the caller (e.g., via thread cap or an IPC gate).
 
-      if (EXPECT_TRUE(current_cpu == partner->home_cpu()))
+      if (current_cpu == partner->home_cpu()) [[likely]]
         {
           // We are on home CPU of partner and IRQs are disabled, so it is safe
           // to access the `Receiver` state.
@@ -666,7 +666,7 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
           // timeout, because it will require much less sorting overhead. If we
           // don't reset the timeout, the probability is very high that the
           // receiver timeout is in the timeout queue.
-          if (EXPECT_TRUE(current_cpu == partner->home_cpu()))
+          if (current_cpu == partner->home_cpu()) [[likely]]
             partner->reset_timeout();
 
           ok = transfer_msg(tag, partner, rights, result.is_open_wait());
@@ -683,7 +683,7 @@ Thread::do_ipc(L4_msg_tag const &tag, Mword from_spec, Thread *partner,
           break;
         }
 
-      if (EXPECT_FALSE(!ok))
+      if (!ok) [[unlikely]]
         {
           // Send failed. Skip the receive phase (Thread_receive_wait was not
           // set) but still activate the partner (may include a switch to it)
@@ -810,17 +810,17 @@ Thread::do_ipc_receive(bool have_receive, Thread *partner, Sender *sender,
 
   Mword state = this->state();
 
-  if (EXPECT_TRUE (!(state & Thread_full_ipc_mask)))
+  if (!(state & Thread_full_ipc_mask)) [[likely]]
     return;
 
-  while (EXPECT_FALSE(state & Thread_ipc_transfer))
+  while (state & Thread_ipc_transfer) [[unlikely]]
     {
       state_del_dirty(Thread_ready);
       schedule();
       state = this->state();
    }
 
-  if (EXPECT_TRUE (!(state & Thread_full_ipc_mask)))
+  if (!(state & Thread_full_ipc_mask)) [[likely]]
     return;
 
   if (state & Thread_ipc_mask)
@@ -829,7 +829,7 @@ Thread::do_ipc_receive(bool have_receive, Thread *partner, Sender *sender,
       // the IPC has not been finished.  could be timeout or cancel
       // XXX should only modify the error-code part of the status code
 
-      if (EXPECT_FALSE(state & Thread_cancel))
+      if (state & Thread_cancel) [[unlikely]]
         {
           // we've presumably been reset!
           regs->tag(commit_error(utcb, L4_error::R_canceled, regs->tag()));
@@ -1007,12 +1007,12 @@ Thread::send_exception(Trap_state *ts)
   L4_fpage::Rights rights = L4_fpage::Rights(0);
   Kobject_iface *handler = _exc_handler.ptr(space(), &rights);
 
-  if (EXPECT_FALSE(!handler))
+  if (!handler) [[unlikely]]
     {
       /* no exception handler (anymore), put thread to sleep */
       LOG_TRACE("Exception invalid handler", "ieh", this, Log_exc_invalid,
                 l->cap_idx = _exc_handler.raw());
-      if (EXPECT_FALSE(space()->is_sigma0()))
+      if (space()->is_sigma0()) [[unlikely]]
         {
           ts->dump();
           panic("Sigma0 raised an exception");
@@ -1043,7 +1043,7 @@ Thread::try_transfer_local_id(L4_buf_iter::Item const *const buf,
         {
           Obj_space::Capability cap = snd->space()->lookup(sfp.obj_index());
           Kobject_iface *o = cap.obj();
-          if (EXPECT_TRUE(o && o->is_local(rcv->space())))
+          if (o && o->is_local(rcv->space())) [[likely]]
             {
               Mword rights = cap.rights()
                              & cxx::int_value<L4_fpage::Rights>(sfp.rights());
@@ -1097,9 +1097,9 @@ Thread::copy_utcb_to(L4_msg_tag tag, Thread* receiver,
 {
   // we cannot copy trap state to trap state!
   assert (!this->_utcb_handler || !receiver->_utcb_handler);
-  if (EXPECT_FALSE(this->_utcb_handler != nullptr))
+  if (this->_utcb_handler != nullptr) [[unlikely]]
     return copy_ts_to_utcb(tag, this, receiver, rights);
-  else if (EXPECT_FALSE(receiver->_utcb_handler != nullptr))
+  else if (receiver->_utcb_handler != nullptr) [[unlikely]]
     return copy_utcb_to_ts(tag, this, receiver, rights);
   else
     return copy_utcb_to_utcb(tag, this, receiver, rights);
@@ -1114,21 +1114,21 @@ Thread::transfer_msg_lookup_dst_tsk(Thread *rcv,
 
   // Regular receive buffer? -> destination task is implicitly the task of the
   // receiving thread.
-  if (EXPECT_TRUE(!buf->b.forward_mappings()))
+  if (!buf->b.forward_mappings()) [[likely]]
     return rcv_tsk;
 
   // Compond receive buffer -> receive task is selected explicitly.
   L4_obj_ref tc(buf->task);
-  if (EXPECT_FALSE(!tc.valid()))
+  if (!tc.valid()) [[unlikely]]
     return nullptr;
 
   Obj_space::Capability dst_cap = rcv_tsk->lookup(tc.cap());
-  if (EXPECT_FALSE(!dst_cap.valid()))
+  if (!dst_cap.valid()) [[unlikely]]
     return nullptr;
 
   Task *dst_tsk = cxx::dyn_cast<Task*>(dst_cap.obj());
   auto task_rights = L4_fpage::Rights(dst_cap.rights());
-  if (EXPECT_FALSE(!dst_tsk || !(task_rights & L4_fpage::Rights::CW())))
+  if (!dst_tsk || !(task_rights & L4_fpage::Rights::CW())) [[unlikely]]
     return nullptr;
 
   return dst_tsk;
@@ -1180,7 +1180,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
           break;
         }
 
-      if (EXPECT_FALSE(!buf_iter))
+      if (!buf_iter) [[unlikely]]
         {
           snd->set_ipc_error(L4_error::Overflow, rcv);
           return false;
@@ -1188,7 +1188,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
 
       L4_buf_iter::Item const *const buf = buf_iter->get();
 
-      if (EXPECT_FALSE(buf->b.is_void() || buf->b.type() != item->b.type()))
+      if (buf->b.is_void() || buf->b.type() != item->b.type()) [[unlikely]]
         {
           snd->set_ipc_error(L4_error::Overflow, rcv);
           return false;
@@ -1210,7 +1210,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
               // we need to do a real mapping
               L4_error err;
               Ref_ptr<Task> dst_tsk(transfer_msg_lookup_dst_tsk(rcv, buf));
-              if (EXPECT_FALSE(!dst_tsk))
+              if (!dst_tsk) [[unlikely]]
                 {
                   snd->set_ipc_error(L4_error::Overflow, rcv);
                   return false;
@@ -1234,7 +1234,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
                   return_item.set_rcv_type_map_nothing();
               }
 
-              if (EXPECT_FALSE(!err.ok()))
+              if (!err.ok()) [[unlikely]]
                 {
                   snd->set_ipc_error(err, rcv);
                   return false;
@@ -1248,7 +1248,7 @@ Thread::transfer_msg_items(L4_msg_tag const &tag, Thread* snd, Utcb *snd_utcb,
         buf_iter->next();
     }
 
-  if (EXPECT_FALSE(items))
+  if (items) [[unlikely]]
     {
       snd->set_ipc_error(L4_error::Overflow, rcv);
       return false;
@@ -1320,7 +1320,7 @@ Thread::do_send_wait(Thread *partner, L4_timeout snd_t)
 {
   IPC_timeout timeout;
 
-  if (EXPECT_FALSE(snd_t.is_finite()))
+  if (snd_t.is_finite()) [[unlikely]]
     {
       Unsigned64 clock = Timer::system_clock();
       Unsigned64 tval = snd_t.microsecs(clock, utcb().access(true));
@@ -1341,19 +1341,19 @@ Thread::do_send_wait(Thread *partner, L4_timeout snd_t)
 
   reset_timeout();
 
-  if (EXPECT_TRUE(!(ipc_state & Thread_send_wait)))
+  if (!(ipc_state & Thread_send_wait)) [[likely]]
     return true;
 
-  if (EXPECT_FALSE(ipc_state & Thread_transfer_failed))
+  if (ipc_state & Thread_transfer_failed) [[unlikely]]
     {
       state_del_dirty(Thread_full_ipc_mask);
       return false;
     }
 
-  if (EXPECT_FALSE(ipc_state & Thread_cancel))
+  if (ipc_state & Thread_cancel) [[unlikely]]
     return !abort_send(L4_error::Canceled, partner);
 
-  if (EXPECT_FALSE(ipc_state & Thread_timeout))
+  if (ipc_state & Thread_timeout) [[unlikely]]
     return !abort_send(L4_error::Timeout, partner);
 
   return true;

@@ -253,11 +253,11 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order order,
   auto i = _dir->walk(virt, level, false,
                       Kmem_alloc::q_allocator(_quota));
 
-  if (EXPECT_FALSE(!i.is_valid() && i.level != level))
+  if (!i.is_valid() && i.level != level) [[unlikely]]
     return Insert_err_nomem;
 
-  if (EXPECT_FALSE(i.is_valid()
-                   && (i.level != level || Phys_addr(i.page_addr()) != phys)))
+  if (i.is_valid()
+      && (i.level != level || Phys_addr(i.page_addr()) != phys)) [[unlikely]]
     return Insert_err_exists;
 
   bool const valid = i.is_valid();
@@ -268,7 +268,7 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order order,
 
   if (valid)
     {
-      if (EXPECT_FALSE(i.entry() == entry))
+      if (i.entry() == entry) [[unlikely]]
         return Insert_warn_exists;
 
       i.set_page(entry);
@@ -307,7 +307,7 @@ Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order order,
 
   auto pte = _dir->walk(virt);
 
-  if (EXPECT_FALSE(!pte.is_valid()))
+  if (!pte.is_valid()) [[unlikely]]
     return Page::Flags::None();
 
   Page::Flags flags = pte.access_flags();
@@ -448,7 +448,7 @@ Mem_space::c_asid() const
 {
   Asid asid = atomic_load(&_asid);
 
-  if (EXPECT_TRUE(asid.is_valid()))
+  if (asid.is_valid()) [[likely]]
     return asid.asid();
   else
     return Mem_unit::Asid_invalid;
@@ -541,7 +541,7 @@ Mem_space::c_vmid() const
 {
   Vmid vmid = atomic_load(&_vmid);
 
-  if (EXPECT_TRUE(vmid.is_valid()))
+  if (vmid.is_valid()) [[likely]]
     return vmid.asid();
   else
     return Mem_unit::Vmid_invalid;

@@ -313,18 +313,18 @@ Vm_vmx_ept::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
   auto i = _ept->walk(virt, level, false,
                       Kmem_alloc::q_allocator(ram_quota()));
 
-  if (EXPECT_FALSE(!i.is_valid() && i.level != level))
+  if (!i.is_valid() && i.level != level) [[unlikely]]
     return Mem_space::Insert_err_nomem;
 
-  if (EXPECT_FALSE(i.is_valid()
-                   && (i.level != level || Mem_space::Phys_addr(i.page_addr()) != phys)))
+  if (i.is_valid()
+      && (i.level != level || Mem_space::Phys_addr(i.page_addr()) != phys)) [[unlikely]]
     return Mem_space::Insert_err_exists;
 
   auto entry = i.make_page(phys, page_attribs);
 
   if (i.is_valid())
     {
-      if (EXPECT_FALSE(i.entry() == entry))
+      if (i.entry() == entry) [[unlikely]]
         return Mem_space::Insert_warn_exists;
 
       i.set_page(entry);
@@ -347,7 +347,7 @@ Vm_vmx_ept::v_delete(Mem_space::Vaddr virt,
 
   auto pte = _ept->walk(virt);
 
-  if (EXPECT_FALSE(!pte.is_valid()))
+  if (!pte.is_valid()) [[unlikely]]
     return Page::Flags::None();
 
   Page::Flags flags = pte.access_flags();
@@ -427,8 +427,8 @@ bool
 Vm_vmx_ept::initialize()
 {
   void *b;
-  if (EXPECT_FALSE(!(b = Kmem_alloc::allocator()
-	  ->q_alloc(ram_quota(), Config::page_order()))))
+  if (!(b = Kmem_alloc::allocator()
+              ->q_alloc(ram_quota(), Config::page_order()))) [[unlikely]]
     return false;
 
   _ept = static_cast<Ept*>(b);
@@ -514,7 +514,7 @@ Vm_vmx_ept::vm_entry(Trex *regs, Vmx_vm_state_t<HOST_STATE> *vm_state,
 
   safe_host_segments();
 
-  if (EXPECT_FALSE(Vmx::vmx_failure()))
+  if (Vmx::vmx_failure()) [[unlikely]]
     return 1;
 
   Unsigned16 ldt = Cpu::get_ldt();
@@ -545,7 +545,7 @@ Vm_vmx_ept::vm_entry(Trex *regs, Vmx_vm_state_t<HOST_STATE> *vm_state,
   restore_host_xcr0(host_xcr0, guest_xcr0);
 
   Unsigned32 error = 0;
-  if (EXPECT_FALSE(ret))
+  if (ret) [[unlikely]]
     {
       // We read the VM instruction error here to make sure that the original
       // value has not been accidentally overwritten by any following VMX
@@ -630,7 +630,7 @@ Vm_vmx_ept::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
       // XXX: This generates a circular dependency between thread<->task!
       if (!(ctxt->state() & Thread_fpu_owner))
         {
-          if (EXPECT_FALSE(!static_cast<Thread *>(ctxt)->switchin_fpu()))
+          if (!static_cast<Thread *>(ctxt)->switchin_fpu()) [[unlikely]]
             {
               WARN("VMX: switchin_fpu failed\n");
               return -L4_err::EInval;
@@ -645,7 +645,7 @@ Vm_vmx_ept::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
   Unsigned32 reason = 0;
   unsigned long ret = vm_entry(&vcpu->_regs, vm_state, guest_long_mode,
                                &reason);
-  if (EXPECT_FALSE(ret))
+  if (ret) [[unlikely]]
     return -L4_err::EInval;
 
   Unsigned32 basic_reason = reason & 0xffffU;
@@ -669,7 +669,7 @@ Vm_vmx_ept::resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
 {
   assert(user_mode);
 
-  if (EXPECT_FALSE(!(ctxt->state(true) & Thread_ext_vcpu_enabled)))
+  if (!(ctxt->state(true) & Thread_ext_vcpu_enabled)) [[unlikely]]
     {
       ctxt->arch_load_vcpu_kern_state(vcpu, true);
       force_kern_entry_vcpu_state(vcpu);
@@ -766,7 +766,7 @@ PUBLIC inline
 void
 Vm_vmx_ept::cleanup_vcpu(Context *ctxt, Vcpu_state *vcpu) override
 {
-  if (EXPECT_FALSE(!(ctxt->state(true) & Thread_ext_vcpu_enabled)))
+  if (!(ctxt->state(true) & Thread_ext_vcpu_enabled)) [[unlikely]]
     return;
 
   Vmx_vm_state *vm_state

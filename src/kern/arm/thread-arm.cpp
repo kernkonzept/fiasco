@@ -188,7 +188,7 @@ extern "C" {
   Mword pagefault_entry(const Mword pfa, Mword error_code,
                         const Mword pc, Return_frame *ret_frame)
   {
-    if (EXPECT_FALSE(PF::is_alignment_error(error_code)))
+    if (PF::is_alignment_error(error_code)) [[unlikely]]
       {
 	WARNX(Warning,
               "KERNEL%d: alignment error at %08lx (PC: %08lx, SP: %08lx, FSR: %lx, PSR: %lx)\n",
@@ -197,12 +197,12 @@ extern "C" {
         return false;
       }
 
-    if (EXPECT_FALSE(Thread::is_debug_exception_fsr(error_code)))
+    if (Thread::is_debug_exception_fsr(error_code)) [[unlikely]]
       return 0;
 
     Thread *t = current_thread();
 
-    if (EXPECT_FALSE(t->check_and_handle_mem_op_fault(error_code, ret_frame)))
+    if (t->check_and_handle_mem_op_fault(error_code, ret_frame)) [[unlikely]]
       return 1;
 
     // Pagefault in user mode
@@ -437,11 +437,11 @@ PRIVATE inline
 L4_msg_tag
 Thread::set_tpidruro(L4_msg_tag tag, Utcb const *utcb)
 {
-  if (EXPECT_FALSE(tag.words() < 2))
+  if (tag.words() < 2) [[unlikely]]
     return commit_result(-L4_err::EInval);
 
   _tpidruro = utcb->values[1];
-  if (EXPECT_FALSE(state() & Thread_vcpu_enabled))
+  if (state() & Thread_vcpu_enabled) [[unlikely]]
     arch_update_vcpu_state(vcpu_state().access());
 
   if (this == current_thread())

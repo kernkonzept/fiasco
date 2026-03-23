@@ -449,7 +449,7 @@ public:
   void queue_check_error()
   {
     bool error_pending = regs[Reg_32::Fault_status] & Fault_status_mask;
-    if (EXPECT_TRUE(!error_pending))
+    if (!error_pending) [[likely]]
       return;
 
     // Handle errors with the queue lock held, then release it before reporting
@@ -530,7 +530,7 @@ public:
     for(;;)
       {
         // Check if queue has enough free slots.
-        if (EXPECT_TRUE(desc_num <= queue_num_free_slots()))
+        if (desc_num <= queue_num_free_slots()) [[likely]]
           break;
 
         // Release lock.
@@ -773,7 +773,7 @@ public:
   bool set_context_entry(Cte::Ptr entry, Unsigned8 bus,
                          Unsigned8 df, Cte new_cte)
   {
-    if (EXPECT_FALSE(!entry))
+    if (!entry) [[unlikely]]
       return false;
 
     Cte old;
@@ -1056,13 +1056,13 @@ Intel::Io_mmu::get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc)
   if (rte->present())
     return reinterpret_cast<Cte *>(Mem_layout::phys_to_pmem(rte->ctp())) + df;
 
-  if (EXPECT_FALSE(!may_alloc))
+  if (!may_alloc) [[unlikely]]
     return nullptr;
 
   enum { Ct_size = 4096 };
   const Bytes Ct_bytes = Bytes(Ct_size);
   void *ctx = Kmem_alloc::allocator()->alloc(Ct_bytes);
-  if (EXPECT_FALSE(!ctx))
+  if (!ctx) [[unlikely]]
     return nullptr; // out of memory
 
   memset(ctx, 0, Ct_size);
@@ -1074,7 +1074,7 @@ Intel::Io_mmu::get_context_entry(Unsigned8 bus, Unsigned8 df, bool may_alloc)
     {
       auto g = lock_guard(_lock);
 
-      if (EXPECT_FALSE(rte->present()))
+      if (rte->present()) [[unlikely]]
         {
           // someone else allocated the context table meanwhile
           g.reset();

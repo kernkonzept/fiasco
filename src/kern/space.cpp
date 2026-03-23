@@ -153,11 +153,11 @@ Space::find_ku_mem(User_ptr<void> p, unsigned size, unsigned align)
   Address const pa = reinterpret_cast<Address>(p.get());
 
   // alignment check
-  if (EXPECT_FALSE(pa & (align - 1)))
+  if (pa & (align - 1)) [[unlikely]]
     return nullptr;
 
   // overflow check
-  if (EXPECT_FALSE(pa + size - 1 < pa))
+  if (pa + size - 1 < pa) [[unlikely]]
     return nullptr;
 
   for (Ku_mem_list::Const_iterator f = _ku_mem.begin(); f != _ku_mem.end(); ++f)

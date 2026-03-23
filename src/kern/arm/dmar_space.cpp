@@ -139,11 +139,11 @@ Dmar_space::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
   auto i = _dmarpt->walk(virt, level, Dmar_pte_ptr::need_cache_write_back(),
                          Kmem_alloc::q_allocator(ram_quota()));
 
-  if (EXPECT_FALSE(!i.is_valid() && i.level != level))
+  if (!i.is_valid() && i.level != level) [[unlikely]]
     return Mem_space::Insert_err_nomem;
 
-  if (EXPECT_FALSE(i.is_valid()
-      && (i.level != level || Mem_space::Phys_addr(i.page_addr()) != phys)))
+  if (i.is_valid()
+      && (i.level != level || Mem_space::Phys_addr(i.page_addr()) != phys)) [[unlikely]]
     return Mem_space::Insert_err_exists;
 
   bool const valid = i.is_valid();
@@ -154,7 +154,7 @@ Dmar_space::v_insert(Mem_space::Phys_addr phys, Mem_space::Vaddr virt,
 
   if (valid)
     {
-      if (EXPECT_FALSE(i.entry() == entry))
+      if (i.entry() == entry) [[unlikely]]
         return Mem_space::Insert_warn_exists;
 
       i.set_page(entry);
@@ -179,7 +179,7 @@ Dmar_space::v_delete(Mem_space::Vaddr virt,
 
   auto pte = _dmarpt->walk(virt);
 
-  if (EXPECT_FALSE(!pte.is_valid()))
+  if (!pte.is_valid()) [[unlikely]]
     return Page::Flags::None();
 
   Page::Flags flags = pte.access_flags();

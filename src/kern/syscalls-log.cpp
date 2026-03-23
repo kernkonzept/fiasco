@@ -46,13 +46,16 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
         }
 
       Tb_entry_ipc _local;
-      Tb_entry_ipc *tb = EXPECT_TRUE(Jdb_ipc_trace::log_buf())
-                       ? Jdb_tbuf::new_entry<Tb_entry_ipc>()
-                       : &_local;
+      Tb_entry_ipc *tb;
+      if (Jdb_ipc_trace::log_buf()) [[likely]]
+        tb = Jdb_tbuf::new_entry<Tb_entry_ipc>();
+      else
+        tb = &_local;
+
       tb->set(curr, regs->ip_syscall_user(), ipc_regs, utcb,
               dbg_id, curr->sched_context()->left());
 
-      if (EXPECT_TRUE(Jdb_ipc_trace::log_buf()))
+      if (Jdb_ipc_trace::log_buf()) [[likely]]
         Jdb_tbuf::commit_entry(tb);
       else
         Jdb_tbuf::direct_log_entry(tb, "IPC");
@@ -67,13 +70,16 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
   if (Jdb_ipc_trace::log() && Jdb_ipc_trace::log_result() && do_log)
     {
       Tb_entry_ipc_res _local;
-      Tb_entry_ipc_res *tb = static_cast<Tb_entry_ipc_res*>
-        (EXPECT_TRUE(Jdb_ipc_trace::log_buf()) ? Jdb_tbuf::new_entry()
-                                               : &_local);
+      Tb_entry_ipc_res *tb;
+      if (Jdb_ipc_trace::log_buf()) [[likely]]
+        tb = Jdb_tbuf::new_entry<Tb_entry_ipc_res>();
+      else
+        tb = &_local;
+
       tb->set(curr, regs->ip_syscall_user(), ipc_regs, utcb, utcb->error.raw(),
               entry_event_num, have_snd, false);
 
-      if (EXPECT_TRUE(Jdb_ipc_trace::log_buf()))
+      if (Jdb_ipc_trace::log_buf()) [[likely]]
         Jdb_tbuf::commit_entry(tb);
       else
         Jdb_tbuf::direct_log_entry(tb, "IPC result");

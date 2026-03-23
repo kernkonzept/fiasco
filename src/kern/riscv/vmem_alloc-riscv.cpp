@@ -16,7 +16,7 @@ Vmem_alloc::page_alloc(void *address, Zero_fill zf, unsigned mode)
   void *vpage = Kmem_alloc::q_allocator(
     Ram_quota::root.unwrap()).alloc(Config::page_size());
 
-  if (EXPECT_FALSE(!vpage))
+  if (!vpage) [[unlikely]]
     return nullptr;
 
   Address page = Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(vpage));

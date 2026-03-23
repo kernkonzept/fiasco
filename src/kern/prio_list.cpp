@@ -185,7 +185,7 @@ void
 Iterable_prio_list::dequeue(Prio_list_elem *e)
 {
   Prio_list_elem **c = nullptr;
-  if (EXPECT_FALSE(_cursor != nullptr) && EXPECT_FALSE(_cursor == e))
+  if (_cursor != nullptr && _cursor == e) [[unlikely]]
     c = &_cursor;
 
   Prio_list::dequeue(e, c);

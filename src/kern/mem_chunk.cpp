@@ -70,10 +70,10 @@ PUBLIC template<typename MEM = Mem_chunk> static
 MEM
 Mem_chunk::alloc_mem(unsigned size, unsigned align = 1)
 {
-  if (EXPECT_FALSE(size < Kmem_alloc::Alloc::Min_size))
+  if (size < Kmem_alloc::Alloc::Min_size) [[unlikely]]
     return MEM();
 
-  if (EXPECT_FALSE(align == 0 || (align & (align - 1))))
+  if (align == 0 || (align & (align - 1))) [[unlikely]]
     return MEM();
 
   // Underlying buddy allocator can only provide naturally aligned blocks of

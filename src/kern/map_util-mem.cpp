@@ -47,8 +47,8 @@ mem_map(Space *from, L4_fpage const &fp_from,
   typedef Mem_space::V_pfc Pfc;
   typedef Mem_space::V_order Order;
 
-  if (EXPECT_FALSE(fp_from.order() < L4_fpage::Mem_addr::Shift
-                   || fp_to.order() < L4_fpage::Mem_addr::Shift))
+  if (fp_from.order() < L4_fpage::Mem_addr::Shift
+      || fp_to.order() < L4_fpage::Mem_addr::Shift) [[unlikely]]
     return L4_error::None;
 
   // loop variables
@@ -67,7 +67,7 @@ mem_map(Space *from, L4_fpage const &fp_from,
   // No remapping possible without an MMU
   if constexpr (!Config::Have_mmu)
     {
-      if (EXPECT_FALSE(snd_addr != rcv_addr))
+      if (snd_addr != rcv_addr) [[unlikely]]
         {
           WARN("No MMU: can't map from " L4_PTR_FMT " to " L4_PTR_FMT "\n",
                cxx::int_value<Pfn>(snd_addr), cxx::int_value<Pfn>(rcv_addr));

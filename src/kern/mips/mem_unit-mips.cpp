@@ -309,7 +309,7 @@ PRIVATE static
 void
 Mem_unit::_plain_tlb_flush(long asid, unsigned /* guest_id */)
 {
-  if (EXPECT_FALSE(asid < 0))
+  if (asid < 0) [[unlikely]]
     return;
 
   Mword saved_hi = entry_hi();
@@ -395,7 +395,7 @@ PRIVATE static
 void
 Mem_unit::_vz_tlb_flush(long asid, unsigned guest_id)
 {
-  if (EXPECT_FALSE((asid < 0) && (guest_id == 0)))
+  if ((asid < 0) && (guest_id == 0)) [[unlikely]]
     return;
 
   // NOTE: we assume a JTLB
@@ -734,7 +734,7 @@ PRIVATE static
 void
 Mem_unit::_tlbinv_tlb_flush(long asid, unsigned /* guest_id */)
 {
-  if (EXPECT_FALSE(asid < 0))
+  if (asid < 0) [[unlikely]]
     return;
 
   Mword saved_hi = entry_hi();

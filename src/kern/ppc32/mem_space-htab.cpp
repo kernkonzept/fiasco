@@ -159,7 +159,7 @@ Mem_space::locate(Pte_htab *pte, Address ea)
       if(free) break;
     }
 
-  if(EXPECT_FALSE(!free))
+  if (!free) [[unlikely]]
     free = ret;
   pte->pte.h = h;
   return free;
@@ -222,7 +222,7 @@ Mem_space::pte_attrib_upgrade(Pte_ptr *e, size_t size, unsigned page_attribs)
 
       if(e2->is_htab_entry())
         {
-          if(EXPECT_FALSE((e2->raw() | page_attribs) == e2->raw()))
+          if ((e2->raw() | page_attribs) == e2->raw()) [[unlikely]]
             {
               ret =  Insert_warn_exists;
               continue;
@@ -245,8 +245,7 @@ Mem_space::pte_attrib_upgrade(Address pte_addr, unsigned page_attribs)
 {
   auto guard = lock_guard(cpu_lock);
   Pte_htab * pte_phys = Pte_htab::addr_to_pte(pte_addr);
-  if(EXPECT_FALSE((pte_phys->phys() | page_attribs) 
-	 	  == pte_phys->phys()))
+  if ((pte_phys->phys() | page_attribs) == pte_phys->phys()) [[unlikely]]
     return Insert_warn_exists;
 
   pte_phys->pte.valid = 0;
@@ -273,15 +272,14 @@ Mem_space::v_insert_htab(Address phys, Address virt,
                vsid(virt));
   Pte_htab *pte_phys = locate(&pte, virt);
 /*
-  if(EXPECT_FALSE(pte.v_equal(pte_phys)
-     && !pte.p_equal(pte_phys)))
+  if (pte.v_equal(pte_phys) && !pte.p_equal(pte_phys)) [[unlikely]]
      return Insert_err_exists;
 */
   //set pte pointer
   *pte_ptr = reinterpret_cast<Address>(pte_phys);
 
   //we have to evict something
-  if(EXPECT_FALSE(pte_phys->valid()))
+  if (pte_phys->valid()) [[unlikely]]
     {
       evict->virt  = pte_phys->pte_to_ea();
       evict->phys  = pte_phys->raw.raw1 | Pt_entry::Valid;
@@ -331,7 +329,7 @@ Mem_space::v_delete_htab(Address pte_addr, unsigned page_attribs = Page_all_attr
   unsigned long ret;
   Pte_htab *pte_phys = Pte_htab::addr_to_pte(pte_addr);
 
-  if(EXPECT_FALSE(!pte_phys->valid()))
+  if (!pte_phys->valid()) [[unlikely]]
     return 0;
 
   ret = pte_phys->phys() & page_attribs;

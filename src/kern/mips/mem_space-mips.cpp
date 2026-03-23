@@ -129,7 +129,7 @@ bool
 Mem_space::initialize()
 {
   Auto_quota<Ram_quota> q(ram_quota(), sizeof(Dir_type));
-  if (EXPECT_FALSE(!q))
+  if (!q) [[unlikely]]
     return false;
 
   _dir = static_cast<Dir_type*>(Kmem_alloc::allocator()
@@ -178,18 +178,18 @@ Mem_space::v_insert(Phys_addr phys, Vaddr virt, Page_order order,
   unsigned po = cxx::int_value<Page_order>(order);
   auto i = _dir->walk(virt, po, Kmem_alloc::q_allocator(_quota));
 
-  if (EXPECT_FALSE(i.size != po && !i.is_pte()))
+  if (i.size != po && !i.is_pte()) [[unlikely]]
     return Insert_err_nomem;
 
-  if (EXPECT_FALSE(i.size != po)) // exists with different size
+  if (i.size != po) [[unlikely]] // exists with different size
     return Insert_err_exists;
 
-  if (EXPECT_FALSE(i.is_pte() && (i.page_addr() != phys)))
+  if (i.is_pte() && (i.page_addr() != phys)) [[unlikely]]
     return Insert_err_exists;
 
   apply_extra_page_attribs(&page_attribs);
 
-  if (EXPECT_FALSE(i.is_pte()))
+  if (i.is_pte()) [[unlikely]]
     {
       // upgrade
       page_attribs.rights |= i.rights();
@@ -226,7 +226,7 @@ PUBLIC inline NEEDS ["paging.h"]
 Address
 Mem_space::virt_to_phys(Address virt) const
 {
-  if (EXPECT_TRUE(dir() != 0))
+  if (dir() != 0) [[likely]]
     return dir()->virt_to_phys(virt);
   return ~0UL;
 }
@@ -256,7 +256,7 @@ Mem_space::v_delete(Vaddr virt, [[maybe_unused]] Page_order order,
   assert(cxx::is_zero(cxx::get_lsb(Virt_addr(virt), order)));
   auto pte = _dir->walk(virt);
 
-  if (EXPECT_FALSE (!pte.is_pte()))
+  if (!pte.is_pte()) [[unlikely]]
     return Page::Flags::None();
 
   Page::Flags flags = pte.access_flags();
@@ -286,14 +286,14 @@ Mem_space::add_tlb_entry(Vaddr virt, bool write_access, bool need_probe, bool gu
   Vaddr a = cxx::mask_lsb(virt, Page_order(Config::PAGE_SHIFT + 1));
 
   auto e = _dir->walk(virt);
-  if (EXPECT_FALSE(!e.is_pte()))
+  if (!e.is_pte()) [[unlikely]]
     return false;
 
-  if (EXPECT_FALSE(write_access && !e.is_writable()))
+  if (write_access && !e.is_writable()) [[unlikely]]
     return false;
 
   Mword e0, e1, pm;
-  if (EXPECT_FALSE(e.size != Config::PAGE_SHIFT))
+  if (e.size != Config::PAGE_SHIFT) [[unlikely]]
     {
       // super page, odd page sizes only supported
       assert (e.size & 1);

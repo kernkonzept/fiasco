@@ -120,7 +120,7 @@ void
 Irq_chip_arm_imx::irq_handler()
 {
   Unsigned32 p = pending();
-  if (EXPECT_TRUE(p != 0xffff))
+  if (p != 0xffff) [[likely]]
     handle_irq<Irq_chip_arm_imx>(p, 0);
 }
 

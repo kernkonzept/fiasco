@@ -23,7 +23,7 @@ static void gic_hit(Irq_base *_self, Upstream_irq const *u)
 
   Upstream_irq ui(self, u);
   unsigned irq = gic->pending();
-  if (EXPECT_TRUE(irq != ~0u))
+  if (irq != ~0u) [[likely]]
     i->handle_irq<Gic>(irq, &ui);
 }
 

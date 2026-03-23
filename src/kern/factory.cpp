@@ -84,11 +84,11 @@ Factory::create_factory(Mword max)
     return nullptr;
 
   Auto_quota<Ram_quota> q(this, sizeof(Factory) + max);
-  if (EXPECT_FALSE(!q))
+  if (!q) [[unlikely]]
     return nullptr;
 
   void *nq = alloc();
-  if (EXPECT_FALSE(!nq))
+  if (!nq) [[unlikely]]
     return nullptr;
 
   q.release();
@@ -158,7 +158,7 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
                         L4_fpage::Rights::CS()))
     return tag;
 
-  if (EXPECT_FALSE(!ref.have_recv()))
+  if (!ref.have_recv()) [[unlikely]]
     return commit_result(0);
 
   L4_fpage buffer(0);
@@ -166,14 +166,13 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
     {
       L4_buf_iter buf(utcb, utcb->buf_desc.obj());
       L4_buf_iter::Item const *const b = buf.get();
-      if (EXPECT_FALSE(b->b.is_void()
-                       || b->b.type() != L4_msg_item::Map))
+      if (b->b.is_void() || b->b.type() != L4_msg_item::Map) [[unlikely]]
         return commit_error(utcb, L4_error(L4_error::Overflow, L4_error::Rcv));
 
       buffer = L4_fpage(b->d);
     }
 
-  if (EXPECT_FALSE(!buffer.is_objpage()))
+  if (!buffer.is_objpage()) [[unlikely]]
     return commit_error(utcb, L4_error(L4_error::Overflow, L4_error::Rcv));
 
   Kobject_iface *new_o;
@@ -209,12 +208,12 @@ factory_factory(Ram_quota *q, Space *,
                 L4_msg_tag tag, Utcb const *u, Utcb *,
                 int *err, unsigned *)
 {
-  if (EXPECT_FALSE(tag.words() < 3))
+  if (tag.words() < 3) [[unlikely]]
     {
       *err = L4_err::EMsgtooshort;
       return nullptr;
     }
-  else if (EXPECT_FALSE(tag.words() > 3 || tag.items() > 0))
+  else if (tag.words() > 3 || tag.items() > 0) [[unlikely]]
     {
       *err = L4_err::EMsgtoolong;
       return nullptr;
