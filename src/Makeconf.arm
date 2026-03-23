@@ -15,7 +15,7 @@ SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A7) += $(call CHECKCC,-mcpu=cortex-a7,-mcpu=cor
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A8) += $(call CHECKCC,-mcpu=cortex-a8)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A9) += $(call CHECKCC,-mcpu=cortex-a9)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A15) += $(call CHECKCC,-mcpu=cortex-a15,-mcpu=cortex-a9)
-SHARED_FLAGS-$(CONFIG_ARM_V7A_GENERIC) += -march=armv7-a
+SHARED_FLAGS-$(CONFIG_ARM_V7A_GENERIC) += -march=$(if $(CONFIG_CPU_VIRT)$(CONFIG_ARM_PSCI),armv7ve,armv7-a)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A35) += $(call CHECKCC,-mcpu=cortex-a35,-march=armv8-a)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A53) += $(call CHECKCC,-mcpu=cortex-a53,-march=armv8-a)
 SHARED_FLAGS-$(CONFIG_ARM_CORTEX_A55) += $(call CHECKCC,-mcpu=cortex-a55,-march=armv8-a)
