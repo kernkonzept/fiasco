@@ -82,6 +82,12 @@ config CAN_ARM_CPU_CORTEX_A76
 config CAN_ARM_CPU_NEOVERSE_N1
 	bool
 
+config CAN_ARM_CPU_V7A
+	bool
+
+config CAN_ARM_CPU_V8A
+	bool
+
 config CAN_ARM_CPU_V8R
 	bool
 
@@ -194,7 +200,8 @@ config ARM_PROFILE_R
 
 choice
 	prompt "CPU"
-	default ARM_926    if ARM
+	default ARM_926 if ARM
+	default ARM_V8A_GENERIC if ARM && PF_ARM_GEN
 
 config ARM_PXA
 	bool "Intel XScale"
@@ -307,6 +314,21 @@ config ARM_KRAIT
 	depends on CAN_ARM_CPU_KRAIT
 	select ARM_V7
 	select HAS_MP_OPTION
+
+config ARM_V7A_GENERIC
+	bool "Generic Armv7-A CPU"
+	depends on CAN_ARM_CPU_V7A
+	select ARM_V7
+	select HAS_MP_OPTION
+	select HAS_CPU_VIRT
+
+config ARM_V8A_GENERIC
+	bool "Generic Armv8-A CPU"
+	depends on CAN_ARM_CPU_V8A
+	select ARM_V8
+	select HAS_MP_OPTION
+	select HAS_CPU_VIRT
+	select HAS_64BIT
 
 config ARM_V8R_GENERIC
 	bool "Generic Armv8-R CPU"
