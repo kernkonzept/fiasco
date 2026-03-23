@@ -168,6 +168,7 @@ static l4re_device_spec_dt_ids dt_ids[] = {
   { .compatible = "ns16550" },
   { .compatible = "ns16550a" },
   { .compatible = "fsl,ns16550" },
+  { .compatible = "brcm,bcm2835-aux-uart" },
   {},
 };
 
