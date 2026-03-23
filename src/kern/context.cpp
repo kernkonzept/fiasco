@@ -19,6 +19,7 @@ INTERFACE:
 #include "timeout.h"
 #include <fiasco_defs.h>
 #include <cxx/function>
+#include <options.h>
 
 class Entry_frame;
 class Context;
@@ -130,7 +131,7 @@ class Context :
 
 protected:
   virtual void finish_migration() = 0;
-  virtual bool initiate_migration() = 0;
+  virtual Reschedule initiate_migration() = 0;
 
   void save_fpu_state_to_utcb(Trap_state *, Utcb *);
 
@@ -207,8 +208,8 @@ public:
   public:
     void enq(Drq *rq);
     bool dequeue(Drq *drq);
-    bool handle_requests();
-    bool execute_request(Drq *r, bool local);
+    Reschedule handle_requests();
+    Reschedule execute_request(Drq *r, bool local);
   };
 
   /**
@@ -916,7 +917,7 @@ void
 Context::activate()
 {
   auto guard = lock_guard(cpu_lock);
-  if (xcpu_state_change(~0UL, Thread_ready, true))
+  if (xcpu_state_change(~0UL, Thread_ready, true) == Reschedule::Yes)
     current()->switch_to_locked(this);
 }
 
@@ -1052,7 +1053,8 @@ PUBLIC inline NEEDS [Context::switch_to_locked]
 bool
 Context::deblock_and_schedule(Context *to)
 {
-  if (Sched_context::rq.current().deblock(to->sched(), sched(), true))
+  if (Sched_context::rq.current().deblock(to->sched(), sched(), true)
+        == Reschedule::Yes)
     {
       switch_to_locked(to);
       return true;
@@ -1176,10 +1178,10 @@ Context::Drq_q::enq(Drq *rq)
 }
 
 IMPLEMENT inline NEEDS["logdefs.h"]
-bool
+Reschedule
 Context::Drq_q::execute_request(Drq *r, bool local)
 {
-  bool need_resched = false;
+  Reschedule need_resched = Reschedule::No;
   Context *const self = context();
   if constexpr (0)
     printf("CPU[%2u:%p]: context=%p: handle request for %p (func=%p, arg=%p)\n",
@@ -1200,7 +1202,7 @@ Context::Drq_q::execute_request(Drq *r, bool local)
       //LOG_MSG_3VAL(current(), "hrP", current_cpu(), (Mword)r->context(), (Mword)r->func);
       self->state_change_dirty(~Thread_drq_wait, Thread_ready);
       self->handle_remote_state_change();
-      return !(self->state() & Thread_ready_mask);
+      return Reschedule::if_zero(self->state() & Thread_ready_mask);
     }
   else
     {
@@ -1220,7 +1222,7 @@ Context::Drq_q::execute_request(Drq *r, bool local)
           answer = r->func(r, self, r->arg);
         }
 
-      need_resched |= answer.need_resched();
+      need_resched |= Reschedule::when(answer.need_resched());
 
       // enqueue answer
       if (!(answer.no_answer()))
@@ -1249,14 +1251,14 @@ Context::Drq_q::dequeue(Drq *drq)
 }
 
 IMPLEMENT inline NEEDS["mem.h", "lock_guard.h"]
-bool
+Reschedule
 Context::Drq_q::handle_requests()
 {
   if constexpr (0)
     printf("CPU[%2u:%p]: > Context::Drq_q::handle_requests() context=%p\n",
            cxx::int_value<Cpu_number>(current_cpu()),
            static_cast<void *>(current()), static_cast<void *>(context()));
-  bool need_resched = false;
+  Reschedule need_resched = Reschedule::No;
   while (1)
     {
       Queue_item *qi;
@@ -1311,18 +1313,18 @@ Context::try_finish_migration()
  * \pre If `!Cpu::online(home_cpu())`, the lock of the home CPU's _pending_rqq
  *      must be held: `_pending_rqq.cpu(home_cpu()).q_lock()->is_locked()`
  *
- * \return True if re-scheduling is needed (ready queue has changed),
- *         false if not.
+ * \retval Reschedule::Yes if a reschedule is necessary (ready queue changed).
+ * \retval Reschedule::No  if no reschedule is necessary.
  */
 PUBLIC //inline
-bool
+Reschedule
 Context::handle_drq()
 {
 
   assert(check_for_current_cpu());
   assert(cpu_lock.test());
 
-  bool resched = false;
+  Reschedule resched = Reschedule::No;
   Mword st = state();
   if (st & Thread_switch_hazards) [[unlikely]]
     {
@@ -1330,8 +1332,7 @@ Context::handle_drq()
       if (st & Thread_finish_migration)
         finish_migration();
 
-      if (st & Thread_need_resched)
-        resched = true;
+      resched |= Reschedule::if_not_zero(st & Thread_need_resched);
     }
 
   if (!drq_pending()) [[likely]]
@@ -1343,7 +1344,8 @@ Context::handle_drq()
 
   //LOG_MSG_3VAL(this, "xdrq", state(), 0, cpu_lock.test());
 
-  return resched || !(state() & Thread_ready_mask);
+  resched |= Reschedule::if_zero(state() & Thread_ready_mask);
+  return resched;
 }
 
 PRIVATE inline
@@ -1352,7 +1354,7 @@ Context::switch_handle_drq()
 {
   if (home_cpu() == get_current_cpu()) [[likely]]
     {
-      if (handle_drq()) [[unlikely]]
+      if (handle_drq() == Reschedule::Yes) [[unlikely]]
         return Switch::Resched;
     }
 
@@ -1434,15 +1436,17 @@ Context::set_home_cpu(Cpu_number cpu)
  *
  * \param mask bit mask for the state (state &= mask).
  * \param add bits to add to the state (state |= add).
- * \returns True if a reschedule is necessary (a de-blocked scheduling context
- *          can preempt the currently running scheduling context) -- this can
- *          only happen if `add` has any bit of `Thread_ready_mask` set.
+ * \retval Reschedule::Yes if a reschedule is necessary (a de-blocked scheduling
+ *                         context can preempt the currently running scheduling
+ *                         context) -- this can only happen if `add` has any bit
+ *                         of `Thread_ready_mask` set.
+ * \retval Reschedule::No  if no reschedule is necessary.
  *
  * This function must be used to change the state of contexts that are
  * potentially running on a different CPU.
  */
 PUBLIC inline NEEDS[Context::pending_rqq_enqueue, "thread_state.h"]
-bool
+Reschedule
 Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
 {
   Cpu_number current_cpu = ::current_cpu();
@@ -1455,14 +1459,14 @@ Context::xcpu_state_change(Mword mask, Mword add, bool lazy_q = false)
           _remote_state_change.del = (_remote_state_change.del & ~add)  | ~mask;
           guard.reset();
           pending_rqq_enqueue();
-          return false;
+          return Reschedule::No;
         }
     }
 
   state_change_dirty(mask, add);
   if (add & Thread_ready_mask)
     return Sched_context::rq.current().deblock(sched(), current()->sched(), lazy_q);
-  return false;
+  return Reschedule::No;
 }
 
 
@@ -1541,7 +1545,7 @@ Context::drq(Drq *drq, Drq::Request_func *func, void *arg,
 }
 
 PUBLIC
-bool
+Reschedule
 Context::kernel_context_drq(Drq::Request_func *func, void *arg)
 {
   if (home_cpu() == get_current_cpu()) [[likely]]
@@ -1549,7 +1553,7 @@ Context::kernel_context_drq(Drq::Request_func *func, void *arg)
 
   Context *kc = kernel_context(current_cpu());
   if (current() == kc)
-    return func(nullptr, kc, arg).need_resched();
+    return Reschedule::when(func(nullptr, kc, arg).need_resched());
 
   Kernel_drq *mdrq = new (&_kernel_drq.current()) Kernel_drq;
 
@@ -1557,7 +1561,7 @@ Context::kernel_context_drq(Drq::Request_func *func, void *arg)
   mdrq->func  = func;
   mdrq->arg   = arg;
   kc->_drq_q.enq(mdrq);
-  return schedule_switch_to_locked(kc) != Switch::Ok;
+  return Reschedule::when(schedule_switch_to_locked(kc) != Switch::Ok);
 }
 
 /**
@@ -1672,7 +1676,7 @@ Context::pending_rqq_enqueue()
 }
 
 PUBLIC
-bool
+Reschedule
 Context::enqueue_drq(Drq *rq)
 {
   assert (cpu_lock.test());
@@ -1688,12 +1692,12 @@ Context::enqueue_drq(Drq *rq)
       l->rq = rq;
   );
 
-  bool do_sched = _drq_q.execute_request(rq, true);
+  Reschedule do_sched = _drq_q.execute_request(rq, true);
   if (   access_once(&_home_cpu) == current_cpu()
       && (state() & Thread_ready_mask) && !in_ready_list())
     {
       Sched_context::rq.current().ready_enqueue(sched());
-      return true;
+      return Reschedule::Yes;
     }
   return do_sched;
 }
@@ -1854,7 +1858,7 @@ protected:
   class Pending_rqq : public Queue
   {
   public:
-    bool handle_requests(Context **);
+    Reschedule handle_requests(Context **);
   };
 
   class Pending_rq : public Queue_item, public Context_member
@@ -1948,7 +1952,7 @@ Context::need_help(Mword const *lock, Mword val)
  * This function wakes up all context from the pending queue.
  */
 IMPLEMENT
-bool
+Reschedule
 Context::Pending_rqq::handle_requests(Context **mq)
 {
   //LOG_MSG_3VAL(current(), "phq", current_cpu(), 0, 0);
@@ -1956,7 +1960,7 @@ Context::Pending_rqq::handle_requests(Context **mq)
     printf("CPU[%2u:%p]: Context::Pending_rqq::handle_requests() this=%p\n",
            cxx::int_value<Cpu_number>(current_cpu()),
            static_cast<void *>(current()), static_cast<void *>(this));
-  bool resched = false;
+  Reschedule resched = Reschedule::No;
   Context *curr = current();
   while (1)
     {
@@ -2122,23 +2126,23 @@ Context::pending_rqq_enqueue()
  * \pre If offline_cpu is true, the lock of the home CPU's _pending_rqq must be
  *      held: `_pending_rqq.cpu(home_cpu()).q_lock()->is_locked()`
  *
- * \return True if re-scheduling is needed (ready queue has changed),
- *         false if not.
+ * \retval Reschedule::Yes if a reschedule is necessary (ready queue changed).
+ * \retval Reschedule::No  if no reschedule is necessary.
  *
  * \post The DRQ function might be preemptible for local DRQ execution, i.e.
  *       `home_cpu() == current_cpu()`, in that case the home CPU can change.
  */
 PRIVATE inline
-bool
+Reschedule
 Context::_execute_drq(Drq *rq, bool offline_cpu = false)
 {
-  bool do_sched = _drq_q.execute_request(rq, true);
+  Reschedule do_sched = _drq_q.execute_request(rq, true);
 
   // The DRQ function executed above might be preemptible in the case
   // of local execution. For example the IRQ shortcut in
   // Irq_sender::handle_remote_hit().
   if (!offline_cpu && home_cpu() != current_cpu()) [[unlikely]]
-    return false;
+    return Reschedule::No;
 
   if (!in_ready_list() && (state(false) & Thread_ready_mask))
     {
@@ -2146,7 +2150,7 @@ Context::_execute_drq(Drq *rq, bool offline_cpu = false)
         Sched_context::rq.cpu(home_cpu()).ready_enqueue(sched());
       else
         Sched_context::rq.current().ready_enqueue(sched());
-      return true;
+      return Reschedule::Yes;
     }
 
   return do_sched;
@@ -2162,18 +2166,18 @@ Context::_execute_drq(Drq *rq, bool offline_cpu = false)
  *      `home_cpu() == current_cpu() || offline_cpu`
  * \pre if (offline_cpu) _pending_rqq.cpu(home_cpu()).q_lock() must be held.
  *
- * \return True if re-scheduling is needed (ready queue has changed),
- *         false if not.
+ * \retval Reschedule::Yes if a reschedule is necessary (ready queue changed).
+ * \retval Reschedule::No  if no reschedule is necessary.
  *
  * \post The DRQ function might be preemptible for local DRQ execution, i.e.
  *       `home_cpu() == current_cpu()`, in that case the home CPU can change.
  */
 PRIVATE inline
-bool
+Reschedule
 Context::_deq_exec_drq(Drq *rq, bool offline_cpu = false)
 {
   if (!_drq_q.dequeue(rq))
-    return false; // already handled
+    return Reschedule::No; // already handled
 
   if (!drq_pending())
     {
@@ -2185,7 +2189,7 @@ Context::_deq_exec_drq(Drq *rq, bool offline_cpu = false)
 }
 
 PUBLIC
-bool
+Reschedule
 Context::enqueue_drq(Drq *rq)
 {
   assert (cpu_lock.test());
@@ -2227,7 +2231,7 @@ Context::enqueue_drq(Drq *rq)
       // migrated between getting the lock and reading the CPU, so the
       // new CPU is responsible for executing our request
       if (access_once(&_home_cpu) != cpu)
-        return false;
+        return Reschedule::No;
 
       if (!Cpu::online(cpu)) [[unlikely]]
         return _deq_exec_drq(rq, true);
@@ -2244,7 +2248,7 @@ Context::enqueue_drq(Drq *rq)
   if (ipi)
     Ipi::send(Ipi::Request, current_cpu, cpu);
 
-  return false;
+  return Reschedule::No;
 }
 
 /**
@@ -2265,7 +2269,7 @@ Context::rcu_wait()
 }
 
 PRIVATE static
-bool
+Reschedule
 Context::rcu_unblock(Rcu_item *i)
 {
   assert(cpu_lock.test());

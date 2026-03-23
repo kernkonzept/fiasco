@@ -1,5 +1,6 @@
 INTERFACE:
 #include "per_cpu_data.h"
+#include <options.h>
 
 EXTENSION class Sched_context
 {
@@ -9,7 +10,8 @@ public:
   public:
     void set_current_sched(Sched_context *sched);
     void invalidate_sched() { activate(nullptr); }
-    bool deblock(Sched_context *sc, Sched_context *crs, bool lazy_q = false);
+    Reschedule deblock(Sched_context *sc, Sched_context *crs,
+                       bool lazy_q = false);
     void ready_enqueue(Sched_context *sc)
     {
       assert(cpu_lock.test());
@@ -116,17 +118,18 @@ Sched_context::Ready_queue::set_current_sched(Sched_context *sched)
  *          can preempt the currently running scheduling context).
  */
 IMPLEMENT inline NEEDS[<cassert>]
-bool
-Sched_context::Ready_queue::deblock(Sched_context *sc, Sched_context *crs, bool lazy_q)
+Reschedule
+Sched_context::Ready_queue::deblock(Sched_context *sc, Sched_context *crs,
+                                    bool lazy_q)
 {
   assert(cpu_lock.test());
 
   Sched_context *cs = current_sched();
-  bool res = true;
+  Reschedule reschedule = Reschedule::Yes;
   if (sc == cs)
     {
       if (crs && crs->dominates(sc))
-        res = false;
+        reschedule = Reschedule::No;
     }
   else
     {
@@ -134,14 +137,14 @@ Sched_context::Ready_queue::deblock(Sched_context *sc, Sched_context *crs, bool 
 
       if ((cs != nullptr && cs->dominates(sc))
           || (crs && crs->dominates(sc)))
-        res = false;
+        reschedule = Reschedule::No;
     }
 
-  if (res && lazy_q)
-    return true;
+  if (reschedule == Reschedule::Yes && lazy_q)
+    return Reschedule::Yes;
 
   ready_enqueue(sc);
-  return res;
+  return reschedule;
 }
 
 INTERFACE [debug]:

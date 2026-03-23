@@ -188,7 +188,7 @@ private:
 
         Cpu_call::cpu_call_many(affected_cpus, [this](Cpu_number cpu) {
           this->do_flush_cpu_op(cpu);
-          return false;
+          return Reschedule::No;
         });
       }
     else

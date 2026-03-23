@@ -681,7 +681,7 @@ Mem_space::tlb_flush_all_cpus()
   Cpu_call::cpu_call_many(tlb_active_on_cpu(), [this](Cpu_number)
     {
       tlb_flush_current_cpu();
-      return false;
+      return Reschedule::No;
     });
 }
 

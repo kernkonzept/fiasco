@@ -2,7 +2,7 @@
 INTERFACE:
 
 #include "timeout.h"
-
+#include "options.h"
 class Receiver;
 
 class IPC_timeout : public Timeout
@@ -48,17 +48,18 @@ IPC_timeout::owner()
 
 /**
  * Timeout expiration callback function
- * @return true if reschedule is necessary, false otherwise
+ * \retval Reschedule::Yes if a reschedule is necessary
+ * \retval Reschedule::No  if no reschedule is necessary
  */
 PRIVATE
-bool
+Reschedule
 IPC_timeout::expired() override
 {
   Receiver * const _owner = owner();
 
   Mword ipc_state = _owner->state() & Thread_ipc_mask;
   if (!ipc_state || (ipc_state & Thread_receive_in_progress))
-    return false;
+    return Reschedule::No;
 
   _owner->state_add_dirty(Thread_ready | Thread_timeout);
 

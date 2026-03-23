@@ -6,6 +6,7 @@ INTERFACE:
 #include "queue_item.h"
 #include "per_cpu_data.h"
 #include "processor.h"
+#include <options.h>
 #include <cxx/function>
 
 class Cpu_call_queue;
@@ -16,14 +17,14 @@ class Cpu_call : private Queue_item
   friend class Jdb_cpu_call_module;
 
 private:
-  cxx::functor<bool (Cpu_number cpu)> _func;
+  cxx::functor<Reschedule (Cpu_number cpu)> _func;
   bool _async;
   bool _wait;
 
 public:
   Cpu_call() : _func(), _wait(false) {}
 
-  void set(cxx::functor<bool (Cpu_number)> const &f, bool async)
+  void set(cxx::functor<Reschedule (Cpu_number)> const &f, bool async)
   {
     _func = f;
     _async = async;
@@ -38,14 +39,14 @@ public:
     write_now(&_wait, Mword{false});
   }
 
-  bool run_local(Cpu_number cpu)
+  Reschedule run_local(Cpu_number cpu)
   { return _func(cpu); }
 
   /**
    * \post Must not access this Cpu_call object afterwards as it might no longer
    *       exist, e.g. if it was allocated on the stack of the caller.
    */
-  bool run_remote(Cpu_number cpu)
+  Reschedule run_remote(Cpu_number cpu)
   {
     if (_async)
       {
@@ -57,7 +58,7 @@ public:
       }
     else
       {
-        bool res = _func(cpu);
+        auto res = _func(cpu);
         this->done();
         return res;
       }
@@ -126,8 +127,8 @@ class Cpu_call_queue : public Queue
 public:
   void enq(Cpu_call *call);
   bool dequeue(Cpu_call *call);
-  bool handle_requests();
-  bool execute_request(Cpu_call *call);
+  Reschedule handle_requests();
+  Reschedule execute_request(Cpu_call *call);
 };
 
 
@@ -148,7 +149,7 @@ Cpu_call_queue::enq(Cpu_call *call)
 }
 
 IMPLEMENT inline
-bool
+Reschedule
 Cpu_call_queue::execute_request(Cpu_call *call)
 {
   return call->run_remote(current_cpu());
@@ -165,10 +166,10 @@ Cpu_call_queue::dequeue(Cpu_call *call)
 }
 
 IMPLEMENT inline NEEDS["mem.h", "lock_guard.h", "globals.h"]
-bool
+Reschedule
 Cpu_call_queue::handle_requests()
 {
-  bool need_resched = false;
+  Reschedule need_resched = Reschedule::No;
   while (1)
     {
       Queue_item *qi;
@@ -206,7 +207,7 @@ Cpu_call_queue::handle_requests()
 PUBLIC static inline inline NEEDS[Cpu_call::_cpu_call_many]
 void
 Cpu_call::cpu_call_many(Cpu_mask const &cpus,
-                        cxx::functor<bool (Cpu_number)> &&func)
+                        cxx::functor<Reschedule (Cpu_number)> &&func)
 { _cpu_call_many(cpus, cxx::move(func), false); }
 
 /**
@@ -231,7 +232,7 @@ Cpu_call::cpu_call_many(Cpu_mask const &cpus,
 PUBLIC static inline NEEDS[Cpu_call::_cpu_call_many]
 void
 Cpu_call::cpu_call_many_async(Cpu_mask const &cpus,
-                              bool (*func)(Cpu_number))
+                              Reschedule (*func)(Cpu_number))
 { _cpu_call_many(cpus, func, true); }
 
 // ----------------------------------------------------------------------
@@ -240,15 +241,15 @@ IMPLEMENTATION [!mp]:
 PUBLIC static inline
 void
 Cpu_call::_cpu_call_many(Cpu_mask const &m,
-                         cxx::functor<bool (Cpu_number)> &&func,
-                         bool)
+                         cxx::functor<Reschedule (Cpu_number)> &&func, bool)
 {
   auto guard = lock_guard(cpu_lock);
   if (m.get(current_cpu()))
     func(current_cpu());
 }
 
-PUBLIC static bool Cpu_call::handle_global_requests() { return false; }
+PUBLIC static Reschedule Cpu_call::handle_global_requests()
+{ return Reschedule::No; }
 
 // -----------------------------------------------------------------------
 IMPLEMENTATION [mp]:
@@ -320,7 +321,7 @@ Cpu_call::remote_call(Cpu_number cpu)
 PRIVATE static inline NEEDS["processor.h"]
 void
 Cpu_call::_cpu_call_many(Cpu_mask const &cpus,
-                         cxx::functor<bool (Cpu_number)> &&func,
+                         cxx::functor<Reschedule (Cpu_number)> &&func,
                          bool async)
 {
   assert (!cpu_lock.test());
@@ -357,7 +358,7 @@ Cpu_call::_cpu_call_many(Cpu_mask const &cpus,
 }
 
 PUBLIC
-static bool
+static Reschedule
 Cpu_call::handle_global_requests()
 {
   return _glbl_q.current().handle_requests();

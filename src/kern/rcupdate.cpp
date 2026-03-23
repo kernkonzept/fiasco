@@ -5,6 +5,7 @@ INTERFACE[mp]:
 #include "spin_lock.h"
 #include <cxx/slist>
 #include "global_data.h"
+#include "options.h"
 
 class Rcu_glbl;
 class Rcu_data;
@@ -53,9 +54,8 @@ class Rcu_item : public cxx::S_list_item
   friend class Rcu;
   friend class Jdb_rcupdate;
   friend class Rcu_tester;
-
 private:
-  bool (*_call_back)(Rcu_item *) = nullptr;
+  Reschedule (*_call_back)(Rcu_item *) = nullptr;
 };
 
 
@@ -180,6 +180,8 @@ public:
 // ------------------------------------------------------------------------
 INTERFACE [!mp]:
 
+#include "options.h"
+
 class Rcu_item {};
 
 class Rcu
@@ -188,7 +190,8 @@ public:
   static inline void enter_idle(Cpu_number) {};
   static inline void leave_idle(Cpu_number) {};
   static inline bool has_pending_work(Cpu_number) { return false; };
-  static inline bool do_pending_work(Cpu_number) { return false; }
+  static inline Reschedule do_pending_work(Cpu_number)
+  { return Reschedule::No; }
   static inline bool suspended_from_rcu(Cpu_number) { return false; }
 };
 
@@ -255,7 +258,7 @@ Rcu_data::enqueue(Rcu_item *i)
 }
 
 PRIVATE inline NOEXPORT NEEDS["cpu_lock.h", "lock_guard.h"]
-bool
+Reschedule
 Rcu_data::do_batch()
 {
   // This function may not properly work if called without CPU lock.
@@ -265,7 +268,7 @@ Rcu_data::do_batch()
   assert(cpu_lock.test());
 
   int count = 0;
-  bool need_resched = false;
+  Reschedule need_resched = Reschedule::No;
   for (Rcu_list::Const_iterator l = _d.begin(); l != _d.end();)
     {
       Rcu_item *i = *l;
@@ -416,7 +419,7 @@ Rcu_data::check_quiescent_state(Rcu_glbl *rgp)
 
 PUBLIC static
 void
-Rcu::call(Rcu_item *i, bool (*cb)(Rcu_item *))
+Rcu::call(Rcu_item *i, Reschedule (*cb)(Rcu_item *))
 {
   i->_call_back = cb;
   LOG_TRACE("Rcu call", "rcu", ::current(), Log_rcu,
@@ -461,7 +464,7 @@ Rcu_data::~Rcu_data()
 }
 
 PUBLIC
-[[nodiscard]] bool
+[[nodiscard]] Reschedule
 Rcu_data::process_callbacks(Rcu_glbl *rgp)
 {
   // This function may not work properly if called without CPU lock.
@@ -500,7 +503,7 @@ Rcu_data::process_callbacks(Rcu_glbl *rgp)
   if (!_d.empty())
     return do_batch();
 
-  return false;
+  return Reschedule::No;
 }
 
 PUBLIC inline
@@ -530,7 +533,7 @@ Rcu_data::pending(Rcu_glbl *rgp) const
 }
 
 PUBLIC [[nodiscard]] static inline NEEDS["globals.h"]
-bool
+Reschedule
 Rcu::process_callbacks(Cpu_number cpu)
 { return _rcu_data.cpu(cpu).process_callbacks(&_rcu); }
 
@@ -561,7 +564,7 @@ Rcu::lock()
 
 
 PUBLIC static inline
-bool
+Reschedule
 Rcu::do_pending_work(Cpu_number cpu)
 {
   if (pending(cpu))
@@ -569,5 +572,5 @@ Rcu::do_pending_work(Cpu_number cpu)
       inc_q_cnt(cpu);
       return process_callbacks(cpu);
     }
-  return false;
+  return Reschedule::No;
 }

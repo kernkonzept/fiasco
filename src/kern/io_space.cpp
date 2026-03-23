@@ -641,7 +641,7 @@ Generic_io_space<SPACE>::io_bitmap_flush_all_cpus()
       Cpu &cpu = Cpu::cpus.current();
       cpu.reset_io_bitmap();
       iopb_mark_unused();
-      return false;
+      return Reschedule::No;
     });
 }
 

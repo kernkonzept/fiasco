@@ -107,7 +107,7 @@ suspend_ap_cpus()
   _cpus_to_suspend = Cpu::online_mask();
   _cpus_to_suspend.clear(Cpu_number::boot_cpu());
 
-  auto suspend_ap_cpu = [](Cpu_number)
+  auto suspend_ap_cpu = [](Cpu_number) -> Reschedule
     {
       Context::spill_current_fpu();
       current()->kernel_context_drq([](Context::Drq *, Context *, void *)
@@ -128,7 +128,7 @@ suspend_ap_cpus()
           _cpus_to_suspend.atomic_clear(cpu);
           cxx::check_noreturn<Platform_control::cpu_suspend>();
         }, nullptr);
-      return false;
+      return Reschedule::No;
     };
 
     {

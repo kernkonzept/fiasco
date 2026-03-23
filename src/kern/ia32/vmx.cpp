@@ -3064,7 +3064,7 @@ Vmx_vmcs::shootdown()
     {
       Vmx &vmx = Vmx::cpus.current();
       vmx.clear_vmx_vmcs(this);
-      return false;
+      return Reschedule::No;
     });
 }
 

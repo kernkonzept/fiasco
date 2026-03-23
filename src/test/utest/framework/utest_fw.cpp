@@ -11,6 +11,7 @@ INTERFACE:
 #include <cstdlib>
 #include <cstring>
 #include <cstdarg>
+#include <options.h>
 
 #include "global_data.h"
 #include "kdb_ke.h"
@@ -975,6 +976,11 @@ utest_format_print_value(char const *val) { printf("%s", val); }
 inline
 void
 utest_format_print_value(char *val) { printf("%s", val); }
+
+inline
+void
+utest_format_print_value(Reschedule const &val)
+{ printf("Reschedule::%s\n", val == Reschedule::Yes ? "Yes" : "No"); }
 
 /**
  * Return the next online CPU starting at `cpu`.

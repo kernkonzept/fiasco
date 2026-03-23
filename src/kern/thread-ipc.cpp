@@ -150,7 +150,8 @@ Thread::ipc_receiver_aborted(Receiver *) override
 
   utcb().access()->error = L4_error::Canceled;
 
-  if (xcpu_state_change(~0UL, Thread_transfer_failed | Thread_ready, true))
+  if (xcpu_state_change(~0UL, Thread_transfer_failed | Thread_ready, true)
+      == Reschedule::Yes)
     current()->switch_to_locked(this);
 }
 
@@ -199,7 +200,7 @@ Thread::ipc_send_msg(Receiver *receiver, bool open_wait) override
                                        // the function Thread::abort_send()
       state_add = Thread_transfer_failed | Thread_ready;
     }
-  if (xcpu_state_change(~state_del, state_add, true))
+  if (xcpu_state_change(~state_del, state_add, true) == Reschedule::Yes)
     receiver->switch_to_locked(this);
 }
 

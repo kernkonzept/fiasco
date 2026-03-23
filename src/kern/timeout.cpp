@@ -3,6 +3,7 @@ INTERFACE:
 #include <cxx/hlist>
 #include "l4_types.h"
 #include "per_cpu_data.h"
+#include <options.h>
 
 /** A timeout basic object. It contains the necessary queues and handles
     enqueuing, dequeuing and handling of timeouts. Real timeout classes must
@@ -32,9 +33,10 @@ private:
 
   /**
    * Timeout handler function to be overridden.
-   * @return true if a reschedule is necessary, false otherwise.
+   * \retval Reschedule::Yes if a reschedule is necessary.
+   * \retval Reschedule::No  if no reschedule is necessary.
    */
-  virtual bool expired() = 0;
+  virtual Reschedule expired() = 0;
 
   struct
   {
@@ -234,10 +236,11 @@ Timeout::reset()
 
 /**
  * Dequeue an expired timeout.
- * @return true if a reschedule is necessary, false otherwise.
+ * \retval Reschedule::Yes if a reschedule is necessary.
+ * \retval Reschedule::No  if no reschedule is necessary.
  */
 PRIVATE inline
-bool
+Reschedule
 Timeout::expire()
 {
   _flags.hit = 1;
@@ -286,15 +289,15 @@ Timeout_q::update_timer(Unsigned64 max_timeout, Timeout const *ignore = nullptr)
  *
  * \param now  The system clock used to decide if timeouts have expired.
  *
- * \retval true if a reschedule is necessary.
- * \retval false otherwise.
+ * \retval Reschedule::Yes if a reschedule is necessary.
+ * \retval Reschedule::No  if no reschedule is necessary.
  */
 PUBLIC inline NEEDS [<cassert>, <climits>, "timer.h", "config.h",
                      Timeout::expire]
-bool
+Reschedule
 Timeout_q::do_timeouts(Unsigned64 now)
 {
-  bool reschedule = false;
+  Reschedule reschedule = Reschedule::No;
 
   // We test if the time between 2 activations of this function is greater
   // than the distance between two timeout queues.

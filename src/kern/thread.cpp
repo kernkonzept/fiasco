@@ -131,7 +131,8 @@ private:
     constexpr bool is_done() const { return _state & 3; }
 
     // Only valid if is_done() is true.
-    constexpr bool need_resched() const { return _state & 1; }
+    constexpr Reschedule need_resched() const
+    { return Reschedule::if_not_zero(_state & 1); }
 
     // Only valid if is_done() is false.
     Migration *migration() const { return reinterpret_cast<Migration *>(_state); }
@@ -427,11 +428,12 @@ Thread::handle_timer_interrupt()
   if constexpr (!Config::Fine_grained_cputime)
     consume_time(Config::Scheduler_granularity);
 
-  bool resched = Rcu::do_pending_work(cpu);
+  Reschedule resched = Rcu::do_pending_work(cpu);
 
   // Check if we need to reschedule due to timeouts or wakeups
   Unsigned64 now = Timer::system_clock();
-  if ((Timeout_q::timeout_queue.cpu(cpu).do_timeouts(now) || resched)
+  if ((Timeout_q::timeout_queue.cpu(cpu).do_timeouts(now) == Reschedule::Yes
+       || resched == Reschedule::Yes)
       && !Sched_context::rq.current().schedule_in_progress)
     {
       schedule();
@@ -447,7 +449,7 @@ Thread::user_invoke_generic()
   Context *const c = current();
   assert (c->state() & Thread_ready_mask);
 
-  if (c->handle_drq())
+  if (c->handle_drq() == Reschedule::Yes)
     c->schedule();
 
   // release CPU lock explicitly, because
@@ -755,7 +757,7 @@ Thread::start_migration()
  * We need help of the kernel idle thread.
  */
 PRIVATE inline
-bool
+Reschedule
 Thread::do_migration_current(Migration *m)
 {
   assert(current_cpu() == home_cpu());
@@ -766,12 +768,13 @@ Thread::do_migration_current(Migration *m)
  * Migrate this thread which is currently not executing.
  */
 PRIVATE inline
-bool
+Reschedule
 Thread::do_migration_not_current(Migration *m)
 {
   Cpu_number target_cpu = access_once(&m->cpu);
-  bool resched = migrate_away(m, false);
+  Reschedule resched = migrate_away(m, false);
   resched |= migrate_to(target_cpu);
+
   return resched;
 }
 
@@ -779,11 +782,11 @@ Thread::do_migration_not_current(Migration *m)
  * Set the scheduling parameters and optionally change the home CPU for this
  * thread running on the same CPU as current_cpu().
  *
- * \retval false No rescheduling required.
- * \retval true Rescheduling required.
+ * \retval Reschedule::Yes if a reschedule is necessary.
+ * \retval Reschedule::No  if no reschedule is necessary.
  */
 PRIVATE
-bool
+Reschedule
 Thread::do_migration()
 {
   Migration_state inf = start_migration();
@@ -806,11 +809,11 @@ Thread::do_migration()
  *
  * \pre this != current()
  *
- * \retval false  No rescheduling required.
- * \retval true  Rescheduling required.
+ * \retval Reschedule::Yes if a reschedule is necessary.
+ * \retval Reschedule::No  if no reschedule is necessary.
  */
 PUBLIC
-bool
+Reschedule
 Thread::initiate_migration() override
 {
   assert (current() != this);
@@ -1017,12 +1020,12 @@ IMPLEMENTATION [!mp]:
 
 
 PRIVATE inline
-bool
+Reschedule
 Thread::migrate_away(Migration *inf, bool remote)
 {
   assert (current() != this);
   assert (cpu_lock.test());
-  bool resched = false;
+  Reschedule resched = Reschedule::No;
 
   Cpu_number cpu = inf->cpu;
 
@@ -1045,7 +1048,7 @@ Thread::migrate_away(Migration *inf, bool remote)
           if (csc == sched())
             {
               rq.set_current_sched(kernel_context(current_cpu())->sched());
-              resched = true;
+              resched = Reschedule::Yes;
             }
         }
     }
@@ -1062,18 +1065,19 @@ Thread::migrate_away(Migration *inf, bool remote)
 }
 
 PRIVATE inline
-bool
+Reschedule
 Thread::migrate_to(Cpu_number target_cpu)
 {
   if (!Cpu::online(target_cpu))
     {
       handle_drq();
-      return false;
+      return Reschedule::No;
     }
 
-  bool resched = false;
+  Reschedule resched = Reschedule::No;
+
   if (state() & Thread_ready_mask)
-    resched = Sched_context::rq.current().deblock(sched(), current()->sched());
+    resched |= Sched_context::rq.current().deblock(sched(), current()->sched());
 
   enqueue_timeout_again();
 
@@ -1094,7 +1098,7 @@ Thread::migrate(Migration *info)
   );
 
   _migration = info;
-  current()->schedule_if(do_migration());
+  current()->schedule_if(do_migration() == Reschedule::Yes);
 }
 
 PRIVATE inline NOEXPORT
@@ -1168,9 +1172,9 @@ Thread::migrate(Migration *info)
   Cpu_number cpu = home_cpu();
 
   if (current_cpu() == cpu)
-    current()->schedule_if(do_migration());
+    current()->schedule_if(do_migration() == Reschedule::Yes);
   else
-    current()->schedule_if(migrate_xcpu(cpu));
+    current()->schedule_if(migrate_xcpu(cpu) == Reschedule::Yes);
 
   cpu_lock.clear();
   // FIXME: use monitor & mwait or wfe & sev if available
@@ -1210,7 +1214,7 @@ Thread::handle_remote_requests_irq()
   // this during the processing of the request queue. In this case we get the
   // thread in migration_q and do this here.
   Context *migration_q = nullptr;
-  bool resched = _pending_rqq.current().handle_requests(&migration_q);
+  Reschedule resched = _pending_rqq.current().handle_requests(&migration_q);
 
   resched |= Rcu::do_pending_work(current_cpu());
 
@@ -1228,7 +1232,7 @@ Thread::handle_remote_requests_irq()
           && on_current_cpu)
         Sched_context::rq.current().ready_enqueue(c->sched());
     }
-  else if (resched)
+  else if (resched == Reschedule::Yes)
     c->schedule();
 }
 
@@ -1263,17 +1267,17 @@ Thread::handle_global_remote_requests_irq()
  * \param remote  False if home CPU is the current CPU.
  *                True if home CPU is the *invalid* CPU or an offline CPU.
  *
- * \retval false  No rescheduling required.
- * \retval true  Rescheduling required.
+ * \retval Reschedule::Yes if a reschedule is necessary.
+ * \retval Reschedule::No  if no reschedule is necessary.
  */
 PRIVATE inline
-bool
+Reschedule
 Thread::migrate_away(Migration *inf, bool remote)
 {
   assert(check_for_current_cpu());
   assert(current() != this);
   assert(cpu_lock.test());
-  bool resched = false;
+  Reschedule resched = Reschedule::No;
 
   if (_timeout)
     {
@@ -1297,7 +1301,7 @@ Thread::migrate_away(Migration *inf, bool remote)
       if (!remote && csc == sched())
         {
           rq->set_current_sched(kernel_context(current_cpu())->sched());
-          resched = true;
+          resched = Reschedule::Yes;
         }
     }
 
@@ -1352,11 +1356,11 @@ Thread::migrate_away(Migration *inf, bool remote)
  * CPU and, if necessary, signal the remote CPU about new entries in its RQQ.
  * Handled on the remote CPU in Thread::Pending_rqq::handle_requests().
  *
- * \retval false  No rescheduling required.
- * \retval true  Rescheduling required.
+ * \retval Reschedule::Yes if a reschedule is necessary.
+ * \retval Reschedule::No  if no reschedule is necessary.
  */
 PRIVATE inline
-bool
+Reschedule
 Thread::migrate_to(Cpu_number target_cpu)
 {
   bool ipi = false;
@@ -1369,19 +1373,21 @@ Thread::migrate_to(Cpu_number target_cpu)
           if (!Cpu::online(target_cpu)) [[unlikely]]
             {
               handle_drq();
-              return false;
+              return Reschedule::No;
             }
         }
 
       // migrated meanwhile
       if (access_once(&_home_cpu) != target_cpu || _pending_rq.queued())
-        return false;
+        return Reschedule::No;
 
       if (target_cpu == current_cpu())
         {
           g.reset();
-          bool resched = handle_drq();
-          return resched | Sched_context::rq.current().deblock(sched(), current()->sched());
+          Reschedule resched = handle_drq();
+          resched |= Sched_context::rq.current().deblock(sched(),
+                                                         current()->sched());
+          return resched;
         }
 
       if (!_pending_rq.queued())
@@ -1401,7 +1407,7 @@ Thread::migrate_to(Cpu_number target_cpu)
       Ipi::send(Ipi::Request, current_cpu(), target_cpu);
     }
 
-  return false;
+  return Reschedule::No;
 }
 
 /**
@@ -1413,11 +1419,11 @@ Thread::migrate_to(Cpu_number target_cpu)
  * will initiate the migration on this thread's current home CPU.
  *
  * \param cpu  Old (current) home CPU of this thread.
- * \retval false  No rescheduling required.
- * \retval true  Rescheduling required.
+ * \retval Reschedule::Yes if a reschedule is necessary.
+ * \retval Reschedule::No  if no reschedule is necessary.
  */
 PRIVATE inline
-bool
+Reschedule
 Thread::migrate_xcpu(Cpu_number cpu)
 {
   bool ipi = false;
@@ -1428,7 +1434,7 @@ Thread::migrate_xcpu(Cpu_number cpu)
 
       // already migrated
       if (cpu != access_once(&_home_cpu))
-        return false;
+        return Reschedule::No;
 
       // now we are sure that this thread stays on 'cpu' because
       // we have the rqq lock of 'cpu'
@@ -1458,7 +1464,7 @@ Thread::migrate_xcpu(Cpu_number cpu)
   if (ipi)
     Ipi::send(Ipi::Request, current_cpu(), cpu);
 
-  return false;
+  return Reschedule::No;
 }
 
 //----------------------------------------------------------------------------

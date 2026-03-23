@@ -2,6 +2,7 @@ INTERFACE:
 
 #include "sender.h"
 #include "receiver.h"
+#include <options.h>
 
 class Ipc_sender_base : public Sender
 {
@@ -65,6 +66,7 @@ Ipc_sender_base::handle_shortcut(Syscall_frame *dst_regs, Receiver *receiver)
 
   if ((current() != receiver
        && rq.deblock(receiver->sched(), current()->sched(), true)
+          == Reschedule::Yes
        // avoid race in do_ipc() after Thread_send_in_progress
        // flag was deleted from receiver's thread state
        // also: no shortcut for alien threads, they need to see the
@@ -129,7 +131,7 @@ Ipc_sender_base::handle_shortcut(Syscall_frame *dst_regs, Receiver *receiver)
 PROTECTED template< typename Derived >
 inline  NEEDS["config.h","globals.h", "thread_state.h",
               Ipc_sender_base::handle_shortcut]
-bool
+Reschedule
 Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
 {
   // XXX careful!  This code may run in midst of an do_ipc()
@@ -154,7 +156,7 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
                          // explicit IPC wait (Thread_receive_wait flag set),
                          // not asynchronous vCPU reception.
               && handle_shortcut(dst_regs, receiver))
-            return false;
+            return Reschedule::No;
 
           // we don't need to manipulate the state in a safe way
           // because we are still running with interrupts turned off
@@ -169,7 +171,7 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
       receiver->state_add_dirty(Thread_ready);
       rq.deblock_refill(receiver->sched());
       rq.ready_enqueue(receiver->sched());
-      return false;
+      return Reschedule::No;
     }
   else
     {
@@ -177,7 +179,7 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
       set_wait_queue(receiver->sender_list());
       sender_enqueue(receiver->sender_list(), 255);
       receiver->on_sender_enqueued(this);
-      return false;
+      return Reschedule::No;
     }
 }
 

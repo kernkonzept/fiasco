@@ -921,7 +921,7 @@ Irq_sender::modify_label(Mword const *todo, int cnt) override
  * \post The caller must not use the Irq_sender object after calling this
  *       function on it, as it might have been deleted (see finish_send()).
  */
-PRIVATE bool
+PRIVATE Reschedule
 Irq_sender::send_local(Irq_thread t, bool is_xcpu)
 {
   // Pairs with write barrier in set_irq_thread(). Prevents to read the _irq_id
@@ -931,7 +931,7 @@ Irq_sender::send_local(Irq_thread t, bool is_xcpu)
   if ((TAG_ENABLED(irq_direct_inject)) && t.is_vcpu_irq())
     {
       inject_vcpu_irq(t);
-      return false;
+      return Reschedule::No;
     }
   else
     return send_msg(t, is_xcpu);
@@ -947,7 +947,7 @@ Irq_sender::handle_remote_hit(Context::Drq *, Context *target, void *arg)
   auto t = access_once(&irq->_irq_thread);
   if (t == target) [[likely]]
     {
-      if (irq->send_local(t, true)) [[likely]]
+      if (irq->send_local(t, true) == Reschedule::Yes) [[likely]]
         return Context::Drq::no_answer_resched();
     }
   else if (t.is_bound()) [[likely]]
