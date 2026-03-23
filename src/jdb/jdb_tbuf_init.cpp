@@ -11,6 +11,7 @@ class Jdb_tbuf_init : public Jdb_tbuf
 
 public:
   static void init();
+  static bool in_pmem();
 };
 
 IMPLEMENTATION:
@@ -122,6 +123,11 @@ Jdb_tbuf_init::allocate(size_t entries)
   return entries;
 }
 
+IMPLEMENT_DEFAULT
+bool
+Jdb_tbuf_init::in_pmem()
+{ return false; }
+
 // --------------------------------------------------------------------------
 IMPLEMENTATION [!mmu]:
 
@@ -152,3 +158,8 @@ Jdb_tbuf_init::allocate(size_t entries)
   memset(_slots, 0, alloc);
   return entries;
 }
+
+IMPLEMENT_DEFAULT
+bool
+Jdb_tbuf_init::in_pmem()
+{ return true; }

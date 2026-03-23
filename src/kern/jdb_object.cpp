@@ -65,11 +65,14 @@ public:
     Jdb_outdec     = 8,
 
     // 0x200 prefix for tbuf opcodes
-    Tbuf_log       = 1,
-    Tbuf_clear     = 2,
-    Tbuf_dump      = 3,
-    Tbuf_log_3val  = 4,
-    Tbuf_log_bin   = 5,
+    Tbuf_log       = 1,  // Log unstructured data to tracebuffer.
+    Tbuf_clear     = 2,  // Clear the tracebuffer.
+    Tbuf_dump      = 3,  // Dump compressed tracebuffer content.
+    Tbuf_log_3val  = 4,  // Log structured data to tracebuffer.
+    Tbuf_log_bin   = 5,  // Log binary data to tracebuffer.
+
+    Tbuf_map_status = 0x10,  // Map tracebuffer status page to task.
+    Tbuf_map_slots  = 0x11,  // Map tracebuffer slots to task.
 
     // 0x500 prefix for dump opcodes
     Dump_kmem_stats = 0,
@@ -83,12 +86,15 @@ static DEFINE_GLOBAL Global_data<Jdb_object> __jdb_kobject;
 //----------------------------------------------------------------------------
 IMPLEMENTATION [rt_dbg && debug]:
 
+#include "jdb_tbuf.h"
+#include "jdb_tbuf_init.h"
+
 PRIVATE inline NOEXPORT
 L4_msg_tag
 Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
                      L4_fpage::Rights,
                      Syscall_frame *,
-                     Utcb const *r_msg, Utcb *)
+                     Utcb const *r_msg, Utcb *s_msg)
 {
   Thread *curr = current_thread();
   switch (op)
@@ -185,6 +191,29 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
         tb->msg.term_buf(length);
         Jdb_tbuf::commit_entry(tb, seq);
         return commit_result(0);
+      }
+
+    case Tbuf_map_status:
+      {
+        if (tag.words() < 2)
+          return commit_result(-L4_err::EMsgtooshort);
+
+        Task *task = nonull_static_cast<Task *>(curr->space());
+        return task->ext_map_ku_mem(r_msg, s_msg, Jdb_tbuf::status(),
+                                    Jdb_tbuf_init::in_pmem(),
+                                    sizeof(Tracebuffer_status),
+                                    L4_fpage::Rights::UR());
+      }
+
+    case Tbuf_map_slots:
+      {
+        if (tag.words() < 2)
+          return commit_result(-L4_err::EMsgtooshort);
+
+        Task *task = nonull_static_cast<Task *>(curr->space());
+        return task->ext_map_ku_mem(r_msg, s_msg, Jdb_tbuf::slots(),
+                                    Jdb_tbuf_init::in_pmem(), Jdb_tbuf::size(),
+                                    L4_fpage::Rights::UR());
       }
 
     default:

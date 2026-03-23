@@ -38,3 +38,8 @@ Jdb_tbuf_init::allocate(size_t entries)
   memset(_slots, 0, alloc);
   return entries;
 }
+
+IMPLEMENT_OVERRIDE
+bool
+Jdb_tbuf_init::in_pmem()
+{ return true; }
