@@ -9,11 +9,8 @@ public:
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
-#include <cstring>
-
 #include "amp_node.h"
 #include "config.h"
-#include "kip_offsets.h"
 #include "mem_layout.h"
 #include "mem_space.h"
 #include "mem_unit.h"
@@ -81,22 +78,17 @@ Kip_init::init_kip_clock()
 
   auto *k = reinterpret_cast<Kip_initializer *>(Kip::k());
 
-  *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SCALER_TIME_STAMP_TO_US)
-    = Timer::get_scaler_shift_ts_to_us().scaler;
-  *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SHIFT_TIME_STAMP_TO_US)
-    = Timer::get_scaler_shift_ts_to_us().shift;
-  *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SCALER_TIME_STAMP_TO_NS)
-    = Timer::get_scaler_shift_ts_to_ns().scaler;
-  *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SHIFT_TIME_STAMP_TO_NS)
-    = Timer::get_scaler_shift_ts_to_ns().shift;
-
-  memcpy(k->b + OFFS__KIP_FN_READ_US, kip_time_fn_read_us,
-         mem_range_bytes(kip_time_fn_read_us, kip_time_fn_read_us_end));
-  memcpy(k->b + OFFS__KIP_FN_READ_NS, kip_time_fn_read_ns,
-         mem_range_bytes(kip_time_fn_read_ns, kip_time_fn_read_ns_end));
-
-  size_t sz = OFFS__KIP_FN_CODE_END - OFFS__KIP_FN_CODE_START;
-  Mem_unit::make_coherent_to_pou(k->b + OFFS__KIP_FN_CODE_START, sz);
+  k->set_mword(OFFS__KIP_SCALER_TIME_STAMP_TO_US,
+               Timer::get_scaler_shift_ts_to_us().scaler);
+  k->set_mword(OFFS__KIP_SHIFT_TIME_STAMP_TO_US,
+               Timer::get_scaler_shift_ts_to_us().shift);
+  k->set_mword(OFFS__KIP_SCALER_TIME_STAMP_TO_NS,
+               Timer::get_scaler_shift_ts_to_ns().scaler);
+  k->set_mword(OFFS__KIP_SHIFT_TIME_STAMP_TO_NS,
+               Timer::get_scaler_shift_ts_to_ns().shift);
+  k->copy_fn(OFFS__KIP_FN_READ_US, kip_time_fn_read_us, kip_time_fn_read_us_end);
+  k->copy_fn(OFFS__KIP_FN_READ_NS, kip_time_fn_read_ns, kip_time_fn_read_ns_end);
+  k->make_coherent();
 }
 
 //--------------------------------------------------------------
