@@ -179,14 +179,14 @@ Mem_layout::phys_to_pmem(Address addr)
 }
 
 PUBLIC static inline
-Mword
+bool
 Mem_layout::in_kernel_image(Address addr)
 {
   return addr >= Kernel_image && addr < Kernel_image_end;
 }
 
 PUBLIC static inline
-Mword
+bool
 Mem_layout::in_pmem(Address addr)
 {
   return addr >= Physmem && addr < Physmem_end;

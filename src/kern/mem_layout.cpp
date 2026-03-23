@@ -48,7 +48,7 @@ public:
   static inline Address pmem_to_phys(const void *ptr)
   { return pmem_to_phys(reinterpret_cast<Address>(ptr)); }
 
-  static Mword in_kernel (Address a);
+  static bool in_kernel (Address a);
 
 };
 
@@ -58,14 +58,14 @@ IMPLEMENTATION:
 #include "config.h"
 
 IMPLEMENT inline
-Mword
+bool
 Mem_layout::in_kernel(Address a)
 {
   return a > user_max();
 }
 
 PUBLIC static inline ALWAYS_INLINE
-Mword
+bool
 Mem_layout::in_kernel_code (Address a)
 {
   return a >= reinterpret_cast<Address>(&start) && a < reinterpret_cast<Address>(&ecode);
