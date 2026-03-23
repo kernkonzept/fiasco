@@ -124,6 +124,7 @@ kernel_task_IMPL	:= kernel_task kernel_task-arm
 kernel_thread_IMPL	:= kernel_thread kernel_thread-arm \
 			   kernel_thread-arm-$(BITS)
 kernel_uart_IMPL  	:= kernel_uart kernel_uart-libuart
+kip_init_IMPL		+= kip_init-arm
 map_util_IMPL		:= map_util map_util-mem map_util-objs
 mem_layout_IMPL		:= mem_layout mem_layout-arm-$(BITS) \
 			   mem_layout-arm

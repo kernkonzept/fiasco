@@ -1,16 +1,3 @@
-INTERFACE [riscv]:
-
-#include "initcalls.h"
-#include "kip.h"
-
-class Kip_init
-{
-public:
-  static void init() FIASCO_INIT;
-  static void init_kip_clock() FIASCO_INIT;
-};
-
-//---------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:
 
 #include <cstring>
@@ -78,17 +65,12 @@ IMPLEMENT
 void
 Kip_init::init_kip_clock()
 {
-  union K
-  {
-    Kip       k;
-    Unsigned8 b[Config::PAGE_SIZE];
-  };
   extern char kip_time_fn_read_us[];
   extern char kip_time_fn_read_us_end[];
   extern char kip_time_fn_read_ns[];
   extern char kip_time_fn_read_ns_end[];
 
-  K *k = reinterpret_cast<K *>(Kip::k());
+  auto *k = reinterpret_cast<Kip_initializer *>(Kip::k());
 
   *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SCALER_TIME_STAMP_TO_US)
     = Timer::get_scaler_shift_ts_to_us().scaler;

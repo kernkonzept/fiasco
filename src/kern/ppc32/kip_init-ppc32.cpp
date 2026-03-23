@@ -1,15 +1,3 @@
-INTERFACE [ppc32]:
-
-#include "kip.h"
-
-class Kip_init
-{
-public:
-  static void init();
-};
-
-
-//---------------------------------------------------------------------------
 IMPLEMENTATION [ppc32]:
 
 #include "config.h"

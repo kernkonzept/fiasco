@@ -63,6 +63,7 @@ obj_space_IMPL = obj_space obj_space-phys
 PREPROCESS_PARTS-$(CONFIG_PHYS_OBJ_SPACE_AVL) += obj_space_phys_avl
 
 kdb_ke_IMPL             := kdb_ke
+kip_init_IMPL           := kip_init
 platform_control_IMPL   := platform_control
 syscalls_IMPL		:= syscalls syscalls-log
 timer_tick_IMPL         := timer_tick

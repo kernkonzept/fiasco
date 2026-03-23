@@ -1,15 +1,3 @@
-INTERFACE [sparc]:
-
-#include "kip.h"
-
-class Kip_init
-{
-public:
-  static void init();
-};
-
-
-//---------------------------------------------------------------------------
 IMPLEMENTATION [sparc]:
 
 #include "mem_layout.h"

@@ -1,13 +1,8 @@
 INTERFACE [arm]:
 
-#include "initcalls.h"
-#include "kip.h"
-
-class Kip_init
+EXTENSION class Kip_init
 {
 public:
-  static void init() FIASCO_INIT;
-  static void init_kip_clock() FIASCO_INIT;
   static void map_kip(Kip *) FIASCO_INIT;
 };
 
@@ -79,17 +74,12 @@ IMPLEMENT
 void
 Kip_init::init_kip_clock()
 {
-  union K
-  {
-    Kip       k;
-    Unsigned8 b[Config::PAGE_SIZE];
-  };
   extern char kip_time_fn_read_us[];
   extern char kip_time_fn_read_us_end[];
   extern char kip_time_fn_read_ns[];
   extern char kip_time_fn_read_ns_end[];
 
-  K *k = reinterpret_cast<K *>(Kip::k());
+  auto *k = reinterpret_cast<Kip_initializer *>(Kip::k());
 
   *reinterpret_cast<Mword *>(k->b + OFFS__KIP_SCALER_TIME_STAMP_TO_US)
     = Timer::get_scaler_shift_ts_to_us().scaler;
@@ -116,13 +106,8 @@ PRIVATE static inline FIASCO_INIT
 void
 Kip_init::init_syscalls(Kip *kinfo)
 {
-  union K
-  {
-    Kip k;
-    Mword w[0x1000 / sizeof(Mword)];
-  };
-  K *k = reinterpret_cast<K *>(kinfo);
-  k->w[OFFS__KIP_FN_SYSCALL / sizeof(Mword)] = 0xd65f03c0d4000001U; // svc #0; ret
+  auto *k = reinterpret_cast<Kip_initializer *>(kinfo);
+  k->set_uint64(OFFS__KIP_FN_SYSCALL, 0xd65f03c0d4000001U); // svc #0; ret
 }
 
 //--------------------------------------------------------------

@@ -61,6 +61,7 @@ kdb_ke_IMPL             += kdb_ke-riscv
 kernel_task_IMPL        := kernel_task
 kernel_thread_IMPL      := kernel_thread kernel_thread-riscv
 kernel_uart_IMPL        := kernel_uart kernel_uart-libuart
+kip_init_IMPL		+= kip_init-riscv
 kmem_IMPL               := kmem kmem-riscv
 kmem_alloc_IMPL         := kmem_alloc kmem_alloc-riscv
 kmem_mmio_IMPL          := kmem_mmio kmem_mmio-riscv
