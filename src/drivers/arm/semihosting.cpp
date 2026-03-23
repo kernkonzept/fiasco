@@ -55,7 +55,10 @@ public:
     register Mword r0 asm("r0") = op;
     register Mword r1 asm("r1") = as_mword(arg);
     register Ret ret asm("r0");
-    asm volatile("hlt #0xF000" : "=r" (ret) : "r" (r0), "r" (r1) : "memory");
+    if constexpr (TAG_ENABLED(thumb2))
+      asm volatile("hlt #0x3c" : "=r" (ret) : "r" (r0), "r" (r1) : "memory");
+    else
+      asm volatile("hlt #0xF000" : "=r" (ret) : "r" (r0), "r" (r1) : "memory");
     return ret;
   }
 
