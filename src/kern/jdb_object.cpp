@@ -114,14 +114,17 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
         length = min<Mword>((tag.words() - 2) * sizeof(Mword), length);
 
         auto str = reinterpret_cast<char const *>(&r_msg->values[2]);
-        Tb_entry_ke *tb = Jdb_tbuf::new_entry<Tb_entry_ke>();
+
+        Tb_sequence seq;
+        auto *tb = Jdb_tbuf::next_entry<Tb_entry_ke>(seq);
+
         tb->set(curr, curr->regs()->ip_syscall_user());
 
         for (unsigned i = 0; i < length; ++i)
           tb->msg.set_buf(i, str[i]);
 
         tb->msg.term_buf(length);
-        Jdb_tbuf::commit_entry(tb);
+        Jdb_tbuf::commit_entry(tb, seq);
         return commit_result(0);
       }
 
@@ -138,13 +141,16 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
                                   (tag.words() - 2) * sizeof(Mword));
 
         auto str = reinterpret_cast<char const *>(&r_msg->values[2]);
-        Tb_entry_ke_bin *tb = Jdb_tbuf::new_entry<Tb_entry_ke_bin>();
+
+        Tb_sequence seq;
+        auto *tb = Jdb_tbuf::next_entry<Tb_entry_ke_bin>(seq);
+
         tb->set(curr, curr->regs()->ip_syscall_user());
 
         for (unsigned i = 0; i < length; ++i)
           tb->set_buf(i, str[i]);
 
-        Jdb_tbuf::commit_entry(tb);
+        Jdb_tbuf::commit_entry(tb, seq);
         return commit_result(0);
       }
 
@@ -159,7 +165,10 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
         // values[4] == length of string in bytes, set_buf ensures it fits into msg buffer,
         //              but we must not read above utcb
         // values[5] == string
-        Tb_entry_ke_reg *tb = Jdb_tbuf::new_entry<Tb_entry_ke_reg>();
+
+        Tb_sequence seq;
+        auto *tb = Jdb_tbuf::next_entry<Tb_entry_ke_reg>(seq);
+
         tb->set(curr, curr->regs()->ip_syscall_user());
         tb->v[0] = access_once(&r_msg->values[1]);
         tb->v[1] = access_once(&r_msg->values[2]);
@@ -174,7 +183,7 @@ Jdb_object::sys_tbuf(L4_msg_tag tag, unsigned op,
           tb->msg.set_buf(i, str[i]);
 
         tb->msg.term_buf(length);
-        Jdb_tbuf::commit_entry(tb);
+        Jdb_tbuf::commit_entry(tb, seq);
         return commit_result(0);
       }
 

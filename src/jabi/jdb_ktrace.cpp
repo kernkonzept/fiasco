@@ -1,8 +1,15 @@
 INTERFACE:
 
 #include "types.h"
+#include "config.h"
 
+/// Tracebuffer entry sequence number.
 using Tb_sequence = Mword;
+
+/// Tracebuffer entry generation number. This is an atomically accessed
+/// variant of the sequence number. Defined as a separate type for future
+/// type-safe atomic defintion.
+using Tb_generation = Tb_sequence;
 
 enum
 {
@@ -21,11 +28,23 @@ enum
   Kern_cnt_max
 };
 
-struct Tracebuffer_status
+struct alignas(Config::PAGE_SIZE) Tracebuffer_status
 {
+  unsigned version;  //< Current version of the tracebuffer layout.
+  size_t alignment;  //< Current value of Config::stable_cache_alignment.
+
+  /// Bit mask for computing tracebuffer slot index.
+  alignas(Config::stable_cache_alignment) size_t mask;
+
+  /// Latest tracebuffer entry generation number.
+  alignas(Config::stable_cache_alignment) Tb_generation tail;
+
   Unsigned32 scaler_tsc_to_ns;
   Unsigned32 scaler_tsc_to_us;
   Unsigned32 scaler_ns_to_tsc;
 
   Unsigned32 kerncnts[Kern_cnt_max];
 };
+
+static_assert(alignof(Tracebuffer_status) == Config::PAGE_SIZE);
+static_assert((sizeof(Tracebuffer_status) % Config::PAGE_SIZE) == 0);

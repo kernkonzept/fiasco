@@ -396,9 +396,10 @@ Breakpoint::test_log(Thread *t)
         }
 
       // is called with disabled interrupts
-      Tb_entry_bp *tb = Jdb_tbuf::new_entry<Tb_entry_bp>();
+      Tb_sequence seq;
+      auto *tb = Jdb_tbuf::next_entry<Tb_entry_bp>(seq);
       tb->set(t, e->ip(), mode, len, value, addr.addr());
-      Jdb_tbuf::commit_entry(tb);
+      Jdb_tbuf::commit_entry(tb, seq);
     }
 }
 

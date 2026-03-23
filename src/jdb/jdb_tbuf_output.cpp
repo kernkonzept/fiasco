@@ -213,20 +213,20 @@ Jdb_tbuf_output::set_filter(const char *filter_str, size_t *entries)
 
   if (!*filter_str)
     {
-      for (size_t n = 0; n < Jdb_tbuf::unfiltered_entries(); ++n)
-        Jdb_tbuf::unfiltered_lookup(n)->unhide();
+      for (size_t n = 0; n < Jdb_tbuf::entries(Jdb_tbuf::all); ++n)
+        Jdb_tbuf::lookup(n, Jdb_tbuf::all)->unhide();
 
-      Jdb_tbuf::disable_filter();
+      Jdb_tbuf::show_hidden();
       if (entries)
-        *entries = Jdb_tbuf::unfiltered_entries();
+        *entries = Jdb_tbuf::entries(Jdb_tbuf::all);
 
       return true;
     }
 
   size_t cnt = 0;
-  for (size_t n = 0; n < Jdb_tbuf::unfiltered_entries(); ++n)
+  for (size_t n = 0; n < Jdb_tbuf::entries(Jdb_tbuf::all); ++n)
     {
-      auto e = Jdb_tbuf::unfiltered_lookup(n);
+      auto e = Jdb_tbuf::lookup(n, Jdb_tbuf::all);
       String_buf<200> s;
 
       print_entry(&s, e);
@@ -249,6 +249,6 @@ Jdb_tbuf_output::set_filter(const char *filter_str, size_t *entries)
   if (entries)
     *entries = cnt;
 
-  Jdb_tbuf::enable_filter();
+  Jdb_tbuf::hide_hidden();
   return true;
 }

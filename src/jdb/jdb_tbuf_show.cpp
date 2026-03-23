@@ -72,9 +72,9 @@ private:
   static String_buf<512> _buffer_str;
   static unsigned _status_type;
   static Mword _absy;
-  static Tb_sequence _nr_cur;
-  static Tb_sequence _nr_ref;
-  static Tb_sequence _nr_pos[10];
+  static Tb_sequence _seq_cur;
+  static Tb_sequence _seq_ref;
+  static Tb_sequence _seq_pos[10];
   static size_t y_offset;
 
   enum
@@ -114,10 +114,10 @@ char Jdb_tbuf_show::_filter_str[40];
 String_buf<512> Jdb_tbuf_show::_buffer_str;
 unsigned Jdb_tbuf_show::_status_type;
 Mword Jdb_tbuf_show::_absy;
-Tb_sequence Jdb_tbuf_show::_nr_cur;
-Tb_sequence Jdb_tbuf_show::_nr_ref;
+Tb_sequence Jdb_tbuf_show::_seq_cur;
+Tb_sequence Jdb_tbuf_show::_seq_ref;
 
-Tb_sequence Jdb_tbuf_show::_nr_pos[10] =
+Tb_sequence Jdb_tbuf_show::_seq_pos[10] =
 {
   Jdb_tbuf::Nil, Jdb_tbuf::Nil, Jdb_tbuf::Nil, Jdb_tbuf::Nil, Jdb_tbuf::Nil,
   Jdb_tbuf::Nil, Jdb_tbuf::Nil, Jdb_tbuf::Nil, Jdb_tbuf::Nil, Jdb_tbuf::Nil
@@ -379,7 +379,7 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
 
   for (unsigned i = 0; i < count; ++i)
     {
-      Tb_sequence number; // event number
+      Tb_sequence seq;  // event number
       Unsigned64 utsc;  // time stamp of this event
       Signed64 dtsc;    // time stamp difference to previous event on same CPU
       Unsigned32 kclock;// kernel clock value of this event
@@ -390,17 +390,8 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
       Kconsole::console()->getchar_chance();
       _buffer_str.reset();
 
-      bool ok = false;
-      if (!Jdb_tbuf::event(pos, &number, &kclock, &utsc, &upmc1, &upmc2, &ok))
+      if (!Jdb_tbuf::event(pos, &seq, &kclock, &utsc, &upmc1, &upmc2))
         break;
-
-      if (!ok)
-        {
-          // event not committed (missing data)
-          printf("event not yet committed\033[K%s", count != 1 ? "\n" : "");
-          ++pos;
-          continue;
-        }
 
       if (long_output)
         {
@@ -411,7 +402,7 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
             dtsc = 0;
 
           for (unsigned i = 0; i < 10; ++i)
-            if (number == _nr_pos[i])
+            if (seq == _seq_pos[i])
               {
                 s[0] = 'M';
                 s[1] = i + '0';
@@ -431,7 +422,7 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
           Jdb::write_tsc_s (&s_tsc_ss, utsc, false);
 
           printf("%-3s%10lu.  %120.120s %12s (%16s)  %12s (%18s) kclk=%u\n",
-                 s, number, _buffer_str.begin() + y_offset, s_tsc_dc.c_str(),
+                 s, seq, _buffer_str.begin() + y_offset, s_tsc_dc.c_str(),
                  s_tsc_ds.c_str(), s_tsc_sc.c_str(), s_tsc_ss.c_str(), kclock);
         }
       else
@@ -441,7 +432,7 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
           switch (mode)
             {
             case Index_mode:
-              s.printf("%12lu", number);
+              s.printf("%12lu", seq);
               break;
             case Tsc_delta_mode:
               if (!Jdb_tbuf::diff_tsc(pos, &dtsc))
@@ -509,7 +500,7 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
           else
             {
               for (unsigned i = 0; i < 10; ++i)
-                if (number == _nr_pos[i])
+                if (seq == _seq_pos[i])
                   {
                     c = Jdb::esc_mark;
                     break;
@@ -553,15 +544,12 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
         break;
 
       // don't wrap around
-      if (!Jdb_tbuf::event_valid(pos))
+      if (pos >= Jdb_tbuf::entries(Jdb_tbuf::all))
         {
           error(direction ? "Begin of tracebuffer reached"
                           : "End of tracebuffer reached");
           return found;
         }
-
-      if (!Jdb_tbuf::event_valid(pos))
-        pos = (direction == 1) ? entries - 1 : 0;
 
       Jdb_tbuf_output::print_entry(&buffer, pos);
 
@@ -601,12 +589,12 @@ Jdb_tbuf_show::find_group(Entry_group *g, Tb_entry const *e, bool older, unsigne
   typedef Entry_group::Group_order Group_order;
 
   Tb_entry_formatter const *fmt = Tb_entry_formatter::get_fmt(e);
-  size_t idx = Jdb_tbuf::unfiltered_idx(e);
+  size_t pos = Jdb_tbuf::pos(e, Jdb_tbuf::all);
   int dir = older ? 1 : -1;
-  while (idx > 0 && !g->full())
+  while (pos > 0 && !g->full())
     {
-      idx += dir;
-      Tb_entry *e1 = Jdb_tbuf::unfiltered_lookup(idx);
+      pos += dir;
+      Tb_entry *e1 = Jdb_tbuf::lookup(pos, Jdb_tbuf::all);
       if (!e1)
         return;
 
@@ -614,7 +602,7 @@ Jdb_tbuf_show::find_group(Entry_group *g, Tb_entry const *e, bool older, unsigne
       Group_order t = fmt->is_pair(e, e1);
       if (t.grouped())
         {
-          py = Jdb_tbuf::idx(e1);
+          py = Jdb_tbuf::pos(e1);
           if (py < _absy || py >= _absy + lines)
             return;
 
@@ -639,7 +627,7 @@ Jdb_tbuf_show::find_group(Entry_group *g, Tb_entry const *e, bool older, unsigne
       Tb_entry_formatter const *fmt2 = Tb_entry_formatter::get_fmt(e1);
       if (fmt2 && fmt2->partner(e1) == e->number())
         {
-          py = Jdb_tbuf::idx(e1);
+          py = Jdb_tbuf::pos(e1);
           if (py < _absy || py >= _absy + lines)
             return;
           g->push_back(e1, py, older ? Group_order::first() : Group_order::last());
@@ -661,11 +649,10 @@ Jdb_tbuf_show::show()
   Jdb::clear_screen();
 
 restart:
-  size_t posy[10];  // idx of mark{0..9}
   unsigned lines = Jdb_screen::height() - 4;
 
-  if (Jdb_tbuf::max_entries() < lines)
-    lines = Jdb_tbuf::max_entries();
+  if (Jdb_tbuf::capacity() < lines)
+    lines = Jdb_tbuf::capacity();
 
   if (entries < lines)
     lines = entries;
@@ -676,7 +663,7 @@ restart:
   size_t max_absy = entries > lines ? entries - lines : 0;
 
   // Search for reference element position. If not found, use last entry.
-  size_t refy = Jdb_tbuf::search_to_idx(_nr_ref);
+  size_t refy = Jdb_tbuf::search_to_pos(_seq_ref);
   if (refy == Jdb_tbuf::Hidden || refy == Jdb_tbuf::Not_found)
     {
       if (entries)
@@ -685,20 +672,27 @@ restart:
         refy = Jdb_tbuf::Not_found;
     }
 
+  size_t posy[10];  // Position of mark{0..9}
   // Search mark {0..9}. If not found, set Nil.
   for (unsigned i = 0; i < 10; ++i)
-    posy[i] = Jdb_tbuf::search_to_idx(_nr_pos[i]);
+    posy[i] = Jdb_tbuf::search_to_pos(_seq_pos[i]);
 
   // Search for current cursor position (starting from the top of the screen).
   // If beyond buffer, goto first entry.
-  Mword addy = Jdb_tbuf::search_to_idx(_nr_cur);
-  if (addy)
-    addy -= _absy;
+  Mword addy = Jdb_tbuf::search_to_pos(_seq_cur);
+  if (addy == Jdb_tbuf::Hidden || addy == Jdb_tbuf::Not_found)
+    {
+      addy = 0;
+      _absy = 0;
+    }
   else
-    addy = _absy = 0;
+    addy -= _absy;
 
   if (addy >= lines - 1)
-    addy = _absy = 0;
+    {
+      addy = 0;
+      _absy = 0;
+    }
 
   for (;;)
     {
@@ -723,8 +717,8 @@ restart:
       Jdb::cursor();
       printf("%3zu%% of %-6zu Perf:%-4s 1=" L4_PTR_FMT
              "(%s%s\033[m%s%s%s\033[m)\033[K",
-             Jdb_tbuf::unfiltered_entries() * 100 / Jdb_tbuf::max_entries(),
-             Jdb_tbuf::max_entries(),
+             Jdb_tbuf::entries(Jdb_tbuf::all) * 100 / Jdb_tbuf::capacity(),
+             Jdb_tbuf::capacity(),
              perf_type, perf_event[0], Jdb::esc_emph, perf_mode[0],
              perf_name[0] && *perf_name[0] ? ":" : "",
              mode==Pmc1_delta_mode || mode==Pmc1_ref_mode ? Jdb::esc_emph : "",
@@ -743,7 +737,7 @@ restart:
         {
           Jdb::cursor(2, 1);
           printf("\033[31m%3zu%% filtered\033[m\n",
-                 entries * 100U / Jdb_tbuf::max_entries());
+                 entries * 100U / Jdb_tbuf::capacity());
         }
 
       for (unsigned i = 3; i < Tbuf_start_line; ++i)
@@ -868,7 +862,7 @@ restart:
                 }
 
               _absy = 0;
-              _nr_cur = Jdb_tbuf::Nil;
+              _seq_cur = Jdb_tbuf::Nil;
               goto restart;
             case 'D': // dump to console
               if (!Kconsole::console()->find_console(Console::GZIP))
@@ -999,12 +993,12 @@ restart:
             case 'c': // clear tracebuffer
               Jdb_tbuf::clear_tbuf();
               _absy = 0;
-              _nr_cur = Jdb_tbuf::Nil;
-              _nr_ref = Jdb_tbuf::Nil;
+              _seq_cur = Jdb_tbuf::Nil;
+              _seq_ref = Jdb_tbuf::Nil;
               entries = 0;
 
               for (unsigned i = 0; i < 10; ++i)
-                _nr_pos[i] = Jdb_tbuf::Nil;
+                _seq_pos[i] = Jdb_tbuf::Nil;
 
               goto restart;
             case 's': // set mark
@@ -1020,7 +1014,7 @@ restart:
                 {
                   unsigned i = c - '0';
                   posy[i] = _absy + addy;
-                  _nr_pos[i] = Jdb_tbuf::lookup(_absy + addy)->number();
+                  _seq_pos[i] = Jdb_tbuf::lookup(_absy + addy)->number();
                 }
 
               redraw = true;
@@ -1030,7 +1024,7 @@ restart:
                 break;
 
               refy = _absy + addy;
-              _nr_ref = Jdb_tbuf::lookup(_absy + addy)->number();
+              _seq_ref = Jdb_tbuf::lookup(_absy + addy)->number();
               redraw = true;
               break;
             case 'j': // jump to mark or reference element
@@ -1118,7 +1112,7 @@ restart:
 
 exit:
   auto e = Jdb_tbuf::lookup(_absy + addy);
-  _nr_cur = e ? e->number() : Jdb_tbuf::Nil;
+  _seq_cur = e ? e->number() : Jdb_tbuf::Nil;
 }
 
 PUBLIC

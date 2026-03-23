@@ -6,15 +6,27 @@ INTERFACE:
 #include "std_macros.h"
 #include "tb_entry.h"
 #include "spin_lock.h"
+#include "config.h"
+#include "minmax.h"
+#include "arithmetic.h"
 
 class Context;
 class Log_event;
-struct Tracebuffer_status;
+
+struct alignas(cxx::bit_ceil(sizeof(Tb_entry_union))) Tracebuffer_slot
+{
+  // The slot sequence number is a member of the data.
+  Tb_entry_union data;
+};
 
 class Jdb_tbuf
 {
 public:
-  static void (*direct_log_entry)(Tb_entry *, const char *);
+  using Predicate = bool (*)(Tb_entry &);
+
+  static constexpr Predicate all = [](Tb_entry &) { return true; };
+  static constexpr Predicate filter_hidden
+    = [](Tb_entry &entry) { return !entry.is_hidden(); };
 
   enum
   {
@@ -24,7 +36,7 @@ public:
 
   enum : Tb_sequence
   {
-    Nil = ~Tb_sequence{0U}
+    Nil = 0U
   };
 
   enum : size_t
@@ -33,13 +45,19 @@ public:
     Not_found = ~size_t{0U}
   };
 
+  enum : unsigned
+  {
+    Tracebuffer_version = 0
+  };
+
+  static void (*direct_log_entry)(Tb_entry *, const char *);
+
 protected:
-  static size_t _max_entries;   //< Number of entries.
-  static bool _filter_enabled;  //< True if filter is active.
-  static Tb_sequence _number;   //< Current event number.
-  static size_t _size;          //< Size of memory area for tracebuffer
+  static size_t _capacity;     //< Number of entries.
+  static size_t _mask;         //< Mask for determining the slot index.
+  static bool _filter_hidden;  //< Filtering of hidden entries enabled.
   static Tracebuffer_status *_status;
-  static Tb_entry_union *_buffer;
+  static Tracebuffer_slot *_slots;
 };
 
 #ifdef CONFIG_JDB_LOGGING
@@ -70,16 +88,13 @@ IMPLEMENTATION:
 #include "std_macros.h"
 
 // Read only (initialized at boot).
+size_t Jdb_tbuf::_capacity;
+size_t Jdb_tbuf::_mask;
 Tracebuffer_status *Jdb_tbuf::_status;
-Tb_entry_union *Jdb_tbuf::_buffer;
-size_t Jdb_tbuf::_size;
-size_t Jdb_tbuf::_max_entries;
+Tracebuffer_slot *Jdb_tbuf::_slots;
 
 // Read mostly (only modified in JDB).
-bool Jdb_tbuf::_filter_enabled;
-
-// Modified often (for each new entry).
-Tb_sequence Jdb_tbuf::_number;
+bool Jdb_tbuf::_filter_hidden;
 
 static void direct_log_dummy(Tb_entry *, const char *)
 {}
@@ -87,37 +102,45 @@ static void direct_log_dummy(Tb_entry *, const char *)
 void (*Jdb_tbuf::direct_log_entry)(Tb_entry *, const char *) = &direct_log_dummy;
 
 PUBLIC static inline Tracebuffer_status *Jdb_tbuf::status() { return _status; }
-PROTECTED static inline Tb_entry_union *Jdb_tbuf::buffer() { return _buffer; }
-PUBLIC static inline size_t Jdb_tbuf::size() { return _size; }
+PUBLIC static inline Tracebuffer_slot *Jdb_tbuf::slots() { return _slots; }
+
+PUBLIC static inline size_t Jdb_tbuf::size(size_t entries)
+{ return entries * sizeof(Tracebuffer_slot); }
+
+PUBLIC static inline size_t Jdb_tbuf::size() { return size(_capacity); }
+
+PUBLIC static inline size_t Jdb_tbuf::capacity(size_t size)
+{ return size / sizeof(Tracebuffer_slot); }
+
+PUBLIC static inline size_t Jdb_tbuf::capacity()
+{ return _capacity; }
 
 /** Clear tracebuffer. */
 PUBLIC static
 void
 Jdb_tbuf::clear_tbuf()
 {
-  for (size_t i = 0; i < _max_entries; ++i)
-    buffer()[i].clear();
+  for (size_t i = 0; i < _capacity; ++i)
+    _slots[i].data.clear();
 
-  _number = 0;
+  _status->tail = Nil;
 }
 
-/** Return pointer to new tracebuffer entry. */
+/**
+ * Return pointer to the next tracebuffer entry.
+ *
+ * \param[out] seq  Sequence number of the next tracebuffer entry.
+ *
+ * \return Pointer to the next tracebuffer entry.
+ */
 PUBLIC static
 Tb_entry *
-Jdb_tbuf::new_entry()
+Jdb_tbuf::next_entry(Tb_sequence &seq)
 {
-  Tb_sequence n;
-  // use atomic_add() when available!
-  do
-    n = access_once(&_number);
-  while (!cas(&_number, n, n + 1));
+  seq = atomic_add_fetch(&_status->tail, 1);
+  Tb_entry *tb = &_slots[seq & _mask].data;
 
-  Tb_entry_union *tb = buffer() + (n & (_max_entries - 1));
-  // As long as not all information is written, write an invalid number which
-  // can be easily corrected in commit_entry(). See the 'committed' parameter
-  // in  Jdb_tbuf::event(). There is still a short race between setting _number
-  // and setting the entry's number field. Let's ignore that for now.
-  tb->number(n + 1000);
+  tb->number(Nil);
   Mem::barrier();
 
   tb->rdtsc();
@@ -127,276 +150,370 @@ Jdb_tbuf::new_entry()
   return tb;
 }
 
-PUBLIC template<typename T> static inline
+PUBLIC static inline
+template<typename T>
 T *
-Jdb_tbuf::new_entry()
+Jdb_tbuf::next_entry(Tb_sequence &seq)
 {
-  static_assert(sizeof(T) <= sizeof(Tb_entry_union), "tb entry T too big");
-  return static_cast<T *>(new_entry());
+  static_assert(sizeof(T) <= sizeof(Tb_entry_union));
+  return static_cast<T *>(next_entry(seq));
 }
 
-/** Commit tracebuffer entry.
- * This function is executed when the entry is complete. At the moment it
- * does nothing. */
+/**
+ * Commit tracebuffer entry.
+ *
+ * This method is executed when the entry is complete.
+ *
+ * \param entry  Tracebuffer entry to commit.
+ * \param seq    Sequence number of the tracebuffer entry to commit.
+ */
 PUBLIC static inline
 void
-Jdb_tbuf::commit_entry(Tb_entry *tb)
+Jdb_tbuf::commit_entry(Tb_entry *entry, Tb_sequence seq)
 {
-  tb->number(tb->number() - 1000);
+  assert(seq != Nil);
+  entry->number(seq);
+  Mem::barrier();
 }
 
-/** Return number of entries currently allocated in tracebuffer.
- * @return number of entries */
-PUBLIC static inline
-size_t
-Jdb_tbuf::unfiltered_entries()
-{
-  return _number > _max_entries ? _max_entries : _number;
-}
-
+/**
+ * Return number of entries currently committed in tracebuffer.
+ *
+ * \param predicate  Filtering predicate (e.g. #filter_hidden).
+ *
+ * \return Number of entries currentry committed in tracebuffer (considering
+ *         the filtering predicate).
+ */
 PUBLIC static
 size_t
-Jdb_tbuf::entries()
+Jdb_tbuf::entries(Predicate predicate)
 {
-  if (!_filter_enabled)
-    return unfiltered_entries();
-
   size_t cnt = 0;
-  for (size_t idx = 0; idx < unfiltered_entries(); idx++)
-    if (!buffer()[idx].is_hidden())
-      cnt++;
+  for (size_t i = 0; i < _capacity; ++i)
+    {
+      Tb_entry &data = _slots[i].data;
+      if (data.number() != Nil && predicate(data))
+        ++cnt;
+    }
 
   return cnt;
 }
 
-/** Return maximum number of entries in tracebuffer.
- * @return number of entries */
-PUBLIC static inline
-size_t
-Jdb_tbuf::max_entries()
-{
-  return _max_entries;
-}
-
-/** Check if event is valid.
- * @param idx position of event in tracebuffer
- * @return 0 if not valid, 1 if valid */
-PUBLIC static inline
-bool
-Jdb_tbuf::event_valid(size_t idx)
-{
-  return idx < unfiltered_entries();
-}
-
-/** Return pointer to tracebuffer event.
- * @param  position of event in tracebuffer:
- *         0 is last event, 1 the event before and so on
- * @return pointer to tracebuffer event
+/**
+ * Check if entry is valid and committed.
  *
- * event with idx == 0 is the last event queued in
- * event with idx == 1 is the event before */
-PUBLIC static
-Tb_entry *
-Jdb_tbuf::unfiltered_lookup(size_t idx)
-{
-  if (!event_valid(idx))
-    return nullptr;
-
-  return buffer() + ((_number - idx - 1) & (_max_entries - 1));
-}
-
-/** Return pointer to tracebuffer event.
- * Don't count hidden events.
- * @param  position of event in tracebuffer:
- *         0 is last event, 1 the event before and so on
- * @return pointer to tracebuffer event
+ * \param seq  Sequence number of the entry.
  *
- * event with idx == 0 is the last event queued in
- * event with idx == 1 is the event before */
-PUBLIC static
-Tb_entry *
-Jdb_tbuf::lookup(size_t look_idx)
-{
-  if (!_filter_enabled)
-    return unfiltered_lookup(look_idx);
-
-  for (size_t idx = 0;; idx++)
-    {
-      Tb_entry *e = unfiltered_lookup(idx);
-
-      if (!e)
-	return nullptr;
-      if (e->is_hidden())
-	continue;
-      if (!look_idx--)
-	return e;
-    }
-}
-
-PUBLIC static
-size_t
-Jdb_tbuf::unfiltered_idx(Tb_entry const *e)
-{
-  auto *ef = static_cast<Tb_entry_union const *>(e);
-  return (_number - (ef - buffer()) - 1) & (_max_entries - 1);
-}
-
-/** Tb_entry => tracebuffer index. */
-PUBLIC static
-size_t
-Jdb_tbuf::idx(Tb_entry const *e)
-{
-  if (!_filter_enabled)
-    return unfiltered_idx(e);
-
-  Tb_entry_union const *ef_next = buffer() + (_number & (_max_entries - 1));
-  Tb_entry_union const *ef = static_cast<Tb_entry_union const*>(e);
-  size_t idx = Not_found;
-
-  for (;;)
-    {
-      if (!ef->is_hidden())
-        idx++;
-      ef++;
-      if (ef >= buffer() + _max_entries)
-        ef -= _max_entries;
-      if (ef == ef_next)
-        break;
-    }
-
-  return idx;
-}
-
-/** Event number => Tb_entry. */
+ * \return Pointer to the entry with the given sequence number, if it is valid.
+ * \retval nullptr  The entry with the given sequence number is not valid.
+ */
 PUBLIC static inline
 Tb_entry *
-Jdb_tbuf::search(size_t nr)
+Jdb_tbuf::entry_valid(Tb_sequence seq)
 {
-  Tb_entry *e;
+  assert(seq != Nil);
 
-  for (size_t idx = 0; (e = unfiltered_lookup(idx)); idx++)
-    if (e->number() == nr)
-      return e;
+  Tb_entry &data = _slots[seq & _mask].data;
+  if (data.number() == seq)
+    return &data;
 
   return nullptr;
 }
 
-/** Event number => tracebuffer index.
- * @param  nr  number of event
- * @return tracebuffer index of event which has the number nr or
- *         -1 if there is no event with this number or
- *         -2 if the event is currently hidden. */
+/**
+ * Get pointer to a tracebuffer event.
+ *
+ * \param pos        Position of the event in the tracebuffer. 0 represents the
+ *                   last event, 1 represents the penultimate event, etc.
+ *                   The filtering predicate is taken into account.
+ * \param predicate  Filtering predicate (e.g. #filter_hidden).
+ *
+ * \return Pointer to the tracebuffer event with the given position (with
+ *         the filtering predicate taken into account).
+ * \retval nullptr  No tracebuffer event with the given position (with
+ *                  the filtering predicate taken into account) found.
+ */
+PUBLIC static
+Tb_entry *
+Jdb_tbuf::lookup(size_t pos, Predicate predicate)
+{
+  Tb_sequence seq = _status->tail;
+  size_t bound = seq > _capacity ? seq - _capacity : 0;
+  size_t cnt = pos;
+
+  while (seq > bound)
+    {
+      Tb_entry *entry = entry_valid(seq);
+
+      // Skip invalid entries and entries that are filtered out by the
+      // predicate.
+      if (!entry || !predicate(*entry))
+        {
+          --seq;
+          continue;
+        }
+
+      // Found the entry with the desired position.
+      if (cnt == 0)
+        return entry;
+
+      // Entry found, but not on the desired position.
+      --seq;
+      --cnt;
+    }
+
+  // No more entries.
+  return nullptr;
+}
+
+/**
+ * Get pointer to a tracebuffer event (possibly with filtering).
+ *
+ * \param pos  Position of the event in the tracebuffer. 0 represents the last
+ *             event, 1 represents the penultimate event, etc. The current
+ *             filtering setting is taken into account.
+ *
+ * \return Pointer to the tracebuffer event with the given position (with
+ *         the current filtering setting taken into account).
+ * \retval nullptr  No tracebuffer event with the given position (with
+ *                  the current filtering setting taken into account) found.
+ */
+PUBLIC static
+Tb_entry *
+Jdb_tbuf::lookup(size_t pos)
+{
+  if (_filter_hidden)
+    return lookup(pos, filter_hidden);
+
+  return lookup(pos, all);
+}
+
+/**
+ * Get the position of the given tracebuffer event.
+ *
+ * \param entry      Tracebuffer event to find in the tracebuffer. The
+ *                   filtering predicate is taken into account.
+ * \param predicate  Filtering predicate (e.g. #filter_hidden).
+ *
+ * \return Position of the given event in the tracebuffer (with the filtering
+ *         predicate taken into account). 0 represents the last event,
+ *         1 represents the penultimate event, etc.
+ * \retval Not_found  The event is not present or no longer present in the
+ *                    tracebuffer.
+ */
 PUBLIC static
 size_t
-Jdb_tbuf::search_to_idx(Tb_sequence nr)
+Jdb_tbuf::pos(Tb_entry const *event, Predicate predicate)
 {
-  if (nr == Nil)
-    return Not_found;
+  Tb_sequence seq = _status->tail;
+  size_t bound = seq > _capacity ? seq - _capacity : 0;
+  size_t pos = 0;
 
-  Tb_entry *e;
-
-  if (!_filter_enabled)
+  while (seq > bound)
     {
-      e = search(nr);
-      if (!e)
-        return Not_found;
+      Tb_entry *cur = entry_valid(seq);
 
-      return unfiltered_idx(e);
+      // Skip invalid entries and entries that are filtered out by the
+      // predicate.
+      if (!cur || !predicate(*cur))
+        {
+          --seq;
+          continue;
+        }
+
+      // Found the desired entry.
+      if (cur == event)
+        return pos;
+
+      // Entry found, but not the desired one.
+      --seq;
+      ++pos;
     }
 
-  for (size_t idx_u = 0, idx_f = 0; (e = unfiltered_lookup(idx_u)); idx_u++)
-    {
-      if (e->number() == nr)
-        return e->is_hidden() ? Hidden : idx_f;
-
-      if (!e->is_hidden())
-        idx_f++;
-    }
-
+  // No more entries.
   return Not_found;
 }
 
-/** Return some information about log event.
- * @param idx             index of event to determine the info
- *                        (0 = most recent event, 1 = penultimate event, ...)
- * @param[out] number     event number
- * @param[out] klock      event value of kernel clock
- * @param[out] tsc        event value of CPU cycles
- * @param[out] pmc1       event value of perf counter 1 cycles
- * @param[out] pmc2       event value of perf counter 2 cycles
- * @param[out] committed  false: event not yet committed
- * @return 0 if something wrong, 1 if everything OK */
+/**
+ * Get the position of the given tracebuffer event (possibly with filtering).
+ *
+ * \param entry  Tracebuffer event to find in the tracebuffer. The current
+ *               filtering setting is taken into account.
+ *
+ * \return Position of the given event in the tracebuffer (with the current
+ *         filtering setting taken into account). 0 represents the last event,
+ *         1 represents the penultimate event, etc.
+ * \retval Not_found  The event is not present or no longer present in the
+ *                    tracebuffer.
+ */
+PUBLIC static
+size_t
+Jdb_tbuf::pos(Tb_entry const *event)
+{
+  if (_filter_hidden)
+    return pos(event, filter_hidden);
+
+  return pos(event, all);
+}
+
+/**
+ * Get tracebuffer entry based on sequence number.
+ *
+ * \param seq  Sequence number of the tracebuffer entry.
+ *
+ * \return Tracebuffer entry with the given sequence number.
+ * \retval nullptr  The event is not present or no longer present in the
+ *                  tracebuffer.
+ */
+PUBLIC static inline
+Tb_entry *
+Jdb_tbuf::search(Tb_sequence seq)
+{
+  Tb_entry *tb = &_slots[seq & _mask].data;
+  if (tb->number() == seq)
+    return tb;
+
+  return nullptr;
+}
+
+/**
+ * Get tracebuffer entry position based on sequence number.
+ *
+ * \param seq  Sequence number of the tracebuffer entry.
+ *
+ * \return Position of the given event in the tracebuffer (with current
+ *         filtering setting taken into account). 0 represents the last event,
+ *         1 represents the penultimate event, etc.
+ * \retval Not_found  The event is not present or no longer present in the
+ *                    tracebuffer.
+ * \retval Hidden     The event is present, but hidden.
+ */
+PUBLIC static
+size_t
+Jdb_tbuf::search_to_pos(Tb_sequence seq)
+{
+  Tb_entry *entry = search(seq);
+  if (!entry)
+    return Not_found;
+
+  if (!_filter_hidden)
+    return pos(entry, all);
+
+  if (entry->is_hidden())
+    return Hidden;
+
+  return pos(entry, filter_hidden);
+}
+
+/**
+ * Return some information about log event (possibly with filtering).
+ *
+ * \param      pos     Position of the even in the tracebuffer. 0 represents
+ *                     the last event, 1 represents the penultimate event, etc.
+ *                     The current filtering setting is taken into account.
+ * \param[out] number  Event number.
+ * \param[out] klock   Event value of kernel clock.
+ * \param[out] tsc     Event value of CPU cycles.
+ * \param[out] pmc1    Event value of perf counter 1 cycles.
+ * \param[out] pmc2    Event value of perf counter 2 cycles.
+ *
+ * \retval false  Something went wrong.
+ * \retval true   Everything is OK.
+ */
 PUBLIC static
 bool
-Jdb_tbuf::event(size_t idx, Tb_sequence *number, Unsigned32 *kclock,
-                Unsigned64 *tsc, Unsigned32 *pmc1, Unsigned32 *pmc2,
-                bool *committed = nullptr)
+Jdb_tbuf::event(size_t pos, Tb_sequence *number, Unsigned32 *kclock,
+                Unsigned64 *tsc, Unsigned32 *pmc1, Unsigned32 *pmc2)
 {
-  Tb_entry *e = lookup(idx);
-
-  if (!e)
+  Tb_entry *entry = lookup(pos);
+  if (!entry)
     return false;
 
-  *number = e->number();
+  *number = entry->number();
+
   if (kclock)
-    *kclock = e->kclock();
+    *kclock = entry->kclock();
+
   if (tsc)
-    *tsc = e->tsc();
+    *tsc = entry->tsc();
+
   if (pmc1)
-    *pmc1 = e->pmc1();
+    *pmc1 = entry->pmc1();
+
   if (pmc2)
-    *pmc2 = e->pmc2();
-  if (committed)
-    *committed = (e->number() < _number);
+    *pmc2 = entry->pmc2();
 
   return true;
 }
 
-/** Get difference CPU cycles between event idx and event idx+1 on the same CPU.
- * @param idx position of first event in tracebuffer
- * @retval difference in CPU cycles
- * @return 0 if something wrong, 1 if everything ok */
+/**
+ * Get the difference of CPU cycles of the given event and the previous event
+ * on the same CPU (possibly with filtering).
+ *
+ * \param      pos    Position of the even in the tracebuffer. 0 represents
+ *                    the last event, 1 represents the penultimate event, etc.
+ *                    The current filtering setting is taken into account.
+ * \param[out] delta  Difference in CPU cycles.
+ *
+ * \retval false  Something went wrong.
+ * \retval true   Everything is OK.
+ */
 PUBLIC static
 bool
-Jdb_tbuf::diff_tsc(size_t idx, Signed64 *delta)
+Jdb_tbuf::diff_tsc(size_t pos, Signed64 *delta)
 {
-  Tb_entry *e      = lookup(idx);
-  Tb_entry *e_prev;
-
-  if (!e)
+  Tb_entry *entry = lookup(pos);
+  if (!entry)
     return false;
+
+  Tb_entry *prev;
 
   do
     {
-      e_prev = lookup(++idx);
-      if (!e_prev)
+      prev = lookup(++pos);
+      if (!prev)
         return false;
     }
-  while (e->cpu() != e_prev->cpu());
+  while (entry->cpu() != prev->cpu());
 
-  *delta = e->tsc() - e_prev->tsc();
+  *delta = entry->tsc() - prev->tsc();
   return true;
 }
 
-/** Get difference perfcnt cycles between event idx and event idx+1.
- * @param idx position of first event in tracebuffer
- * @param nr  number of perfcounter (0=first, 1=second)
- * @retval difference in perfcnt cycles
- * @return 0 if something wrong, 1 if everything ok */
+/**
+ * Get the difference of performance counter cycles of the given event and the
+ * previous event (possibly with filtering).
+ *
+ * \param      pos    Position of the even in the tracebuffer. 0 represents
+ *                    the last event, 1 represents the penultimate event, etc.
+ *                    The current filtering setting is taken into account.
+ * \param      index  Performance counter index. 0 represents the first
+ *                    counter, 1 represents the second counter.
+ * \param[out] delta  Difference in performance counter cycles.
+ *
+ * \retval false  Something went wrong.
+ * \retval true   Everything is OK.
+ */
 PUBLIC static
 bool
-Jdb_tbuf::diff_pmc(size_t idx, unsigned nr, Signed32 *delta)
+Jdb_tbuf::diff_pmc(size_t pos, unsigned index, Signed32 *delta)
 {
-  Tb_entry *e      = lookup(idx);
-  Tb_entry *e_prev = lookup(idx + 1);
-
-  if (!e || !e_prev)
+  Tb_entry *entry = lookup(pos);
+  if (!entry)
     return false;
 
-  switch (nr)
+  Tb_entry *prev = lookup(pos + 1);
+  if (!prev)
+    return false;
+
+  switch (index)
     {
-    case 0: *delta = e->pmc1() - e_prev->pmc1(); break;
-    case 1: *delta = e->pmc2() - e_prev->pmc2(); break;
+    case 0:
+      *delta = entry->pmc1() - prev->pmc1();
+      break;
+    case 1:
+      *delta = entry->pmc2() - prev->pmc2();
+      break;
     }
 
   return true;
@@ -404,10 +521,10 @@ Jdb_tbuf::diff_pmc(size_t idx, unsigned nr, Signed32 *delta)
 
 PUBLIC static inline
 void
-Jdb_tbuf::enable_filter()
-{ _filter_enabled = true; }
+Jdb_tbuf::hide_hidden()
+{ _filter_hidden = true; }
 
 PUBLIC static inline
 void
-Jdb_tbuf::disable_filter()
-{ _filter_enabled = false; }
+Jdb_tbuf::show_hidden()
+{ _filter_hidden = false; }

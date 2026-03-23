@@ -5,7 +5,7 @@ INTERFACE:
 class Jdb_tbuf_init : public Jdb_tbuf
 {
   static size_t max_size();
-  static size_t allocate(size_t size);
+  static size_t allocate(size_t entries);
 
   static bool _init_done;
 
@@ -37,43 +37,49 @@ void Jdb_tbuf_init::init()
 {
   if (!_init_done)
     {
-      _init_done = true;
-
       size_t want_entries = Config::tbuf_entries;
 
       if (Koptions::o()->opt(Koptions::F_tbuf_entries))
         want_entries = Koptions::o()->tbuf_entries;
 
-      static_assert((sizeof(Tb_entry_union) & (sizeof(Tb_entry_union) - 1)) == 0,
-                    "Tb_entry_size must be a power of two");
+      // The count of slots must be a power of 2 for performance reasons and
+      // also because the slot index is determined by a modulo of the count
+      // (i.e. binary anding it with count - 1).
+      //
+      // We use a sane upper limit which fits into 2 GiB. The max_size() method
+      // also limits the buffer to the available window in the virtual memory
+      // layout.
 
-      // Must be a power of 2 for performance reasons and because the buffer
-      // pointer is determined by binary AND of size-1. Also use a sane upper
-      // limit which fits into 4 GiB. The allocate function limits the buffer to
-      // the available window in the virtual memory layout.
-      size_t n;
-      for (n = Config::PAGE_SIZE / sizeof(Tb_entry_union);
-           n < want_entries && n < max_size() / sizeof(Tb_entry_union);
-           n <<= 1)
-        ;
+      size_t entries = capacity(Config::PAGE_SIZE);
+      size_t max_entries = capacity(max_size());
 
-      if (n < want_entries)
-        panic("Cannot allocate more than %zu entries for tracebuffer.", n);
+      while (entries < want_entries && entries < max_entries)
+        entries <<= 1;
 
-      size_t size = n * sizeof(Tb_entry_union);
-      size_t got = allocate(size);
-      if (got < size)
-        panic("Could not allocate trace buffer memory entries=%zu: got %zu/%zu KiB.",
-              n, got >> 10, size >> 10);
+      if (entries < want_entries)
+        panic("Cannot allocate more than %zu entries for tracebuffer.",
+              entries);
 
-      status()->scaler_tsc_to_ns = Cpu::boot_cpu()->get_scaler_tsc_to_ns();
-      status()->scaler_tsc_to_us = Cpu::boot_cpu()->get_scaler_tsc_to_us();
-      status()->scaler_ns_to_tsc = Cpu::boot_cpu()->get_scaler_ns_to_tsc();
+      size_t got_entries = allocate(entries);
+      if (got_entries < entries)
+        panic("Cannot allocate %zu entries for tracebuffer. Got %zu entries.",
+              entries, got_entries);
 
-      _max_entries = n;
-      _size        = size;
+      _capacity = entries;
+      _mask = entries - 1;
+      _filter_hidden = false;
+
+      _status->version = Tracebuffer_version;
+      _status->alignment = Config::stable_cache_alignment;
+      _status->mask = _mask;
+      _status->tail = Nil;
+
+      _status->scaler_tsc_to_ns = Cpu::boot_cpu()->get_scaler_tsc_to_ns();
+      _status->scaler_tsc_to_us = Cpu::boot_cpu()->get_scaler_tsc_to_us();
+      _status->scaler_ns_to_tsc = Cpu::boot_cpu()->get_scaler_ns_to_tsc();
 
       clear_tbuf();
+      _init_done = true;
     }
 }
 
@@ -90,28 +96,30 @@ Jdb_tbuf_init::max_size()
 
 IMPLEMENT_DEFAULT FIASCO_INIT
 size_t
-Jdb_tbuf_init::allocate(size_t size)
+Jdb_tbuf_init::allocate(size_t entries)
 {
-  assert(Pg::aligned(size));
+  size_t alloc = size(entries);
+  assert(Pg::aligned(alloc));
 
-  if (size > max_size())
-    return max_size();
+  if (alloc > max_size())
+    return capacity(max_size());
 
-  _status =
-    reinterpret_cast<Tracebuffer_status *>(Mem_layout::Tbuf_status_page);
-  if (!Vmem_alloc::page_alloc(static_cast<void*>(status()),
-                              Vmem_alloc::ZERO_FILL))
-    panic("jdb_tbuf: alloc status page at %p failed",
+  _status
+    = reinterpret_cast<Tracebuffer_status *>(Mem_layout::Tbuf_status_page);
+  _slots = reinterpret_cast<Tracebuffer_slot *>(Mem_layout::Tbuf_buffer_area);
+
+  if (!Vmem_alloc::page_alloc(_status, Vmem_alloc::ZERO_FILL))
+    panic("jdb_tbuf: Allocation of tracebuffer status page at %p failed",
           static_cast<void *>(_status));
 
-  _buffer = reinterpret_cast<Tb_entry_union *>(Mem_layout::Tbuf_buffer_area);
-  Address va = reinterpret_cast<Address>(buffer());
-  for (size_t i = 0; i < Pg::count(size); ++i, va += Config::PAGE_SIZE)
-    if (!Vmem_alloc::page_alloc(reinterpret_cast<void *>(va),
-                                Vmem_alloc::NO_ZERO_FILL))
-      return Pg::size(i);
+  for (size_t i = 0; i < Pg::count(alloc); ++i)
+    {
+      auto ptr = offset_cast<void *>(_slots, Pg::size(i));
+      if (!Vmem_alloc::page_alloc(ptr, Vmem_alloc::ZERO_FILL))
+        return capacity(Pg::size(i));
+    }
 
-  return size;
+  return entries;
 }
 
 // --------------------------------------------------------------------------
@@ -122,21 +130,25 @@ IMPLEMENTATION [!mmu]:
 IMPLEMENT_DEFAULT FIASCO_INIT
 size_t
 Jdb_tbuf_init::max_size()
-{ return ~size_t{0U}; }
+{ return size_t{2U} << 30; }
 
 IMPLEMENT_DEFAULT FIASCO_INIT
 size_t
-Jdb_tbuf_init::allocate(size_t size)
+Jdb_tbuf_init::allocate(size_t entries)
 {
-  static Tracebuffer_status _tb_status;
-  _status = &_tb_status;
+  size_t alloc = size(entries);
+  if (alloc > max_size())
+    return capacity(max_size());
 
-  _buffer = reinterpret_cast<Tb_entry_union *>(Kmem_alloc::allocator()
-                                                ->alloc(Bytes(size)));
-  if (!_buffer)
+  static Tracebuffer_status status;
+  _status = &status;
+
+  _slots = reinterpret_cast<Tracebuffer_slot *>(Kmem_alloc::allocator()
+                                                ->alloc(Bytes(alloc)));
+  if (!_slots)
     return 0;
 
-  memset(_buffer, 0, size);
-
-  return size;
+  memset(_status, 0, sizeof(status));
+  memset(_slots, 0, alloc);
+  return entries;
 }

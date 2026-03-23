@@ -16,18 +16,18 @@ extern "C" void sys_ipc_log_wrapper(void);
 IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
 {
   Thread *curr = current_thread();
-  Entry_frame   *regs      = curr->regs();
-  Syscall_frame *ipc_regs  = regs->syscall_frame();
+  Entry_frame *regs = curr->regs();
+  Syscall_frame *ipc_regs = regs->syscall_frame();
 
-  Mword entry_event_num    = static_cast<Mword>(-1);
-  Unsigned8 have_snd       = ipc_regs->ref().op() & L4_obj_ref::Ipc_send;
+  Tb_sequence entry_event_num = Jdb_tbuf::Nil;
+  Unsigned8 have_snd = ipc_regs->ref().op() & L4_obj_ref::Ipc_send;
   Utcb *utcb = curr->utcb().access(true);
   Task *curr_task = static_cast<Task*>(curr->space());
   int do_log = Jdb_ipc_trace::log()
-               && Jdb_ipc_trace::check_restriction(curr->dbg_id(),
-                                                   curr_task->dbg_id(),
-                                                   ipc_regs, 0)
-               && ipc_regs->tag().proto() != L4_msg_tag::Label_debugger;
+                 && Jdb_ipc_trace::check_restriction(curr->dbg_id(),
+                                                     curr_task->dbg_id(),
+                                                     ipc_regs, 0)
+                 && ipc_regs->tag().proto() != L4_msg_tag::Label_debugger;
 
   if (do_log)
     {
@@ -45,22 +45,24 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
             dbg_id = ~0UL;
         }
 
-      Tb_entry_ipc _local;
+      Tb_entry_ipc local;
+      Tb_sequence seq = Jdb_tbuf::Nil;
+
       Tb_entry_ipc *tb;
       if (Jdb_ipc_trace::log_buf()) [[likely]]
-        tb = Jdb_tbuf::new_entry<Tb_entry_ipc>();
+        tb = Jdb_tbuf::next_entry<Tb_entry_ipc>(seq);
       else
-        tb = &_local;
+        tb = &local;
 
-      tb->set(curr, regs->ip_syscall_user(), ipc_regs, utcb,
-              dbg_id, curr->sched_context()->left());
+      tb->set(curr, regs->ip_syscall_user(), ipc_regs, utcb, dbg_id,
+              curr->sched_context()->left());
 
       if (Jdb_ipc_trace::log_buf()) [[likely]]
-        Jdb_tbuf::commit_entry(tb);
+        Jdb_tbuf::commit_entry(tb, seq);
       else
         Jdb_tbuf::direct_log_entry(tb, "IPC");
 
-      entry_event_num = tb->number();
+      entry_event_num = seq;
     }
 
 
@@ -69,18 +71,20 @@ IMPLEMENT void FIASCO_FLATTEN sys_ipc_log_wrapper()
 
   if (Jdb_ipc_trace::log() && Jdb_ipc_trace::log_result() && do_log)
     {
-      Tb_entry_ipc_res _local;
+      Tb_entry_ipc_res local;
+      Tb_sequence seq = Jdb_tbuf::Nil;
+
       Tb_entry_ipc_res *tb;
       if (Jdb_ipc_trace::log_buf()) [[likely]]
-        tb = Jdb_tbuf::new_entry<Tb_entry_ipc_res>();
+        tb = Jdb_tbuf::next_entry<Tb_entry_ipc_res>(seq);
       else
-        tb = &_local;
+        tb = &local;
 
-      tb->set(curr, regs->ip_syscall_user(), ipc_regs, utcb, utcb->error.raw(),
-              entry_event_num, have_snd, false);
+      tb->set(curr, regs->ip_syscall_user(), ipc_regs, utcb,
+              utcb->error.raw(), entry_event_num, have_snd, false);
 
       if (Jdb_ipc_trace::log_buf()) [[likely]]
-        Jdb_tbuf::commit_entry(tb);
+        Jdb_tbuf::commit_entry(tb, seq);
       else
         Jdb_tbuf::direct_log_entry(tb, "IPC result");
     }

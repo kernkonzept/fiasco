@@ -17,19 +17,24 @@ Jdb_tbuf_init::max_size()
 
 IMPLEMENT_OVERRIDE FIASCO_INIT
 size_t
-Jdb_tbuf_init::allocate(size_t size)
+Jdb_tbuf_init::allocate(size_t entries)
 {
+  size_t alloc = size(entries);
+  if (alloc > max_size())
+    return capacity(max_size());
+
   _status =
     static_cast<Tracebuffer_status *>(
       Kmem_alloc::allocator()->alloc(Bytes(sizeof(Tracebuffer_status))));
   if (!_status)
+    panic("jdb_tbuf: Allocation of tracebuffer status page failed");
+
+  _slots = reinterpret_cast<Tracebuffer_slot *>(Kmem_alloc::allocator()
+                                                ->alloc(Bytes(alloc)));
+  if (!_slots)
     return 0;
 
-  _buffer =
-    static_cast<Tb_entry_union *>(Kmem_alloc::allocator()->alloc(Bytes(size)));
-
-  if (!_buffer)
-    return 0;
-
-  return size;
+  memset(_status, 0, sizeof(Tracebuffer_status));
+  memset(_slots, 0, alloc);
+  return entries;
 }

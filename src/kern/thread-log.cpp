@@ -23,17 +23,19 @@ Thread::page_fault_log(Address pfa, unsigned error_code, unsigned long eip)
     {
       auto guard = lock_guard(cpu_lock);
 
-      Tb_entry_pf _local;
+      Tb_entry_pf local;
+      Tb_sequence seq = Jdb_tbuf::Nil;
+
       Tb_entry_pf *tb;
       if (Jdb_pf_trace::log_buf()) [[likely]]
-        tb = Jdb_tbuf::new_entry<Tb_entry_pf>();
+        tb = Jdb_tbuf::next_entry<Tb_entry_pf>(seq);
       else
-        tb = &_local;
+        tb = &local;
 
       tb->set(this, eip, pfa, error_code, current()->space());
 
       if (Jdb_pf_trace::log_buf()) [[likely]]
-        Jdb_tbuf::commit_entry(tb);
+        Jdb_tbuf::commit_entry(tb, seq);
       else
         Jdb_tbuf::direct_log_entry(tb, "PF");
     }

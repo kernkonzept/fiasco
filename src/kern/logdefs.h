@@ -42,10 +42,11 @@
   BEGIN_LOG_EVENT(name, sc, fmt)                                        \
     if (cond)                                                           \
       {                                                                 \
-        fmt *l = Jdb_tbuf::new_entry<fmt>();                            \
+        Tb_sequence seq;                                                \
+        auto *l = Jdb_tbuf::next_entry<fmt>(seq);                       \
         l->set_global(__do_log__, ctx, Proc::program_counter());        \
         {__VA_ARGS__;}                                                  \
-        Jdb_tbuf::commit_entry(l);                                      \
+        Jdb_tbuf::commit_entry(l, seq);                                 \
       }                                                                 \
   END_LOG_EVENT
 
@@ -99,10 +100,11 @@
  */
 #define LOG_MSG(context, text)                                          \
   do {                                                                  \
-    Tb_entry_ke *tb = Jdb_tbuf::new_entry<Tb_entry_ke>();               \
+    Tb_sequence seq;                                                    \
+    auto *tb = Jdb_tbuf::next_entry<Tb_entry_ke>(seq);                  \
     tb->set(context, Proc::program_counter());                          \
     tb->msg.set_const(text);                                            \
-    Jdb_tbuf::commit_entry(tb);                                         \
+    Jdb_tbuf::commit_entry(tb, seq);                                    \
   } while (0)
 
 /*
@@ -110,11 +112,12 @@
  */
 #define LOG_MSG_3VAL(context, text, v1, v2, v3)                         \
   do {                                                                  \
-    Tb_entry_ke_reg *tb = Jdb_tbuf::new_entry<Tb_entry_ke_reg>();       \
+    Tb_sequence seq;                                                    \
+    auto *tb = Jdb_tbuf::new_entry<Tb_entry_ke_reg>(seq);               \
     tb->set(context, Proc::program_counter());                          \
     tb->v[0] = v1; tb->v[1] = v2; tb->v[2] = v3;                        \
     tb->msg.set_const(text);                                            \
-    Jdb_tbuf::commit_entry(tb);                                         \
+    Jdb_tbuf::commit_entry(tb, seq);                                    \
   } while (0)
 
 #endif // !CONFIG_JDB
