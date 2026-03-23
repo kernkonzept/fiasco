@@ -638,7 +638,7 @@ Task::create(Ram_quota *q,
   if (!v->initialize()) [[unlikely]]
     return nullptr;
 
-  if (MUST_SYNC_KERNEL && (v->sync_kernel() < 0))
+  if (MUST_SYNC_KERNEL && (v->sync_kernel() == Ptab::Sync_result::Allocation_failed))
     return nullptr;
 
   if (UTCB_AREA_MR >= 2)

@@ -1,11 +1,11 @@
 IMPLEMENTATION [arm]:
 
 PROTECTED inline NEEDS["kmem_alloc.h"]
-int
+Ptab::Sync_result
 Mem_space::sync_kernel()
 {
   // FIXME: add syscall page etc... if needed
-  return 0;
+  return Ptab::Sync_result::OK;
 }
 
 //----------------------------------------------------------------------------

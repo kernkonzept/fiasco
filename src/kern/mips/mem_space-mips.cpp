@@ -366,7 +366,8 @@ Mem_space::~Mem_space()
     }
 }
 
-PROTECTED inline int Mem_space::sync_kernel() { return 0; }
+PROTECTED inline Ptab::Sync_result Mem_space::sync_kernel()
+{ return Ptab::Sync_result::OK; }
 
 
 PUBLIC static inline

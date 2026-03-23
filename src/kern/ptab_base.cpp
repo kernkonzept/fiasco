@@ -159,6 +159,7 @@ namespace Ptab
     }
   };
 
+  enum class Sync_result { OK, Allocation_failed, Entry_changed };
 
   template< typename _Last, typename PTE_PTR, int DEPTH = 0 >
   class Walk
@@ -241,8 +242,9 @@ namespace Ptab
     {}
 
     template< typename _Alloc, typename MEM >
-    int sync(Address &l_addr, This const &_r, Address &r_addr,
-             Address &size, unsigned, bool force_write_back, _Alloc &&, MEM &&)
+    Sync_result sync(Address &l_addr, This const &_r, Address &r_addr,
+                     Address &size, unsigned, bool force_write_back, _Alloc &&,
+                     MEM &&)
     {
       unsigned count = size >> Traits::Shift;
       unsigned const l = Vec::idx(l_addr);
@@ -255,12 +257,12 @@ namespace Ptab
       Entry *le = &_e[l];
       Entry const *re = &_r._e[r];
 
-      bool need_flush = false;
+      Sync_result result = Sync_result::OK;
 
       for (unsigned n = count; n > 0; --n)
 	{
 	  if (PTE_PTR(&le[n - 1], Depth).is_valid())
-	    need_flush = true;
+	    result = Sync_result::Entry_changed;
 
           /* This loop seems unnecessary, but remote_update is also used for
            * updating the long IPC window.
@@ -296,7 +298,7 @@ namespace Ptab
       l_addr += static_cast<unsigned long>(count) << Traits::Shift;
       r_addr += static_cast<unsigned long>(count) << Traits::Shift;
       size -= static_cast<unsigned long>(count) << Traits::Shift;
-      return need_flush;
+      return result;
     }
   };
 
@@ -476,9 +478,9 @@ namespace Ptab
     }
 
     template< typename _Alloc, typename MEM >
-    int sync(Address &l_a, This2 const &_r, Address &r_a,
-             Address &size, unsigned level, bool force_write_back,
-             _Alloc &&alloc, MEM &&mem)
+    Sync_result sync(Address &l_a, This2 const &_r, Address &r_a,
+                     Address &size, unsigned level, bool force_write_back,
+                     _Alloc &&alloc, MEM &&mem)
     {
       if (!level)
         return reinterpret_cast<This*>(this)
@@ -495,7 +497,7 @@ namespace Ptab
             count = Vec::Length - mx;
         }
 
-      bool need_flush = false;
+      Sync_result result = Sync_result::OK;
 
       for (unsigned i = count; size && i > 0; --i) //while (size)
         {
@@ -517,22 +519,23 @@ namespace Ptab
           if (!l.is_valid())
             {
               if (!alloc.valid() || !(n = alloc_next(l, alloc, force_write_back)))
-                return -1;
+                return Sync_result::Allocation_failed;
             }
           else
             n = reinterpret_cast<Next*>(mem.phys_to_pmem(l.next_level()));
 
           Next *rn = reinterpret_cast<Next*>(mem.phys_to_pmem(r.next_level()));
 
-          int err = n->sync(l_a, *rn, r_a, size, level - 1, force_write_back, alloc, mem);
-          if (err > 0)
-            need_flush = true;
+          Sync_result sr = n->sync(l_a, *rn, r_a, size, level - 1,
+                                   force_write_back, alloc, mem);
+          if (sr == Sync_result::Entry_changed)
+            result = Sync_result::Entry_changed;
 
-          if (err < 0)
-            return err;
+          if (sr == Sync_result::Allocation_failed)
+            return sr;
         }
 
-      return need_flush;
+      return result;
     }
 
   };
@@ -730,13 +733,13 @@ namespace Ptab
      * \param size The size of the range to sync.
      * \param level The level to sync at.
      *
-     * \retval -1 if page table allocation failed.
-     * \retval  1 if a previously valid page table entry was changed
-     *            during sync.
-     * \retval  0 otherwise
+     * \retval Sync_result::Allocation_failed if page table allocation failed.
+     * \retval Sync_result::Entry_changed     if a previously valid page table
+     *                                        entry was changed during sync.
+     * \retval Sync_result::OK                otherwise
      */
     template< typename OPTE_PTR, typename _Alloc = Null_alloc, typename MEM = MEM_DFLT >
-    int sync(Va l_addr, Base<OPTE_PTR, _Traits, _Addr, MEM_DFLT> const *_r,
+    Sync_result sync(Va l_addr, Base<OPTE_PTR, _Traits, _Addr, MEM_DFLT> const *_r,
              Va r_addr, Vs size, unsigned level = Depth,
              bool force_write_back = false,
              _Alloc &&alloc = _Alloc(), MEM &&mem = MEM())

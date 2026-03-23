@@ -110,7 +110,7 @@ Mem_space::make_current(Switchin_flags)
 
 
 PROTECTED inline NEEDS[<cstdio>]
-int
+Ptab::Sync_result
 Mem_space::sync_kernel()
 {
   printf("%s checkme\n", __func__);

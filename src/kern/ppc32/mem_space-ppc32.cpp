@@ -97,9 +97,9 @@ Mem_space::initialize()
 }
 
 PROTECTED inline
-int
+Ptab::Sync_result
 Mem_space::sync_kernel()
-{ return 0; }
+{ return Ptab::Sync_result::OK; }
 
 PUBLIC
 Mem_space::Mem_space(Ram_quota *q, Dir_type* pdir)

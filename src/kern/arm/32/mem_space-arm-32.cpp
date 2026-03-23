@@ -1,17 +1,17 @@
 IMPLEMENTATION [arm && !mmu]:
 
 PROTECTED inline
-int
+Ptab::Sync_result
 Mem_space::sync_kernel()
 {
-  return 0;
+  return Ptab::Sync_result::OK;
 }
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 PROTECTED inline NEEDS["kmem_alloc.h"]
-int
+Ptab::Sync_result
 Mem_space::sync_kernel()
 {
   return _dir->sync(Virt_addr(Mem_layout::user_max() + 1), kernel_space()->_dir,
@@ -35,13 +35,13 @@ Mem_space::set_syscall_page(void *p)
 }
 
 PROTECTED
-int
+Ptab::Sync_result
 Mem_space::sync_kernel()
 {
   auto pte = _dir->walk(Virt_addr(Mem_layout::Kern_lib_base),
       Pdir::Depth, true, Kmem_alloc::q_allocator(ram_quota()));
   if (pte.level < Pdir::Depth - 1)
-    return -1;
+    return Ptab::Sync_result::Allocation_failed;
 
   extern char kern_lib_start[];
 
@@ -54,14 +54,14 @@ Mem_space::sync_kernel()
       Pdir::Depth, true, Kmem_alloc::q_allocator(ram_quota()));
 
   if (pte.level < Pdir::Depth - 1)
-    return -1;
+    return Ptab::Sync_result::Allocation_failed;
 
   pte.set_page(Phys_mem_addr(__mem_space_syscall_page),
                Page::Attr::space_local(Page::Rights::URX()));
 
   pte.write_back_if(true, c_asid());
 
-  return 0;
+  return Ptab::Sync_result::OK;
 }
 
 IMPLEMENT_OVERRIDE inline NEEDS["mem_layout.h"]

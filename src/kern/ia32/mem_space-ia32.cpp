@@ -457,10 +457,10 @@ Mem_space::prepare_pt_switch()
 
 
 PROTECTED inline
-int
+Ptab::Sync_result
 Mem_space::sync_kernel()
 {
-  return 0;
+  return Ptab::Sync_result::OK;
 }
 
 // --------------------------------------------------------------------
@@ -480,7 +480,7 @@ Mem_space::switch_page_table(Switchin_flags)
 }
 
 PROTECTED inline
-int
+Ptab::Sync_result
 Mem_space::sync_kernel()
 {
   return _dir->sync(Virt_addr(Mem_layout::user_max() + 1), Kmem::dir(),

@@ -184,7 +184,7 @@ Mem_space::virt_to_phys(Address virt) const
 }
 
 PROTECTED inline
-int
+Ptab::Sync_result
 Mem_space::sync_kernel()
 {
   Virt_addr kernel_base(
