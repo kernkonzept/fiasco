@@ -11,13 +11,13 @@ IMPLEMENTATION [mips]:
 #include "jdb_ktrace.h"
 
 IMPLEMENT_OVERRIDE FIASCO_INIT
-unsigned
+size_t
 Jdb_tbuf_init::max_size()
 { return 2 << 20; }
 
 IMPLEMENT_OVERRIDE FIASCO_INIT
-unsigned
-Jdb_tbuf_init::allocate(unsigned size)
+size_t
+Jdb_tbuf_init::allocate(size_t size)
 {
   _status =
     static_cast<Tracebuffer_status *>(

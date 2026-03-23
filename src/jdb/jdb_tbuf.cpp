@@ -22,17 +22,27 @@ public:
     Result = 2
   };
 
+  enum : Tb_sequence
+  {
+    Nil = ~Tb_sequence{0U}
+  };
+
+  enum : size_t
+  {
+    Hidden = ~size_t{0U} - 1,
+    Not_found = ~size_t{0U}
+  };
+
 protected:
-  static Mword		_max_entries;	// maximum number of entries
-  static Mword          _filter_enabled;// !=0 if filter is active
-  static Mword		_number;	// current event number
-  static Address        _size;		// size of memory area for tbuffer
+  static size_t _max_entries;   //< Number of entries.
+  static bool _filter_enabled;  //< True if filter is active.
+  static Tb_sequence _number;   //< Current event number.
+  static size_t _size;          //< Size of memory area for tracebuffer
   static Tracebuffer_status *_status;
   static Tb_entry_union *_buffer;
 };
 
 #ifdef CONFIG_JDB_LOGGING
-
 
 #define END_LOG_EVENT						\
 	}							\
@@ -59,18 +69,17 @@ IMPLEMENTATION:
 #include "mem.h"
 #include "std_macros.h"
 
-// read only: initialized at boot
+// Read only (initialized at boot).
 Tracebuffer_status *Jdb_tbuf::_status;
 Tb_entry_union *Jdb_tbuf::_buffer;
-Address Jdb_tbuf::_size;
-Mword Jdb_tbuf::_max_entries;
+size_t Jdb_tbuf::_size;
+size_t Jdb_tbuf::_max_entries;
 
-// read mostly (only modified in JDB)
-Mword Jdb_tbuf::_filter_enabled;
+// Read mostly (only modified in JDB).
+bool Jdb_tbuf::_filter_enabled;
 
-// modified often (for each new entry)
-Mword Jdb_tbuf::_number;
-
+// Modified often (for each new entry).
+Tb_sequence Jdb_tbuf::_number;
 
 static void direct_log_dummy(Tb_entry *, const char *)
 {}
@@ -79,16 +88,14 @@ void (*Jdb_tbuf::direct_log_entry)(Tb_entry *, const char *) = &direct_log_dummy
 
 PUBLIC static inline Tracebuffer_status *Jdb_tbuf::status() { return _status; }
 PROTECTED static inline Tb_entry_union *Jdb_tbuf::buffer() { return _buffer; }
-PUBLIC static inline Address Jdb_tbuf::size() { return _size; }
+PUBLIC static inline size_t Jdb_tbuf::size() { return _size; }
 
 /** Clear tracebuffer. */
 PUBLIC static
 void
 Jdb_tbuf::clear_tbuf()
 {
-  Mword i;
-
-  for (i = 0; i < _max_entries; i++)
+  for (size_t i = 0; i < _max_entries; ++i)
     buffer()[i].clear();
 
   _number = 0;
@@ -99,7 +106,7 @@ PUBLIC static
 Tb_entry *
 Jdb_tbuf::new_entry()
 {
-  Mword n;
+  Tb_sequence n;
   // use atomic_add() when available!
   do
     n = access_once(&_number);
@@ -141,22 +148,21 @@ Jdb_tbuf::commit_entry(Tb_entry *tb)
 /** Return number of entries currently allocated in tracebuffer.
  * @return number of entries */
 PUBLIC static inline
-Mword
+size_t
 Jdb_tbuf::unfiltered_entries()
 {
   return _number > _max_entries ? _max_entries : _number;
 }
 
 PUBLIC static
-Mword
+size_t
 Jdb_tbuf::entries()
 {
   if (!_filter_enabled)
     return unfiltered_entries();
 
-  Mword cnt = 0;
-
-  for (Mword idx = 0; idx<unfiltered_entries(); idx++)
+  size_t cnt = 0;
+  for (size_t idx = 0; idx < unfiltered_entries(); idx++)
     if (!buffer()[idx].is_hidden())
       cnt++;
 
@@ -166,7 +172,7 @@ Jdb_tbuf::entries()
 /** Return maximum number of entries in tracebuffer.
  * @return number of entries */
 PUBLIC static inline
-Mword
+size_t
 Jdb_tbuf::max_entries()
 {
   return _max_entries;
@@ -176,8 +182,8 @@ Jdb_tbuf::max_entries()
  * @param idx position of event in tracebuffer
  * @return 0 if not valid, 1 if valid */
 PUBLIC static inline
-int
-Jdb_tbuf::event_valid(Mword idx)
+bool
+Jdb_tbuf::event_valid(size_t idx)
 {
   return idx < unfiltered_entries();
 }
@@ -191,7 +197,7 @@ Jdb_tbuf::event_valid(Mword idx)
  * event with idx == 1 is the event before */
 PUBLIC static
 Tb_entry *
-Jdb_tbuf::unfiltered_lookup(Mword idx)
+Jdb_tbuf::unfiltered_lookup(size_t idx)
 {
   if (!event_valid(idx))
     return nullptr;
@@ -209,12 +215,12 @@ Jdb_tbuf::unfiltered_lookup(Mword idx)
  * event with idx == 1 is the event before */
 PUBLIC static
 Tb_entry *
-Jdb_tbuf::lookup(Mword look_idx)
+Jdb_tbuf::lookup(size_t look_idx)
 {
   if (!_filter_enabled)
     return unfiltered_lookup(look_idx);
 
-  for (Mword idx = 0;; idx++)
+  for (size_t idx = 0;; idx++)
     {
       Tb_entry *e = unfiltered_lookup(idx);
 
@@ -228,7 +234,7 @@ Jdb_tbuf::lookup(Mword look_idx)
 }
 
 PUBLIC static
-Mword
+size_t
 Jdb_tbuf::unfiltered_idx(Tb_entry const *e)
 {
   auto *ef = static_cast<Tb_entry_union const *>(e);
@@ -237,7 +243,7 @@ Jdb_tbuf::unfiltered_idx(Tb_entry const *e)
 
 /** Tb_entry => tracebuffer index. */
 PUBLIC static
-Mword
+size_t
 Jdb_tbuf::idx(Tb_entry const *e)
 {
   if (!_filter_enabled)
@@ -245,7 +251,7 @@ Jdb_tbuf::idx(Tb_entry const *e)
 
   Tb_entry_union const *ef_next = buffer() + (_number & (_max_entries - 1));
   Tb_entry_union const *ef = static_cast<Tb_entry_union const*>(e);
-  Mword idx = static_cast<Mword>(-1);
+  size_t idx = Not_found;
 
   for (;;)
     {
@@ -264,11 +270,11 @@ Jdb_tbuf::idx(Tb_entry const *e)
 /** Event number => Tb_entry. */
 PUBLIC static inline
 Tb_entry *
-Jdb_tbuf::search(Mword nr)
+Jdb_tbuf::search(size_t nr)
 {
   Tb_entry *e;
 
-  for (Mword idx = 0; (e = unfiltered_lookup(idx)); idx++)
+  for (size_t idx = 0; (e = unfiltered_lookup(idx)); idx++)
     if (e->number() == nr)
       return e;
 
@@ -281,11 +287,11 @@ Jdb_tbuf::search(Mword nr)
  *         -1 if there is no event with this number or
  *         -2 if the event is currently hidden. */
 PUBLIC static
-Mword
-Jdb_tbuf::search_to_idx(Mword nr)
+size_t
+Jdb_tbuf::search_to_idx(Tb_sequence nr)
 {
-  if (nr == static_cast<Mword>(-1))
-    return static_cast<Mword>(-1);
+  if (nr == Nil)
+    return Not_found;
 
   Tb_entry *e;
 
@@ -293,20 +299,21 @@ Jdb_tbuf::search_to_idx(Mword nr)
     {
       e = search(nr);
       if (!e)
-        return static_cast<Mword>(-1);
+        return Not_found;
+
       return unfiltered_idx(e);
     }
 
-  for (Mword idx_u = 0, idx_f = 0; (e = unfiltered_lookup(idx_u)); idx_u++)
+  for (size_t idx_u = 0, idx_f = 0; (e = unfiltered_lookup(idx_u)); idx_u++)
     {
       if (e->number() == nr)
-        return e->is_hidden() ? static_cast<Mword>(-2) : idx_f;
+        return e->is_hidden() ? Hidden : idx_f;
 
       if (!e->is_hidden())
         idx_f++;
     }
 
-  return static_cast<Mword>(-1);
+  return Not_found;
 }
 
 /** Return some information about log event.
@@ -320,10 +327,10 @@ Jdb_tbuf::search_to_idx(Mword nr)
  * @param[out] committed  false: event not yet committed
  * @return 0 if something wrong, 1 if everything OK */
 PUBLIC static
-int
-Jdb_tbuf::event(Mword idx, Mword *number, Unsigned32 *kclock,
-		Unsigned64 *tsc, Unsigned32 *pmc1, Unsigned32 *pmc2,
-		bool *committed = nullptr)
+bool
+Jdb_tbuf::event(size_t idx, Tb_sequence *number, Unsigned32 *kclock,
+                Unsigned64 *tsc, Unsigned32 *pmc1, Unsigned32 *pmc2,
+                bool *committed = nullptr)
 {
   Tb_entry *e = lookup(idx);
 
@@ -341,6 +348,7 @@ Jdb_tbuf::event(Mword idx, Mword *number, Unsigned32 *kclock,
     *pmc2 = e->pmc2();
   if (committed)
     *committed = (e->number() < _number);
+
   return true;
 }
 
@@ -349,8 +357,8 @@ Jdb_tbuf::event(Mword idx, Mword *number, Unsigned32 *kclock,
  * @retval difference in CPU cycles
  * @return 0 if something wrong, 1 if everything ok */
 PUBLIC static
-int
-Jdb_tbuf::diff_tsc(Mword idx, Signed64 *delta)
+bool
+Jdb_tbuf::diff_tsc(size_t idx, Signed64 *delta)
 {
   Tb_entry *e      = lookup(idx);
   Tb_entry *e_prev;
@@ -376,8 +384,8 @@ Jdb_tbuf::diff_tsc(Mword idx, Signed64 *delta)
  * @retval difference in perfcnt cycles
  * @return 0 if something wrong, 1 if everything ok */
 PUBLIC static
-int
-Jdb_tbuf::diff_pmc(Mword idx, Mword nr, Signed32 *delta)
+bool
+Jdb_tbuf::diff_pmc(size_t idx, unsigned nr, Signed32 *delta)
 {
   Tb_entry *e      = lookup(idx);
   Tb_entry *e_prev = lookup(idx + 1);
@@ -397,13 +405,9 @@ Jdb_tbuf::diff_pmc(Mword idx, Mword nr, Signed32 *delta)
 PUBLIC static inline
 void
 Jdb_tbuf::enable_filter()
-{
-  _filter_enabled = 1;
-}
+{ _filter_enabled = true; }
 
 PUBLIC static inline
 void
 Jdb_tbuf::disable_filter()
-{
-  _filter_enabled = 0;
-}
+{ _filter_enabled = false; }

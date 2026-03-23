@@ -160,9 +160,9 @@ formatter_default(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidl
 
 PUBLIC static
 void
-Jdb_tbuf_output::print_entry(String_buffer *buf, int e_nr)
+Jdb_tbuf_output::print_entry(String_buffer *buf, size_t pos)
 {
-  Tb_entry *tb = Jdb_tbuf::lookup(e_nr);
+  auto tb = Jdb_tbuf::lookup(pos);
   if (tb)
     print_entry(buf, tb);
 }
@@ -205,7 +205,7 @@ Jdb_tbuf_output::print_entry(String_buffer *buf, Tb_entry *tb)
 
 PUBLIC static
 bool
-Jdb_tbuf_output::set_filter(const char *filter_str, Mword *entries)
+Jdb_tbuf_output::set_filter(const char *filter_str, size_t *entries)
 {
   Jdb_regex regex;
   if (!regex.start(filter_str))
@@ -213,7 +213,7 @@ Jdb_tbuf_output::set_filter(const char *filter_str, Mword *entries)
 
   if (!*filter_str)
     {
-      for (Mword n = 0; n < Jdb_tbuf::unfiltered_entries(); n++)
+      for (size_t n = 0; n < Jdb_tbuf::unfiltered_entries(); ++n)
         Jdb_tbuf::unfiltered_lookup(n)->unhide();
 
       Jdb_tbuf::disable_filter();
@@ -223,10 +223,10 @@ Jdb_tbuf_output::set_filter(const char *filter_str, Mword *entries)
       return true;
     }
 
-  Mword cnt = 0;
-  for (Mword n = 0; n < Jdb_tbuf::unfiltered_entries(); n++)
+  size_t cnt = 0;
+  for (size_t n = 0; n < Jdb_tbuf::unfiltered_entries(); ++n)
     {
-      Tb_entry *e = Jdb_tbuf::unfiltered_lookup(n);
+      auto e = Jdb_tbuf::unfiltered_lookup(n);
       String_buf<200> s;
 
       print_entry(&s, e);

@@ -2,6 +2,8 @@ INTERFACE:
 
 #include "types.h"
 
+using Tb_sequence = Mword;
+
 enum
 {
   Kern_cnt_context_switch    = 0,
