@@ -625,7 +625,7 @@ Sbi::set_timer(Unsigned64 stime_value)
 
 IMPLEMENT inline NEEDS[<cassert>]
 void
-Sbi::send_ipi(Mword hart_mask, Mword hart_mask_base = 0)
+Sbi::send_ipi(Mword hart_mask, [[maybe_unused]] Mword hart_mask_base = 0)
 {
   assert(hart_mask_base == 0);
   Legacy::send_ipi(hart_mask);
