@@ -358,8 +358,8 @@ static inline
 typename SPACE::Attr
 Map_traits<SPACE>::apply_attribs(typename SPACE::Attr attribs,
                                  typename SPACE::Phys_addr &,
-                                 typename SPACE::Attr set_attr)
-{ return attribs.apply(set_attr); }
+                                 typename SPACE::Attr map_attribs)
+{ return attribs.apply(map_attribs); }
 
 
 //-------------------------------------------------------------------------
@@ -413,12 +413,12 @@ static inline
 Obj_space::Attr
 Map_traits<Obj_space>::apply_attribs(Obj_space::Attr attribs,
                                      Obj_space::Phys_addr &a,
-                                     Obj_space::Attr set_attr)
+                                     Obj_space::Attr map_attribs)
 {
-  if (attribs.extra() & ~set_attr.extra())
-    a = a->downgrade(~set_attr.extra());
+  if (attribs.extra() & ~map_attribs.extra())
+    a = a->downgrade(~map_attribs.extra());
 
-  attribs &= set_attr;
+  attribs &= map_attribs;
   return attribs;
 }
 
@@ -508,7 +508,7 @@ map_lookup_src(SPACE* from,
                typename SPACE::Phys_addr *i_phys,
                typename SPACE::Page_order *s_order,
                typename SPACE::Attr *i_attribs,
-               typename SPACE::Attr attribs)
+               typename SPACE::Attr map_attribs)
 {
   using Mt = Map_traits<SPACE>;
   // Sigma0 special case: Sigma0 doesn't need to have a
@@ -522,7 +522,7 @@ map_lookup_src(SPACE* from,
   typename SPACE::V_pfc page_offset = SPACE::subpage_offset(snd_addr, *s_order);
   *i_phys = SPACE::subpage_address(*s_phys, page_offset);
 
-  *i_attribs = Mt::apply_attribs(s_attribs, *i_phys, attribs);
+  *i_attribs = Mt::apply_attribs(s_attribs, *i_phys, map_attribs);
   if (i_attribs->empty()) [[unlikely]]
     return false;
 
@@ -538,7 +538,7 @@ map(MAPDB* mapdb,
     typename SPACE::V_pfc snd_size,
     SPACE* to, Space *to_id,
     typename SPACE::V_pfn rcv_addr,
-    bool grant, typename SPACE::Attr attribs,
+    bool grant, typename SPACE::Attr map_attribs,
     Mu::Auto_tlb_flush<SPACE> &tlb,
     Kobjects_list &reap_list)
 {
@@ -608,7 +608,7 @@ map(MAPDB* mapdb,
       // fully-constructed page table, and it can fabricate mappings
       // for all physical addresses.
       if (!map_lookup_src(from, snd_addr, &s_phys, &i_phys, &s_order,
-                          &i_attribs, attribs)) [[unlikely]]
+                          &i_attribs, map_attribs)) [[unlikely]]
         {
           size = SPACE::to_size(s_order) - SPACE::subpage_offset(snd_addr, s_order);
           if (size >= snd_size)
