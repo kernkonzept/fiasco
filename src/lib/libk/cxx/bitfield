@@ -229,8 +229,26 @@ public:
   {
   public:
     constexpr Value(TT t) : Value_base<TT>(t) {}
-    constexpr operator Bits_type () const { return this->get(); }
-    constexpr Value &operator = (Bits_type val) { this->set(val); return *this; }
+
+    using Access_type = conditional_t<Bits != 1, Bits_type, bool>;
+
+    constexpr operator Access_type () const
+    {
+      if constexpr (Bits == 1)
+        return this->get() != 0;
+      else
+        return this->get();
+    }
+
+    constexpr Value &operator = (Access_type val)
+    {
+      if constexpr (Bits == 1)
+        this->set(static_cast<Bits_type>(val ? 1 : 0));
+      else
+        this->set(val);
+      return *this;
+    }
+
     constexpr Value &operator = (Value const &val)
     { this->set(val.get()); return *this; }
     Value(Value const &) = default;
