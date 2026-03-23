@@ -20,7 +20,6 @@ INTERFACE:
 #define FIASCO_FASTCALL
 #endif
 
-#define MARK_AS_DEPRECATED __attribute__((__deprecated__))
 #define ALWAYS_INLINE      __attribute__((__always_inline__))
 #define FIASCO_NOINLINE    __attribute__((__noinline__))
 
