@@ -17,6 +17,10 @@ eval_impl = $(if $($(1)_IMPL),$($(1)_IMPL),$(1))
 
 include $(objbase)/globalconfig.out
 
+BITS-$(CONFIG_BIT32) = 32
+BITS-$(CONFIG_BIT64) = 64
+BITS = $(BITS-y)
+
 # use patsubst here to prevent confusion of syntax highlighting editors :-)
 CONFIG_XARCH	:= $(patsubst "%",%,$(CONFIG_XARCH))
 CONFIG_ABI	:= $(patsubst "%",%,$(CONFIG_ABI))

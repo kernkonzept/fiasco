@@ -8,9 +8,6 @@ include $(srcdir)/Modules.generic
 PREPROCESS_PARTS += $(CONFIG_XARCH) $(CONFIG_ABI) libuart
 PREPROCESS_PARTS-$(CONFIG_BIT32) += 32bit riscv32
 PREPROCESS_PARTS-$(CONFIG_BIT64) += 64bit riscv64
-BITS-$(CONFIG_BIT32) = 32
-BITS-$(CONFIG_BIT64) = 64
-BITS = $(BITS-y)
 
 PREPROCESS_PARTS-$(CONFIG_MP)     += need_xcpu_tlb_flush
 PREPROCESS_PARTS-$(CONFIG_SERIAL) += force_vkey

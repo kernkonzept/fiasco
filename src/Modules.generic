@@ -127,9 +127,9 @@ ASSRC_CRT0	:= crt0.S
 # DRIVERS Subsystem
 #
 DRIVERS 	:= libdrivers.a libgluedriverslibc.a
-VPATH		+= $(if $(BITS),drivers/$(CONFIG_XARCH)/$(BITS))
+VPATH		+= drivers/$(CONFIG_XARCH)/$(BITS)
 VPATH		+= drivers/$(CONFIG_XARCH) drivers
-PRIVATE_INCDIR	+= $(if $(BITS),drivers/$(CONFIG_XARCH)/$(BITS))
+PRIVATE_INCDIR	+= drivers/$(CONFIG_XARCH)/$(BITS)
 PRIVATE_INCDIR	+= drivers/$(CONFIG_XARCH) drivers
 INTERFACES_DRIVERS := delayloop console filter_console mux_console mem reset \
 		      uart
@@ -157,8 +157,7 @@ endif
 # JABI Subsystem
 #
 JABI		:= libjabi.a
-VPATH		+= $(if $(BITS),jabi/$(CONFIG_XARCH)/$(BITS),)
-VPATH		+= jabi/$(CONFIG_XARCH) jabi
+VPATH		+= jabi/$(CONFIG_XARCH)/$(BITS) jabi/$(CONFIG_XARCH) jabi
 INTERFACES_JABI	:= jdb_ktrace jdb_obj_info
 
 #
@@ -335,9 +334,9 @@ endif
 # LIBK subsystem
 #
 LIBK		:= libk.a
-VPATH          	+= $(if $(BITS),lib/libk/$(CONFIG_XARCH)/$(BITS))
+VPATH          	+= lib/libk/$(CONFIG_XARCH)/$(BITS)
 VPATH		+= lib/libk/$(CONFIG_XARCH) lib/libk
-PRIVATE_INCDIR 	+= $(if $(BITS),lib/libk/$(CONFIG_XARCH)/$(BITS))
+PRIVATE_INCDIR 	+= lib/libk/$(CONFIG_XARCH)/$(BITS)
 PRIVATE_INCDIR	+= lib/libk/$(CONFIG_XARCH) lib/libk
 INTERFACES_LIBK := atomic lock_guard processor std_macros
 CXXSRC_LIBK     += construction.cc
@@ -380,7 +379,7 @@ CXXSRC_TCBOFFSET := tcboffset.cc dump_tcboffsets.cc
 #
 # TYPES subsystem
 #
-PRIVATE_INCDIR += $(if $(BITS),types/$(CONFIG_XARCH)/$(BITS),)
+PRIVATE_INCDIR += types/$(CONFIG_XARCH)/$(BITS)
 PRIVATE_INCDIR += types/$(CONFIG_XARCH) types
 
 #

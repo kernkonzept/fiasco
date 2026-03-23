@@ -1,8 +1,5 @@
 # -*- makefile -*-
 # vi:se ft=make:
-BITS-$(CONFIG_BIT32) = 32
-BITS-$(CONFIG_BIT64) = 64
-BITS = $(BITS-y)
 
 CROSS_COMPILE             ?= riscv64-linux-gnu-
 

@@ -9,11 +9,9 @@ PREPROCESS_PARTS 	+= $(CONFIG_ABI) $(CONFIG_XARCH) libuart
 
 ifeq ($(CONFIG_BIT64),y)
 PREPROCESS_PARTS += 64bit arm_esr_traps
-BITS := 64
 else
 PREPROCESS_PARTS += 32bit recover_jmpbuf
 PREPROCESS_PARTS-$(CONFIG_MMU) += abs_syscalls
-BITS := 32
 endif
 
 # On ARMv7 and above Fiasco uses broadcast TLB invalidation instructions. On
