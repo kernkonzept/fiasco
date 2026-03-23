@@ -238,7 +238,7 @@ Cpu_call::cpu_call_many_async(Cpu_mask const &cpus,
 IMPLEMENTATION [!mp]:
 
 PUBLIC static inline
-bool
+void
 Cpu_call::_cpu_call_many(Cpu_mask const &m,
                          cxx::functor<bool (Cpu_number)> &&func,
                          bool)
@@ -246,7 +246,6 @@ Cpu_call::_cpu_call_many(Cpu_mask const &m,
   auto guard = lock_guard(cpu_lock);
   if (m.get(current_cpu()))
     func(current_cpu());
-  return true;
 }
 
 PUBLIC static bool Cpu_call::handle_global_requests() { return false; }
