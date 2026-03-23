@@ -236,7 +236,7 @@ Kip::init_global_kip(Kip *kip)
 {
   global_kip = kip;
 
-  kip->platform_info.is_mp = Config::Max_num_cpus > 1;
+  kip->platform_info.is_mp = (Config::Max_num_cpus > 1) ? 1 : 0;
   kip->sched_granularity = Config::Scheduler_granularity;
 
   // Sanitize incoming descriptors. Mark ones with invalid range as undefined

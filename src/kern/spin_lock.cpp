@@ -199,7 +199,7 @@ PUBLIC template<typename Lock_t> inline NEEDS[Spin_lock::lock_arch, "mem.h"]
 typename Spin_lock<Lock_t>::Status
 Spin_lock<Lock_t>::test_and_set()
 {
-  Status s = !!cpu_lock.test();
+  Status s = cpu_lock.test() == Not_locked ? 0 : 1;
   cpu_lock.lock();
   lock_arch();
   return s;

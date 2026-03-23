@@ -30,7 +30,7 @@ void Proc::cli()
 IMPLEMENT static inline
 Proc::Status Proc::interrupts()
 {
-  return (Psr::read() & (0xF << Psr::Interrupt_lvl)) == 0;
+  return (Psr::read() & (0xF << Psr::Interrupt_lvl)) == 0 ? 1 : 0;
 }
 
 /// Block external interrupts and save the old state

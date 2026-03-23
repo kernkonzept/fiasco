@@ -27,5 +27,5 @@ Cpu_lock::clear()
 IMPLEMENT inline NEEDS ["processor.h"]
 Cpu_lock::Status Cpu_lock::test() const
 {
-  return !Proc::interrupts();
+  return Proc::interrupts() ? 0 : 1;
 }

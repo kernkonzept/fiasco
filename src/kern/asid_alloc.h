@@ -110,7 +110,7 @@ public:
     // assume a sparsely populated bitmap - the next free bit is
     // normally found during first iteration
     for (unsigned i = _current_idx; i < asid_num(); ++i)
-      if ((*this)[i] == 0)
+      if (!(*this)[i])
         {
           _current_idx = i + 1;
           return i;
@@ -231,7 +231,8 @@ private:
         if (!Cpu::online(cpu))
           continue;
 
-        res |= _asids.cpu(cpu).check_and_update_reserved(asid, update);
+        if (_asids.cpu(cpu).check_and_update_reserved(asid, update))
+          res = true;
       }
     return res;
   }

@@ -36,7 +36,7 @@ public:
   void done()
   {
     Mem::mp_mb();
-    write_now(&_wait, Mword{false});
+    write_now(&_wait, false);
   }
 
   Reschedule run_local(Cpu_number cpu)

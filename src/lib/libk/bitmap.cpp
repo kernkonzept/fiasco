@@ -535,7 +535,7 @@ public:
   void bit(size_t bit, bool on)
   {
     unsigned long mask = 1UL << bit;
-    unsigned long val = static_cast<unsigned long>(on) << bit;
+    unsigned long val = (on ? 1UL : 0UL) << bit;
 
     this->_bits &= ~mask;
     this->_bits |= val;

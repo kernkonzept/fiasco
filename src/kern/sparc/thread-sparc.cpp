@@ -89,7 +89,7 @@ extern "C" {
    * the call to Thread::handle_page_fault().
    * @param pfa page-fault virtual address
    * @param error_code CPU error code
-   * @return true if page fault could be resolved, false otherwise
+   * @return 1 if page fault could be resolved, 0 otherwise
    */
   Mword pagefault_entry(const Mword pfa, const Mword error_code,
                         const Mword pc, Return_frame *ret_frame)

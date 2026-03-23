@@ -18,6 +18,13 @@ public:
   /// The return type of test methods
   typedef Mword Status;
 
+  /**
+   * The state of the lock.
+   *
+   * The values for Locked are architecture specific. The generic
+   * interpretation is that any value that is not Not_locked must
+   * be considered locked.
+   */
   enum : Status { Not_locked = 0 };
 
   /// ctor.

@@ -188,7 +188,7 @@ IMPLEMENTATION[arm && mp]:
   void *sp = kernel->init_stack();
     {
       register Mword r0 __asm__("r0") = reinterpret_cast<Mword>(kernel);
-      register Mword r1 __asm__("r1") = !cpu_is_new;
+      register Mword r1 __asm__("r1") = cpu_is_new ? 0 : 1;
 
       // switch to stack of kernel thread and continue thread init
       asm volatile

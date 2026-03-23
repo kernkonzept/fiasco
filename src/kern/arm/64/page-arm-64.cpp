@@ -4,6 +4,7 @@ INTERFACE [arm && mmu && cpu_virt]:
 #include "cpubits.h"
 #include "mem_unit.h"
 #include "minmax.h"
+#include <cxx/conditionals>
 
 EXTENSION class Page
 {
@@ -50,7 +51,7 @@ public:
     return (vtcr_sl0()          <<  6)  // SL0
             | (pa_range         << 16)  // PS
             | ((64U - pa_bits)  <<  0)  // T0SZ
-            | ((Mem_unit::Asid_bits == 16) << 19); // VS
+            | cxx::const_ite<Mem_unit::Asid_bits == 16>(1 << 19, 0); // VS
   }
 };
 
@@ -72,6 +73,6 @@ public:
                  | (2UL  << 30) // (TG1)  Page granularity 4 KiB
                  | (5UL  << 32) // (IPS)  Physical address size 48 bits
                                 // (AS)   ASID Size
-                 | ((Mem_unit::Asid_bits == 16 ? 1UL : 0UL) << 36)
+                 | cxx::const_ite<Mem_unit::Asid_bits == 16>(1UL << 36, 0UL)
   };
 };

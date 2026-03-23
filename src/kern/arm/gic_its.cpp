@@ -578,8 +578,9 @@ Gic_its::Table::alloc(Reg r, Typer typer)
   _mem.make_coherent();
 
   WARNX(Info, "ITS: Allocated table of type=%u with size=0x%llx "
-              "indirect=%u page_size=%u entry_size=%u pages=%u.\n",
-              _type, size, _indirect, _page_size, _entry_size, num_pages);
+              "indirect=%c page_size=%u entry_size=%u pages=%u.\n",
+              _type, size, _indirect ? 'y' : 'n', _page_size, _entry_size,
+              num_pages);
 }
 
 IMPLEMENT

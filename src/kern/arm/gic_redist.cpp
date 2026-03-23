@@ -313,7 +313,7 @@ void
 Gic_redist::enable_lpi(Mword lpi, bool enabled)
 {
   Unsigned8 *lpi_config = lpi_config_table.virt_ptr<Unsigned8>() + lpi;
-  write_now(lpi_config, GICR_lpi_default_prio | enabled);
+  write_now(lpi_config, GICR_lpi_default_prio | (enabled ? 1 : 0));
   lpi_config_table.make_coherent(lpi_config, lpi_config + 1);
 }
 

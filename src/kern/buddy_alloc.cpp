@@ -94,8 +94,11 @@ private:
     // supported blocks. We need an extra bit in the case that the Max_mem
     // is no multiple of Max_size to ensure that buddy() does not access
     // beyond the bitmap.
-    return (calc_max_mem_size(min_addr, max_addr) + Min_size - 1) / Min_size
-            + !!(calc_max_mem_size(min_addr, max_addr) & (Max_size - 1));
+    auto max_mem_size = calc_max_mem_size(min_addr, max_addr);
+    unsigned long bits = (max_mem_size + Min_size - 1) / Min_size;
+    if ((max_mem_size & (Max_size - 1)) > 0)
+      bits += 1;
+    return bits;
   }
 
   B_list _free[Num_sizes];

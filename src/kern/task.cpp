@@ -819,12 +819,12 @@ Task::sys_caps_equal(Syscall_frame *, Utcb *utcb)
     return commit_result(1);
 
   if (obj_a.special() || obj_b.special())
-    return commit_result(obj_a.special_cap() == obj_b.special_cap());
+    return commit_result(obj_a.special_cap() == obj_b.special_cap() ? 1 : 0);
 
   Obj_space::Capability c_a = lookup(obj_a.cap());
   Obj_space::Capability c_b = lookup(obj_b.cap());
 
-  return commit_result(c_a == c_b);
+  return commit_result(c_a == c_b ? 1 : 0);
 }
 
 /*

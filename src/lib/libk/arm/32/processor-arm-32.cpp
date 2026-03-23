@@ -63,7 +63,7 @@ Proc::Status Proc::interrupts()
 {
   Status ret;
   asm volatile("mrs %0, cpsr" : "=r" (ret));
-  return !(ret & Sti_mask);
+  return (ret & Sti_mask) ? 0 : 1;
 }
 
 //----------------------------------------------------------------

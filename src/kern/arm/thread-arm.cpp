@@ -190,11 +190,11 @@ extern "C" {
   {
     if (PF::is_alignment_error(error_code)) [[unlikely]]
       {
-	WARNX(Warning,
+        WARNX(Warning,
               "KERNEL%d: alignment error at %08lx (PC: %08lx, SP: %08lx, FSR: %lx, PSR: %lx)\n",
               cxx::int_value<Cpu_number>(current_cpu()), pfa, pc,
               ret_frame->usp, error_code, ret_frame->psr);
-        return false;
+        return 0;
       }
 
     if (Thread::is_debug_exception_fsr(error_code)) [[unlikely]]
@@ -753,7 +753,7 @@ Thread::arm_esr_entry(Return_frame *rf)
         }
       else
         {
-          if ((esr.cpt_simd() == 1
+          if ((esr.cpt_simd()
                || esr.cpt_cpnr() == 10  // CP10: Floating-point
                || esr.cpt_cpnr() == 11) // CP11: Advanced SIMD
               && Thread::handle_fpu_trap(ts))

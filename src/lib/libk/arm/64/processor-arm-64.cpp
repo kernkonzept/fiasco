@@ -35,7 +35,7 @@ Proc::Status Proc::interrupts()
 {
   Status ret;
   asm volatile("mrs %0, DAIF" : "=r" (ret));
-  return !(ret & Sti_mask);
+  return (ret & Sti_mask) ? 0 : 1;
 }
 
 IMPLEMENT static inline

@@ -28,7 +28,7 @@ div_ceil(N const &n, D const &d)
   // % operator is no longer implementation defined, thus we can use n % d to
   // detect if the quotient is positive (n % d >= 0) and was truncated (n % d !=
   // 0). In that case, we add one to round to the next largest integer.
-  return n / d + (n % d > 0);
+  return n / d + ((n % d) > 0 ? 1 : 0);
 }
 
 /**
