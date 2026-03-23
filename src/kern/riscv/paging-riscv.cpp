@@ -319,32 +319,32 @@ Pte_ptr::write_back_if(bool)
 {}
 
 IMPLEMENT inline
-Mword
+bool
 PF::is_translation_error(Mword error)
 {
-  return !(error & PF::Err_access_fault);
+  return (error & PF::Err_access_fault) == 0;
 }
 
 IMPLEMENT inline
-Mword
+bool
 PF::is_usermode_error(Mword error)
 {
-  return error & PF::Err_usermode;
+  return (error & PF::Err_usermode) == PF::Err_usermode;
 }
 
 IMPLEMENT inline
-Mword
+bool
 PF::is_read_error(Mword error)
 {
   // Instruction faults also count as read errors
-  return !(error & PF::Err_store);
+  return (error & PF::Err_store) == 0;
 }
 
 PUBLIC static inline
-Mword
+bool
 PF::is_instruction_error(Mword error)
 {
-  return error & PF::Err_inst;
+  return (error & PF::Err_inst) == PF::Err_inst;
 }
 
 IMPLEMENT inline

@@ -250,7 +250,7 @@ IMPLEMENTATION [mips]:
 Mword Tlb_entry::cached;
 
 IMPLEMENT inline
-Mword
+bool
 PF::is_usermode_error(Mword /*cause*/)
 {
   // TODO: From the passed "cause" we cannot determine if the page fault was
@@ -262,22 +262,22 @@ PF::is_usermode_error(Mword /*cause*/)
 }
 
 IMPLEMENT inline
-Mword
+bool
 PF::is_read_error(Mword cause)
 {
   // bit 0 in the exception code denotes a write / store access
   // in all TLB, Address, and bus errors
   // 0x13 is triggered on a read access if the RI (read inhibit) bit is set.
-  return !(cause & 4) || ((cause & 0x7c) == (0x13 << 2));
+  return !((cause & 4) == 4) || ((cause & 0x7c) == (0x13 << 2));
 }
 
 PUBLIC static inline NEEDS["trap_state.h"]
-Mword
+bool
 PF::is_read_error(Trap_state::Cause const cause)
 { return is_read_error(cause.raw); }
 
 PUBLIC static inline
-Mword
+bool
 PF::is_xi_error(Mword cause)
 {
   // TLBXI
@@ -286,7 +286,7 @@ PF::is_xi_error(Mword cause)
 }
 
 PUBLIC static inline
-Mword
+bool
 PF::is_tlb_rights_error(Mword cause)
 {
   auto code = cause & 0x7c;
@@ -294,7 +294,7 @@ PF::is_tlb_rights_error(Mword cause)
 }
 
 PUBLIC static inline NEEDS["trap_state.h"]
-Mword
+bool
 PF::is_translation_error(Trap_state::Cause const cause)
 {
   return    cause.exc_code() == 2  // TLBL
@@ -302,7 +302,7 @@ PF::is_translation_error(Trap_state::Cause const cause)
 }
 
 IMPLEMENT inline NEEDS["trap_state.h"]
-Mword
+bool
 PF::is_translation_error(Mword cause)
 { return is_translation_error(Trap_state::Cause(cause)); }
 

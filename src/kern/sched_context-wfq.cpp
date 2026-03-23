@@ -155,7 +155,7 @@ Sched_context::set_left(Unsigned64 left)
  * @return 1 if thread is in ready-list, 0 otherwise
  */
 PUBLIC inline
-Mword
+bool
 Sched_context::in_ready_list() const
 {
   return _ready_link != 0;

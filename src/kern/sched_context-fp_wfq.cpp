@@ -141,7 +141,7 @@ Sched_context::Ready_queue_base::next_to_run() const
  * @return 1 if thread is in ready-list, 0 otherwise
  */
 PUBLIC inline
-Mword
+bool
 Sched_context::in_ready_list() const
 {
   // this magically works for the fp list and the heap,

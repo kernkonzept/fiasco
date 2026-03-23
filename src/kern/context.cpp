@@ -906,7 +906,7 @@ Context::update_ready_list()
  * @return 1 if thread is in ready-list, 0 otherwise
  */
 PUBLIC inline
-Mword
+bool
 Context::in_ready_list() const
 {
   return sched()->in_ready_list();

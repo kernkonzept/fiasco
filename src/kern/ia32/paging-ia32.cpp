@@ -339,21 +339,21 @@ IMPLEMENTATION [ia32 || amd64]:
 #include "regdefs.h"
 
 IMPLEMENT inline NEEDS["regdefs.h"]
-Mword PF::is_translation_error(Mword error)
+bool PF::is_translation_error(Mword error)
 {
-  return !(error & PF_ERR_PRESENT);
+  return (error & PF_ERR_PRESENT) == 0;
 }
 
 IMPLEMENT inline NEEDS["regdefs.h"]
-Mword PF::is_usermode_error(Mword error)
+bool PF::is_usermode_error(Mword error)
 {
-  return (error & PF_ERR_USERMODE);
+  return (error & PF_ERR_USERMODE) == PF_ERR_USERMODE;
 }
 
 IMPLEMENT inline NEEDS["regdefs.h"]
-Mword PF::is_read_error(Mword error)
+bool PF::is_read_error(Mword error)
 {
-  return !(error & PF_ERR_WRITE);
+  return (error & PF_ERR_WRITE) == 0;
 }
 
 IMPLEMENT inline NEEDS["regdefs.h"]

@@ -280,11 +280,10 @@ public:
 
 
   /**
-   * Is the flexpage the whole address space?
-   * @return not zero, if the flexpage covers the
-   *   whole address space.
+   * Test if the flexpage covers whole address space
+   * \return true, if the flexpage covers the whole address space.
    */
-  constexpr Mword is_all_spaces() const
+  constexpr bool is_all_spaces() const
   {
     Mword mask = Mword{type_bfm_t::Mask} | Mword{order_bfm_t::Mask};
     return (_raw & mask) == order_bfm_t::val(Whole_space);

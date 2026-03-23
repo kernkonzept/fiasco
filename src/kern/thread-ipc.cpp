@@ -955,18 +955,18 @@ Thread::exception(Kobject_iface *handler, Trap_state *ts, L4_fpage::Rights right
 
   // FIXME: handle not existing exception handler properly
   // for now, just ignore any errors
-  return 1;
+  return true;
 }
 
-/* return 1 if exception could be handled
- * return 0 if not for send_exception and halt thread
+/* return true  if exception could be handled
+ * return false if not for send_exception and halt thread
  */
 /*
  * L4-IFACE: kernel-thread.exception
  */
 PUBLIC inline NEEDS["task.h", "trap_state.h",
                     Thread::vcpu_return_to_kernel]
-int
+bool
 Thread::send_exception(Trap_state *ts)
 {
   assert(cpu_lock.test());
@@ -976,7 +976,7 @@ Thread::send_exception(Trap_state *ts)
   if (vcpu_exceptions_enabled(vcpu))
     {
       if (_exc_cont.valid(ts))
-        return 1;
+        return true;
 
       // before entering kernel mode to have original fpu state before
       // enabling fpu

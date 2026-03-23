@@ -219,19 +219,19 @@ Paging::decanonize(Address addr)
 }
 
 IMPLEMENT inline
-Mword PF::is_translation_error(Mword error)
+bool PF::is_translation_error(Mword error)
 {
   return !(error & 1 << 30) /* DSISR/SRR1 bit 1 */;
 }
 
 IMPLEMENT inline NEEDS["psr.h"]
-Mword PF::is_usermode_error(Mword error)
+bool PF::is_usermode_error(Mword error)
 {
   return 0 & error;//(error & Msr::Msr_pr);
 }
 
 IMPLEMENT inline
-Mword PF::is_read_error(Mword error)
+bool PF::is_read_error(Mword error)
 {
   return !(error & (1 << 25)) /* DSISR bit 6*/;
 }

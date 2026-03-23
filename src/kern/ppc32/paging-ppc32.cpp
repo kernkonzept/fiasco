@@ -156,22 +156,22 @@ Paging::decanonize(Address addr)
 }
 
 //---------------------------------------------------------------------------
-IMPLEMENT inline 
-Mword PF::is_translation_error(Mword error)
+IMPLEMENT inline
+bool PF::is_translation_error(Mword error)
 {
-  return !(error & 1 << 30) /* DSISR/SRR1 bit 1 */;
+  return (error & (1 << 30) == 0 /* DSISR/SRR1 bit 1 */;
 }
 
 IMPLEMENT inline NEEDS["msr.h"]
-Mword PF::is_usermode_error(Mword error)
+bool PF::is_usermode_error(Mword error)
 {
-  return (error & Msr::Msr_pr);
+  return (error & Msr::Msr_pr) == Msr::Msr_pr;
 }
 
 IMPLEMENT inline
-Mword PF::is_read_error(Mword error)
+bool PF::is_read_error(Mword error)
 {
-  return !(error & (1 << 25)) /* DSISR bit 6*/;
+  return (error & (1 << 25)) == 0 /* DSISR bit 6*/;
 }
 
 IMPLEMENT inline

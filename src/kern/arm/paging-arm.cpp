@@ -804,8 +804,8 @@ EXTENSION class K_pte_ptr : public Pte_no_cache_asid<K_pte_ptr> {};
 IMPLEMENTATION [arm && mmu && arm_v5]:
 
 PUBLIC static inline
-Mword PF::is_alignment_error(Mword error)
-{ return ((error >> 26) & 0x04) && ((error & 0x0d) == 0x001); }
+bool PF::is_alignment_error(Mword error)
+{ return ((error >> 26) & 0x04) == 0x04 && (error & 0x0d) == 0x001; }
 
 //---------------------------------------------------------------------------
 INTERFACE [arm && mmu && !arm_lpae && arm_v6plus]:
@@ -832,21 +832,21 @@ public:
 IMPLEMENTATION [arm && (arm_v6 || arm_v7 || arm_v8) && !(arm_lpae || mpu)]:
 
 PUBLIC static inline
-Mword PF::is_alignment_error(Mword error)
+bool PF::is_alignment_error(Mword error)
 { return ((error >> 26) == 0x24) && ((error & 0x40f) == 0x001); }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && (arm_lpae || mpu)]:
 
 PUBLIC static inline
-Mword PF::is_alignment_error(Mword error)
+bool PF::is_alignment_error(Mword error)
 { return ((error >> 26) == 0x24) && ((error & 0x3f) == 0x21); }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && !(arm_lpae || mpu)]:
 
 IMPLEMENT inline
-Mword PF::is_translation_error(Mword error)
+bool PF::is_translation_error(Mword error)
 {
   return (error & 0x0d/*FSR_STATUS_MASK*/) == 0x05/*FSR_TRANSL*/;
 }
@@ -855,7 +855,7 @@ Mword PF::is_translation_error(Mword error)
 IMPLEMENTATION [arm && (arm_lpae || mpu)]:
 
 IMPLEMENT inline
-Mword PF::is_translation_error(Mword error)
+bool PF::is_translation_error(Mword error)
 {
   return (error & 0x3c) == 0x04;
 }
@@ -864,15 +864,15 @@ Mword PF::is_translation_error(Mword error)
 IMPLEMENTATION [arm]:
 
 IMPLEMENT inline
-Mword PF::is_usermode_error(Mword error)
+bool PF::is_usermode_error(Mword error)
 {
-  return !((error >> 26) & 1);
+  return ((error >> 26) & 1) == 0;
 }
 
 IMPLEMENT inline
-Mword PF::is_read_error(Mword error)
+bool PF::is_read_error(Mword error)
 {
-  return !(error & (1 << 6));
+  return (error & (1 << 6)) == 0;
 }
 
 IMPLEMENT inline NEEDS[PF::is_read_error]

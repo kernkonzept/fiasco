@@ -7,9 +7,9 @@ INTERFACE:
 class PF
 {
 public:
-  static Mword is_translation_error(Mword error);
-  static Mword is_usermode_error(Mword error);
-  static Mword is_read_error(Mword error);
+  static bool is_translation_error(Mword error);
+  static bool is_usermode_error(Mword error);
+  static bool is_read_error(Mword error);
   static Mword addr_to_msgword0(Address pfa, Mword error);
 };
 
