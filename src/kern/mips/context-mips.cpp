@@ -145,29 +145,31 @@ bool
 Context::switchin_guest_context(Space *spc)
 {
   bool const guest_context = (state() & Thread_vcpu_user) && (regs()->status & (1 << 3));
-  if (EXPECT_FALSE(guest_context)
-      && EXPECT_TRUE(home_cpu() == get_current_cpu()))
+  if (guest_context) [[unlikely]]
     {
-      if (!(state() & Thread_vcpu_vz_owner))
+      if (home_cpu() == get_current_cpu()) [[likely]]
         {
-          auto &owner = Vz::owner.cpu(get_current_cpu());
-          if (owner.ctxt)
-            owner.ctxt->vz_save_state(owner.guest_id);
+          if (!(state() & Thread_vcpu_vz_owner))
+            {
+              auto &owner = Vz::owner.cpu(get_current_cpu());
+              if (owner.ctxt)
+                owner.ctxt->vz_save_state(owner.guest_id);
 
-          owner.ctxt = this;
-          owner.guest_id = spc->switchin_guest_context();
-          vz_load_state(owner.guest_id);
-        }
-      else
-        {
-          [[maybe_unused]] unsigned guest_id = spc->switchin_guest_context();
+              owner.ctxt = this;
+              owner.guest_id = spc->switchin_guest_context();
+              vz_load_state(owner.guest_id);
+            }
+          else
+            {
+              [[maybe_unused]] unsigned guest_id = spc->switchin_guest_context();
 #ifndef NDEBUG
-          auto &owner = Vz::owner.cpu(get_current_cpu());
-          assert (owner.ctxt == this);
-          assert (static_cast<unsigned>(owner.guest_id) == guest_id);
+              auto &owner = Vz::owner.cpu(get_current_cpu());
+              assert (owner.ctxt == this);
+              assert (static_cast<unsigned>(owner.guest_id) == guest_id);
 #endif
+            }
+          return true;
         }
-      return true;
     }
 
   return false;

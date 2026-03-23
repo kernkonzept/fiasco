@@ -147,8 +147,7 @@ Ipc_sender<Derived>::send_msg(Receiver *receiver, bool is_xcpu)
       // in case a timeout was set
       receiver->reset_timeout();
 
-      if (!is_xcpu
-          || EXPECT_TRUE(current_cpu() == receiver->home_cpu()))
+      if (!is_xcpu || current_cpu() == receiver->home_cpu()) [[likely]]
         {
           auto &rq = Sched_context::rq.current();
           if (s.is_ipc() // Shortcut is applicable with receiver that is in

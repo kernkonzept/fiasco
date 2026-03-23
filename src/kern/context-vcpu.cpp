@@ -218,24 +218,30 @@ PUBLIC inline
 bool
 Context::vcpu_irqs_enabled(Vcpu_state *vcpu) const
 {
-  return EXPECT_FALSE(state() & Thread_vcpu_enabled)
-    && vcpu->state & Vcpu_state::F_irqs;
+  if (!(state() & Thread_vcpu_enabled)) [[likely]]
+    return false;
+
+  return vcpu->state & Vcpu_state::F_irqs;
 }
 
 PUBLIC inline
 bool
 Context::vcpu_pagefaults_enabled(Vcpu_state *vcpu) const
 {
-  return EXPECT_FALSE(state() & Thread_vcpu_enabled)
-    && vcpu->state & Vcpu_state::F_page_faults;
+  if (!(state() & Thread_vcpu_enabled)) [[likely]]
+    return false;
+
+  return vcpu->state & Vcpu_state::F_page_faults;
 }
 
 PUBLIC inline
 bool
 Context::vcpu_exceptions_enabled(Vcpu_state *vcpu) const
 {
-  return EXPECT_FALSE(state() & Thread_vcpu_enabled)
-    && vcpu->state & Vcpu_state::F_exceptions;
+  if (!(state() & Thread_vcpu_enabled)) [[likely]]
+    return false;
+
+  return vcpu->state & Vcpu_state::F_exceptions;
 }
 
 PUBLIC inline

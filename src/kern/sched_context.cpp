@@ -132,7 +132,7 @@ Sched_context::Ready_queue::deblock(Sched_context *sc, Sched_context *crs, bool 
     {
       deblock_refill(sc);
 
-      if ((EXPECT_TRUE(cs != nullptr) && cs->dominates(sc))
+      if ((cs != nullptr && cs->dominates(sc))
           || (crs && crs->dominates(sc)))
         res = false;
     }

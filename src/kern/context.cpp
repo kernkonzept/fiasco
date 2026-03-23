@@ -1354,8 +1354,12 @@ PRIVATE inline
 Context::Switch
 Context::switch_handle_drq()
 {
-  if (EXPECT_TRUE(home_cpu() == get_current_cpu()))
-    return EXPECT_FALSE(handle_drq()) ? Switch::Resched : Switch::Ok;
+  if (home_cpu() == get_current_cpu()) [[likely]]
+    {
+      if (handle_drq()) [[unlikely]]
+        return Switch::Resched;
+    }
+
   return Switch::Ok;
 }
 

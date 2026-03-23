@@ -340,7 +340,7 @@ private:
   bool can_use_asid(Asid asid) const
   {
     // is_same_generation implicitly checks for asid != Asid_invalid
-    return EXPECT_TRUE(asid.is_same_generation(atomic_load(&_gen)));
+    return asid.is_same_generation(atomic_load(&_gen));
   }
 
   /**
@@ -354,7 +354,7 @@ private:
    */
   static bool set_active_asid(Asid asid, Asid *active_asid)
   {
-    return EXPECT_TRUE(atomic_exchange(active_asid, asid).is_valid());
+    return atomic_exchange(active_asid, asid).is_valid();
   }
 
 public:
@@ -419,7 +419,7 @@ public:
   {
     Asid *active_asid = get_active_asid(cpu);
     Asid a = atomic_load(asid);
-    if (can_use_asid(a) && set_active_asid(a, active_asid))
+    if (can_use_asid(a) && set_active_asid(a, active_asid)) [[likely]]
       return false;
 
     return alloc_asid(asid, active_asid, cpu);

@@ -422,9 +422,9 @@ thread_page_fault(Address pfa, Mword error_code, Address ip, Mword flags,
         return 1;
     }
 
-  if(EXPECT_TRUE(PF::is_usermode_error(error_code))
+  if(PF::is_usermode_error(error_code)
      || (flags & EFLAGS_IF)
-     || !Kmem::is_kmem_page_fault(pfa, error_code))
+     || !Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
     Proc::sti();
 
   return t->handle_page_fault(pfa, error_code, ip, regs);

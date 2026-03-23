@@ -216,9 +216,9 @@ extern "C" {
         t->state_del(Thread_cancel);
       }
 
-    if (EXPECT_TRUE(PF::is_usermode_error(error_code))
+    if (PF::is_usermode_error(error_code)
         || !(ret_frame->psr & Proc::Status_preempt_disabled)
-        || !Kmem::is_kmem_page_fault(pfa, error_code))
+        || !Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
       Proc::sti();
 
     return t->handle_page_fault(pfa, error_code, pc, ret_frame);

@@ -2,10 +2,6 @@ INTERFACE:
 
 #include "globalconfig.h"
 
-#define BUILTIN_EXPECT(exp, c) __builtin_expect((exp), (c))
-#define EXPECT_TRUE(exp)       __builtin_expect((exp), true)
-#define EXPECT_FALSE(exp)      __builtin_expect((exp), false)
-
 // Use this for functions which do not examine any values except their
 // arguments and have no effects except the return value. Note that a
 // function that has pointer arguments and examines the data pointed to

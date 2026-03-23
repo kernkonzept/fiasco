@@ -1262,20 +1262,22 @@ Thread::migrate_away(Migration *inf, bool remote)
     }
 
     {
-      Sched_context::Ready_queue &rq = EXPECT_TRUE(!remote)
-                                     ? Sched_context::rq.current()
-                                     : Sched_context::rq.cpu(home_cpu());
+      Sched_context::Ready_queue *rq;
+      if (!remote) [[likely]]
+        rq = &Sched_context::rq.current();
+      else
+        rq = &Sched_context::rq.cpu(home_cpu());
 
       // if we are in the middle of the scheduler, leave it now
-      if (rq.schedule_in_progress == this)
-        rq.schedule_in_progress = nullptr;
+      if (rq->schedule_in_progress == this)
+        rq->schedule_in_progress = nullptr;
 
-      rq.ready_dequeue(sched());
+      rq->ready_dequeue(sched());
 
-      Sched_context *csc = rq.current_sched();
+      Sched_context *csc = rq->current_sched();
       if (!remote && csc == sched())
         {
-          rq.set_current_sched(kernel_context(current_cpu())->sched());
+          rq->set_current_sched(kernel_context(current_cpu())->sched());
           resched = true;
         }
     }

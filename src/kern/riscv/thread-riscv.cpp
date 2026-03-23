@@ -378,9 +378,9 @@ Thread::handle_page_fault_riscv(Mword cause, Mword pfa, Return_frame *ret_frame)
 
   // Enable interrupts, except for kernel page faults in TCB area.
   Lock_guard<Cpu_lock, Lock_guard_inverse_policy> guard;
-  if (EXPECT_TRUE(PF::is_usermode_error(error_code))
+  if (PF::is_usermode_error(error_code)
       || ret_frame->interrupts_enabled()
-      || !Kmem::is_kmem_page_fault(pfa, error_code))
+      || !Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
     guard = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
   return handle_page_fault(pfa, error_code, ret_frame->ip(), ret_frame);
