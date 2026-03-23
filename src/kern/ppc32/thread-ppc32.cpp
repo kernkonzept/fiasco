@@ -86,7 +86,7 @@ Thread::user_invoke()
   Return_frame *r = nonull_static_cast<Return_frame*>(current()->regs());
   Kip *kip = nullptr;
   if (current_thread()->mem_space()->is_sigma0()) [[unlikely]]
-    kip = kip::k();
+    kip = Kip::k();
 
   /* DEBUGGING */
   Mword vsid, utcb;

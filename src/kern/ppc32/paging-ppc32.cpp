@@ -159,7 +159,7 @@ Paging::decanonize(Address addr)
 IMPLEMENT inline
 bool PF::is_translation_error(Mword error)
 {
-  return (error & (1 << 30) == 0 /* DSISR/SRR1 bit 1 */;
+  return (error & (1 << 30) == 0 /* DSISR/SRR1 bit 1 */);
 }
 
 IMPLEMENT inline NEEDS["msr.h"]
