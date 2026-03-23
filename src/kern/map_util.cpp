@@ -604,12 +604,10 @@ map(MAPDB* mapdb,
       Page_order s_order;
       Attr i_attribs;
 
-      // Sigma0 special case: Sigma0 doesn't need to have a
-      // fully-constructed page table, and it can fabricate mappings
-      // for all physical addresses.
       if (!map_lookup_src(from, snd_addr, &s_phys, &i_phys, &s_order,
                           &i_attribs, map_attribs)) [[unlikely]]
         {
+          // Skip non-existing part of map.
           size = SPACE::to_size(s_order) - SPACE::subpage_offset(snd_addr, s_order);
           if (size >= snd_size)
             break;
@@ -687,13 +685,16 @@ map(MAPDB* mapdb,
             }
           else
             {
-              // unmap dst
+              // Unmap from receiver space.
               auto r_addr = SPACE::page_address(rcv_addr, r_order);
               auto r_size = SPACE::to_size(r_order);
               to->v_delete(r_addr, r_order, Page::Rights::FULL());
 
               tlb.add_page(to_id, r_addr, r_order);
 
+              // Memory/io only: Recursively unmap via mapdb the just deleted
+              // mapping from all other spaces that the receiver has mapped it
+              // to.
               MAPDB::foreach_mapping(rcv_frame, SPACE::to_pfn(r_addr),
                                      SPACE::to_pfn(r_addr + r_size),
                   [&tlb](typename MAPDB::Mapping *m, typename MAPDB::Order size)
@@ -701,8 +702,11 @@ map(MAPDB* mapdb,
                     v_delete<SPACE>(m, size, Page::Rights::FULL(), true, tlb);
                   });
 
+              // And finally recursively remove the mapping from the mapdb.
               mapdb->flush(rcv_frame, L4_map_mask::full(), SPACE::to_pfn(r_addr),
                            SPACE::to_pfn(r_addr + r_size));
+              // Objects only: Initiate deletion of object, if we just released
+              // the last mapping.
               Map_traits<SPACE>::free_object(r_phys, reap_list);
 
               // Dst is equal to or an ancestor of src.
@@ -717,7 +721,8 @@ map(MAPDB* mapdb,
                          || sender_frame.frame == nullptr /* i.e. not locked */);
                   rcv_frame.clear();
 
-                  // src is gone too
+                  // Src is gone too (since dst was an anchestor of src, and we
+                  // just unmapped that...)
                   continue;
                 }
 
