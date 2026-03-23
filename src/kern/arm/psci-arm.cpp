@@ -176,7 +176,8 @@ Psci::init(Cpu_number cpu)
   if (cpu != Cpu_number::boot_cpu())
     return;
 
-  init_psci_method();
+  if (!init_psci_method())
+    return;
 
   printf("Detecting PSCI ...\n");
   Result r = psci_call(Psci_version);
@@ -313,19 +314,17 @@ Psci::probe_method_acpi()
 IMPLEMENTATION [arm && arm_psci && !arm_psci_dyn]:
 
 PRIVATE static inline
-void
+bool
 Psci::init_psci_method()
-{}
+{ return true; }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_psci && arm_psci_dyn]:
 
-#include "panic.h"
-
 bool Psci::_is_hvc;
 
 PRIVATE static
-void
+bool
 Psci::init_psci_method()
 {
   Call_method call_method = probe_method_dt();
@@ -336,9 +335,12 @@ Psci::init_psci_method()
 
   if (   call_method == Call_method::Unknown
       || call_method == Call_method::Not_supported)
-    panic("PSCI: Could not find a PSCI call method");
-
+    {
+      printf("PSCI: Could not find a PSCI call method");
+      return false;
+    }
   _is_hvc = call_method == Call_method::Hvc;
+  return true;
 }
 
 // ------------------------------------------------------------------------
