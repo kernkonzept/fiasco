@@ -8,6 +8,7 @@
 #include "simpleio.h"
 #include "thread.h"
 
+extern "C"
 void
 panic(const char *format, ...)
 {

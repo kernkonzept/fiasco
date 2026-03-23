@@ -6,7 +6,7 @@ IMPLEMENTATION:
 
 extern "C" void sys_ipc_wrapper();
 
-IMPLEMENT void FIASCO_FLATTEN sys_ipc_wrapper()
+IMPLEMENT extern "C" void FIASCO_FLATTEN sys_ipc_wrapper()
 {
   assert (!(current()->state() & Thread_drq_ready));
 

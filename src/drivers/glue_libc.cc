@@ -1,7 +1,7 @@
 #include "libc_backend.h"
 #include "console.h"
 
-int __libc_backend_outs(const char *str, size_t len)
+extern "C" int __libc_backend_outs(const char *str, size_t len)
 {
   if (!Console::stdout)
     return 1;
