@@ -25,6 +25,20 @@
 #endif
 .endm
 
+.macro read_sync_and_convert scaler, shift
+        read_timer_counter
+        ldr     x4, \scaler
+        ldr     x5, \shift
+        umulh   x1, x0, x4
+        mul     x0, x0, x4      /* {x1,x0} contains (timer * scaler) */
+        mov     x2, #32
+        sub     x3, x2, x5
+        add     x2, x2, x5
+        lsr     x0, x0, x3      /* x0 = x0 >> (32 - shift) */
+        lsl     x1, x1, x2      /* x1 = x1 << (32 + shift) */
+        orr     x0, x0, x1      /* OR the "out-shifted" bits to x0 */
+.endm
+
         .section ".initcall.text", "ax"
 
 /**
@@ -47,17 +61,8 @@
 #define KIP_VAL(v)      kip_time_fn_read_us + OFFS__ ##v - OFFS__KIP_FN_READ_US
 kip_time_fn_read_us:
 #ifdef CONFIG_SYNC_CLOCK
-        read_timer_counter
-        ldr     x4, KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US)  /* scaler */
-        ldr     x5, KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_US)   /* shift */
-        umulh   x1, x0, x4
-        mul     x0, x0, x4      /* {x1,x0} contains (timer * scaler) */
-        mov     x2, #32
-        sub     x3, x2, x5
-        add     x2, x2, x5
-        lsr     x0, x0, x3      /* x0 = x0 >> (32 - shift) */
-        lsl     x1, x1, x2      /* x1 = x1 << (32 + shift) */
-        orr     x0, x0, x1      /* OR the "out-shifted" bits to x0 */
+        read_sync_and_convert KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US),\
+                              KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_US)
 #else
         ldr     x0, KIP_VAL(KIP_CLOCK)
 #endif
@@ -81,17 +86,8 @@ kip_time_fn_read_us_end:
 #define KIP_VAL(v)      kip_time_fn_read_ns + OFFS__ ##v - OFFS__KIP_FN_READ_NS
 kip_time_fn_read_ns:
 #ifdef CONFIG_SYNC_CLOCK
-        read_timer_counter
-        ldr     x4, KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS)
-        ldr     x5, KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_NS)
-        umulh   x1, x0, x4
-        mul     x0, x0, x4
-        mov     x2, #32
-        sub     x3, x2, x5
-        add     x2, x2, x5
-        lsr     x0, x0, x3
-        lsl     x1, x1, x2
-        orr     x0, x0, x1
+        read_sync_and_convert KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS),\
+                              KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_NS)
 #else
         ldr     x0, KIP_VAL(KIP_CLOCK)
         mov     x1, #1000
