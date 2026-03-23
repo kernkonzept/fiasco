@@ -14,9 +14,9 @@ Cpu::stack_align(Mword stack)
 { return stack & ~0x3; }
 
 
-PUBLIC inline FIASCO_CONST
+PUBLIC static inline FIASCO_CONST
 Unsigned64
-Cpu::ns_to_tsc(Unsigned64 ns) const
+Cpu::ns_to_tsc(Unsigned64 ns)
 {
   Unsigned32 dummy1, dummy2;
   Unsigned64 tsc;
@@ -37,9 +37,9 @@ Cpu::ns_to_tsc(Unsigned64 ns) const
   return tsc;
 }
 
-PUBLIC inline FIASCO_CONST
+PUBLIC static inline FIASCO_CONST
 Unsigned64
-Cpu::tsc_to_ns(Unsigned64 tsc) const
+Cpu::tsc_to_ns(Unsigned64 tsc)
 {
   Unsigned32 dummy1, dummy2;
   Unsigned64 ns;
@@ -60,9 +60,9 @@ Cpu::tsc_to_ns(Unsigned64 tsc) const
   return ns;
 }
 
-PUBLIC inline FIASCO_CONST
+PUBLIC static inline FIASCO_CONST
 Unsigned64
-Cpu::tsc_to_us(Unsigned64 tsc) const
+Cpu::tsc_to_us(Unsigned64 tsc)
 {
   Unsigned32 dummy;
   Unsigned64 us;
@@ -80,10 +80,9 @@ Cpu::tsc_to_us(Unsigned64 tsc) const
   return us;
 }
 
-
-PUBLIC inline
+PUBLIC static inline
 void
-Cpu::tsc_to_s_and_ns(Unsigned64 tsc, Unsigned32 *s, Unsigned32 *ns) const
+Cpu::tsc_to_s_and_ns(Unsigned64 tsc, Unsigned32 *s, Unsigned32 *ns)
 {
     Unsigned32 dummy;
     asm inline
@@ -103,7 +102,6 @@ Cpu::tsc_to_s_and_ns(Unsigned64 tsc, Unsigned32 *s, Unsigned32 *ns) const
 	: "A" (tsc), "g" (scaler_tsc_to_ns)
 	);
 }
-
 
 PUBLIC static inline
 Unsigned64

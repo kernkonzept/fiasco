@@ -52,7 +52,7 @@ public:
                                     // stop in any ACPI state
   };
 
-  Unsigned64 time_us() const;
+  static Unsigned64 time_us();
   int can_wrmsr() const;
 
 private:
@@ -1579,9 +1579,9 @@ Cpu::tsc_frequency_accurate()
 
 IMPLEMENT inline
 Unsigned64
-Cpu::time_us() const
+Cpu::time_us()
 {
-  return tsc_to_us (rdtsc());
+  return tsc_to_us(rdtsc());
 }
 
 

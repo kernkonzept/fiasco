@@ -23,7 +23,7 @@ IMPLEMENT_OVERRIDE inline NEEDS ["cpu.h", "kip.h", "warn.h"]
 void
 Timer::init_system_clock()
 {
-  Cpu_time time = Cpu::cpus.cpu(_cpu).time_us();
+  Cpu_time time = Cpu::time_us();
   if (time >= Kip::Clock_1_year)
     WARN("System clock initialized to %llu on boot CPU\n", time);
 }
@@ -32,7 +32,7 @@ IMPLEMENT_OVERRIDE inline NEEDS["cpu.h", "kip.h", "warn.h"]
 void
 Timer::init_system_clock_ap(Cpu_number cpu)
 {
-  Cpu_time time = Cpu::cpus.cpu(_cpu).time_us();
+  Cpu_time time = Cpu::time_us();
   if (time >= Kip::Clock_1_year)
     WARN("System clock initialized to %llu on CPU%u\n",
          time, cxx::int_value<Cpu_number>(cpu));
@@ -42,12 +42,12 @@ IMPLEMENT_OVERRIDE inline NEEDS ["cpu.h"]
 Unsigned64
 Timer::system_clock()
 {
-  return Cpu::cpus.cpu(_cpu).time_us();
+  return Cpu::time_us();
 }
 
 IMPLEMENT inline NEEDS ["cpu.h"]
 Unsigned64
 Timer::aux_clock_unstopped()
 {
-  return Cpu::cpus.cpu(_cpu).time_us();
+  return Cpu::time_us();
 }
