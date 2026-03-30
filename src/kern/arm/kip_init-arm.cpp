@@ -11,7 +11,6 @@ IMPLEMENTATION [arm]:
 
 #include "amp_node.h"
 #include "config.h"
-#include "mem_layout.h"
 #include "mem_space.h"
 #include "mem_unit.h"
 #include "timer.h"
