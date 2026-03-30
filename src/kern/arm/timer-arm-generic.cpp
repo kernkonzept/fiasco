@@ -68,7 +68,7 @@ Timer::init(Cpu_number cpu)
     {
       _freq0 = frequency();
       _interval = interval(Config::Scheduler_granularity);
-      printf("ARM generic timer: freq=%ld interval=%ld cnt=%lld\n",
+      printf("ARM generic timer: freq=%lu interval=%lu cnt=%llu\n",
              _freq0.unwrap(), _interval.unwrap(), Gtimer::counter());
       assert(_freq0);
 
