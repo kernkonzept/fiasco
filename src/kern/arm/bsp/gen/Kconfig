@@ -88,6 +88,10 @@ config PF_ARM_GEN_SELECT_UART_OMAP
 	bool "Support UART TI/OMAP" if PF_ARM_GEN_SELECT_SUPPORT
 	default y
 
+config PF_ARM_GEN_SELECT_UART_MVEBU
+	bool "Support UART mvebu" if PF_ARM_GEN_SELECT_SUPPORT
+	default y
+
 config PF_ARM_GEN_SELECT_DT
 	bool
 	default y if !ARM_ACPI
