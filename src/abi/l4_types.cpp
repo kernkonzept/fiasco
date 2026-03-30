@@ -479,8 +479,8 @@ public:
 
   /**
    * Create the specified timeout.
-   * @param man mantissa of the send timeout.
-   * @param exp exponent of the send timeout
+   * @param man mantissa of the timeout.
+   * @param exp exponent of the timeout
    *        (exp=0: infinite timeout,
    *        exp>0: t=2^(exp)*man,
    *        man=0 & exp!=0: t=0).
@@ -501,44 +501,40 @@ public:
   unsigned short raw() const;
 
   /**
-   * Get the receive exponent.
-   * @return The exponent of the receive timeout.
-   * @see rcv_man()
+   * Get the exponent of the timeout.
+   * \return The exponent of the timeout.
    */
   Mword exp() const;
 
   /**
-   * Set the exponent of the receive timeout.
-   * @param er the exponent for the receive timeout (see L4_timeout()).
-   * @see rcv_man()
+   * Set the exponent of the timeout.
+   * \param exponent The exponent for the timeout (see L4_timeout()).
    */
-  void exp(Mword er);
+  void exp(Mword exponent);
 
   /**
-   * Get the receive timout's mantissa.
-   * @return The mantissa of the receive timeout (see L4_timeout()).
-   * @see rcv_exp()
+   * Get the mantiassa of the timeout
+   * \return The mantissa of the timeout (see L4_timeout()).
    */
   Mword man() const;
 
   /**
    * Set the mantissa of the receive timeout.
-   * @param mr the mantissa of the receive timeout (see L4_timeout()).
-   * @see rcv_exp()
+   * \param mantissa The mantissa of the timeout (see L4_timeout()).
    */
-  void man(Mword mr);
+  void man(Mword mantissa);
 
   /**
-   * Get the relative receive timeout in microseconds.
-   * @param clock Current value of kernel clock
-   * @return The receive timeout in microseconds.
+   * Get the relative timeout in microseconds.
+   * \param clock Current value of kernel clock
+   * \return The timeout in microseconds.
    */
   Unsigned64 microsecs_rel(Unsigned64 clock) const;
 
   /**
-   * Get the absolute receive timeout in microseconds.
-   * @param u  UTCB pointer.
-   * @return The receive timeout in microseconds.
+   * Get the absolute timeout in microseconds.
+   * \param u UTCB pointer.
+   * \return The timeout in microseconds.
    */
   Unsigned64 microsecs_abs(Utcb const *u) const;
 
@@ -1055,13 +1051,13 @@ L4_timeout::L4_timeout(Mword man, Mword exp)
 IMPLEMENT inline Mword L4_timeout::exp() const
 { return (_t & Exp_mask) >> Exp_shift; }
 
-IMPLEMENT inline void L4_timeout::exp(Mword w)
-{ _t = (_t & ~Exp_mask) | ((w << Exp_shift) & Exp_mask); }
+IMPLEMENT inline void L4_timeout::exp(Mword exponent)
+{ _t = (_t & ~Exp_mask) | ((exponent << Exp_shift) & Exp_mask); }
 
 IMPLEMENT inline Mword L4_timeout::man() const
 { return (_t & Man_mask) >> Man_shift; }
 
-IMPLEMENT inline void L4_timeout::man (Mword w)
-{ _t = (_t & ~Man_mask) | ((w << Man_shift) & Man_mask); }
+IMPLEMENT inline void L4_timeout::man(Mword mantissa)
+{ _t = (_t & ~Man_mask) | ((mantissa << Man_shift) & Man_mask); }
 
 
