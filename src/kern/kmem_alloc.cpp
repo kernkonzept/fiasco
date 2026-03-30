@@ -435,13 +435,7 @@ Kmem_alloc::create_free_map(Kip const *kip, Mem_region_map_base *map,
 
   for (auto const &md: kip->mem_descs_a())
     {
-      if (!md.valid())
-        {
-          const_cast<Mem_desc &>(md).type(Mem_desc::Undefined);
-          continue;
-        }
-
-      if (md.is_virtual())
+      if (!md.valid() || md.is_virtual())
         continue;
 
       unsigned long s = md.start();

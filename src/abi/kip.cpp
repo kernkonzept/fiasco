@@ -214,6 +214,9 @@ void Kip::num_mem_descs(unsigned n)
 PUBLIC
 Mem_desc *Kip::add_mem_region(Mem_desc const &md)
 {
+  if (!md.valid())
+    panic("Refusing to add invalid memory descriptor");
+
   for (auto &m: mem_descs_a())
     if (m.type() == Mem_desc::Undefined)
       {
@@ -235,6 +238,11 @@ Kip::init_global_kip(Kip *kip)
 
   kip->platform_info.is_mp = Config::Max_num_cpus > 1;
   kip->sched_granularity = Config::Scheduler_granularity;
+
+  // Sanitize incoming descriptors. Mark ones with invalid range as undefined
+  for (auto &md: kip->mem_descs_a())
+    if (md.type() != Mem_desc::Undefined && md.start() >= md.end())
+      md.type(Mem_desc::Undefined);
 
   // check that the KIP has actually been set up
   //assert(kip->sigma0_ip && kip->root_ip && kip->user_ptr);
