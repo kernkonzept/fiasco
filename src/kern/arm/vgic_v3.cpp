@@ -88,14 +88,6 @@ Gic_h_v3::switch_to_vcpu(Arm_vgic const *g, To_user_mode to_mode,
     disable_load_defaults();
 }
 
-PUBLIC
-void
-Gic_h_v3::save_and_disable(Arm_vgic *g) override
-{
-  if (switch_from_vcpu(g) == From_vgic_mode::Enabled)
-    disable_load_defaults();
-}
-
 PUBLIC inline
 void
 Gic_h_v3::disable_load_defaults()

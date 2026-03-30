@@ -178,15 +178,6 @@ Gic_h_v2::switch_to_vcpu(Arm_vgic const *g, To_user_mode to_mode,
     }
 }
 
-PUBLIC
-void
-Gic_h_v2::save_and_disable(Arm_vgic *g) override
-{
-  switch_from_vcpu(g);
-  disable_load_defaults();
-  vgic_barrier();
-}
-
 PUBLIC inline
 void
 Gic_h_v2::disable_load_defaults()

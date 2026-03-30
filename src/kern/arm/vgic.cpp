@@ -292,6 +292,13 @@ public:
     return From_vgic_mode::Enabled;
   }
 
+  void save_and_disable(Arm_vgic *g) final
+  {
+    if (switch_from_vcpu(g) == From_vgic_mode::Enabled)
+      self()->disable_load_defaults();
+    IMPL::vgic_barrier();
+  }
+
   void disable() final
   {
     self()->disable_load_defaults();
