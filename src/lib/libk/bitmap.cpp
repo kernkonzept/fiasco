@@ -434,10 +434,12 @@ public:
   /**
    * Provide raw access to underlying storage.
    */
-  unsigned long const *raw() const
+  unsigned long const *raw() const &
   {
     return this->_bits;
   }
+
+  unsigned long const *raw() const && = delete;
 
 protected:
   template<bool LARGE, size_t BTS> friend class Bitmap_base;
@@ -813,10 +815,12 @@ public:
   /**
    * Provide raw access to underlying storage.
    */
-  unsigned long const *raw() const
+  unsigned long const *raw() const &
   {
     return &_bits;
   }
+
+  unsigned long const *raw() const && = delete;
 
 protected:
   template<bool LARGE, size_t BTS> friend class Bitmap_base;

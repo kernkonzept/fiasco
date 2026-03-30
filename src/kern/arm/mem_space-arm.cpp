@@ -114,8 +114,8 @@ public:
   { Context_base::load_ku_mem_regions(_ku_mem_regions); }
 
 private:
-  inline void ku_mem_added(Unsigned32 touched)
-  { _ku_mem_regions |= touched; }
+  inline void ku_mem_added(Mpu_regions_mask const& touched)
+  { _ku_mem_regions |= *touched.raw(); }
 
   /**
    * Pointer to Mpu_regions object of this Mem_space.
@@ -511,7 +511,7 @@ Mem_space::v_insert([[maybe_unused]] Phys_addr phys,
     }
 
   if (ku_mem)
-    ku_mem_added(*touched.value().raw());
+    ku_mem_added(touched.value());
 
   if (writeback)
     {
