@@ -210,11 +210,11 @@ IMPLEMENT
 void
 Alternative_insn::init()
 {
-  extern Alternative_insn const _alt_insns_begin[];
-  extern Alternative_insn const _alt_insns_end[];
+  extern Alternative_insn const _alt_insns_begin;
+  extern Alternative_insn const _alt_insns_end;
 
-  auto const *begin = &_alt_insns_begin[0];
-  auto const *end = &_alt_insns_end[0];
+  auto const *begin = &_alt_insns_begin;
+  auto const *end = &_alt_insns_end;
 
   if (begin != end)
     {
