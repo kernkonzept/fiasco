@@ -126,16 +126,16 @@ atomic_store(T *mem, V value)
 
 inline
 void
-local_atomic_and(Mword *mem, Mword mask)
+local_atomic_and(Mword *mem, Mword value)
 {
-  atomic_and(mem, mask);
+  atomic_and(mem, value);
 }
 
 inline
 void
-local_atomic_or(Mword *mem, Mword bits)
+local_atomic_or(Mword *mem, Mword value)
 {
-  atomic_or(mem, bits);
+  atomic_or(mem, value);
 }
 
 inline

@@ -158,8 +158,8 @@ Cpu::online() const
 
 IMPLEMENT static inline
 bool
-Cpu::online(Cpu_number _cpu)
-{ return _online_mask->get(_cpu); }
+Cpu::online(Cpu_number cpu)
+{ return _online_mask->get(cpu); }
 
 // --------------------------------------------------------------------------
 IMPLEMENTATION [!mp]:
@@ -176,6 +176,6 @@ Cpu::online() const
 
 IMPLEMENT static inline
 bool
-Cpu::online(Cpu_number _cpu)
-{ return _cpu == Cpu_number::boot_cpu(); }
+Cpu::online(Cpu_number cpu)
+{ return cpu == Cpu_number::boot_cpu(); }
 

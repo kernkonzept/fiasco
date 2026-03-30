@@ -12,15 +12,14 @@ __BEGIN_DECLS
 /**
  * The text output back-end.
  *
- * This function must be provided to the C-library for
- * text output. It must simply send len characters of s
- * to an output device.
+ * This function must be provided to the C-library for text output. It must
+ * simply send len characters of str to an output device.
  *
- * @param s   Buffer to send.
- * @param len The number of bytes.
- * @return 1 on success, 0 else.
+ * \param str Buffer to send.
+ * \param len The number of bytes.
+ * \return 1 on success, 0 else.
  */
-int __libc_backend_outs(const char *s, size_t len);
+int __libc_backend_outs(const char *str, size_t len);
 
 typedef unsigned int __libc_backend_printf_lock_t;
 

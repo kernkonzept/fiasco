@@ -71,7 +71,7 @@ DEFINE_GLOBAL_CONSTINIT Global_data<Kpdir *> Kmem::kdir;
 
 IMPLEMENT inline
 bool
-Kmem::is_kmem_page_fault(Mword pfa, Mword /*cause*/)
+Kmem::is_kmem_page_fault(Mword pfa, Mword /*pf_info*/)
 {
   return in_kernel(pfa);
 }

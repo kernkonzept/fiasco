@@ -28,22 +28,22 @@ public:
   /**
    * Translate physical address located in pmem to virtual address.
    *
-   * @param addr  Physical address located in pmem.
+   * \param phys  Physical address located in pmem.
    *              This address does not need to be page-aligned.
    *
-   * @return Virtual address corresponding to addr.
+   * \return Virtual address corresponding to phys.
    */
-  static Address phys_to_pmem(Address addr);
+  static Address phys_to_pmem(Address phys);
 
   /**
    * Translate virtual address located in pmem to physical address.
    *
-   * @param addr  Virtual address located in pmem.
+   * \param virt  Virtual address located in pmem.
    *              This address does not need to be page-aligned.
    *
-   * @return Physical address corresponding to addr.
+   * \return Physical address corresponding to virt.
    */
-  static Address pmem_to_phys(Address addr);
+  static Address pmem_to_phys(Address virt);
 
   static inline Address pmem_to_phys(const void *ptr)
   { return pmem_to_phys(reinterpret_cast<Address>(ptr)); }

@@ -23,7 +23,8 @@ public:
    */
   static void memcpy_mwords(void *dst, void const *src, unsigned long nr_of_mwords);
   static void memcpy_bytes (void *dst, void const *src, unsigned long nr_of_bytes);
-  static void memset_mwords(void *dst, const unsigned long val, unsigned long nr_of_mwords);
+  static void memset_mwords(void *dst, const unsigned long value,
+                            unsigned long nr_of_mwords);
 
   template<typename T> static T read64_consistent(T const *t);
   template<typename T> static void write64_consistent(T *t, T val);

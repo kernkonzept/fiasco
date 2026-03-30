@@ -279,10 +279,10 @@ Irq_mgr_rmsi::nr_msis() const override
 
 PUBLIC
 int
-Irq_mgr_rmsi::msi_info(Mword msi, Unsigned64 src, Msi_info *info) const override
+Irq_mgr_rmsi::msi_info(Mword msi, Unsigned64 source, Msi_info *info) const override
 {
   if (msi & Msi_bit)
-    return _chip.msi_info(msi & ~Msi_bit, src, info);
+    return _chip.msi_info(msi & ~Msi_bit, source, info);
 
   return -L4_err::ERange;
 }

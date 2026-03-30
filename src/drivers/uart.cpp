@@ -179,15 +179,15 @@ IMPLEMENT inline void Uart::shutdown()
   uart()->shutdown();
 }
 
-IMPLEMENT inline bool Uart::change_mode(TransferMode m, BaudRate baud)
+IMPLEMENT inline bool Uart::change_mode(TransferMode m, BaudRate r)
 {
-  return uart()->change_mode(m, baud);
+  return uart()->change_mode(m, r);
 }
 
 IMPLEMENT_DEFAULT inline
-int Uart::write(const char *s, __SIZE_TYPE__ count)
+int Uart::write(const char *str, size_t len)
 {
-  return uart()->write(s, count);
+  return uart()->write(str, len);
 }
 
 IMPLEMENT_DEFAULT inline void Uart::enable_rcv_irq() {}
@@ -284,7 +284,7 @@ void Uart::checksum_tag()
 }
 
 IMPLEMENT_OVERRIDE inline
-int Uart::write(char const *str, __SIZE_TYPE__ count)
+int Uart::write(char const *str, size_t len)
 {
   if (crc32.empty())
     {
@@ -299,7 +299,7 @@ int Uart::write(char const *str, __SIZE_TYPE__ count)
     }
 
   char const *cur = str;
-  char const *end = str + count;
+  char const *end = str + len;
   char const *delim = str;
 
   while (cur < end)
@@ -337,5 +337,5 @@ int Uart::write(char const *str, __SIZE_TYPE__ count)
         }
     }
 
-  return count;
+  return len;
 }

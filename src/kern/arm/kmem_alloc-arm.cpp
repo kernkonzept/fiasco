@@ -116,8 +116,8 @@ static void add_initial_pmem()
   // kmem_space-arm-32/64.cpp).
   struct Identity_map
   {
-    static Address phys_to_pmem(Address a)
-    { return a; }
+    static Address phys_to_pmem(Address phys)
+    { return phys; }
   };
 
   // Find out our virt->phys mapping simply by walking the page table.

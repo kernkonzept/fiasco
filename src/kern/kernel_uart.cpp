@@ -120,9 +120,9 @@ Kernel_uart::Kernel_uart()
 }
 
 PUBLIC void
-Kernel_uart::pm_on_suspend([[maybe_unused]] Cpu_number cpu) override
+Kernel_uart::pm_on_suspend([[maybe_unused]] Cpu_number current_cpu) override
 {
-  assert(cpu == Cpu_number::boot_cpu());
+  assert(current_cpu == Cpu_number::boot_cpu());
 
   uart()->state(Console::DISABLED);
 
@@ -131,9 +131,9 @@ Kernel_uart::pm_on_suspend([[maybe_unused]] Cpu_number cpu) override
 }
 
 PUBLIC void
-Kernel_uart::pm_on_resume([[maybe_unused]] Cpu_number cpu) override
+Kernel_uart::pm_on_resume([[maybe_unused]] Cpu_number current_cpu) override
 {
-  assert(cpu == Cpu_number::boot_cpu());
+  assert(current_cpu == Cpu_number::boot_cpu());
   static_cast<Kernel_uart*>(Kernel_uart::uart())->setup(true);
   uart()->state(Console::ENABLED);
 

@@ -137,17 +137,17 @@ Io_apic_mgr::legacy_override(Mword isa_pin) override
 
 PUBLIC
 void
-Io_apic_mgr::pm_on_suspend([[maybe_unused]] Cpu_number cpu) override
+Io_apic_mgr::pm_on_suspend([[maybe_unused]] Cpu_number current_cpu) override
 {
-  assert(cpu == Cpu_number::boot_cpu());
+  assert(current_cpu == Cpu_number::boot_cpu());
   Io_apic::save_state();
 }
 
 PUBLIC
 void
-Io_apic_mgr::pm_on_resume([[maybe_unused]] Cpu_number cpu) override
+Io_apic_mgr::pm_on_resume([[maybe_unused]] Cpu_number current_cpu) override
 {
-  assert(cpu == Cpu_number::boot_cpu());
+  assert(current_cpu == Cpu_number::boot_cpu());
   Pic::disable_all_save();
   Io_apic::restore_state(true);
 }

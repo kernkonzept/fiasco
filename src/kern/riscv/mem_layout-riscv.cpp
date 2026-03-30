@@ -28,17 +28,17 @@ Mem_layout::pmem_phys_base(Address base)
 
 IMPLEMENT static inline NEEDS[<cassert>]
 Address
-Mem_layout::pmem_to_phys(Address addr)
+Mem_layout::pmem_to_phys(Address virt)
 {
-  assert(in_pmem(addr));
-  return addr - pmem_phys_offset;
+  assert(in_pmem(virt));
+  return virt - pmem_phys_offset;
 }
 
 IMPLEMENT static inline
 Address
-Mem_layout::phys_to_pmem(Address addr)
+Mem_layout::phys_to_pmem(Address phys)
 {
-  return addr + pmem_phys_offset;
+  return phys + pmem_phys_offset;
 }
 
 PUBLIC static inline

@@ -989,7 +989,7 @@ Intel::Io_mmu::allocate_root_table()
 
 IMPLEMENT
 void
-Intel::Io_mmu::pm_on_resume(Cpu_number cpu)
+Intel::Io_mmu::pm_on_resume(Cpu_number current_cpu)
 {
   Address inv_q_pa = Kmem::virt_to_phys(inv_q);
   inv_q_tail = 0;
@@ -1006,7 +1006,7 @@ Intel::Io_mmu::pm_on_resume(Cpu_number cpu)
 
   if (_irq_remapping_table)
     {
-      Cpu_phys_id target = Apic::apic.cpu(cpu)->cpu_id();
+      Cpu_phys_id target = Apic::apic.cpu(current_cpu)->cpu_id();
 
       for (auto *irte = _irq_remapping_table;
            irte != _irq_remapping_table + (1 << _irq_remap_table_size);

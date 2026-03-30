@@ -44,13 +44,14 @@ public:
   : cxx::Dyn_castable<T, Base>(cxx::forward<A>(args)...)
   {}
 
-  void invoke(L4_obj_ref self, L4_fpage::Rights rights, Syscall_frame *f, Utcb *u) override
+  void invoke(L4_obj_ref self, L4_fpage::Rights rights, Syscall_frame *f,
+              Utcb *utcb) override
   {
     L4_msg_tag res(no_reply());
     if (self.op() & L4_obj_ref::Ipc_send) [[likely]]
       res = static_cast<T*>(this)->T::kinvoke(
-              self, rights, f, u,
-              self.have_recv() ? u : Kobject_helper_base::utcb_dummy());
+              self, rights, f, utcb,
+              self.have_recv() ? utcb : Kobject_helper_base::utcb_dummy());
 
     if (res.has_error()) [[unlikely]]
       {

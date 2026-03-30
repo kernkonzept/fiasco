@@ -47,7 +47,7 @@ Address Kmem::virt_to_phys(const void *addr)
 }
 
 IMPLEMENT inline
-bool Kmem::is_kmem_page_fault(Mword pfa, Mword /*error*/)
+bool Kmem::is_kmem_page_fault(Mword pfa, Mword /*pf_info*/)
 {
   return in_kernel(pfa);
 }

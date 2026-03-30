@@ -97,17 +97,17 @@ Mem_layout::kphys_base(Address base)
 
 IMPLEMENT static inline NEEDS[<cassert>]
 Address
-Mem_layout::pmem_to_phys(Address addr)
+Mem_layout::pmem_to_phys(Address virt)
 {
-  assert (in_pmem(addr));
-  return addr - physmem_offs;
+  assert (in_pmem(virt));
+  return virt - physmem_offs;
 }
 
 IMPLEMENT static inline
 Address
-Mem_layout::phys_to_pmem(Address addr)
+Mem_layout::phys_to_pmem(Address phys)
 {
-  return addr + physmem_offs;
+  return phys + physmem_offs;
 }
 
 PUBLIC static inline

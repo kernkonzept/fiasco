@@ -33,8 +33,8 @@ public:
 
   struct Boot_mem_map
   {
-    static Address phys_to_pmem(Address addr)
-    { return addr; }
+    static Address phys_to_pmem(Address phys)
+    { return phys; }
   };
 
   struct Boot_alloc

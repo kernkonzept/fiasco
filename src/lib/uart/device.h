@@ -80,8 +80,8 @@ l4re_dev_create_by_dt_compatible(const char *dt_compatible,
   struct l4re_device_type_##instance_name \
   : public l4re_device_type_base \
   { \
-    Device_class_base *create(void *objmem, unsigned arg1) override \
-    { return new (objmem) Device_class(arg1); } \
+    Device_class_base *create(void *obj_mem, unsigned arg1) override \
+    { return new (obj_mem) Device_class(arg1); } \
     \
     unsigned obj_size() override { return sizeof(Device_class); } \
     const l4re_device_ids *ids() override { return &__ids; } \

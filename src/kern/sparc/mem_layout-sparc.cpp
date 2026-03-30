@@ -91,10 +91,10 @@ Mem_layout::phys_to_pmem(Address phys)
 
 IMPLEMENT static
 Address
-Mem_layout::pmem_to_phys(Address addr)
+Mem_layout::pmem_to_phys(Address virt)
 {
   printf("Mem_layout::pmem_to_phys(Address addr=%lx) is not implemented\n",
-         addr);
+         virt);
   return ~0L;
 }
 

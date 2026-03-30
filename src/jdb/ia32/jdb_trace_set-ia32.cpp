@@ -112,7 +112,7 @@ namespace {
 struct Jdb_ipc_log_pm : Cpu_pm_callbacks
 {
   Jdb_ipc_log_pm(Cpu_number cpu) { register_pm(cpu); }
-  void pm_on_resume(Cpu_number cpu) override
+  void pm_on_resume(Cpu_number current_cpu) override
   {
     void (*fast_entry)(void);
 
@@ -121,7 +121,7 @@ struct Jdb_ipc_log_pm : Cpu_pm_callbacks
     else
       fast_entry  = entry_sys_fast_ipc_c;
 
-    set_fast_entry(cpu, fast_entry);
+    set_fast_entry(current_cpu, fast_entry);
   }
 
   void pm_on_suspend(Cpu_number) override {}

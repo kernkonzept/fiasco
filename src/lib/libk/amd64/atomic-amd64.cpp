@@ -156,23 +156,23 @@ atomic_store(T *mem, V value)
 
 inline
 void
-local_atomic_add(Mword *l, Mword value)
+local_atomic_add(Mword *mem, Mword value)
 {
-  asm volatile ("addq %1, %2" : "=m"(*l) : "er"(value), "m"(*l));
+  asm volatile ("addq %1, %2" : "=m"(*mem) : "er"(value), "m"(*mem));
 }
 
 inline
 void
-local_atomic_and(Mword *l, Mword mask)
+local_atomic_and(Mword *mem, Mword value)
 {
-  asm volatile ("andq %1, %2" : "=m"(*l) : "er"(mask), "m"(*l));
+  asm volatile ("andq %1, %2" : "=m"(*mem) : "er"(value), "m"(*mem));
 }
 
 inline
 void
-local_atomic_or(Mword *l, Mword bits)
+local_atomic_or(Mword *mem, Mword value)
 {
-  asm volatile ("orq %1, %2" : "=m"(*l) : "er"(bits), "m"(*l));
+  asm volatile ("orq %1, %2" : "=m"(*mem) : "er"(value), "m"(*mem));
 }
 
 // ``unsafe'' stands for no safety according to the size of the given type.

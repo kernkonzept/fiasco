@@ -51,16 +51,16 @@ Address Mem_layout::Tbuf_ubuffer_area = 0;
 //no virtual memory in kernel mode
 IMPLEMENT static inline
 Address
-Mem_layout::phys_to_pmem (Address addr)
+Mem_layout::phys_to_pmem(Address phys)
 {
-  return addr;
+  return phys;
 }
 
 IMPLEMENT static inline
 Address
-Mem_layout::pmem_to_phys (Address addr)
+Mem_layout::pmem_to_phys(Address virt)
 {
-  return addr;
+  return virt;
 }
 
 //---------------------------------------------------------------------------

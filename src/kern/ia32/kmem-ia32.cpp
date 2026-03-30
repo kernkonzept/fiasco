@@ -131,9 +131,9 @@ IMPLEMENT inline Address Kmem::kcode_end()
 
 IMPLEMENT inline NEEDS["mem_layout.h"]
 bool
-Kmem::is_kmem_page_fault(Address addr, Mword /*error*/)
+Kmem::is_kmem_page_fault(Address pfa, Mword /*pf_info*/)
 {
-  return addr > Mem_layout::user_max();
+  return pfa > Mem_layout::user_max();
 }
 
 

@@ -10,8 +10,8 @@ EXTENSION class Bootstrap
 {
   struct Bs_mem_map
   {
-    static Address phys_to_pmem(Address a)
-    { return a; }
+    static Address phys_to_pmem(Address phys)
+    { return phys; }
   };
 
   struct Bs_alloc

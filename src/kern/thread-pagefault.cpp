@@ -20,29 +20,30 @@ IMPLEMENTATION:
  * virtual-memory area they occurred in, page-directory updates for kernel
  * faults, IPC-window updates, and invocation of paging function for
  * user-space page faults (handle_page_fault_pager).
- * @param pfa page-fault virtual address
- * @param error_code CPU error code
- * @return true if page fault could be resolved, false otherwise
- * @exception longjmp longjumps to recovery location if page-fault
+ *
+ * \param pfa page-fault virtual address
+ * \param pf_info CPU-specific additional info (e.g. error code)
+ * \return true if page fault could be resolved, false otherwise
+ * \exception longjmp longjumps to recovery location if page-fault
  *                    handling fails (i.e., return value would be false),
  *                    but recovery location has been installed
  */
 IMPLEMENT inline NEEDS[<cstdio>,"kdb_ke.h","processor.h",
 		       "config.h","std_macros.h","logdefs.h",
 		       "warn.h",Thread::page_fault_log, "paging.h"]
-int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
+int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc,
                               Return_frame *)
 {
   CNT_PAGE_FAULT;
 
   // TODO: put this into a debug_page_fault_handler
   if (log_page_fault()) [[unlikely]]
-    page_fault_log(pfa, error_code, pc);
+    page_fault_log(pfa, pf_info, pc);
 
   L4_msg_tag ipc_code = L4_msg_tag(0, 0, 0, 0);
 
   // Check for page fault in user memory area
-  if (!Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
+  if (!Kmem::is_kmem_page_fault(pfa, pf_info)) [[likely]]
     {
       // Make sure that we do not handle page faults that do not
       // belong to this thread.
@@ -59,7 +60,7 @@ int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
         }
 
       // user mode page fault -- send pager request
-      if (handle_page_fault_pager(_pager, pfa, error_code,
+      if (handle_page_fault_pager(_pager, pfa, pf_info,
                                   L4_msg_tag::Label_page_fault))
         return 1;
 
@@ -67,12 +68,12 @@ int Thread::handle_page_fault(Address pfa, Mword error_code, Mword pc,
     }
 
   // don't allow page fault in kernel memory region caused by user mode
-  else if (PF::is_usermode_error(error_code)) [[unlikely]]
+  else if (PF::is_usermode_error(pf_info)) [[unlikely]]
     return 0;
 
   // We're in kernel code faulting on a kernel memory region
-  WARN("No page-fault handler for 0x%lx, error 0x%lx, pc " L4_PTR_FMT "\n",
-        pfa, error_code, pc);
+  WARN("No page-fault handler for 0x%lx, error/info 0x%lx, pc " L4_PTR_FMT "\n",
+        pfa, pf_info, pc);
 
   // An error occurred.  Our last chance to recover is an exception
   // handler a kernel function may have set.

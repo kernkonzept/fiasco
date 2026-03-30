@@ -7,7 +7,7 @@ INTERFACE:
 class Kmem : public Mem_layout
 {
 public:
-  static bool is_kmem_page_fault(Mword pfa, Mword error);
+  static bool is_kmem_page_fault(Mword pfa, Mword pf_info);
   static void kernel_remap();
 
   static Global_data<Kpdir *> kdir;

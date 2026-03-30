@@ -202,13 +202,14 @@ public:
    * Revoke pending vIRQ from extended vCPU user mode.
    *
    * \param g       vGIC context of the thread.
-   * \param lr      List register index that shall be cleared.
+   * \param lr_idx  List register index that shall be cleared.
    * \param load    Shall the hardware be updated immediately?
    * \param abandon Abandon vIRQ if it was active.
    *
    * \return  True if vIRQ was active, false if it was still pending.
    */
-  virtual bool revoke(Arm_vgic *g, unsigned lr, bool load, bool abandon) = 0;
+  virtual bool revoke(Arm_vgic *g, unsigned lr_idx, bool load,
+                      bool abandon) = 0;
 
   /**
    * Handle vGIC maintenance interrupt.
@@ -307,36 +308,36 @@ public:
 
   unsigned inject(Arm_vgic *g, Vcpu_irq_cfg cfg, bool load) override
   {
-    unsigned idx = __builtin_ffs((load ? self()->elsr() : g->elsr) &
-                                 ((1UL << Arm_vgic::N_lregs) - 1U));
-    if (!idx)
+    unsigned lr_idx = __builtin_ffs((load ? self()->elsr() : g->elsr) &
+                                   ((1UL << Arm_vgic::N_lregs) - 1U));
+    if (!lr_idx)
       return 0;
 
-    self()->build_lr(&g->lr, idx - 1, cfg, load);
-    g->injected |= 1UL << (idx - 1);
+    self()->build_lr(&g->lr, lr_idx - 1, cfg, load);
+    g->injected |= 1UL << (lr_idx - 1);
     if (!load)
-      g->elsr &= ~(1UL << (idx - 1));
+      g->elsr &= ~(1UL << (lr_idx - 1));
 
-    return idx;
+    return lr_idx;
   }
 
-  bool revoke(Arm_vgic *g, unsigned idx, bool load, bool abandon) override
+  bool revoke(Arm_vgic *g, unsigned lr_idx, bool load, bool abandon) override
   {
-    bool active = self()->teardown_lr(&g->lr, idx);
+    bool active = self()->teardown_lr(&g->lr, lr_idx);
     if (!active)
       {
         // Was pending but not active. Completely remove it.
         if (load)
-          self()->clear_lr(idx);
-        g->injected &= ~(1UL << idx);
-        g->elsr |= 1UL << idx;
+          self()->clear_lr(lr_idx);
+        g->injected &= ~(1UL << lr_idx);
+        g->elsr |= 1UL << lr_idx;
       }
     else if (abandon)
       {
         // Has been active and we should abandon it. From here on, it is the
         // responsibility of the VMM to handle the eventual EOI of the guest
         // and to finally clear the LR.
-        g->injected &= ~(1UL << idx);
+        g->injected &= ~(1UL << lr_idx);
       }
 
     return active;
@@ -356,9 +357,9 @@ public:
 
     while (eisr)
       {
-        unsigned idx = __builtin_ffs(eisr) - 1U;
-        eisr &= ~(1UL << idx);
-        self()->clear_lr(idx);
+        unsigned lr_idx = __builtin_ffs(eisr) - 1U;
+        eisr &= ~(1UL << lr_idx);
+        self()->clear_lr(lr_idx);
       }
 
     return self()->misr().raw == 0;

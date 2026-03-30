@@ -2,14 +2,14 @@ IMPLEMENTATION [mips32]:
 
 IMPLEMENT inline
 bool
-Kmem::is_kmem_page_fault(Mword pfa, Mword /*cause*/)
+Kmem::is_kmem_page_fault(Mword pfa, Mword /*pf_info*/)
 { return pfa >= 0x80000000; }
 
 IMPLEMENTATION [mips64]:
 
 IMPLEMENT inline
 bool
-Kmem::is_kmem_page_fault(Mword pfa, Mword /*cause*/)
+Kmem::is_kmem_page_fault(Mword pfa, Mword /*pf_info*/)
 { return pfa >= 0x8000000000000000; }
 
 IMPLEMENTATION [mips]:

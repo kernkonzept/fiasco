@@ -15,29 +15,29 @@ atomic_exchange(T *mem, V value)
 
 template<typename T, typename V> inline
 void
-atomic_and(T *l, V value)
+atomic_and(T *mem, V value)
 {
   static_assert(sizeof(T) == 4);
   T val = value;
-  asm volatile ("lock; andl %1, %2" : "=m"(*l) : "ir"(val), "m"(*l));
+  asm volatile ("lock; andl %1, %2" : "=m"(*mem) : "ir"(val), "m"(*mem));
 }
 
 template<typename T, typename V> inline
 void
-atomic_or(T *l, V value)
+atomic_or(T *mem, V value)
 {
   static_assert(sizeof(T) == 4);
   T val = value;
-  asm volatile ("lock; orl %1, %2" : "=m"(*l) : "ir"(val), "m"(*l));
+  asm volatile ("lock; orl %1, %2" : "=m"(*mem) : "ir"(val), "m"(*mem));
 }
 
 template<typename T, typename V> inline
 void
-atomic_add(T *l, V value)
+atomic_add(T *mem, V value)
 {
   static_assert(sizeof(T) == 4);
   T val = value;
-  asm volatile ("lock; addl %1, %2" : "=m"(*l) : "ir"(val), "m"(*l));
+  asm volatile ("lock; addl %1, %2" : "=m"(*mem) : "ir"(val), "m"(*mem));
 }
 
 template<typename T, typename V> inline
@@ -139,23 +139,23 @@ atomic_store(T *mem, V value)
 
 inline
 void
-local_atomic_add(Mword *l, Mword value)
+local_atomic_add(Mword *mem, Mword value)
 {
-  asm volatile ("addl %1, %2" : "=m"(*l) : "ir"(value), "m"(*l));
+  asm volatile ("addl %1, %2" : "=m"(*mem) : "ir"(value), "m"(*mem));
 }
 
 inline
 void
-local_atomic_and(Mword *l, Mword mask)
+local_atomic_and(Mword *mem, Mword value)
 {
-  asm volatile ("andl %1, %2" : "=m"(*l) : "ir"(mask), "m"(*l));
+  asm volatile ("andl %1, %2" : "=m"(*mem) : "ir"(value), "m"(*mem));
 }
 
 inline
 void
-local_atomic_or(Mword *l, Mword bits)
+local_atomic_or(Mword *mem, Mword value)
 {
-  asm volatile ("orl %1, %2" : "=m"(*l) : "ir"(bits), "m"(*l));
+  asm volatile ("orl %1, %2" : "=m"(*mem) : "ir"(value), "m"(*mem));
 }
 
 // ``unsafe'' stands for no safety according to the size of the given type.

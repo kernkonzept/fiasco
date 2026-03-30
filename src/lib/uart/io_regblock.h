@@ -38,17 +38,17 @@ public:
   /**
    * \brief Write register with a byte access.
    */
-  virtual void write8(unsigned long reg, unsigned char value) const = 0;
+  virtual void write8(unsigned long reg, unsigned char val) const = 0;
 
   /**
    * \brief Write register with a 2 byte access.
    */
-  virtual void write16(unsigned long reg, unsigned short value) const = 0;
+  virtual void write16(unsigned long reg, unsigned short val) const = 0;
 
   /**
    * \brief Write register with a 4 byte access.
    */
-  virtual void write32(unsigned long reg, unsigned int value) const = 0;
+  virtual void write32(unsigned long reg, unsigned int val) const = 0;
 
   /*
    * \brief Write register with an 8 byte access.

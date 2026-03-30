@@ -19,7 +19,7 @@ void __libc_backend_printf_unlock(unsigned int)
 {}
 
 // Output to pl011!
-int __libc_backend_outs(const char *s, size_t len)
+int __libc_backend_outs(const char *str, size_t len)
 {
   Unsigned32 *pl011 = reinterpret_cast<Unsigned32 *>(0x9000000);
   size_t i = 0;
@@ -27,7 +27,7 @@ int __libc_backend_outs(const char *s, size_t len)
     {
       while (access_once(&pl011[0x18 / 4]) & 0x20)
         ;
-      write_now(&pl011[0x00], s[i]);
+      write_now(&pl011[0x00], str[i]);
     }
   return 1;
 }

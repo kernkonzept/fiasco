@@ -14,9 +14,9 @@ IMPLEMENTATION [arm && cpu_virt]:
 
 IMPLEMENT inline NEEDS["paging.h"]
 bool
-Kmem::is_kmem_page_fault(Mword, Mword ec)
+Kmem::is_kmem_page_fault(Mword, Mword pf_info)
 {
-  return !PF::is_usermode_error(ec);
+  return !PF::is_usermode_error(pf_info);
 }
 
 //---------------------------------------------------------------------------

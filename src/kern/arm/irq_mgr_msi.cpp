@@ -51,11 +51,11 @@ Irq_mgr_msi<CHIP, MSI_CHIP>::nr_msis() const override
 
 PUBLIC template<typename CHIP, typename MSI_CHIP>
 int
-Irq_mgr_msi<CHIP, MSI_CHIP>::msi_info(Mword msi, Unsigned64 src,
+Irq_mgr_msi<CHIP, MSI_CHIP>::msi_info(Mword msi, Unsigned64 source,
                                       Msi_info *info) const override
 {
   if ((msi & Msi_bit) && _msi_chip)
-    return _msi_chip->MSI_CHIP::msi_info(msi & ~Msi_bit, src, info);
+    return _msi_chip->MSI_CHIP::msi_info(msi & ~Msi_bit, source, info);
 
   return -L4_err::ERange;
 }

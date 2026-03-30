@@ -18,13 +18,13 @@ IMPLEMENTATION:
 
 PUBLIC
 bool
-Sigma0_task::v_fabricate(Mem_space::Vaddr address,
-                         Mem_space::Phys_addr *phys, Mem_space::Page_order *size,
+Sigma0_task::v_fabricate(Mem_space::Vaddr address, Mem_space::Phys_addr *phys,
+                         Mem_space::Page_order *order,
                          Mem_space::Attr *attribs = nullptr) override
 {
   // special-cased because we don't do ptab lookup for sigma0
-  *size = static_cast<Mem_space const &>(*this).largest_page_size();
-  *phys = cxx::mask_lsb(Virt_addr(address), *size);
+  *order = static_cast<Mem_space const &>(*this).largest_page_size();
+  *phys = cxx::mask_lsb(Virt_addr(address), *order);
 
   if (attribs)
     *attribs = Mem_space::Attr::space_local(L4_fpage::Rights::URWX());

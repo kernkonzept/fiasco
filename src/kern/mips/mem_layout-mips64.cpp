@@ -34,13 +34,13 @@ IMPLEMENTATION [mips64]:
 
 IMPLEMENT static inline
 Address
-Mem_layout::phys_to_pmem(Address addr)
-{ return addr + KSEG0; }
+Mem_layout::phys_to_pmem(Address phys)
+{ return phys + KSEG0; }
 
 IMPLEMENT static inline
 Address
-Mem_layout::pmem_to_phys(Address addr)
-{ return addr - KSEG0; }
+Mem_layout::pmem_to_phys(Address virt)
+{ return virt - KSEG0; }
 
 PUBLIC static inline
 bool

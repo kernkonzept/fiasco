@@ -228,8 +228,10 @@ Thread::modify_label(Mword const *todo, int cnt) override
 /** Page fault handler.
     This handler suspends any ongoing IPC, then sets up page-fault IPC.
     Finally, the ongoing IPC's state (if any) is restored.
-    @param pfa page-fault virtual address
-    @param error_code page-fault error code.
+    \param pfa     page-fault virtual address
+    \param pf_info additional CPU-specific page-fault info (e.g. error code)
+
+    \return true if the pagefault was successfully handled, false otherwise
  */
 /*
  * L4-IFACE: kernel-thread.page_fault
@@ -237,7 +239,7 @@ Thread::modify_label(Mword const *todo, int cnt) override
 PRIVATE
 bool
 Thread::handle_page_fault_pager(Thread_ptr const &_pager,
-                                Address pfa, Mword error_code,
+                                Address pfa, Mword pf_info,
                                 L4_msg_tag::Protocol protocol)
 {
   if constexpr (TAG_ENABLED(alien))
@@ -252,14 +254,14 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
   if (!pager)
     {
       WARN("CPU%u: Pager of %lx is invalid (pfa=" L4_PTR_FMT
-           ", errorcode=" L4_PTR_FMT ") to %lx (pc=%lx)\n",
+           ", errorcode/info=" L4_PTR_FMT ") to %lx (pc=%lx)\n",
            cxx::int_value<Cpu_number>(current_cpu()), dbg_id(), pfa,
-           error_code, cxx::int_value<Cap_index>(_pager.raw()), regs()->ip());
+           pf_info, cxx::int_value<Cap_index>(_pager.raw()), regs()->ip());
 
 
       LOG_TRACE("Page fault invalid pager", "ipfh", this, Log_pf_invalid,
                 l->cap_idx = _pager.raw();
-                l->err     = error_code;
+                l->err     = pf_info;
                 l->pfa     = pfa);
 
       kill();
@@ -279,13 +281,13 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
 
   Pf_msg_utcb_saver saved_utcb_fields(utcb);
 
-  assert(PF::is_usermode_error(error_code));
+  assert(PF::is_usermode_error(pf_info));
 
   utcb->buf_desc = L4_buf_desc(0, 0, 0, L4_buf_desc::Inherit_fpu);
   utcb->buffers[0] = L4_buf_item::map().raw();
   utcb->buffers[1] = L4_fpage::all_spaces().raw();
 
-  utcb->values[0] = PF::addr_to_msgword0(pfa, error_code);
+  utcb->values[0] = PF::addr_to_msgword0(pfa, pf_info);
   utcb->values[1] = regs()->ip();
 
   L4_timeout_pair timeout(L4_timeout::Never, L4_timeout::Never);
@@ -305,7 +307,7 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
     {
       if (utcb->error.snd_phase()
           && (utcb->error.error() == L4_error::Not_existent)
-          && PF::is_usermode_error(error_code)
+          && PF::is_usermode_error(pf_info)
           && !(state() & Thread_cancel))
         {
           success = false;

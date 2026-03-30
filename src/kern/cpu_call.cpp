@@ -124,10 +124,10 @@ private:
 class Cpu_call_queue : public Queue
 {
 public:
-  void enq(Cpu_call *rq);
-  bool dequeue(Cpu_call *drq);
+  void enq(Cpu_call *call);
+  bool dequeue(Cpu_call *call);
   bool handle_requests();
-  bool execute_request(Cpu_call *r);
+  bool execute_request(Cpu_call *call);
 };
 
 
@@ -140,28 +140,28 @@ IMPLEMENTATION:
 
 IMPLEMENT inline NEEDS["lock_guard.h", "assert.h"]
 void
-Cpu_call_queue::enq(Cpu_call *rq)
+Cpu_call_queue::enq(Cpu_call *call)
 {
   assert(cpu_lock.test());
   auto guard = lock_guard(q_lock());
-  enqueue(rq);
+  enqueue(call);
 }
 
 IMPLEMENT inline
 bool
-Cpu_call_queue::execute_request(Cpu_call *r)
+Cpu_call_queue::execute_request(Cpu_call *call)
 {
-  return r->run_remote(current_cpu());
+  return call->run_remote(current_cpu());
 }
 
 IMPLEMENT inline NEEDS["lock_guard.h"]
 bool
-Cpu_call_queue::dequeue(Cpu_call *r)
+Cpu_call_queue::dequeue(Cpu_call *call)
 {
   auto guard = lock_guard(q_lock());
-  if (!r->queued())
+  if (!call->queued())
     return false;
-  return Queue::dequeue(r);
+  return Queue::dequeue(call);
 }
 
 IMPLEMENT inline NEEDS["mem.h", "lock_guard.h", "globals.h"]

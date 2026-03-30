@@ -98,14 +98,14 @@ void Uart_sa1000::shutdown()
   _regs->write<unsigned int>(UTCR3, 0);
 }
 
-bool Uart_sa1000::change_mode(Transfer_mode m, Baud_rate baud)
+bool Uart_sa1000::change_mode(Transfer_mode m, Baud_rate r)
 {
   unsigned old_utcr3, quot;
   //proc_status st;
 
-  if (baud == static_cast<Baud_rate>(-1))
+  if (r == static_cast<Baud_rate>(-1))
     return false;
-  if (baud != BAUD_NC && (baud > 115200 || baud < 96))
+  if (r != BAUD_NC && (r > 115200 || r < 96))
     return false;
   if (m == static_cast<Transfer_mode>(-1))
     return false;
@@ -125,9 +125,9 @@ bool Uart_sa1000::change_mode(Transfer_mode m, Baud_rate baud)
     _regs->write<unsigned int>(UTCR0, m & 0x0ff);
 
   /* set baud rate */
-  if (baud!=BAUD_NC)
+  if (r != BAUD_NC)
     {
-      quot = (UARTCLK / (16 * baud)) -1;
+      quot = (UARTCLK / (16 * r)) -1;
       _regs->write<unsigned int>(UTCR1, (quot & 0xf00) >> 8);
       _regs->write<unsigned int>(UTCR2, quot & 0x0ff);
     }

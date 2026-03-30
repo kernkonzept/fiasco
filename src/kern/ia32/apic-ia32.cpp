@@ -167,9 +167,9 @@ Apic::pm_on_resume(Cpu_number) override
 IMPLEMENTATION [mp]:
 
 PUBLIC void
-Apic::pm_on_resume(Cpu_number cpu) override
+Apic::pm_on_resume(Cpu_number current_cpu) override
 {
-  if (cpu == Cpu_number::boot_cpu())
+  if (current_cpu == Cpu_number::boot_cpu())
     Apic::init(true);
   else
     Apic::init_ap();

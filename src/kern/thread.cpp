@@ -94,7 +94,7 @@ public:
    */
   explicit Thread(Ram_quota *);
 
-  int handle_page_fault(Address pfa, Mword error, Mword pc,
+  int handle_page_fault(Address pfa, Mword pf_info, Mword pc,
                         Return_frame *regs);
 
 private:

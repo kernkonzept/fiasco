@@ -500,12 +500,12 @@ Context::arch_inject_vcpu_irq(Mword irq_id, Vcpu_irq_list_item *irq)
   //    happen twice.
   if (Vcpu_irq_list::in_list(irq)) [[unlikely]]
     {
-      assert(irq->lr && !irq->queued);
+      assert(irq->lr_idx && !irq->queued);
       irq->queued = true;
       return;
     }
 
-  assert(!irq->lr);
+  assert(!irq->lr_idx);
 
   if ((state() & (Thread_vcpu_user | Thread_ext_vcpu_enabled)) ==
                  (Thread_vcpu_user | Thread_ext_vcpu_enabled))
@@ -513,9 +513,10 @@ Context::arch_inject_vcpu_irq(Mword irq_id, Vcpu_irq_list_item *irq)
       // We've interrupted the guest and can directly inject the IRQ
       Vcpu_state *vcpu = vcpu_state().access();
       Vm_state *v = vm_state(vcpu);
-      irq->lr = Gic_h_global::gic->inject(&v->gic, Gic_h::Vcpu_irq_cfg(irq_id),
-                                          current() == this);
-      if (irq->lr)
+      irq->lr_idx = Gic_h_global::gic->inject(&v->gic,
+                                              Gic_h::Vcpu_irq_cfg(irq_id),
+                                              current() == this);
+      if (irq->lr_idx)
         {
           _injected_irqs.push_back(irq);
           irq->vcpu_soi();
@@ -543,18 +544,18 @@ Context::arch_revoke_vcpu_irq(Vcpu_irq_list_item *irq, bool abandon)
   if (!Vcpu_irq_list::in_list(irq))
     return Revoke_vcpu_state::Ok_was_clear;
 
-  if (irq->lr)
+  if (irq->lr_idx)
     {
       Vcpu_state *vcpu = vcpu_state().access();
       Vm_state *v = vm_state(vcpu);
       bool load = current() == this;
-      bool active = Gic_h_global::gic->revoke(&v->gic, irq->lr - 1U, load,
+      bool active = Gic_h_global::gic->revoke(&v->gic, irq->lr_idx - 1U, load,
                                               abandon);
       if (active && !abandon) [[unlikely]]
         return Revoke_vcpu_state::Fail_is_active;
 
       bool queued = irq->queued;
-      irq->lr = 0;
+      irq->lr_idx = 0;
       irq->queued = false;
       _injected_irqs.remove(irq);
 
@@ -581,11 +582,11 @@ Context::vcpu_handle_pending_injects(Vm_state *v)
   while (it != _pending_irqs.end())
     {
       Vcpu_irq_list_item *irq = *it;
-      assert(!irq->lr);
-      irq->lr = Gic_h_global::gic->inject(&v->gic,
-                                          Gic_h::Vcpu_irq_cfg(irq->vcpu_irq_id()),
-                                          true);
-      if (!irq->lr)
+      assert(!irq->lr_idx);
+      irq->lr_idx = Gic_h_global::gic->inject(&v->gic,
+                                      Gic_h::Vcpu_irq_cfg(irq->vcpu_irq_id()),
+                                      true);
+      if (!irq->lr_idx)
         break;
 
       it = _pending_irqs.erase(it);
@@ -647,11 +648,11 @@ Context::vcpu_vgic_maintenance(unsigned virq)
       while (it != _injected_irqs.end())
         {
           Vcpu_irq_list_item *irq = *it;
-          if (eois & (1UL << (irq->lr - 1U)))
+          if (eois & (1UL << (irq->lr_idx - 1U)))
             {
               it = _injected_irqs.erase(it);
               irq->vcpu_eoi();
-              irq->lr = 0;
+              irq->lr_idx = 0;
               if (irq->queued) [[unlikely]]
                 {
                   irq->queued = false;
