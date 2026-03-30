@@ -188,13 +188,13 @@ Per_cpu_data::run_ctors(Cpu_number cpu)
   if (cpu != Cpu_number::boot_cpu())
     return;
 
-  extern ctor_function_t __PER_CPU_INIT_ARRAY_START__;
-  extern ctor_function_t __PER_CPU_INIT_ARRAY_END__;
-  run_ctor_functions(&__PER_CPU_INIT_ARRAY_START__, &__PER_CPU_INIT_ARRAY_END__);
+  extern ctor_function_t __PER_CPU_INIT_ARRAY_START__[];
+  extern ctor_function_t __PER_CPU_INIT_ARRAY_END__[];
+  run_ctor_functions(__PER_CPU_INIT_ARRAY_START__, __PER_CPU_INIT_ARRAY_END__);
 
-  extern ctor_function_t __PER_CPU_CTORS_LIST__;
-  extern ctor_function_t __PER_CPU_CTORS_END__;
-  run_ctor_functions(&__PER_CPU_CTORS_LIST__, &__PER_CPU_CTORS_END__);
+  extern ctor_function_t __PER_CPU_CTORS_LIST__[];
+  extern ctor_function_t __PER_CPU_CTORS_END__[];
+  run_ctor_functions(__PER_CPU_CTORS_LIST__, __PER_CPU_CTORS_END__);
 }
 
 IMPLEMENT inline
@@ -207,14 +207,14 @@ Per_cpu_data::run_late_ctors(Cpu_number cpu)
   if (cpu != Cpu_number::boot_cpu())
     return;
 
-  extern ctor_function_t __PER_CPU_LATE_INIT_ARRAY_START__;
-  extern ctor_function_t __PER_CPU_LATE_INIT_ARRAY_END__;
-  run_ctor_functions(&__PER_CPU_LATE_INIT_ARRAY_START__,
-                     &__PER_CPU_LATE_INIT_ARRAY_END__);
+  extern ctor_function_t __PER_CPU_LATE_INIT_ARRAY_START__[];
+  extern ctor_function_t __PER_CPU_LATE_INIT_ARRAY_END__[];
+  run_ctor_functions(__PER_CPU_LATE_INIT_ARRAY_START__,
+                     __PER_CPU_LATE_INIT_ARRAY_END__);
 
-  extern ctor_function_t __PER_CPU_LATE_CTORS_LIST__;
-  extern ctor_function_t __PER_CPU_LATE_CTORS_END__;
-  run_ctor_functions(&__PER_CPU_LATE_CTORS_LIST__, &__PER_CPU_LATE_CTORS_END__);
+  extern ctor_function_t __PER_CPU_LATE_CTORS_LIST__[];
+  extern ctor_function_t __PER_CPU_LATE_CTORS_END__[];
+  run_ctor_functions(__PER_CPU_LATE_CTORS_LIST__, __PER_CPU_LATE_CTORS_END__);
 }
 
 
@@ -238,8 +238,8 @@ private:
     unsigned len() const { return _len; }
     Ctor const &operator [] (unsigned idx) const
     {
-      extern Ctor _per_cpu_ctor_data_start;
-      return (&_per_cpu_ctor_data_start)[idx];
+      extern Ctor _per_cpu_ctor_data_start[];
+      return _per_cpu_ctor_data_start[idx];
     }
 
   private:
@@ -271,13 +271,13 @@ IMPLEMENT
 void
 Per_cpu_data::Ctor_vector::push_back(Ctor::Func func, void *base)
 {
-  extern Ctor _per_cpu_ctor_data_start;
-  extern Ctor _per_cpu_ctor_data_end;
+  extern Ctor _per_cpu_ctor_data_start[];
+  extern Ctor _per_cpu_ctor_data_end[];
 
-  if (&_per_cpu_ctor_data_start + _len >= &_per_cpu_ctor_data_end)
+  if (_per_cpu_ctor_data_start + _len >= _per_cpu_ctor_data_end)
     panic("out of per_cpu_ctor_space");
 
-  (&_per_cpu_ctor_data_start)[_len++] = Ctor(func, base);
+  _per_cpu_ctor_data_start[_len++] = Ctor(func, base);
 }
 
 
@@ -343,14 +343,14 @@ IMPLEMENT inline
 void
 Per_cpu_data::run_ctors(Cpu_number cpu)
 {
-  extern ctor_function_t __PER_CPU_INIT_ARRAY_START__;
-  extern ctor_function_t __PER_CPU_INIT_ARRAY_END__;
-  extern ctor_function_t __PER_CPU_CTORS_LIST__;
-  extern ctor_function_t __PER_CPU_CTORS_END__;
+  extern ctor_function_t __PER_CPU_INIT_ARRAY_START__[];
+  extern ctor_function_t __PER_CPU_INIT_ARRAY_END__[];
+  extern ctor_function_t __PER_CPU_CTORS_LIST__[];
+  extern ctor_function_t __PER_CPU_CTORS_END__[];
   if (cpu == Cpu_number::boot_cpu())
     {
-      run_ctor_functions(&__PER_CPU_INIT_ARRAY_START__, &__PER_CPU_INIT_ARRAY_END__);
-      run_ctor_functions(&__PER_CPU_CTORS_LIST__, &__PER_CPU_CTORS_END__);
+      run_ctor_functions(__PER_CPU_INIT_ARRAY_START__, __PER_CPU_INIT_ARRAY_END__);
+      run_ctor_functions(__PER_CPU_CTORS_LIST__, __PER_CPU_CTORS_END__);
       late_ctor_start = ctors.len();
       return;
     }
@@ -363,14 +363,14 @@ IMPLEMENT inline
 void
 Per_cpu_data::run_late_ctors(Cpu_number cpu)
 {
-  extern ctor_function_t __PER_CPU_LATE_INIT_ARRAY_START__;
-  extern ctor_function_t __PER_CPU_LATE_INIT_ARRAY_END__;
-  extern ctor_function_t __PER_CPU_LATE_CTORS_LIST__;
-  extern ctor_function_t __PER_CPU_LATE_CTORS_END__;
+  extern ctor_function_t __PER_CPU_LATE_INIT_ARRAY_START__[];
+  extern ctor_function_t __PER_CPU_LATE_INIT_ARRAY_END__[];
+  extern ctor_function_t __PER_CPU_LATE_CTORS_LIST__[];
+  extern ctor_function_t __PER_CPU_LATE_CTORS_END__[];
   if (cpu == Cpu_number::boot_cpu())
     {
-      run_ctor_functions(&__PER_CPU_LATE_INIT_ARRAY_START__, &__PER_CPU_LATE_INIT_ARRAY_END__);
-      run_ctor_functions(&__PER_CPU_LATE_CTORS_LIST__, &__PER_CPU_LATE_CTORS_END__);
+      run_ctor_functions(__PER_CPU_LATE_INIT_ARRAY_START__, __PER_CPU_LATE_INIT_ARRAY_END__);
+      run_ctor_functions(__PER_CPU_LATE_CTORS_LIST__, __PER_CPU_LATE_CTORS_END__);
       return;
     }
 

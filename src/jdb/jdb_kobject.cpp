@@ -473,10 +473,10 @@ IMPLEMENT
 char const *
 Jdb_kobject_handler::_kobject_type(Kobject_common *o)
 {
-  extern Kobject_typeinfo_name const _jdb_typeinfo_table;
-  extern Kobject_typeinfo_name const _jdb_typeinfo_table_end;
+  extern Kobject_typeinfo_name const _jdb_typeinfo_table[];
+  extern Kobject_typeinfo_name const _jdb_typeinfo_table_end[];
 
-  for (auto const *t = &_jdb_typeinfo_table; t != &_jdb_typeinfo_table_end; ++t)
+  for (auto const *t = _jdb_typeinfo_table; t != _jdb_typeinfo_table_end; ++t)
     if (t->type == cxx::dyn_typeid(o))
       return t->name;
 
