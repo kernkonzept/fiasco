@@ -25,8 +25,7 @@ public:
       Kip *_i;
 
     public:
-      bool operator==(Iterator const &other) const { return _i == other._i; }
-      bool operator!=(Iterator const &other) const { return _i != other._i; }
+      friend bool operator==(Iterator const &, Iterator const &) = default;
       Kip *operator*() const { return _i; }
       Kip *operator->() const { return _i; }
 

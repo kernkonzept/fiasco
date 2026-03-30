@@ -998,29 +998,31 @@ public:
    * results of the == operator applied on each pair of corresponding bits of
    * the bitmaps separately.
    *
-   * \param o  Bitmap to compare the bitmap with.
+   * \param lhs  Left hand side bitmap to compare with.
+   * \param rhs  Right hand side bitmap to compare with.
    *
    * \retval true   All bits in the common range of the bitmaps match and all
    *                bits beyond the common range are unset.
    * \retval false  Some bits in the common range of the bitmaps do not match
    *                or some bits beyond the common range are set.
    */
-  template<size_t OTHER_BITS>
-  bool operator ==(Bitmap<OTHER_BITS> const &o) const
+  template<size_t RHS_BITS>
+  friend bool operator == (Bitmap<BITS> const &lhs,
+                           Bitmap<RHS_BITS> const &rhs)
   {
     // Check the common range of bits.
-    for (size_t i = 0; i < min(BITS, OTHER_BITS); ++i)
-      if (this->operator[](i) != o[i])
+    for (size_t i = 0; i < min(BITS, RHS_BITS); ++i)
+      if (lhs[i] != rhs[i])
         return false;
 
     // Check the bits in this bitmap beyond the common range.
-    for (size_t i = OTHER_BITS; i < BITS; ++i)
-      if (this->operator[](i))
+    for (size_t i = RHS_BITS; i < BITS; ++i)
+      if (lhs[i])
         return false;
 
     // Check the bits in the other bitmap beyond the common range.
-    for (size_t i = BITS; i < OTHER_BITS; ++i)
-      if (o[i])
+    for (size_t i = BITS; i < RHS_BITS; ++i)
+      if (rhs[i])
         return false;
 
     return true;
@@ -1034,7 +1036,8 @@ public:
    * bits of the bitmaps separately (assuming an unset bit is represented by
    * 0 and a set bit is represented by 1).
    *
-   * \param o  Bitmap to compare the bitmap with.
+   * \param lhs  Left hand side bitmap for the comparison
+   * \param rhs  Right hand side bitmap for the comparison
    *
    * \retval true   For all bits in the common range of the bitmaps, if a bit
    *                is set in the bitmap, it is also set in the other bitmap
@@ -1047,17 +1050,18 @@ public:
    *                larger than the other bitmap, then there is a bit in the
    *                bitmap beyond the common range that is set.
    */
-  template<size_t OTHER_BITS>
-  bool operator <=(Bitmap<OTHER_BITS> const &o) const
+  template<size_t RHS_BITS>
+  friend bool operator <=(Bitmap<BITS> const &lhs,
+                          Bitmap<RHS_BITS> const &rhs)
   {
     // Check for bitwise lesser-or-equal comparison in the common range.
-    for (size_t i = 0; i < min(BITS, OTHER_BITS); ++i)
-      if (this->operator[](i) && !o[i])
+    for (size_t i = 0; i < min(BITS, RHS_BITS); ++i)
+      if (lhs[i] && !rhs[i])
         return false;
 
     // Check for bits set in this bitmap beyond the common range.
-    for (size_t i = OTHER_BITS; i < BITS; ++i)
-      if (this->operator[](i))
+    for (size_t i = RHS_BITS; i < BITS; ++i)
+      if (lhs[i])
         return false;
 
     return true;

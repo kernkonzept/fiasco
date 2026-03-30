@@ -62,11 +62,7 @@ public:
   bool is_same_generation(Asid_t generation) const
   { return (a & ~Mask) == generation.a; }
 
-  bool operator == (Asid_t o) const
-  { return a == o.a; }
-
-  bool operator != (Asid_t o) const
-  { return a != o.a; }
+  friend bool operator == (Asid_t const &, Asid_t const &) = default;
 };
 
 using Asid_num_fn = unsigned (*)();

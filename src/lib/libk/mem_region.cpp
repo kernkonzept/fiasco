@@ -11,8 +11,8 @@ public:
 
   bool valid() const { return start < end; }
 
-  bool operator < (Mem_region const &o) const
-  { return end < o.start; }
+  friend bool operator < (Mem_region const &lhs, Mem_region const &rhs)
+  { return lhs.end < rhs.start; }
 
   bool overlaps(Mem_region const &o) const
   { return !(o < *this || *this < o); }

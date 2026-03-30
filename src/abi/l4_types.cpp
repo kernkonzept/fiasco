@@ -286,10 +286,12 @@ public:
 
   /**
    * Compare two capability selectors for equality.
-   * \param o the right hand side for the comparison.
+   * \param lhs the left hand side for the comparison.
+   * \param rhs the right hand side for the comparison.
    * \note Capability selectors are compared by their binary representation.
    */
-  bool operator == (L4_obj_ref const &o) const { return _raw == o._raw; }
+  friend bool operator == (L4_obj_ref const &lhs, L4_obj_ref const &rhs)
+  { return lhs._raw == rhs._raw; }
 
 private:
   L4_obj_ref(bool, Mword raw) : _raw(raw) {}

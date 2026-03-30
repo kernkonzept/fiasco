@@ -57,14 +57,9 @@ public:
   element_type &operator * () const { return *get(); }
   pointer operator -> () const { return get(); }
 
-  bool operator == (decltype(nullptr)) const
+  friend bool operator == (unique_ptr const &lhs, decltype(nullptr))
   {
-    return _ptr == nullptr;
-  }
-
-  bool operator != (decltype(nullptr)) const
-  {
-    return !((*this) == nullptr);
+    return lhs._ptr == nullptr;
   }
 
   pointer get() const { return _ptr; }

@@ -20,19 +20,21 @@ public:
   Rcu_batch(long b) : _b(b) {}
 
   /// less than comparison.
-  bool operator < (Rcu_batch const &o) const { return (_b - o._b) < 0; }
+  friend bool operator < (Rcu_batch const &lhs, Rcu_batch const &rhs)
+  { return (lhs._b - rhs._b) < 0; }
   /// greater than comparison.
-  bool operator > (Rcu_batch const &o) const { return (_b - o._b) > 0; }
+  friend bool operator > (Rcu_batch const &lhs, Rcu_batch const &rhs)
+  { return (lhs._b - rhs._b) > 0; }
   /// greater than / equal to comparison.
-  bool operator >= (Rcu_batch const &o) const { return (_b - o._b) >= 0; }
+  friend bool operator >= (Rcu_batch const &lhs, Rcu_batch const &rhs)
+  { return (lhs._b - rhs._b) >= 0; }
   /// equality check.
-  bool operator == (Rcu_batch const &o) const { return _b == o._b; }
-  /// inequality test.
-  bool operator != (Rcu_batch const &o) const { return _b != o._b; }
+  friend bool operator == (Rcu_batch const &, Rcu_batch const &) = default;
   /// increment batch.
   Rcu_batch &operator ++ () { ++_b; return *this; }
   /// increase batch with \a r.
-  Rcu_batch operator + (long r) { return Rcu_batch(_b + r); }
+  friend Rcu_batch operator + (Rcu_batch const &batch, long r)
+  { return Rcu_batch(batch._b + r); }
 
 
 private:

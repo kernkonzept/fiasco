@@ -77,6 +77,6 @@ public:
       return *this;
     }
 
-    bool operator==(Attr const &) const = default;
+    friend bool operator==(Attr const &, Attr const &) = default;
   };
 };

@@ -104,8 +104,8 @@ public:
     constexpr Irq_thread() : _target(nullptr) {}
     explicit constexpr Irq_thread(Thread *t, bool = false) : _target(t) {}
 
-    constexpr bool operator==(Irq_thread const &other) const
-    { return _target == other._target; }
+    constexpr friend bool operator==(Irq_thread const &,
+                                     Irq_thread const &) = default;
 
     constexpr operator Thread*() const { return _target; }
     constexpr explicit operator bool() const { return is_bound(); }
@@ -144,8 +144,8 @@ public:
     : _target(reinterpret_cast<Mword>(t) | (vcpu ? 2U : 0U))
     {}
 
-    constexpr bool operator==(Irq_thread const &other) const
-    { return _target == other._target; }
+    constexpr friend bool operator==(Irq_thread const &,
+                                     Irq_thread const &) = default;
 
     operator Thread*() const { return as_thread(); }
     constexpr explicit operator bool() const { return is_bound(); }

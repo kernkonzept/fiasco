@@ -54,11 +54,11 @@ protected:
 
     __Iterator() {}
 
-    bool operator == (__Iterator const &o) const
-    { return _c == o._c; }
+    friend bool operator == (__Iterator const &lhs, __Iterator const &rhs)
+    { return lhs._c == rhs._c; }
 
-    bool operator != (__Iterator const &o) const
-    { return _c != o._c; }
+    friend bool operator != (__Iterator const &lhs, __Iterator const &rhs)
+    { return lhs._c != rhs._c; }
 
     __Iterator &operator ++ ()
     {

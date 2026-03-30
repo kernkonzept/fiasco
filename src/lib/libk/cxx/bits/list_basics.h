@@ -57,8 +57,10 @@ public:
     Value_type operator -> () const { return static_cast<Value_type>(*_c); }
     Iterator operator ++ () { _c = POLICY::next(_c); return *this; }
 
-    bool operator == (Iterator const &o) const { return *_c == *o._c; }
-    bool operator != (Iterator const &o) const { return !operator == (o); }
+    friend bool operator == (Iterator const &lhs, Iterator const &rhs)
+    { return *lhs._c == *rhs._c; }
+    friend bool operator != (Iterator const &lhs, Iterator const &rhs)
+    { return *lhs._c != *rhs._c; }
 
     Iterator() : _c(__end()) {}
 

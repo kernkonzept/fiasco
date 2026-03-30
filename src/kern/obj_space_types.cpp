@@ -61,7 +61,7 @@ namespace Obj {
     void del_rights(L4_fpage::Rights r)
     { _obj &= ~(cxx::int_value<L4_fpage::Rights>(r) & 3); }
 
-    bool operator == (Capability const &c) const { return _obj == c._obj; }
+    friend bool operator == (Capability const &, Capability const &) = default;
   };
 
   /**
