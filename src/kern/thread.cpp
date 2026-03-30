@@ -673,16 +673,16 @@ Thread::ex_regs_arch(Mword ops)
 PUBLIC inline
 bool
 Thread::check_sys_ipc(unsigned flags, Thread **partner, Thread **sender,
-                      bool *have_recv) const
+                      bool *have_recv)
 {
   if (flags & L4_obj_ref::Ipc_recv)
     {
-      *sender = flags & L4_obj_ref::Ipc_open_wait ? nullptr : const_cast<Thread*>(this);
+      *sender = flags & L4_obj_ref::Ipc_open_wait ? nullptr : this;
       *have_recv = true;
     }
 
   if (flags & L4_obj_ref::Ipc_send)
-    *partner = const_cast<Thread*>(this);
+    *partner = this;
 
   return *have_recv || ((flags & L4_obj_ref::Ipc_send) && *partner);
 }

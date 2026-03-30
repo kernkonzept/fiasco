@@ -67,7 +67,7 @@ public:
     Abt_ipc_in_progress,
   };
 
-  Rcv_state sender_ok(const Sender* sender) const;
+  Rcv_state sender_ok(Sender* sender);
 
   /// Whether the IPC partner this Receiver is waiting for (closed wait) is
   /// enqueued in the Receiver's sender list
@@ -579,7 +579,7 @@ Receiver::in_ipc(Sender *sender)
 IMPLEMENT inline NEEDS["std_macros.h", "thread_state.h", "sender.h",
                        Receiver::vcpu_async_ipc]
 Receiver::Rcv_state
-Receiver::sender_ok(const Sender *sender) const
+Receiver::sender_ok(Sender *sender)
 {
   unsigned ipc_state = state() & Thread_ipc_mask;
 
@@ -604,7 +604,7 @@ Receiver::sender_ok(const Sender *sender) const
 
 PRIVATE inline NEEDS["logdefs.h"]
 Receiver::Rcv_state
-Receiver::vcpu_async_ipc(Sender const *sender) const
+Receiver::vcpu_async_ipc(Sender *sender)
 {
   if (state() & Thread_ipc_mask) [[unlikely]]
     return Rcv_state::Not_receiving;
@@ -614,12 +614,10 @@ Receiver::vcpu_async_ipc(Sender const *sender) const
   if (!vcpu_irqs_enabled(vcpu)) [[unlikely]]
     return Rcv_state::Not_receiving;
 
-  Receiver *self = const_cast<Receiver*>(this);
-
   if (this == current())
-    self->spill_user_state();
+    spill_user_state();
 
-  if (self->vcpu_enter_kernel_mode(vcpu))
+  if (vcpu_enter_kernel_mode(vcpu))
     vcpu = vcpu_state().access();
 
   LOG_TRACE("VCPU events", "vcpu", this, Vcpu_log,
@@ -630,12 +628,12 @@ Receiver::vcpu_async_ipc(Sender const *sender) const
       l->space = ~0; //vcpu_user_space() ? static_cast<Task*>(vcpu_user_space())->dbg_id() : ~0;
       );
 
-  self->_rcv_regs = &vcpu->_ipc_regs;
-  self->set_cur_reply_cap_slot(&self->_implicit_reply_cap);
+  _rcv_regs = &vcpu->_ipc_regs;
+  set_cur_reply_cap_slot(&_implicit_reply_cap);
   vcpu->_regs.set_ipc_upcall();
-  self->set_partner(const_cast<Sender*>(sender));
-  self->state_add_dirty(Thread_receive_wait);
-  self->vcpu_save_state_and_upcall_async_ipc();
+  set_partner(sender);
+  state_add_dirty(Thread_receive_wait);
+  vcpu_save_state_and_upcall_async_ipc();
   return Rcv_state::Irq_receive;
 }
 

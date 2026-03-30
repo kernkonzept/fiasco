@@ -856,9 +856,9 @@ Context::schedule_if(bool s)
  */
 PUBLIC inline
 Sched_context *
-Context::sched_context() const
+Context::sched_context()
 {
-  return const_cast<Sched_context*>(&_sched_context);
+  return &_sched_context;
 }
 
 /**

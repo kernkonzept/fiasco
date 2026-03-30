@@ -90,8 +90,7 @@ public:
 
   void release() { lock.clear(); }
   unsigned min_depth() const { return 0; }
-  Iterator first() const
-  { return const_cast<Mapping_tree &>(_tree).begin(); }
+  Iterator first() { return _tree.begin(); }
 };
 
 //---------------------------------------------------------------------------
