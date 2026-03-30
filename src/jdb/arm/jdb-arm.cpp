@@ -43,6 +43,11 @@ void
 Jdb::wfi_leave()
 {}
 
+PRIVATE static inline
+void
+Jdb::next_interval_app_cpu()
+{}
+
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pic_gic && serial]:
 
@@ -135,6 +140,11 @@ Jdb::wfi_leave()
   kernel_uart_irq_enable();
 }
 
+PRIVATE static inline
+void
+Jdb::next_interval_app_cpu()
+{ Timer_tick::next_interval(); }
+
 PRIVATE static
 void
 Jdb::_wait_for_input()
@@ -190,6 +200,8 @@ Jdb::restore_irqs(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
     wfi_leave();
+  else
+    next_interval_app_cpu();
 
   Timer_tick::enable(cpu);
 
