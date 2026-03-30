@@ -5,9 +5,10 @@ IMPLEMENTATION:
 #include "warn.h"
 
 
-IMPLEMENT inline NEEDS["kmem.h", "paging.h", "warn.h", Thread::page_fault_log]
+IMPLEMENT inline NEEDS["kmem.h", "paging.h", "warn.h", Thread::page_fault_log,
+                       Thread::handle_page_fault_trampoline]
 int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc,
-                              Trap_state *, bool release_cpulock)
+                              Trap_state *ts, bool release_cpulock)
 {
   CNT_PAGE_FAULT;
 
@@ -36,6 +37,10 @@ int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc,
           ipc_code.set_error();
           goto error;
         }
+
+      // Try one-shot, in-thread handler first
+      if (handle_page_fault_trampoline(pfa, pf_info, ts))
+        return 1;
 
       // Maybe not necessary because handle_page_fault_pager() acquires the CPU
       // lock again. But this is at least a preemption point.
@@ -68,4 +73,48 @@ int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc,
   longjmp_recover_jmpbuf();
 
   return 0;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [!pagefault_trampoline]:
+
+PRIVATE inline
+bool
+Thread::handle_page_fault_trampoline(Address, Mword, Trap_state *)
+{
+  return false;
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [pagefault_trampoline]:
+
+#include "cpu_lock.h"
+
+PRIVATE
+bool
+Thread::handle_page_fault_trampoline(Address pfa, Mword pf_info, Trap_state *ts)
+{
+  if (!(state() & Thread_pf_trampoline))
+    return false;
+
+  assert(cpu_lock.test());
+
+  state_del_dirty(Thread_pf_trampoline);
+
+  // Actually only required for ARM32/novirt (SP_usr/LR_usr) and ARM64 (SP_EL0).
+  // Must be done here so that tramp_state->ts contains the information.
+  // The supplemental fill_user_state() is done directly in the ARM32/ARM64
+  // resume_{normal,trigger_exception}_after_pf_trampoline() Assembler code.
+  spill_user_state();
+
+  Pf_trampoline *tramp_state = pf_tramp_state().access();
+  tramp_state->ts = *ts;
+  tramp_state->saved_mr0 = this->utcb().access(true)->values[0];
+  tramp_state->flags |= Pf_trampoline::Pf_in_progress;
+  ts->ip(tramp_state->ip);
+
+  arch_return_to_pf_trampoline(pfa, pf_info, ts,
+                               tramp_state, pf_tramp_state().usr());
+
+  return true;
 }

@@ -1133,9 +1133,21 @@ go_nonsecure:
 /* -------------------------------------- TEXT ---------------------------*/
 
 .text
+
+/*************************************************************************
+ * return from vCPU context / return normal after PF trampoline handler
+ * \pre interrupts must be disabled
+ * \pre `r0` must point to the trap state
+ * \pre `r1` must point to the return frame
+ * \pre `r1 = r0 + sizeof(Trap_state) - sizeof(Return_frame)`
+ * \post `sp` points to the top of the stack (pops the return frame)
+ */
 	.global	vcpu_resume
 	.type vcpu_resume, #function
 vcpu_resume:
+	.global	resume_normal_after_pf_trampoline
+	.type resume_normal_after_pf_trampoline, #function
+resume_normal_after_pf_trampoline:
 #ifdef CONFIG_MPU
 	// We cannot update sp before calling mpu_kernel_leave because
 	// CONTEXT_OF does not work with a completely empty stack!
@@ -1157,5 +1169,25 @@ vcpu_resume:
 	ldmia	lr!, {r0 - r12}
 	ldmia	lr, {sp, lr}^			@ restore user sp and lr (now lazy)
 	add	lr, lr, #(RF_SIZE - 4)		@ return address
-	ldmdb	lr, {pc}^			@ go back to interrupted insn 
+	ldmdb	lr, {pc}^			@ go back to interrupted insn
+#endif
+
+#ifdef CONFIG_PAGEFAULT_TRAMPOLINE
+# ifdef CONFIG_MMU
+.section	.excp.text,"xa"
+# endif
+/******************************************************************************
+ * return from PF trampoline handler and trigger exception (re-enter)
+ * \pre interrupts must be disabled
+ * \pre `r0` must point to the trap state
+ */
+.global resume_trigger_exception_after_pf_trampoline
+.type resume_trigger_exception_after_pf_trampoline, #function
+resume_trigger_exception_after_pf_trampoline:
+	mov	sp, r0
+	add	lr, r0, #(15 * 4)
+	ldmia	lr, {sp, lr}^
+	align_and_save_sp r0
+	adr	lr, exception_return
+	ldr	pc, .LCslowtrap_entry
 #endif

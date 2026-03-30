@@ -95,7 +95,8 @@ timer_IMPL		?= timer timer-mips
 timer_tick_IMPL         := timer_tick
 thread_IMPL		:= thread thread-log thread-pagefault \
 			   thread-mips thread-ipc thread-jdb \
-			   thread-vcpu
+			   thread-vcpu \
+			   thread-pf_trampoline thread-pf_trampoline-mips
 vmem_alloc_IMPL		:= vmem_alloc
 tb_entry_IMPL		:= tb_entry tb_entry-mips
 

@@ -427,6 +427,45 @@ protected:
 
   struct Kernel_drq : Drq { Context *src = nullptr; };
 
+  /**
+   * Resume to userland after returning from one-shot page fault trampoline
+   * handler.
+   *
+   * \param ts  Trap_state.
+   * \param rf  Stack pointer of Return_frame of this context.
+   *
+   * \pre Interrupts must be disabled.
+   * \pre There must be no exception pending.
+   *
+   * This function is actually the same as vcpu_resume().
+   *
+   * This function may safely assume that there is no exception pending because
+   * interrupts remained disabled since entering the kernel and the continuation
+   * can only be activated by the thread context itself.
+   */
+  [[noreturn]] static void
+  resume_normal_after_pf_trampoline(Trap_state *ts, Return_frame *rf)
+    asm ("resume_normal_after_pf_trampoline") FIASCO_FASTCALL;
+
+  /**
+   * Re-enter the kernel by triggering an exception.
+   *
+   * \param ts  Trap_state.
+   *
+   * \pre Interrupts must be disabled.
+   * \pre There must be no exception pending.
+   *
+   * Sets the kernel stack pointer to the passed Trap_state and jumps to the
+   * slowtrap handler.
+   *
+   * This function may safely assume that there is no exception pending because
+   * interrupts remained disabled since entering the kernel and the continuation
+   * can only be activated by the thread context itself.
+   */
+  [[noreturn]] static void
+  resume_trigger_exception_after_pf_trampoline(Trap_state *ts)
+    asm ("resume_trigger_exception_after_pf_trampoline") FIASCO_FASTCALL;
+
 private:
   static Per_cpu<Clock> _clock;
   static Per_cpu<Context *> _kernel_ctxt;

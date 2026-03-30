@@ -253,6 +253,9 @@ __mpu_kernel_leave_nocheck:
 .type	vcpu_resume, function
 .global	vcpu_resume
 vcpu_resume:
+.type 	resume_normal_after_pf_trampoline, function
+.global	resume_normal_after_pf_trampoline
+resume_normal_after_pf_trampoline:
 #ifdef CONFIG_MPU
 	bl	__mpu_kernel_leave_nocheck
 #endif
@@ -264,6 +267,16 @@ vcpu_resume:
 	ldr	x0, [x0, #8]
 	eret
 
+#ifdef CONFIG_PAGEFAULT_TRAMPOLINE
+.type 	resume_trigger_exception_after_pf_trampoline, function
+.global	resume_trigger_exception_after_pf_trampoline
+resume_trigger_exception_after_pf_trampoline:
+	ldr	x3, [x0, #EF_SP]
+	msr	SP_EL0, x3
+	mov	sp, x0
+	bl	slowtrap_entry
+	b	.Lret_from_exception
+#endif
 
 .global kern_kdebug_ipi_entry
 kern_kdebug_ipi_entry:

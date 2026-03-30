@@ -33,7 +33,8 @@ Jdb_thread::print_state_bits(Mword bits, unsigned max_size)
       "migrate",       "resched",       "<0x4000>",     "fpu",
       cxx::const_ite<TAG_ENABLED(alien)>("alien", "0x10000"),
       cxx::const_ite<TAG_ENABLED(alien)>("dealien", "0x20000"),
-                                        "exc_progr",    "<0x80000>",
+                                        "exc_progr",
+      cxx::const_ite<TAG_ENABLED(pagefault_trampoline)>("pf_tramp", "0x80000"),
       "drq",           "rcu_wait",      "vcpu",         "vcpu_user",
       "vcpu_fpu_disabled", "vcpu_ext"
     };

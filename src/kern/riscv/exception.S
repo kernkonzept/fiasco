@@ -315,6 +315,7 @@ END(handle_trap)
 
 
 ENTRY(vcpu_resume)
+ENTRY(resume_normal_after_pf_trampoline)
     /* Reset kernel stack pointer to return frame */
     mv sp, a1
 
@@ -323,6 +324,16 @@ ENTRY(vcpu_resume)
 
     sret
 END(vcpu_resume)
+END(resume_normal_after_pf_trampoline)
+
+
+#ifdef CONFIG_PAGEFAULT_TRAMPOLINE
+ENTRY(resume_trigger_exception_after_pf_trampoline)
+    mv sp, a0
+    la ra, return_from_exception
+    j thread_handle_slow_trap
+END(resume_trigger_exception_after_pf_trampoline)
+#endif
 
 
 ENTRY(leave_by_trigger_exception)

@@ -589,11 +589,19 @@ leave_by_vcpu_upcall:
 .p2align 3
 .globl	vcpu_resume
 vcpu_resume:
+.globl	resume_normal_after_pf_trampoline
+resume_normal_after_pf_trampoline:
 	mov	%rdi, %rsp
 	restore_all_regs
 	add	$(2 * 8), %rsp
 	andq	$0x7f, 8(%rsp)          /* If entered using syscall */
 	SAFE_IRET
+
+.p2align 3
+.globl	resume_trigger_exception_after_pf_trampoline
+resume_trigger_exception_after_pf_trampoline:
+	mov	%rdi, %rsp
+	jmp	_slowtraps
 
 .p2align 3
 .globl	leave_and_kill_myself

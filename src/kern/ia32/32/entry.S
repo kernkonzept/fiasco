@@ -652,6 +652,8 @@ leave_by_vcpu_upcall:
 .p2align 3
 .globl	vcpu_resume
 vcpu_resume:
+.global resume_normal_after_pf_trampoline
+resume_normal_after_pf_trampoline:
 	mov	%eax, %esp
 	addl	$(2 * 4), %esp /* Skip es and ds for now */
 	popl	%gs
@@ -659,6 +661,14 @@ vcpu_resume:
 	restore_all_regs
 	addl	$(2 * 4), %esp
 	iret
+
+.p2align 3
+.global resume_trigger_exception_after_pf_trampoline
+resume_trigger_exception_after_pf_trampoline:
+	leal	(2 * 4)(%eax), %esp /* Skip es und ds for now */
+	popl	%gs
+	popl	%fs
+	jmp	.L_slowtraps
 
 /* Fast return from Dirq::hit */
 .align	16

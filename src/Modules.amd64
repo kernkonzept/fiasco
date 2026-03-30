@@ -112,7 +112,8 @@ tb_entry_IMPL		:= tb_entry tb_entry-ia32-64
 timer_IMPL		:= timer timer-ia32
 thread_IMPL		:= thread thread-ia32 thread-ia32-64 \
 			   thread-ipc thread-pagefault thread-log \
-			   thread-debug thread-dbf thread-vcpu thread-io
+			   thread-debug thread-dbf thread-vcpu thread-io \
+			   thread-pf_trampoline thread-pf_trampoline-ia32
 trap_state_IMPL		:= trap_state-amd64
 tss_IMPL		:= tss-amd64
 utcb_init_IMPL		:= utcb_init utcb_init-ia32

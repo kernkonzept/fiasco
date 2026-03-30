@@ -194,7 +194,7 @@ print_words(String_buffer *buf, L4_msg_tag const &tag, Mword dw0, Mword dw1)
             default: print_dw0 = true; break;
           }
       else if (tag.proto() == L4_msg_tag::Label_thread)
-        switch (Thread::Op{dw0})
+        switch (Thread::Op{dw0 & Thread::Opcode_mask})
           {
             TB_ENTRY(Thread, Control);
             TB_ENTRY(Thread, Ex_regs);
@@ -211,6 +211,23 @@ print_words(String_buffer *buf, L4_msg_tag const &tag, Mword dw0, Mword dw1)
             // unfortunately same value as Gdt_x86
             TB_ENTRY(Thread, Set_tpidruro_arm);
 #endif
+            case Thread::Op::Pf_tramp_control:
+              switch (Thread::Pf_tramp_op{dw0 & ~Thread::Opcode_mask})
+                {
+                case Thread::Pf_tramp_op::Setup:
+                  buf->printf("PF-tramp::setup");
+                  break;
+                case Thread::Pf_tramp_op::Resume:
+                  buf->printf("PF-tramp::resume");
+                  break;
+                case Thread::Pf_tramp_op::Reflect:
+                  buf->printf("PF-tramp::reflect");
+                  break;
+                default:
+                  buf->printf("Pf-tramp::%lx", dw0 & ~Thread::Opcode_mask);
+                  break;
+                }
+              break;
             TB_ENTRY(Thread, Set_segment_base_amd64);
             TB_ENTRY(Thread, Segment_info_amd64);
             default: print_dw0 = true; break;

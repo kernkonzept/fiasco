@@ -67,7 +67,8 @@ enum Thread_state
   /// Thread has sent an exception but still got no reply.
   Thread_in_exception         = 0x40000,
 
-  // 0x80000 is free
+  /// Use one-shot, user space in-thread page fault trampoline.
+  Thread_pf_trampoline        = 0x80000,
 
   /// Thread polls for DRQs.
   Thread_drq_wait             = 0x100000,

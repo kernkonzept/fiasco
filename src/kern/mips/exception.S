@@ -236,6 +236,33 @@ LEAF(vcpu_resume)
 	restore_all_and_eret	4, 0 /* a0 offset 0 as pointer to trap-state */
 END(vcpu_resume)
 
+#ifdef CONFIG_PAGEFAULT_TRAMPOLINE
+.section ".text.resume_normal_after_pf_trampoline", "ax"
+LEAF(resume_normal_after_pf_trampoline)
+	restore_all_and_eret	4, 0 /* a0 offset 0 as pointer to trap-state */
+END(resume_normal_after_pf_trampoline)
+
+.section ".text.resume_trigger_exception_after_pf_trampoline", "ax"
+LEAF(resume_trigger_exception_after_pf_trampoline)
+	.set push
+	.set noreorder
+	.set noat
+	move	sp, a0
+	move	a1, a0
+	jal	thread_handle_trap
+	  ASM_L	a0, TS_CAUSE(0)(a1) /* delay slot */
+
+	ASM_L	k0, TS_REG(0, 0)(sp)
+	bnez	k0, 1f
+	  nop                       /* delay slot */
+	restore_all_and_eret	29, 0 /* sp offset 0 as pointer to trap-state */
+
+1:	jr	k0
+	  ASM_S	zero, TS_REG(0, 0)(sp) /* delay slot */
+	.set pop
+END(resume_trigger_exception_after_pf_trampoline)
+#endif
+
 .section ".text.leave_by_trigger_exception", "ax"
 LEAF(leave_by_trigger_exception)
 	.set push

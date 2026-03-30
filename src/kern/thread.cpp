@@ -45,7 +45,7 @@ class Thread :
 
 public:
   enum Context_mode_kernel { Kernel = 0 };
-  enum { Opcode_mask = 0xffff };
+  enum : Mword { Opcode_mask = 0xffff };
   enum class Op : Mword
   {
     Control = 0,
@@ -57,6 +57,7 @@ public:
     Modify_senders = 6,
     Vcpu_control = 7,
     Register_doorbell_irq = 8,
+    Pf_tramp_control = 9,
     Gdt_x86 = 0x10,
     Set_tpidruro_arm = 0x10,
     Set_segment_base_amd64 = 0x12,
@@ -82,6 +83,15 @@ public:
   enum Vcpu_ctl_flags
   {
     Vcpu_ctl_extended_vcpu = 0x10000,
+  };
+
+  enum class Pf_tramp_op : Mword
+  {
+    Setup = 0x0000,
+    Resume = 0x10000,
+    Reflect = 0x20000,
+    Disable = 0x30000,
+    Enable = 0x40000,
   };
 
 public:

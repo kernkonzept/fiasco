@@ -152,7 +152,8 @@ task_IMPL		:= task task-arm
 thread_IMPL	  	:= thread thread-arm thread-arm-hyp \
 			   thread-jdb thread-jdb-$(BITS) thread-ipc \
 			   thread-pagefault  thread-log \
-			   thread-vcpu thread-arm-$(BITS)
+			   thread-vcpu thread-arm-$(BITS) \
+			   thread-pf_trampoline thread-pf_trampoline-arm
 timer_IMPL		:= timer timer-arm
 timer_tick_IMPL		:= timer_tick timer_tick-arm
 utcb_init_IMPL		:= utcb_init utcb_init-arm

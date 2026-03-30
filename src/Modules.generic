@@ -54,7 +54,7 @@ INTERFACES_KERNEL	:= cpu_mask rcupdate kobject_mapdb context_base pm \
 			   buddy_alloc vkey kdb_ke prio_list ipi scheduler   \
 			   clock sys_call_page boot_alloc                    \
 			   semaphore jdb_object tlbs amp_node global_data    \
-			   observer_irq dt
+			   observer_irq dt pf_trampoline
 
 INTERFACES_KERNEL-$(or $(CONFIG_OUTPUT),$(CONFIG_INPUT)) += vlog
 

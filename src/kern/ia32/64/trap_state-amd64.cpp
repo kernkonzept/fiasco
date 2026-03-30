@@ -179,6 +179,16 @@ Trap_state::value4() const
 
 PUBLIC inline
 void
+Trap_state::trapno(Mword trapno)
+{ _trapno = trapno; }
+
+PUBLIC inline
+void
+Trap_state::error(Mword error)
+{ _err = error; }
+
+PUBLIC inline
+void
 Trap_state::ip(Mword ip)
 { _ip = ip; }
 

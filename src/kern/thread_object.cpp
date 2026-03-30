@@ -178,6 +178,9 @@ Thread_object::invoke(L4_obj_ref self, L4_fpage::Rights rights,
     case Op::Register_doorbell_irq:
       tag = sys_register_doorbell_irq(f->tag(), utcb);
       break;
+    case Op::Pf_tramp_control:
+      tag = sys_pf_tramp_control(rights, f->tag(), utcb, out);
+      break;
     default:
       tag = invoke_arch(f->tag(), utcb, out);
       break;
@@ -787,4 +790,181 @@ Thread_object::sys_register_doorbell_irq(L4_msg_tag tag, Utcb const *in)
     return Kobject_iface::commit_result(0);
   else
     return Kobject_iface::commit_result(-L4_err::EBusy);
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [!pagefault_trampoline]:
+
+PRIVATE inline NOEXPORT
+L4_msg_tag
+Thread_object::sys_pf_tramp_control(L4_fpage::Rights, L4_msg_tag const &,
+                                    Utcb const *, Utcb *)
+{
+  return commit_result(-L4_err::ENosys);
+}
+
+//-----------------------------------------------------------------------------
+IMPLEMENTATION [pagefault_trampoline]:
+
+PRIVATE inline NOEXPORT
+L4_msg_tag
+Thread_object::sys_pf_tramp_control(L4_fpage::Rights, L4_msg_tag const &tag,
+                                    Utcb const *utcb, Utcb *out)
+{
+  if (tag.items())
+    return commit_result(-L4_err::EMsgtoolong);
+
+  switch (Pf_tramp_op{access_once(&utcb->values[0]) & ~Opcode_mask})
+    {
+    case Pf_tramp_op::Setup:   return sys_pf_tramp_control_setup(tag, utcb);
+    case Pf_tramp_op::Resume:  return sys_pf_tramp_control_resume(tag, false);
+    case Pf_tramp_op::Reflect: return sys_pf_tramp_control_resume(tag, true);
+    case Pf_tramp_op::Disable: return sys_pf_tramp_control_disable(tag, out);
+    case Pf_tramp_op::Enable:  return sys_pf_tramp_control_enable(tag);
+    default:                   return commit_result(-L4_err::ENosys);
+    }
+}
+
+PRIVATE inline
+NOEXPORT
+L4_msg_tag
+Thread_object::sys_pf_tramp_control_setup(L4_msg_tag const &tag,
+                                          Utcb const *utcb)
+{
+  if (tag.words() < 2)
+    return commit_result(-L4_err::EMsgtooshort);
+  if (tag.words() > 2)
+    return commit_result(-L4_err::EMsgtoolong);
+
+  auto pf_tramp_uptr = User_ptr<Pf_trampoline>(
+    reinterpret_cast<Pf_trampoline *>(access_once(&utcb->values[1])));
+  Space::Ku_mem const *pf_tramp_m = space()->find_ku_mem(
+    pf_tramp_uptr, sizeof(Pf_trampoline), alignof(Pf_trampoline));
+  if (!pf_tramp_m)
+    return commit_result(-L4_err::EInval);
+
+  _pf_tramp_state.set(pf_tramp_uptr, pf_tramp_m->kern_addr(pf_tramp_uptr));
+  xcpu_state_change(~0UL, Thread_pf_trampoline, true);
+  return  commit_result(0);
+}
+
+PRIVATE inline
+NOEXPORT
+L4_msg_tag
+Thread_object::sys_pf_tramp_control_resume(L4_msg_tag const &tag, bool reflect)
+{
+  if (tag.words() > 1) [[unlikely]]
+    return commit_result(-L4_err::EMsgtoolong);
+
+  // Resuming from a trampoline page fault is permitted only for the thread
+  // itself. Otherwise, we would need a DRQ, complicating things needlessly.
+  if (current() != this) [[unlikely]]
+    return commit_result(-L4_err::EPerm);
+
+  if (!_pf_tramp_state || (state() & Thread_pf_trampoline)) [[unlikely]]
+    return commit_result(-L4_err::EInval);
+
+  // update thread state directly because we checked current() == this
+  state_add_dirty(Thread_pf_trampoline, false);
+
+  Pf_trampoline *tramp_state = pf_tramp_state().access();
+  this->utcb().access(true)->values[0] = tramp_state->saved_mr0;
+
+  // reflecting the PF exception has precedence
+  bool trigger_exception = false;
+  if (reflect)
+    trigger_exception = true;
+  if (tramp_state->flags & Pf_trampoline::Trigger_exception_after_resume)
+    trigger_exception = true;
+
+  tramp_state->flags &= ~(Pf_trampoline::Pf_in_progress
+                          | Pf_trampoline::Trigger_exception_after_resume);
+
+  if (trigger_exception)
+    {
+      // Note: It is essential on all architectures to use the top of the stack
+      // to be able to handle pending continuations (e.g. eret_work)!
+      //
+      // Don't unwind the kernel stack. arch_exception_from_pf_trampoline()
+      // replaces the Entry_frame -- which was created upon entering the kernel
+      // via this syscall -- with a Trap_state. Then it re-enters the kernel
+      // with an exception prepared in the Trap_state.
+      static_assert(sizeof(Entry_frame) >= sizeof(Trap_state));
+      Trap_state *ts = reinterpret_cast<Trap_state *>(regs() + 1) - 1;
+      arch_exception_from_pf_trampoline(ts, tramp_state, !reflect);
+      // does not return
+    }
+  else
+    {
+      // Don't unwind the kernel stack, because on some architectures the
+      // syscall entry path does not use a fully-fledged trap state -- in
+      // contrast to the page fault entry path.
+      arch_return_from_pf_trampoline(tramp_state);
+      // does not return
+    }
+}
+
+PRIVATE inline
+NOEXPORT
+L4_msg_tag
+Thread_object::sys_pf_tramp_control_disable(L4_msg_tag const &tag, Utcb *out)
+{
+  if (tag.words() > 1)
+    return commit_result(-L4_err::EMsgtoolong);
+
+  if (!_pf_tramp_state)
+    {
+      // be permissive
+      out->values[0] = 0;
+      return commit_result(0, 1);
+    }
+
+  Mword was_enabled = 0;
+  Cpu_number current_cpu = ::current_cpu();
+  if (access_once(&_home_cpu) != current_cpu) [[unlikely]]
+    {
+      auto drq_func = [](Context::Drq *, Context *self, void *arg)
+        {
+          Mword *was_enabled = static_cast<Mword *>(arg);
+          *was_enabled = (self->state() & Thread_pf_trampoline) ? 1 : 0;
+          self->state_change_dirty(~Thread_pf_trampoline, 0);
+          return Context::Drq::done();
+        };
+      drq(drq_func, &was_enabled);
+    }
+  else
+    {
+      was_enabled = (state() & Thread_pf_trampoline) ? 1 : 0;
+      state_change_dirty(~Thread_pf_trampoline, 0);
+    }
+
+  out->values[0] = was_enabled;
+  return commit_result(0, 1);
+}
+
+PRIVATE inline
+NOEXPORT
+L4_msg_tag
+Thread_object::sys_pf_tramp_control_enable(L4_msg_tag const &tag)
+{
+  if (tag.words() > 1)
+    return commit_result(-L4_err::EMsgtoolong);
+
+  if (!_pf_tramp_state)
+    return commit_result(-L4_err::EInval);
+
+  // It's OK if Thread_pf_trampoline is already enabled.
+  Cpu_number current_cpu = ::current_cpu();
+  if (access_once(&_home_cpu) != current_cpu) [[unlikely]]
+    {
+      auto drq_func = [](Context::Drq *, Context *self, void *)
+        {
+          self->state_change_dirty(~0UL, Thread_pf_trampoline);
+          return Context::Drq::done();
+        };
+      drq(drq_func, nullptr);
+    }
+  else
+    state_change_dirty(~0UL, Thread_pf_trampoline);
+  return commit_result(0);
 }
