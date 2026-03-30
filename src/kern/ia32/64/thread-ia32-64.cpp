@@ -138,7 +138,7 @@ Thread::invoke_arch(L4_msg_tag tag, Utcb const *utcb, Utcb *out)
         if (tag.words() < 2)
           return commit_result(-L4_err::EMsgtooshort);
 
-        Mword base = access_once(utcb->values + 1);
+        Mword base = access_once(&utcb->values[1]);
         if (!Cpu::is_canonical_address(base))
           return commit_result(-L4_err::EInval);
 

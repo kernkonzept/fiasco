@@ -181,7 +181,7 @@ Factory::kinvoke(L4_obj_ref ref, L4_fpage::Rights rights, Syscall_frame *f,
 
   auto cpu_lock_guard = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
-  long label = static_cast<long>(access_once(utcb->values + 0));
+  long label = static_cast<long>(access_once(&utcb->values[0]));
   new_o = Kobject_iface::manufacture(label, this, c_space, f->tag(), utcb,
                                      utcb_out, &err, &words);
 

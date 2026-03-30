@@ -314,7 +314,7 @@ Irq::get_irq_opcode(L4_msg_tag tag, Utcb const *utcb)
   if (tag.words() < 1) [[unlikely]]
     return ~0UL;
 
-  return access_once(utcb->values) & 0xffff;
+  return access_once(&utcb->values[0]) & 0xffff;
 }
 
 /*
