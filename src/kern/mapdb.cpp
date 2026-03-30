@@ -861,6 +861,12 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
 
   if (! submap)  // Need allocation of new entry for submap
     {
+      // In case `size` of the new mapping is larger than the parent `frame`.
+      // Should never happen, but in case someone passes invalid arguments we
+      // better catch it, and not corrupt the mapdb.
+      if (_sub_shifts_num <= 0) [[unlikely]]
+        return nullptr;
+
       // first check quota! In case of a new submap the parent pays for
       // the node...
       Ram_quota *payer = Mapping_tree::quota(parent_space);
@@ -868,8 +874,6 @@ Treemap::insert(Physframe* frame, Mapping_tree::Iterator const &parent,
       Iterator free = frame->tree()->allocate_submap(payer, parent);
       if (!*free) [[unlikely]]
         return nullptr;
-
-      assert (_sub_shifts_num > 0);
 
       submap = Treemap::create(_page_shift, parent_space, parent_va,
                                _sub_shifts, _sub_shifts_num);
