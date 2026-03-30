@@ -154,8 +154,7 @@ public:
                                 Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
                                    ? Sctlr_a : 0)
-                                | (Config::Cache_enabled
-                                   ? Sctlr_cache_bits : 0)
+                                | Sctlr_cache_bits,
                                 | Sctlr_write_buffer
                                 | Sctlr_prog32
                                 | Sctlr_data32
@@ -187,8 +186,7 @@ public:
                                 Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
                                    ? Sctlr_a : 0)
-                                | (Config::Cache_enabled
-                                   ? Sctlr_cache_bits : 0)
+                                | Sctlr_cache_bits,
                                 | Sctlr_z
                                 | Sctlr_v
                                 | Sctlr_u
@@ -205,8 +203,7 @@ public:
                                 Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
                                    ? Sctlr_a : 0)
-                                | (Config::Cache_enabled
-                                   ? Sctlr_cache_bits : 0)
+                                | Sctlr_cache_bits,
                                 | Sctlr_z
                                 | Sctlr_v
                                 | Sctlr_u
@@ -230,8 +227,7 @@ public:
                                 Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
                                    ? Sctlr_a : 0)
-                                | (Config::Cache_enabled
-                                   ? Sctlr_cache_bits : 0)
+                                | Sctlr_cache_bits
                                 | Sctlr_z
                                 | Sctlr_v
                                 | Sctlr_tre
@@ -252,8 +248,7 @@ public:
                                 Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
                                    ? Sctlr_a : 0)
-                                | (Config::Cache_enabled
-                                   ? Sctlr_cache_bits : 0)
+                                | Sctlr_cache_bits,
                                 | Sctlr_z
                                 | Sctlr_rao_sbop;
 };
@@ -332,7 +327,7 @@ public:
     Hsctlr_fi = 1 << 21,
 
     Hsctlr = (Config::Sctlr_use_alignment_check ?  Hsctlr_alignment_check : 0)
-           | (Config::Cache_enabled ? Hsctlr_cache_bits : 0)
+           | Hsctlr_cache_bits
            | (Config::Fast_interrupts ? Hsctlr_fi : 0)
            | Hsctlr_cp15ben
            | Hsctlr_mpu
@@ -1008,7 +1003,5 @@ IMPLEMENT_OVERRIDE
 void
 Cpu::print_boot_infos()
 {
-  printf("Cache config: %s\n",
-         cxx::const_ite<Config::Cache_enabled>("ON", "OFF"));
   boot_cpu()->print_infos(); // all other CPUs in App_cpu_thread::bootstrap()
 }

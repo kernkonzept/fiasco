@@ -41,11 +41,6 @@ public:
 
   enum
   {
-    Cache_enabled = true,
-  };
-
-  enum
-  {
     Sctlr_use_swp_enable = TAG_ENABLED(arm_enable_swp),
     Sctlr_use_alignment_check = TAG_ENABLED(arm_alignment_check),
     Kip_clock_uses_timer = TAG_ENABLED(sync_clock),
