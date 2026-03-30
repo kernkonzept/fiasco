@@ -1304,7 +1304,7 @@ Mapdb::lookup_src_dst(Space const *, Pfn, Pfn,
                       Space const *, Pfn, Pfn,
                       Frame *, Frame *)
 {
-  return Mapdb_lookup_src_dst::Dst_child_of_src;
+  return Mapdb_lookup_src_dst::Not_related;
 }
 
 PUBLIC inline
