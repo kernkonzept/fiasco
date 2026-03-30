@@ -30,7 +30,10 @@
         ldr     x4, \scaler
         ldr     x5, \shift
         umulh   x1, x0, x4
-        mul     x0, x0, x4      /* {x1,x0} contains (timer * scaler) */
+        mul     x0, x0, x4
+        /* {x1,x0} contains (timer * scaler) */
+
+        /* compute {x1,x0} >> (32-shift) */
         mov     x2, #32
         sub     x3, x2, x5
         add     x2, x2, x5

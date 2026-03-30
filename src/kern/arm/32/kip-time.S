@@ -59,12 +59,14 @@
         ldr     ip, \scaler     /* ip = scaler */
         read_timer_counter
         umull   r0, r2, ip, r0  /* {r2,r0} = ts.lo * scaler */
-        umull   r1, r3, ip, r1  /* {r3,r2} = (ts.hi * scaler) / 2^32 */
-        ldr     ip, \shift      /* ip = shift */
+        umull   r1, r3, ip, r1  /* {r3,r1} = (ts.hi * scaler) / 2^32 */
+        ldr     ip, \shift      /* ip = shift => 0..31 */
         adds    r1, r1, r2
-        adc     r2, r3, #0      /* {r2,r1,r0} contains (timer * scaler) */
-        rsb     r3, ip, #32     /* r3 = 32 - shift */
-                                /* compute {r2,r1,r0} >> (32 - shift) */
+        adc     r2, r3, #0
+        /* {r2,r1,r0} contains (timer * scaler) */
+
+        /* compute {r2,r1,r0} >> (32-shift) */
+        rsb     r3, ip, #32     /* r3 = 32 - shift => 1..32 */
         lsr     r0, r0, r3
         orr     r0, r0, r1, LSL ip /* r0 = (r1<<shift) | (r0 >> (32-shift)) */
         lsr     r1, r1, r3
