@@ -269,6 +269,9 @@ public:
         return _k;
     }
 
+    explicit operator bool() const
+    { return _k != nullptr; }
+
     User_ptr<T> usr() const { return _u; }
     T* kern() const { return _k; }
   };
