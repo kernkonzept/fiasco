@@ -251,8 +251,9 @@ public:
   void push_front(T *e) { push(e, Front); }
   void rotate_to(T *h) { H::set_head(_f, h); }
 
-  typename H::Head_type const &head() const { return _f; }
-  typename H::Head_type &head() { return _f; }
+  typename H::Head_type const &head() const & { return _f; }
+  typename H::Head_type const &head() const && = delete;
+  typename H::Head_type &head() & { return _f; }
 
   Iterator begin() { return Iterator(H::head(_f)); }
   Iterator end() { return Iterator(nullptr); }

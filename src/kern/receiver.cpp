@@ -424,7 +424,7 @@ Receiver::rcv_regs() const
  */
 PUBLIC inline
 Iterable_prio_list *
-Receiver::sender_list()
+Receiver::sender_list() &
 {
   return &_sender_list;
 }

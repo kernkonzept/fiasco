@@ -121,8 +121,12 @@ void Context::vcpu_pv_switch_to_user(Vcpu_state *, bool) {}
 
 PUBLIC inline
 Context::Ku_mem_ptr<Vcpu_state> const &
-Context::vcpu_state() const
+Context::vcpu_state() const &
 { return _vcpu_state; }
+
+PUBLIC
+Context::Ku_mem_ptr<Vcpu_state> const &
+Context::vcpu_state() const && = delete;
 
 
 PUBLIC inline

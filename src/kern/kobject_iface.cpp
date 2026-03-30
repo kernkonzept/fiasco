@@ -82,7 +82,7 @@ Kobject_iface::commit_error(Utcb const *utcb, L4_error const &e,
 
 PUBLIC virtual
 Kobject_iface *
-Kobject_iface::downgrade(unsigned long /* del_attribs */)
+Kobject_iface::downgrade(unsigned long /* del_attribs */) &
 { return this; }
 
 PUBLIC static

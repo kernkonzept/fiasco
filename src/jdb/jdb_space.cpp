@@ -66,9 +66,12 @@ Jdb_space_image_info::base() const
 
 PUBLIC inline
 char const *
-Jdb_space_image_info::name() const
+Jdb_space_image_info::name() const &
 { return _name; }
 
+PUBLIC
+char const *
+Jdb_space_image_info::name() const && = delete;
 
 class Jdb_space : public Jdb_kobject_handler
 {

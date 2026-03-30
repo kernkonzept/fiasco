@@ -91,7 +91,7 @@ namespace Obj {
   public:
     Mapping() : _flags(0) {}
     // fake this really badly
-    Mapping *parent() { return this; }
+    Mapping *parent() & { return this; }
     Mword delete_rights() const { return _flags & Delete; }
     Mword is_ref_counted() const { return _flags & Ref_cnt; }
 
@@ -134,8 +134,10 @@ namespace Obj {
      *
      * This function gives explicit access to the private #Capability base.
      */
-    Capability const & capability() const
+    Capability const & capability() const &
     { return *this; }
+
+    Capability const & capability() const && = delete;
 
     using Capability::invalidate;
     using Capability::obj;

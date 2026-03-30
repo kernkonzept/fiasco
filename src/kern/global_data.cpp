@@ -42,8 +42,9 @@ public:
   {}
 
 protected:
-  constexpr T *_get() { return &_d; }
-  constexpr T const *_get() const { return &_d; }
+  constexpr T *_get() & { return &_d; }
+  constexpr T const *_get() const & { return &_d; }
+  constexpr T const *_get() const && = delete;
 
 private:
   T _d;

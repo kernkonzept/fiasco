@@ -232,7 +232,7 @@ public:
 
   Mword pin() const { return _pin; }
   Irq_chip *chip() const { return _chip; }
-  Spin_lock<> *irq_lock() { return &_irq_lock; }
+  Spin_lock<> *irq_lock() & { return &_irq_lock; }
 
   void mask()
   {

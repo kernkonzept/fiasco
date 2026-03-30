@@ -190,8 +190,10 @@ public:
     inline bool is_valid() const
     { return _mem.is_valid(); }
 
-    inline Gic_mem const &mem() const
+    inline Gic_mem const &mem() const &
     { return _mem; }
+
+    Gic_mem const &mem() const && = delete;
 
     void alloc(Reg r, Typer typer);
     bool ensure_id_present(unsigned id);

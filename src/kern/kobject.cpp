@@ -201,7 +201,7 @@ public:
     Reap_list() : _reap_list(_first) {}
     ~Reap_list() { del(); }
 
-    Kobjects_list &list() { return _reap_list; }
+    Kobjects_list &list() & { return _reap_list; }
     void reset() { _reap_list.reset(_first); }
     bool empty() const { return _first == nullptr; }
 

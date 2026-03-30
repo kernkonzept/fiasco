@@ -94,7 +94,7 @@ private:
 
 public:
   Space *space() const { return _s.get_unused(); }
-  Space_n_lock *lock() { return &_s; }
+  Space_n_lock *lock() & { return &_s; }
   Address user_mode() const { return _v & 1; }
   Space *vcpu_user() const { return reinterpret_cast<Space*>(_v & ~3); }
   Space *vcpu_aware() const { return user_mode() ? vcpu_user() : space(); }
@@ -716,7 +716,7 @@ Context::state_change_dirty(Mword mask, Mword bits,
 
 PUBLIC inline
 Context_space_ref *
-Context::space_ref()
+Context::space_ref() &
 { return &_space; }
 
 PUBLIC inline
@@ -968,7 +968,7 @@ Context::set_kernel_sp(Mword * const esp)
 
 PUBLIC inline
 Fpu_state_ptr &
-Context::fpu_state()
+Context::fpu_state() &
 {
   return _fpu_state;
 }
@@ -1162,8 +1162,12 @@ Context::_switch_exec_common(Context *t, Helping_mode mode)
 
 PUBLIC inline
 Context::Ku_mem_ptr<Utcb> const &
-Context::utcb() const
+Context::utcb() const &
 { return _utcb; }
+
+PUBLIC inline
+Context::Ku_mem_ptr<Utcb> const &
+Context::utcb() const && = delete;
 
 IMPLEMENT inline NEEDS["globals.h"]
 Context *

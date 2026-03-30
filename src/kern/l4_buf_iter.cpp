@@ -24,7 +24,8 @@ public:
   explicit L4_buf_iter(Utcb const *utcb, unsigned start)
   : _buf(&utcb->buffers[start]), _max(&utcb->buffers[Utcb::Max_buffers])
   { next(); }
-  Item const *get() const { return &c; }
+  Item const *get() const & { return &c; }
+  Item const *get() const && = delete;
   bool next();
 
 private:
@@ -52,7 +53,8 @@ public:
   explicit L4_snd_item_iter(Utcb const *utcb, unsigned offset)
   : _buf(&utcb->values[offset]),
     _max(&utcb->values[Utcb::Max_words]) {}
-  Item const *get() const { return &c; }
+  Item const *get() const &{ return &c; }
+  Item const *get() const && = delete;
   bool next();
 
 private:

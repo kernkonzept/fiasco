@@ -2222,8 +2222,12 @@ Iommu_domain::get_or_init_cd(unsigned ias, unsigned virt_addr_size, Address pt_p
 
 PRIVATE
 Iommu::Cd const *
-Iommu_domain::get_cd_addr() const
+Iommu_domain::get_cd_addr() const &
 { return &_cd; }
+
+PRIVATE
+Iommu::Cd const *
+Iommu_domain::get_cd_addr() const && = delete;
 
 PRIVATE
 void

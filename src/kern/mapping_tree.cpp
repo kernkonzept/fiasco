@@ -74,8 +74,9 @@ public:
 
   Helping_lock lock;
 
-  Mapping_tree *tree() { return &_tree; }
-  Mapping_tree const *tree() const { return &_tree; }
+  Mapping_tree *tree() & { return &_tree; }
+  Mapping_tree const *tree() const & { return &_tree; }
+  Mapping_tree const *tree() const && = delete;
   void erase_tree(Space *owner) { _tree.erase(owner); }
   bool has_mappings() const { return _tree.front(); }
   unsigned long base_quota_size() const { return 0; }

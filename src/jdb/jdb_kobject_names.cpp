@@ -66,12 +66,16 @@ Jdb_kobject_name::name(char const *name, int size)
 
 PUBLIC inline
 char const *
-Jdb_kobject_name::name() const
+Jdb_kobject_name::name() const &
 { return _name; }
+
+PUBLIC
+char const *
+Jdb_kobject_name::name() const && = delete;
 
 PUBLIC inline
 char *
-Jdb_kobject_name::name()
+Jdb_kobject_name::name() &
 { return _name; }
 
 class Jdb_name_hdl : public Jdb_kobject_handler
