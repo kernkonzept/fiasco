@@ -119,7 +119,7 @@ public:
 
   Per_cpu_ptr() {}
   constexpr Per_cpu_ptr(Per_cpu_type *o) : _p(&o->_d.unwrap()) {}
-  Per_cpu_ptr &operator = (Per_cpu_type *o)
+  Per_cpu_ptr &operator = (Per_cpu_type *o) &
   {
     _p = &o->_d.unwrap();
     return *this;

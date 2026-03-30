@@ -60,7 +60,7 @@ public:
                     : _offs > offs*sizeof(Mword);
   }
 
-  Jdb_tcb_ptr &operator += (int offs)
+  Jdb_tcb_ptr &operator += (int offs) &
   { _offs += offs*sizeof(Mword); return *this; }
 
   inline Address addr() const

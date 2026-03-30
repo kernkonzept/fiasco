@@ -55,7 +55,7 @@ public:
   ~Ref_ptr() noexcept
   { reset(); }
 
-  Ref_ptr &operator = (Ref_ptr const &o)
+  Ref_ptr &operator = (Ref_ptr const &o) &
   {
     if (&o == this)
       return *this;
@@ -64,7 +64,7 @@ public:
     return *this;
   }
 
-  Ref_ptr &operator = (Ref_ptr &&o)
+  Ref_ptr &operator = (Ref_ptr &&o) &
   {
     if (&o == this)
       return *this;

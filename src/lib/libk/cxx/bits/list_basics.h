@@ -117,7 +117,7 @@ public:
     o.clear();
   }
 
-  Basic_list &operator = (Basic_list &&o)
+  Basic_list &operator = (Basic_list &&o) &
   {
     if (&o != this)
       {

@@ -145,8 +145,9 @@ namespace Ptab
 	return (virt >> Shift);
     }
 
-    Entry &operator [] (unsigned idx) { return _e[idx]; }
-    Entry const &operator [] (unsigned idx) const { return _e[idx]; }
+    Entry &operator [] (unsigned idx) & { return _e[idx]; }
+    Entry const &operator [] (unsigned idx) const & { return _e[idx]; }
+    Entry const &operator [] (unsigned idx) const && = delete;
 
     template<typename PTE_PTR>
     void clear(unsigned level, bool force_write_back)

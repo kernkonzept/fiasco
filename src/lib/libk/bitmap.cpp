@@ -946,7 +946,7 @@ public:
    *
    * \param o  Bitmap to assign from.
    */
-  Bitmap &operator =(Bitmap const &o)
+  Bitmap &operator =(Bitmap const &o) &
   {
     if (&o != this)
       this->_copy(o);
@@ -963,7 +963,7 @@ public:
    * \param o  Bitmap to assign from.
    */
   template<size_t SOURCE_BITS>
-  Bitmap &operator =(Bitmap<SOURCE_BITS> const &o)
+  Bitmap &operator =(Bitmap<SOURCE_BITS> const &o) &
   {
     this->_copy(o);
     return *this;
@@ -975,7 +975,7 @@ public:
    *
    * \param o  Bitmap to logically disjoint the bitmap with.
    */
-  Bitmap &operator |=(Bitmap const &o)
+  Bitmap &operator |=(Bitmap const &o) &
   {
     this->_or(o);
     return *this;
@@ -987,7 +987,7 @@ public:
    *
    * \param o  Bitmap to logically conjoint the bitmap with.
    */
-  Bitmap &operator &=(Bitmap const &o)
+  Bitmap &operator &=(Bitmap const &o) &
   {
     this->_and(o);
     return *this;

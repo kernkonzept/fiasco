@@ -42,13 +42,13 @@ public:
 
   ~unique_ptr() { reset(); }
 
-  unique_ptr &operator = (unique_ptr &&o)
+  unique_ptr &operator = (unique_ptr &&o) &
   {
     reset(o.release());
     return *this;
   }
 
-  unique_ptr &operator = (decltype(nullptr))
+  unique_ptr &operator = (decltype(nullptr)) &
   {
     reset();
     return *this;

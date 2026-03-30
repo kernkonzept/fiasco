@@ -33,7 +33,7 @@ public:
   }
 
   Auto_quota(Auto_quota &&o) : _quota(o.release()), _bytes(o._bytes) {}
-  Auto_quota &operator = (Auto_quota &&o)
+  Auto_quota &operator = (Auto_quota &&o) &
   {
     if (*this == o)
       return *this;

@@ -50,7 +50,7 @@ public:
 
   S_list(S_list &&o) : Base(static_cast<Base&&>(o)) {}
 
-  S_list &operator = (S_list &&o)
+  S_list &operator = (S_list &&o) &
   {
     if (&o != this)
       Base::operator = (static_cast<Base&&>(o));
@@ -152,7 +152,7 @@ public:
     t._tail = &t._f; // reset the source tail
   }
 
-  S_list_tail &operator = (S_list_tail &&t)
+  S_list_tail &operator = (S_list_tail &&t) &
   {
     if (&t != this)
       {

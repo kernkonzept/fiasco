@@ -32,7 +32,7 @@ public:
   /// equality check.
   friend bool operator == (Rcu_batch const &, Rcu_batch const &) = default;
   /// increment batch.
-  Rcu_batch &operator ++ () { ++_b; return *this; }
+  Rcu_batch &operator ++ () & { ++_b; return *this; }
   /// increase batch with \a r.
   friend Rcu_batch operator + (Rcu_batch const &batch, long r)
   { return Rcu_batch(batch._b + r); }
@@ -75,7 +75,7 @@ public:
   Rcu_list() {}
   Rcu_list(Rcu_list &&o) : Base(static_cast<Base &&>(o)) {}
 
-  Rcu_list &operator = (Rcu_list &&o)
+  Rcu_list &operator = (Rcu_list &&o) &
   {
     if (&o != this)
       Base::operator = (static_cast<Base &&>(o));

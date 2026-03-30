@@ -26,12 +26,13 @@ struct Next_iter
 {
   Next_iter() : _c(nullptr) {}
   Next_iter(T const *h) : _c(h) {}
-  Next_iter const &operator ++ ()
+  Next_iter const &operator ++ () &
   {
     _c = _c->next();
     return *this;
   }
-  T const &operator * () const { return *_c; }
+  T const &operator * () const & { return *_c; }
+  T const &operator * () const && = delete;
 
   bool operator == (Next_iter const &o) const { return _c == o._c; }
   bool operator != (Next_iter const &o) const { return _c != o._c; }

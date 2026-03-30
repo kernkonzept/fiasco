@@ -18,7 +18,7 @@ public:
   Cpu_mask_t &operator = (Cpu_mask_t const &) = default;
 
   template<unsigned NCPUS>
-  Cpu_mask_t &operator = (Cpu_mask_t<NCPUS> const &o)
+  Cpu_mask_t &operator = (Cpu_mask_t<NCPUS> const &o) &
   {
     _b = o._b;
     return *this;
@@ -35,13 +35,13 @@ public:
   void set(Cpu_number cpu)
   { _b.set_bit(cxx::int_value<Cpu_number>(cpu)); };
 
-  Cpu_mask_t &operator |= (Cpu_mask_t const &o)
+  Cpu_mask_t &operator |= (Cpu_mask_t const &o) &
   {
     _b |= o._b;
     return *this;
   }
 
-  Cpu_mask_t &operator &= (Cpu_mask_t const &o)
+  Cpu_mask_t &operator &= (Cpu_mask_t const &o) &
   {
     _b &= o._b;
     return *this;

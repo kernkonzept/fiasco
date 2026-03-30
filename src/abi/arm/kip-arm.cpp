@@ -29,7 +29,7 @@ public:
       Kip *operator*() const { return _i; }
       Kip *operator->() const { return _i; }
 
-      Iterator &operator++()
+      Iterator &operator++() &
       {
         _i = offset_cast<Kip *>(_i, Kip_size);
         return *this;

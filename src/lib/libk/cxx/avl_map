@@ -122,8 +122,10 @@ public:
    * \param key The key value to use for lookup.
    * \pre A <key, data> pair for the given key value must exist.
    */
-  Data_type const &operator [] (Key_type const &key) const
+  Data_type const &operator [] (Key_type const &key) const &
   { return this->find_node(key)->second; }
+
+  Data_type const &operator [] (Key_type const &key) const && = delete;
 
   /**
    * Get or insert data for the given key.
@@ -134,7 +136,7 @@ public:
    *         Otherwise a new data item is default-constructed and inserted
    *         under the given key before a reference is returned.
    */
-  Data_type &operator [] (Key_type const &key)
+  Data_type &operator [] (Key_type const &key) &
   {
     Node n = this->find_node(key);
     if (n)

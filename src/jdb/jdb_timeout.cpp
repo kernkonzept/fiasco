@@ -67,7 +67,7 @@ public:
     _i = skip_empty(&_c, _i);
   }
 
-  Timeout_iter const &operator ++ ()
+  Timeout_iter const &operator ++ () &
   {
     if (_c == _q->first(_i).end())
       return *this;
@@ -108,7 +108,7 @@ public:
   public:
     Iterator() {}
 
-    Iterator const &operator += (int offs)
+    Iterator const &operator += (int offs) &
     {
       if (offs < 0)
         return operator -= (-offs);
@@ -122,7 +122,7 @@ public:
       return *this;
     }
 
-    Iterator const &operator -= (int offs)
+    Iterator const &operator -= (int offs) &
     {
       if (offs < 0)
         return this->operator += (-offs);
@@ -144,7 +144,7 @@ public:
       return *this;
     }
 
-    Iterator const &operator -- ()
+    Iterator const &operator -- () &
     { return this->operator -= (1); }
 
     int pos() const { return _p; }

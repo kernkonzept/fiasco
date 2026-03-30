@@ -66,7 +66,7 @@ public:
   Context_ptr_base<T> &operator = (Context_ptr_base<T> const &o) = default;
 
   template< typename X >
-  Context_ptr_base<T> &operator = (Context_ptr_base<X> const &o)
+  Context_ptr_base<T> &operator = (Context_ptr_base<X> const &o) &
   {
     X *x = nullptr;
     T *t = x;
@@ -849,7 +849,7 @@ Context::schedule_if(bool s)
  */
 PUBLIC inline
 Sched_context *
-Context::sched_context()
+Context::sched_context() &
 {
   return &_sched_context;
 }

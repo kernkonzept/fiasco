@@ -173,7 +173,7 @@ public:
   class Iterator : public Base::Iterator
   {
   public:
-    Iterator &operator ++ ()
+    Iterator &operator ++ () &
     {
       if (this->_c)
         Base::Iterator::operator ++ ();
@@ -196,7 +196,7 @@ public:
   class R_iterator : public Base::Iterator
   {
   public:
-    R_iterator &operator ++ ()
+    R_iterator &operator ++ () &
     {
       if (this->_c)
         Base::Iterator::operator -- ();

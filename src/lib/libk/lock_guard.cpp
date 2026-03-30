@@ -99,7 +99,7 @@ Lock_guard<LOCK, POLICY>::Lock_guard(Lock_guard &&l)
 PUBLIC template<typename LOCK, template< typename L > class POLICY>
 inline
 Lock_guard<LOCK, POLICY>&
-Lock_guard<LOCK, POLICY>::operator = (Lock_guard &&l)
+Lock_guard<LOCK, POLICY>::operator = (Lock_guard &&l) &
 {
   if (&l != this)
     {

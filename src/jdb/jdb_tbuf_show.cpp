@@ -41,8 +41,9 @@ public:
 
   Entry_group() : _c(0) {}
 
-  Item const &operator [] (unsigned i) const { return _i[i]; }
-  Item &operator [] (unsigned i) { return _i[i]; }
+  Item const &operator [] (unsigned i) const & { return _i[i]; }
+  Item const &operator [] (unsigned i) const && = delete;
+  Item &operator [] (unsigned i) & { return _i[i]; }
   unsigned size() const { return _c; }
   bool full() const { return _c >= Max_group_size; }
 

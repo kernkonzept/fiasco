@@ -17,7 +17,7 @@ public:
   friend constexpr bool operator==(Reschedule const &lhs, Reschedule const &rhs)
   { return lhs._value == rhs._value; }
 
-  constexpr Reschedule &operator|=(Reschedule const &rhs)
+  constexpr Reschedule &operator|=(Reschedule const &rhs) &
   {
     if (_value == No)
       _value = rhs._value;

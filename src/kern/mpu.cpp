@@ -121,7 +121,7 @@ public:
    * the result will also be in an error state. This is just a safety measure.
    * The caller should check each individual update operation for errors.
    */
-  Mpu_regions_update &operator|=(Mpu_regions_update const &other)
+  Mpu_regions_update &operator|=(Mpu_regions_update const &other) &
   {
     _updates |= other._updates;
     return *this;
@@ -269,8 +269,9 @@ public:
       }
   }
 
-  Mpu_region const &operator[](unsigned i) const
+  Mpu_region const &operator[](unsigned i) const &
   { return _regions[i]; }
+  Mpu_region const &operator[](unsigned i) const && = delete;
 
   Mpu_regions_mask used()     const { return _used_mask; }
   Mpu_regions_mask reserved() const { return _reserved; }
