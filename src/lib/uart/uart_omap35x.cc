@@ -114,3 +114,12 @@ int Uart_omap35x::get_char(bool blocking) const
 #endif // !UART_WITHOUT_INPUT
 
 } // namespace L4
+
+static l4re_device_spec_dt_ids dt_ids[] = {
+  { .compatible = "ti,am64-uart" },
+  { .compatible = "ti,am654-uart" },
+  { .compatible = "ti,j721e-uart" },
+  {},
+};
+
+l4re_register_device_uart_dt(L4::Uart_omap35x, omap35x, dt_ids);
