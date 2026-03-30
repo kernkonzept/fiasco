@@ -129,3 +129,11 @@ int Uart_dm::get_char(bool blocking) const
 #endif // !UART_WITHOUT_INPUT
 
 } // namespace L4
+
+static l4re_device_spec_dt_ids dt_ids[] = {
+  { .compatible = "qcom,msm-uartdm" },
+  { .compatible = "qcom,msm-uartdm-v1.4" },
+  {},
+};
+
+l4re_register_device_uart_dt(L4::Uart_dm, dm, dt_ids);

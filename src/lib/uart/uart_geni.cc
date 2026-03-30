@@ -178,3 +178,11 @@ int Uart_geni::get_char(bool blocking) const
 #endif // !UART_WITHOUT_INPUT
 
 }
+
+static l4re_device_spec_dt_ids dt_ids[] = {
+  { .compatible = "qcom,geni-uart" },
+  { .compatible = "qcom,geni-debug-uart" },
+  {},
+};
+
+l4re_register_device_uart_dt(L4::Uart_geni, geni, dt_ids);
