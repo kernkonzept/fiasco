@@ -28,17 +28,8 @@ class Mpu_region_attr
 public:
   Mpu_region_attr() = default;
 
-  constexpr bool operator == (Mpu_region_attr const &other)
-  {
-    return    _rights  == other._rights
-           && _type    == other._type
-           && _enabled == other._enabled;
-  }
-
-  constexpr bool operator != (Mpu_region_attr const &other)
-  {
-    return !operator==(other);
-  }
+  friend constexpr bool operator == (Mpu_region_attr const &lhs,
+                                     Mpu_region_attr const &rhs) = default;
 
   static constexpr Mpu_region_attr
   make_attr(L4_fpage::Rights rights,
@@ -220,8 +211,8 @@ struct Mpu_region : public cxx::D_list_item
   inline void attr(Mpu_region_attr attr);
   inline void disable();
 
-  bool operator < (Mpu_region const &o) const
-  { return end() < o.start(); }
+  friend bool operator < (Mpu_region const &lhs, Mpu_region const &rhs)
+  { return lhs.end() < rhs.start(); }
 
   constexpr bool contains(Mword addr) const
   { return start() <= addr && addr <= end(); }
