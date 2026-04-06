@@ -1,36 +1,11 @@
 IMPLEMENTATION:
 
-#include <cstdio>
-
-#include "config.h"
-#include "cpu.h"
-#include "kdb_ke.h"
 #include "kmem.h"
-#include "logdefs.h"
-#include "processor.h"
-#include "std_macros.h"
-#include "thread.h"
-#include "warn.h"
 #include "paging.h"
+#include "warn.h"
 
 
-/** 
- * The global page fault handler switch.
- * Handles page-fault monitoring, classification of page faults based on
- * virtual-memory area they occurred in, page-directory updates for kernel
- * faults, IPC-window updates, and invocation of paging function for
- * user-space page faults (handle_page_fault_pager).
- *
- * \param pfa page-fault virtual address
- * \param pf_info CPU-specific additional info (e.g. error code)
- * \return true if page fault could be resolved, false otherwise
- * \exception longjmp longjumps to recovery location if page-fault
- *                    handling fails (i.e., return value would be false),
- *                    but recovery location has been installed
- */
-IMPLEMENT inline NEEDS[<cstdio>,"kdb_ke.h","processor.h",
-		       "config.h","std_macros.h","logdefs.h",
-		       "warn.h",Thread::page_fault_log, "paging.h"]
+IMPLEMENT inline NEEDS["kmem.h", "paging.h", "warn.h", Thread::page_fault_log]
 int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc,
                               Return_frame *)
 {

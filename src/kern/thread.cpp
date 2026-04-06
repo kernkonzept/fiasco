@@ -94,8 +94,27 @@ public:
    */
   explicit Thread(Ram_quota *);
 
-  int handle_page_fault(Address pfa, Mword pf_info, Mword pc,
-                        Return_frame *regs);
+  /**
+   * The global page fault handler switch.
+   *
+   * Handles page-fault monitoring, classification of page faults based on
+   * virtual-memory area they occurred in, page-directory updates for kernel
+   * faults, and invocation of paging function for user-space page faults
+   * (handle_page_fault_pager).
+   *
+   * \param pfa      Page-fault virtual address.
+   * \param pf_info  CPU-specific additional information (e.g. error code).
+   * \param pc       Address of the instruction which triggered the page fault.
+   * \param regs     Return frame.
+   *
+   * \retval 0 Page fault could not be resolved.
+   * \retval !=0 Page fault successfully resolved.
+   *
+   * \exception longjmp Might perform a long jump to recovery location if
+   *                    page-fault handling fails (i.e., return value would be
+   *                    false), but recovery location has been installed.
+   */
+  int handle_page_fault(Address pfa, Mword pf_info, Mword pc, Return_frame *regs);
 
 private:
   struct Migration_state
