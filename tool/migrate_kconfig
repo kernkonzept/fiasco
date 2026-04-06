@@ -9,6 +9,7 @@ use Getopt::Long;
 use File::Basename;
 use File::Copy;
 use Cwd qw(realpath);
+use Pod::Usage;
 
 use constant {
   UNSET => bless({},"UNSET"),
@@ -135,7 +136,8 @@ sub apply_migration
       if (exists($config->{options}{$key}))
         {
           # Replace line
-          splice @{$config->{lines}}, $config->{options}{$key}{idx}, 1, $updated_line;
+          splice @{$config->{lines}}, $config->{options}{$key}{idx}, 1,
+            $updated_line;
 
           $line_idx = $config->{options}{$key}{idx};
         }
@@ -158,6 +160,7 @@ my $yes;
 my $interactive = -t STDIN;
 my $no_keep_orig;
 my $migrationfile = "$Dir/migrate_kconfig.settings";
+my $help = 0;
 
 sub confirm_prompt
 {
@@ -186,15 +189,18 @@ GetOptions(
   "no-interactive" => sub { $interactive = 0; },
   "no-keep-orig" => \$no_keep_orig,
   "m|migration=s" => \$migrationfile,
-) or die "Usage: migrate_kconfig [-y|--yes] [--no-interactive] [--no-keep-orig] [-m|--migration migration.cfg] <globalconfig.out>\n";
+  "h|help" => sub { $help++; },
+) or pod2usage(1);
+
+pod2usage(-verbose => $help) if $help;
 
 my $auto_confirm = $yes;
 $auto_confirm //= 0 unless $interactive;
 
 my ($configfile) = @ARGV;
 
-die "Missing config file" unless defined($configfile);
-die "Cannot read config file '$configfile'" unless -r $configfile;
+pod2usage("Missing config file") unless defined($configfile);
+pod2usage("Cannot read config file '$configfile'") unless -r $configfile;
 
 # Load migration config
 my $migrations = do (realpath($migrationfile));
@@ -207,7 +213,8 @@ my $anychanges = 0;
 my $spec_idx = 0;
 foreach my $spec (@$migrations)
   {
-    die "Invalid migration (Index $spec_idx)" unless $spec->{match} && $spec->{replace};
+    die "Invalid migration (Index $spec_idx)"
+      unless defined($spec->{match}) && defined($spec->{replace});
     $spec_idx++;
 
     my $match = read_kconfig($spec->{match});
@@ -230,11 +237,18 @@ unless ($anychanges)
     exit(0);
   }
 
-my ($tmpfh, $tempfile) = tempfile( basename($configfile) . ".XXXXXXX", TMPDIR => 1);
+my ($tmpfh, $tempfile) = tempfile(
+  basename($configfile) . ".XXXXXXX",
+  TMPDIR => 1
+);
 print $tmpfh write_kconfig($config);
 close($tmpfh);
 
-system("diff", $interactive ? "--color=always" : (), "--unified", $configfile, $tempfile);
+system("diff",
+       $interactive ? "--color=always" : (),
+       "--unified",
+       $configfile,
+       $tempfile);
 my $exit_code = $? >> 8;
 
 print "\n";
@@ -273,3 +287,160 @@ copy($tempfile, $configfile) or
   die "Unable to write file '$configfile'\n";
 
 print "$configfile migrated.\n";
+
+__END__
+
+=head1 NAME
+
+migrate_kconfig - Match and apply migrations to configuration file
+
+=head1 SYNOPSIS
+
+migrate_kconfig [options] <globalconfig.out>
+
+=head1 OPTIONS
+
+=over
+
+=item -y, --yes
+
+Assume yes as answer for all confirmations whether or not a specific migration
+shall be applied to the configuration. If --no-interactive is specified also
+assume yes for the final confirmation.
+
+=item --no-interactive
+
+Do not ask for confirmation including the final confirmation question. Unless
+--yes is specified, assume no as answer for all questions including the final
+confirmation.
+
+This option is implied if STDIN is not a TTY.
+
+Overrides any previous B<--interactive>
+
+=item --interactive
+
+Ask for confirmation even if STDIN is not a TTY.
+
+Overrides any previous B<--no-interactive>.
+
+=item --no-keep-orig
+
+By default if this tool alters the specified configuration file, it creates a
+copy with the original content under the same file name plus a suffix C<.orig>.
+
+Specifying this option skips the creation of this copy.
+
+=item -m, --migration <file>
+
+Specifies which file to load migrations from. Defaults to
+C<migrate_kconfig.settings> in the same directory as this script.
+
+See section MIGRATIONS in full help text (-hh) for more information.
+
+=item -h, --help
+
+Show short help text.
+
+=item -hh, --help --help
+
+Show full help text.
+
+=back
+
+=head1 DESCRIPTION
+
+This tool loads a list of migrations from a migration file, matches each
+migration to the configuration file and applies each matching migration (in
+specific cases after confirmation) to said configuration file. Once all
+migrations are applied the user is present with the textual diff between the
+original and the migration configuration file.
+
+=head1 MIGRATIONS
+
+=head2 MIGRATIONS FILE FORMAT
+
+The migrations file is a Perl script. The last statement must provide an
+arrayref of migrations to apply. Migrations are matched and applied in order,
+with each migration being matched and applied before the next migration is
+matched and applied.
+
+=head2 MIGRATION
+
+Each migration is represented by a hashref containing a key C<match>, a key
+C<replace> and a optionally a key C<prompt>:
+
+The keys C<match> as well as C<replace> contain a multiline string in the same
+format as a configuration file (i.e. globalconfig.out). The order of options
+within the C<match> string is irrelevant. Leading whitespaces in each line of
+the string are ignored, so that these options can be indented for better
+readability.
+
+migrate_kconfig matches each option in C<match> with the corresponding option in
+the configuration file. If all options in the key C<match> have the same value
+as in the configuration file, these options are removed and all the options
+specified in the key C<replace> are inserted/updated. The same option may be
+specified in C<match> and C<replace> in order to let the migration change the
+value of said option (or keep the option if the value is identical in both
+C<match> and C<replace>).
+
+C<match> may be empty to insert/update the options in C<replace> without
+condition. C<replace> may be empty to simply remove all options in C<match>.
+
+In addition to the keys C<match> and C<replace> a migration may have a key
+C<prompt> with a string as value. This string will be used for interactive
+confirmation, and should be a statement describing the migration, e.g. "Enable
+x", "Disable y", "Convert from A to B", "Increase Z".
+
+=head3 EXAMPLE
+
+[
+
+  ...
+
+  {
+    prompt => "Update max core count to 32 for platform arm_virt if MP is enabled",
+    match => q(
+      CONFIG_PF_ARM_VIRT=y
+      CONFIG_MP=y
+    ),
+    replace => q(
+      CONFIG_PF_ARM_VIRT=y
+      CONFIG_MP=y
+      CONFIG_MP_MAX_CPUS=32
+    ),
+  },
+
+  ...
+
+]
+
+=head2 OPTION COMPARISON
+
+During the matching of two options the values are compared.
+
+=over
+
+=item *
+
+If the option is absent on either side, the option is consider not matching.
+
+=item *
+
+If at least one of the values is denoted as "is not set" comment, then both
+values are only considered matching if both values are denoted as "is not
+set" comment
+
+=item *
+
+In all other cases, both values are string compared, including any quotation.
+
+=back
+
+=head2 OPTION INSERTION/UPDATE
+
+The migrate_kconfig tool retains the order of the options in the original
+configuration file. If an option is present in the configuration file as well as
+the key C<replace> of a migration the option is updated in the same line. If an
+option is present in the key C<replace>, but not in the configuration file then
+the option is appended to the end of the file.
