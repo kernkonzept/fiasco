@@ -3,15 +3,9 @@
 
 #include "globalconfig.h"
 
-// We want to be Hazelnut compatible, because we want to use the same
-// sysenter IPC bindings. When doing sysenter they push 0x1b and the
-// returning EIP. The 0x1b value is used for small address spaces where
-// the code segment has to be reloaded after a sysexit was performed
-// (sysexit loads a flat 4 GiB segment into CS and SS).
-//
-// Furthermore, the order of GDT_CODE_KERNEL, GDT_DATA_KERNEL, GDT_CODE_USER,
-// GDT_DATA_USER is important since the sysenter/sysexit instruction pair
-// assumes this layout (see Intel Reference Manual about sysenter/sysexit)
+// The order of GDT_CODE_KERNEL, GDT_DATA_KERNEL, GDT_CODE_USER, GDT_DATA_USER
+// is important since the sysenter/sysexit instruction pair assumes this layout
+// (see Intel Reference Manual about sysenter/sysexit).
 
 #ifdef CONFIG_AMD64
 # define NEXT_SYS_DESC(x) (x + 16)
