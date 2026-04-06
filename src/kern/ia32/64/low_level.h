@@ -341,10 +341,6 @@
 	pop	%rdi
 	.endm
 
-	.macro	IRET_INSN
-	iretq
-	.endm
-
 #define PAGE_FAULT_ADDR	%cr2
 #define PAGE_DIR_ADDR	%cr3
 

@@ -124,10 +124,6 @@
 	pop	%eax
 	.endm
 
-	.macro	IRET_INSN
-	iret
-	.endm
-
 #define PAGE_FAULT_ADDR	%cr2
 #define PAGE_DIR_ADDR	%cr3
 
