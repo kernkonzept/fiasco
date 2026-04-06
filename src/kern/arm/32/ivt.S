@@ -374,9 +374,9 @@ inst_abort_entry:
 	switch_to_kernel 4 0 1
 /**************************************************************************/
 /*prefetch_abort: @ A real prefetch abort occurred --- handled as a page fault */
-	stmdb	sp!, {r0 - r3, r12} 	@ Stack rest of user state
-	mpu_kernel_enter (5*4)
-	ldr	lr, [sp, #RF(PSR, 5*4)]	@ get spsr from stack
+	stmdb	sp!, {r0 - r12} 	@ build full Trap_state
+	mpu_kernel_enter (13*4)
+	ldr	lr, [sp, #RF(PSR, 13*4)] @ get spsr from stack
 	ands	lr, lr, #0x0f		@ Mask all but relevant mode bits
 	bne	kernel_prefetch_abort	@ Kernel abort?
 	/* user prefetch abort */
@@ -392,11 +392,11 @@ inst_abort_entry:
 	mrc	p15, 0, r0, c6, c0, 2   @ Read fault address, for T2: pfa != pc
 # endif
 #else
-	ldr	r0, [sp, #RF(PC, 5*4)]  @ Get PC from RF and use as pfa
+	ldr	r0, [sp, #RF(PC, 13*4)] @ Get PC from RF and use as pfa
 #endif
-	mov	r2, r0
-	add 	r3, sp, #(5*4)
-	stmdb	sp!, {r0, r1}
+	mov	r2, r0                  @ assume pc == pfa
+	add 	r3, sp, #(13*4)         @ address of Return_frame
+	stmdb	sp!, {r0, r1}           @ push pfa (r0) and error (r1)
 	align_and_save_sp r12           @ use r12 as scratch
 	adr	lr, pagefault_return
 	ldr	pc,  .LCpagefault_entry	@ Jump to C code
@@ -430,19 +430,17 @@ GEN_LEAVE_AND_KILL_MYSELF
  *
  *   old sp->  |       |
  *             +-------+
- *             |  lr'  | +36
+ *             |  lr'  | +68
  *             +-------+
- *             | spsr  | +32
+ *             | spsr  | +64
  *	       +-------+
- *             | km_lr | +28
+ *             | km_lr | +60
  *             +-------+
- *             |  ulr  | +24
+ *             |  ulr  | +56
  *             +-------+
- *             |  usp  | +20
+ *             |  usp  | +52
  *             +-------+
- *             |  r12  | +16
- *             +-------+
- *             |  r3   | +12
+ *             |  r12  | +48
  *             +-------+
  *               :  :
  *             +-------+
@@ -466,8 +464,8 @@ GEN_LEAVE_AND_KILL_MYSELF
 .p2align 2
 data_abort_entry:
 	switch_to_kernel 8 0 1
-	stmdb   sp!, {r0 - r3, r12}          @ Stack rest of user state
-	mpu_kernel_enter (5*4)
+	stmdb   sp!, {r0 - r12}         @ build full Trap_state
+	mpu_kernel_enter (13*4)
 
 	/* user data abort */
 #ifdef CONFIG_ARM_V6PLUS
@@ -484,27 +482,27 @@ data_abort_entry:
 	mrc     p15, 0, r0, c6, c0, 0	@ Load DFAR into r0
 # endif
 
-	ldr	r2, [sp, #RF(PC,  5*4)] @ Load PC into r2
-	ldr	lr, [sp, #RF(PSR, 5*4)]	@ load spsr, from stack 
+	ldr	r2, [sp, #RF(PC,  13*4)] @ Load PC into r2
+	ldr	lr, [sp, #RF(PSR, 13*4)] @ load spsr, from stack
 
 	ands	lr, lr, #0x0f		@ Mask all but relevant mode bits
 					@ NE -> kernel
-	add 	r3, sp, #(5*4)
 	orrne   r1, r1, #GET_HSR(0x01)
 	orr	r1, r1, #GET_HSR(0x24)  @ Set error code to data abort
 
-	stmdb	sp!, {r0, r1}
+	add 	r3, sp, #(13*4)         @ address of Return_frame
+	stmdb	sp!, {r0, r1}           @ push pfa (r0) and error (r1)
 	align_and_save_sp r12           @ use r12 as scratch
 	adr	lr, pagefault_return	@ set return address
 
-	ldr	pc, .LCpagefault_entry	@ page fault	
-#else
+	ldr	pc, .LCpagefault_entry	@ page fault
+#else /* !CONFIG_ARM_V6PLUS */
 	mrc     p15, 0, r1, c5, c0, 0	@ Load FSR into r1
 	bic	r1, r1, #(1 << 6)	@ clear bit 6 (write indicator)
 	bic	r1, r1, #GET_HSR(0x3f)
 	mrc     p15, 0, r0, c6, c0, 0	@ Load FAR into r0
-	ldr	r2, [sp, #RF(PC,  5*4)] @ Load PC into r2
-	ldr	lr, [sp, #RF(PSR, 5*4)]	@ load spsr, from stack 
+	ldr	r2, [sp, #RF(PC,  13*4)] @ Load PC into r2
+	ldr	lr, [sp, #RF(PSR, 13*4)] @ load spsr, from stack
 	tst	lr, #0x20		@ comes from thumb mode?
 	bne	.LChandle_thumb
 	@ arm insns
@@ -517,10 +515,10 @@ data_abort_entry:
 	atomic_fixup r2 1
 	ands	lr, lr, #0x0f		@ Mask all but relevant mode bits
 					@ NE -> kernel
-	add 	r3, sp, #(5*4)
 	orrne	r1, r1, #GET_HSR(0x01)
 	orr	r1, r1, #GET_HSR(0x24)  @ Set error code to data abort
-	stmdb	sp!, {r0, r1}
+	add 	r3, sp, #(13*4)         @ address of Return_frame
+	stmdb	sp!, {r0, r1}           @ push pfa (r0) and error (r1)
 	align_and_save_sp r12           @ use r12 as scratch
 	adr	lr, pagefault_return	@ set return address
 
@@ -544,19 +542,16 @@ data_abort_entry:
 pagefault_return:
 	ldr	sp, [sp]
 	cmp 	r0, #0
-	ldmia	sp!, {r12, lr}
 	beq	slowtrap_from_pagefault
 
+	ldmia	sp!, {r12, lr}          @ pop r12=pfa (drop) and pop lr=pc
 	msr	cpsr_c, #0xd3 // disable IRQs
-	mpu_kernel_leave 1, (5*4)
-	ldmia	sp!, {r0 - r3, r12}		@ Restore user state
+	mpu_kernel_leave 1, (13*4)
+	ldmia	sp!, {r0 - r12}
 	return_from_exception
 
 slowtrap_from_pagefault:
 	disable_irqs
-	ldmia 	sp!, {r0 - r3}
-	stmdb 	sp!, {r0 - r11}
-	stmdb 	sp!, {r12, lr}
 	align_and_save_sp r0
 	adr   	lr, exception_return
 	ldr	pc, .LCslowtrap_entry	@ slow trap
