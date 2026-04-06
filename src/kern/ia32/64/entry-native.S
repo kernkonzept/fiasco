@@ -52,23 +52,7 @@ entry_vec01_debug:
 1:	SWITCH_TO_KERNEL_CR3 0
 	push	$(0)
 	push	$(1)
-	push	%rax
-	push	%rcx
-	push	%rdx
-	push	%rbx
-	mov	%cr2,%rax
-	push	%rax
-	push	%rbp
-	push	%rsi
-	push	%rdi
-	push	%r8
-	push	%r9
-	push	%r10
-	push	%r11
-	push	%r12
-	push	%r13
-	push	%r14
-	push	%r15
+	save_all_regs
 	jmp	slowtraps
 
 
@@ -79,23 +63,7 @@ entry_vec08_dbf:
 	SWITCH_TO_KERNEL_CR3 0
 	push	$(0)
 	push	$(8)
-	push	%rax
-	push	%rcx
-	push	%rdx
-	push	%rbx
-	mov	%cr2,%rax
-	push	%rax
-	push	%rbp
-	push	%rsi
-	push	%rdi
-	push	%r8
-	push	%r9
-	push	%r10
-	push	%r11
-	push	%r12
-	push	%r13
-	push	%r14
-	push	%r15
+	save_all_regs
 	IA32_IBRS_CLOBBER
 	mov	%rsp,%rdi		// 1st arg: trap state
 	call	thread_handle_double_fault
