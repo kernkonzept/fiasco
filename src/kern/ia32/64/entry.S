@@ -228,11 +228,6 @@ in_page_fault:
 .p2align 4
 .Lbad_page_fault:
 	cli
-	/*
-	 * We have on stack: r8, rdi, rsi, rdx, rcx, rax, error code.
-	 * Move registers down to make room for trap number* and build complete
-	 * trap state before jumping to trap handler.
-	 */
 	popq	%rdi                    /* Pop pfa */
 	mov	%rdi, %cr2              /* Restore pfa */
 	RESTORE_SCRATCH
