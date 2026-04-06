@@ -154,7 +154,7 @@ public:
                                 Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
                                    ? Sctlr_a : 0)
-                                | Sctlr_cache_bits,
+                                | Sctlr_cache_bits
                                 | Sctlr_write_buffer
                                 | Sctlr_prog32
                                 | Sctlr_data32
@@ -186,7 +186,7 @@ public:
                                 Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
                                    ? Sctlr_a : 0)
-                                | Sctlr_cache_bits,
+                                | Sctlr_cache_bits
                                 | Sctlr_z
                                 | Sctlr_v
                                 | Sctlr_u
@@ -203,7 +203,7 @@ public:
                                 Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
                                    ? Sctlr_a : 0)
-                                | Sctlr_cache_bits,
+                                | Sctlr_cache_bits
                                 | Sctlr_z
                                 | Sctlr_v
                                 | Sctlr_u
@@ -248,7 +248,7 @@ public:
                                 Sctlr_m
                                 | (Config::Sctlr_use_alignment_check
                                    ? Sctlr_a : 0)
-                                | Sctlr_cache_bits,
+                                | Sctlr_cache_bits
                                 | Sctlr_z
                                 | Sctlr_rao_sbop;
 };
