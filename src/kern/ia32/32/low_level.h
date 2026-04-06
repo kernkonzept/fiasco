@@ -84,6 +84,11 @@
 	andl	$~(THREAD_BLOCK_SIZE - 1), \reg
 	.endm
 
+/* {SAVE,RESTORE}_STATE save/restore _all_ GP registers (omitting esp) building
+ * a stack layout described in
+ * - Syscall_frame for IPC (invoked by sysenter/int30h),
+ * - Trap_state for exceptions handled in slowtrap handler,
+ *   used by save_all_regs. */
 	.macro	SAVE_STATE
 	pushl	%ebp
 	pushl	%ebx
@@ -111,6 +116,8 @@
 	addl	$4, %esp
 	.endm
 
+/* {SAVE,RESTORE}_SCRATCH save/restore only GP registers which are not saved by
+ * the entry code of the called C++ handler. */
 #define SCRATCH_REGISTER_SIZE 12
 	.macro	SAVE_SCRATCH
 	push	%eax

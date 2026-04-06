@@ -245,6 +245,12 @@
 .endm
 
 
+/* {SAVE,RESTORE}_STATE save/restore _all_ GP registers (skipping rsp) building
+ * a stack layout described in
+ * - Syscall_post_frame and Syscall_frame for IPC (invoked by sysenter),
+ *   used by SAVE_STATE_SYSEXIT,
+ * - Trap_state for exceptions handled in slowtrap handler + DBF handler,
+ *   used by save_all_regs. */
 .macro	SAVE_STATE save_cr2=0 timeout_reg=%rcx
 	push	\timeout_reg
 	push	%rdx
@@ -316,6 +322,11 @@
 	.endm
 
 
+/* {SAVE,RESTORE}_SCRATCH save/restore _only_ GP registers which are not saved
+ * by the entry code of the called C++ handler. Used by
+ * - handlers for exceptions 0x07, 0x0e, 0x12,
+ * - interrupt handlers,
+ * - APIC error interrupt. */
 #define SCRATCH_REGISTER_SIZE 72
 	.macro	SAVE_SCRATCH
 	push	%rdi
