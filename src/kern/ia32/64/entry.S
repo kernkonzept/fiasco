@@ -224,16 +224,6 @@ in_page_fault:
 	add	$8, %rsp                /* Remove error code */
 	SAFE_IRET
 
-/*
- * If code or stack from a small address space are not yet mapped in the
- * current page directory we might get a page fault on return from the
- * trampoline page. In this case we cannot return to the trampoline page after
- * handling the fault because we are already in user mode (with segment limits
- * below kernel space) while the trampoline code is located in kernel data
- * space. So instead we change ESP and EIP to point to the address the
- * trampoline wanted to return to and do the normal IRET.
- */
-
 /* recover from a bad page fault by invoking the slow_trap handler */
 .p2align 4
 .Lbad_page_fault:
