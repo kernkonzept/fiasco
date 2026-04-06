@@ -10,12 +10,6 @@
 #include <cxx/type_traits>
 #include <new>
 
-template< typename T > inline
-T expect(T v, T expected)
-{
-  return static_cast<T>(__builtin_expect(static_cast<long>(v), static_cast<long>(expected)));
-}
-
 template< typename a, typename b > inline
 a nonull_static_cast( b p )
 {
