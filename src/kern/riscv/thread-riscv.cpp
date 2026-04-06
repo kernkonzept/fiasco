@@ -5,7 +5,7 @@ EXTENSION class Thread
 public:
   static int
   thread_handle_trap(Mword cause, Mword val,
-                     Return_frame *ret_frame) asm ("thread_handle_trap");
+                     Trap_state *ts) asm ("thread_handle_trap");
 
   static int
   thread_handle_slow_trap(Trap_state *ts) asm ("thread_handle_slow_trap");
@@ -244,14 +244,14 @@ extern "C" void leave_by_vcpu_upcall(Trap_state *ts)
 
 IMPLEMENT
 int
-Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
+Thread::thread_handle_trap(Mword cause, Mword val, Trap_state *ts)
 {
   assert(cpu_lock.test());
 
   Thread *t = current_thread();
 
   // Handle hypervisor traps
-  if (t->handle_hyp_ext_trap(cause, val, ret_frame))
+  if (t->handle_hyp_ext_trap(cause, val, ts))
     {
       assert(cpu_lock.test());
       return 1;
@@ -277,26 +277,26 @@ Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
     case Cpu::Exc_inst_page_fault:
     case Cpu::Exc_load_page_fault:
     case Cpu::Exc_store_page_fault:
-      result = t->handle_page_fault_riscv(cause, val, ret_frame);
+      result = t->handle_page_fault_riscv(cause, val, ts);
       if (!result)
         {
-          result = t->handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+          result = t->handle_slow_trap(ts);
         }
       break;
 
     // Environment call
     case Cpu::Exc_ecall:
-      result = t->handle_ecall(ret_frame);
+      result = t->handle_ecall(ts);
       break;
 
     // Illegal instruction
     case Cpu::Exc_illegal_inst:
-      result = t->handle_fpu_trap(ret_frame);
+      result = t->handle_fpu_trap(ts);
       break;
 
     // Breakpoint
     case Cpu::Exc_breakpoint:
-      result = t->handle_breakpoint(ret_frame);
+      result = t->handle_breakpoint(ts);
       break;
 
     // PMA/PMP check failed
@@ -306,13 +306,13 @@ Thread::thread_handle_trap(Mword cause, Mword val, Return_frame *ret_frame)
 
     default:
       WARN("Unhandled Trap: Cause=" L4_MWORD_FMT ", Epc=" L4_MWORD_FMT ", Val=" L4_MWORD_FMT "\n",
-           cause, ret_frame->ip(), val);
-      result = t->handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+           cause, ts->ip(), val);
+      result = t->handle_slow_trap(ts);
     }
 
     if (!result)
       WARN("Trap handling failed: Cause=" L4_MWORD_FMT ", Epc=" L4_MWORD_FMT ", Val=" L4_MWORD_FMT "\n",
-           cause, ret_frame->ip(), val);
+           cause, ts->ip(), val);
 
     assert(cpu_lock.test());
     return result;
@@ -345,13 +345,13 @@ Thread::handle_external_interrupt()
 
 PROTECTED inline
 int
-Thread::handle_page_fault_riscv(Mword cause, Mword pfa, Return_frame *ret_frame)
+Thread::handle_page_fault_riscv(Mword cause, Mword pfa, Trap_state *ts)
 {
   // RISC-V does not indicate whether a page fault was caused
   // by a missing mapping or by insufficient permissions.
   Mword error_code = 0;
 
-  if (ret_frame->user_mode())
+  if (ts->user_mode())
     error_code |= PF::Err_usermode;
 
   switch (cause)
@@ -372,18 +372,18 @@ Thread::handle_page_fault_riscv(Mword cause, Mword pfa, Return_frame *ret_frame)
   // Pagefault in user mode
   if (PF::is_usermode_error(error_code)) [[likely]]
     {
-      if (vcpu_pagefault(pfa, cause, ret_frame->ip()))
+      if (vcpu_pagefault(pfa, cause, ts->ip()))
         return 1;
     }
 
   // Enable interrupts, except for kernel page faults in TCB area.
   Lock_guard<Cpu_lock, Lock_guard_inverse_policy> guard;
   if (PF::is_usermode_error(error_code)
-      || ret_frame->interrupts_enabled()
+      || ts->interrupts_enabled()
       || !Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
     guard = lock_guard<Lock_guard_inverse_policy>(cpu_lock);
 
-  return handle_page_fault(pfa, error_code, ret_frame->ip(), ret_frame);
+  return handle_page_fault(pfa, error_code, ts->ip(), ts);
 }
 
 IMPLEMENT
@@ -414,7 +414,7 @@ Thread::handle_slow_trap(Trap_state *ts)
 
 PROTECTED inline
 int
-Thread::handle_ecall(Return_frame *ret_frame)
+Thread::handle_ecall(Trap_state *ts)
 {
   Mword state = this->state();
   state_del(Thread_cancel);
@@ -425,14 +425,14 @@ Thread::handle_ecall(Return_frame *ret_frame)
         if (state & Thread_dis_alien)
           {
             state_del_dirty(Thread_dis_alien);
-            handle_syscall(ret_frame);
-            ret_frame->cause = Return_frame::Ec_l4_alien_after_syscall;
+            handle_syscall(ts);
+            ts->cause = Trap_state::Ec_l4_alien_after_syscall;
           }
 
-      return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+      return handle_slow_trap(ts);
     }
 
-  handle_syscall(ret_frame);
+  handle_syscall(ts);
   return 1;
 }
 
@@ -448,15 +448,15 @@ Thread::handle_syscall(Return_frame *ret_frame)
 
 PROTECTED inline
 int
-Thread::handle_breakpoint(Return_frame *ret_frame)
+Thread::handle_breakpoint(Trap_state *ts)
 {
-  if (ret_frame->user_mode())
-    return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+  if (ts->user_mode())
+    return handle_slow_trap(ts);
 
   // Breakpoint in kernel
-  call_nested_trap_handler(static_cast<Trap_state *>(ret_frame));
+  call_nested_trap_handler(ts);
   // Advance ip to continue execution after ebreak instruction.
-  ret_frame->ip(ret_frame->ip() + Cpu::inst_size(ret_frame->ip()));
+  ts->ip(ts->ip() + Cpu::inst_size(ts->ip()));
 
   return 1;
 }
@@ -466,11 +466,11 @@ IMPLEMENTATION [riscv && fpu]:
 
 PROTECTED inline
 int
-Thread::handle_fpu_trap(Return_frame *ret_frame)
+Thread::handle_fpu_trap(Trap_state *ts)
 {
   // FPU is enabled, so it can't be an FPU trap.
   if (Fpu::is_enabled())
-    return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+    return handle_slow_trap(ts);
 
   // Assume that the illegal instruction exception was caused
   // by a floating point instruction in combination with a disabled FPU.
@@ -478,11 +478,11 @@ Thread::handle_fpu_trap(Return_frame *ret_frame)
   // instruction, another illegal instruction exception will be thrown
   // when returning from the trap handler. This time the FPU is enabled,
   // therefore we know the cause can't be an FPU trap (see above).
-  if (!ret_frame->user_mode())
+  if (!ts->user_mode())
     panic("FPU trap or illegal instruction exception from inside the kernel!");
 
   if (!switchin_fpu())
-    return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+    return handle_slow_trap(ts);
 
   return 1;
 }
@@ -492,9 +492,9 @@ IMPLEMENTATION [riscv && !fpu]:
 
 PROTECTED inline
 int
-Thread::handle_fpu_trap(Return_frame *ret_frame)
+Thread::handle_fpu_trap(Trap_state *ts)
 {
-  return handle_slow_trap(static_cast<Trap_state *>(ret_frame));
+  return handle_slow_trap(ts);
 }
 
 //----------------------------------------------------------------------------
@@ -547,7 +547,7 @@ Thread::arch_init_vcpu_state(Vcpu_state *vcpu_state, bool)
 
 PRIVATE inline
 bool
-Thread::handle_hyp_ext_trap(Mword, Mword, Return_frame *)
+Thread::handle_hyp_ext_trap(Mword, Mword, Trap_state *)
 { return false; }
 
 //----------------------------------------------------------
@@ -622,10 +622,10 @@ Thread::arch_vcpu_set_user_space()
 
 PRIVATE inline NEEDS["cpu.h", Thread::handle_slow_trap]
 bool
-Thread::handle_hyp_ext_trap(Mword cause, Mword val, Return_frame *ret_frame)
+Thread::handle_hyp_ext_trap(Mword cause, Mword val, Trap_state *ts)
 {
   // The trap comes from virtualization mode.
-  if (ret_frame->virt_mode())
+  if (ts->virt_mode())
     {
       // For traps from VS-mode the return frame is marked as not coming from
       // user mode, which is technically correct but confuses Fiasco, because in
@@ -633,7 +633,7 @@ Thread::handle_hyp_ext_trap(Mword cause, Mword val, Return_frame *ret_frame)
       // it comes from within Fiasco or not. Therefore, we always mark
       // virtualization return frames as user mode frames. Whether the guest was
       // in VS-mode or VU-mode is already represented in hstatus.SPVP.
-      ret_frame->user_mode(true);
+      ts->user_mode(true);
 
       // Assume the illegal instruction exception is a FPU trap caused by lazy
       // FPU switching(see Thread::handle_fpu_trap)
@@ -656,28 +656,28 @@ Thread::handle_hyp_ext_trap(Mword cause, Mword val, Return_frame *ret_frame)
             }
         }
 
-      assert(ret_frame == regs());
-      if (!send_exception(static_cast<Trap_state *>(ret_frame)))
+      assert(ts == regs());
+      if (!send_exception(ts))
         {
           WARN("Hypervisor trap handling failed: Cause=" L4_MWORD_FMT ", Epc=" L4_MWORD_FMT ", Val=" L4_MWORD_FMT "\n",
-               cause, ret_frame->ip(), val);
+               cause, ts->ip(), val);
           kdb_ke("Hypervisor trap handling failed!");
           kill();
         }
 
       return true;
     }
-  else if (ret_frame->hstatus & Cpu::Hstatus_gva)
+  else if (ts->hstatus & Cpu::Hstatus_gva)
     {
       // If hstatus.SPV is not set and hstatus.GVA is set, the cause
       // of the exception must be a failed hypervisor load store instruction.
-      assert(ret_frame->user_mode());
+      assert(ts->user_mode());
       assert((state() & Thread_ext_vcpu_enabled));
 
       // HLV, HLVX, or HSV failed
       vm_state(vcpu_state().access())->hlsi_failed = true;
       // Skip instruction
-      ret_frame->ip(ret_frame->ip() + 4);
+      ts->ip(ts->ip() + 4);
 
       return true;
     }
