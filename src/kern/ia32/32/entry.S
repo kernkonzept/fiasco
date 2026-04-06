@@ -28,7 +28,7 @@
   entry_\name:
 	pushl	$(0)
 	pushl	$(\n)
-	pusha
+	save_all_regs
 	jmp	.L_slowtraps
 .endm
 
@@ -42,7 +42,7 @@
   entry_\name:
 	pushl	$(0)
 	pushl	$(\n)
-	pusha
+	save_all_regs
 	jmp	.L_slowtraps
 .endm
 
@@ -55,7 +55,7 @@
   .p2align 3
   entry_\name:
 	pushl	$(\n)
-	pusha
+	save_all_regs
 	jmp	.L_slowtraps
 .endm
 
@@ -69,7 +69,7 @@
 	popl	%eax
 	pushl	$(0x30 << 3 | 2)
 	pushl	$(0xd)
-	pusha
+	save_all_regs
 	jmp	.L_slowtraps
 	/* DOES NOT RETURN! */
 
@@ -86,7 +86,7 @@
 	popl	%eax
 	pushl	$(0x30 << 3 | 6)
 	pushl	$(0xd)
-	pusha
+	save_all_regs
 	jmp	.L_slowtraps
 .endm
 #endif
@@ -192,7 +192,7 @@ in_slowtrap:
 	addl	$(4 * 2), %esp          /* Pop ds, es segment registers */
 1:	popl	%gs
 2:	popl	%fs
-	popa
+	restore_all_regs
 	addl	$(4 * 2), %esp          /* Pop trap number and error code */
 3:	iret
 
@@ -346,7 +346,7 @@ in_handle_fputrap:
 	RESTORE_SCRATCH
 	pushl	$(0)
 	pushl	$(7)
-	pusha
+	save_all_regs
 	jmp	.L_slowtraps
 
 /* Timer interrupt */
@@ -607,7 +607,7 @@ leave_by_trigger_exception:
 	RESTORE_SCRATCH
 	pushl	$0x00
 	pushl	$0xff
-	pusha
+	save_all_regs
 	jmp	.L_slowtraps
 
 #define OFS__VCPU_STATE__REGS_IRET (VAL__SIZEOF_TRAP_STATE - 20 + OFS__VCPU_STATE__TREX)
@@ -686,7 +686,7 @@ vcpu_resume:
 	addl	$(2 * 4), %esp /* Skip es and ds for now */
 	popl	%gs
 	popl	%fs
-	popa
+	restore_all_regs
 	addl	$(2 * 4), %esp
 	iret
 

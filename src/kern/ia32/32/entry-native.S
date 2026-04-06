@@ -17,7 +17,7 @@
 	andl	$0x7f,4(%esp)
 	pushl	$(0x30 << 3 | 2)
 	pushl	$(0xd)
-	pusha
+	save_all_regs
 	/* emulate entry code in KIP */
 	mov	40(%esp), %ebp         /* offset 40: eip */
 	mov	%ebp, 16(%esp)         /* offset 16: ebx */
@@ -49,7 +49,7 @@
 	andl	$0x7f,4(%esp)
 	pushl	$(0x30 << 3 | 6)
 	pushl	$(0xd)
-	pusha
+	save_all_regs
 	jmp	slowtraps
 .endm
 #endif
@@ -69,7 +69,7 @@ entry_vec01_debug:
 #endif
 1:	pushl	$0
 	pushl	$1
-	pusha
+	save_all_regs
 	jmp	slowtraps
 
 
@@ -330,7 +330,7 @@ leave_alien_from_sysenter_by_iret:
 	LEAVE_SE_BY_IRET
 	pushl	$(0x30 << 3 | 6)
 	pushl	$(0xd)
-	pusha
+	save_all_regs
 	jmp	slowtraps
 
 	.bss
