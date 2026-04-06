@@ -430,25 +430,25 @@ GEN_LEAVE_AND_KILL_MYSELF
  *
  *   old sp->  |       |
  *             +-------+
- *             |  lr'  | +68
+ *             |  lr'  | +36
  *             +-------+
- *             | spsr  | +64
+ *             | spsr  | +32
  *	       +-------+
- *             | km_lr | +60
+ *             | km_lr | +28
  *             +-------+
- *             |  ulr  | +56
+ *             |  ulr  | +24
  *             +-------+
- *             |  usp  | +52
+ *             |  usp  | +20
  *             +-------+
- *             |  r12  | +48
+ *             |  r12  | +16
  *             +-------+
- *               :  : 	
+ *             |  r3   | +12
+ *             +-------+
+ *               :  :
  *             +-------+
  *       sp -> |  r0   | +0
  *             +-------+
  *             |       |
- *
- *
  *
  */
 
@@ -541,6 +541,26 @@ data_abort_entry:
 .LCslowtrap_entry:	.word	slowtrap_entry
 
 
+pagefault_return:
+	ldr	sp, [sp]
+	cmp 	r0, #0
+	ldmia	sp!, {r12, lr}
+	beq	slowtrap_from_pagefault
+
+	msr	cpsr_c, #0xd3 // disable IRQs
+	mpu_kernel_leave 1, (5*4)
+	ldmia	sp!, {r0 - r3, r12}		@ Restore user state
+	return_from_exception
+
+slowtrap_from_pagefault:
+	disable_irqs
+	ldmia 	sp!, {r0 - r3}
+	stmdb 	sp!, {r0 - r11}
+	stmdb 	sp!, {r12, lr}
+	align_and_save_sp r0
+	adr   	lr, exception_return
+	ldr	pc, .LCslowtrap_entry	@ slow trap
+
 /***************************************************************************
  * Generic return code for restoring the thread state after exceptions.
  *
@@ -560,33 +580,13 @@ data_abort_entry:
  *             +-------+
  *             |  r12  | +48
  *             +-------+
- *               :  : 	
+ *               :  :
  *             +-------+
  *   old sp -> |  r0   | +0
  *             +-------+
  *             |       |
  *
- *
- */	
-pagefault_return:
-	ldr	sp, [sp]
-	cmp 	r0, #0
-	ldmia	sp!, {r12, lr}
-	beq	slowtrap_from_pagefault
-	
-	msr	cpsr_c, #0xd3 // disable IRQs
-	mpu_kernel_leave 1, (5*4)
-	ldmia	sp!, {r0 - r3, r12}		@ Restore user state
-	return_from_exception
-
-slowtrap_from_pagefault:
-	disable_irqs
-	ldmia 	sp!, {r0 - r3}
-	stmdb 	sp!, {r0 - r11}
-	stmdb 	sp!, {r12, lr}
-	align_and_save_sp r0
-	adr   	lr, exception_return
-	ldr	pc, .LCslowtrap_entry	@ slow trap
+ */
 
 GEN_EXCEPTION_RETURN
 GEN_IRET
