@@ -92,7 +92,6 @@ entry_vec0f_apic_spurious_interrupt_bug:
 	iretq
 
 
-/* XXX has to be fixed */
 /* APIC error interrupt */
 	.p2align 4
 	.globl	entry_apic_error_interrupt
