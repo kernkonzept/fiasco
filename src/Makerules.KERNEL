@@ -15,7 +15,7 @@ $(2): $(call KERNEL_PREREQUISITES,$(3))
 	$$(call ADD_CONFIGFILE,$$@)
 
 $(1): $(1).stripped $(2)
-	$$(LINK_MESSAGE)
+	$$(STRIP_MESSAGE)
 	$$(VERBOSE)$$(OBJCOPY) --add-gnu-debuglink=$$(strip $(2)) $$< $$@
 	$$(VERBOSE)chmod 755 $$@
 	$$(VERBOSE)$$(RM) $$<
