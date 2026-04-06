@@ -6,8 +6,7 @@ IMPLEMENTATION:
 
 
 IMPLEMENT inline NEEDS["kmem.h", "paging.h", "warn.h", Thread::page_fault_log]
-int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc,
-                              Return_frame *)
+int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc, Trap_state *)
 {
   CNT_PAGE_FAULT;
 

@@ -288,7 +288,7 @@ Thread::check_and_handle_linux_cache_api(Trap_state *ts)
 
 IMPLEMENT_OVERRIDE inline
 bool
-Thread::check_and_handle_mem_op_fault(Mword error_code, Return_frame *ret_frame)
+Thread::check_and_handle_mem_op_fault(Mword error_code, Trap_state *ts)
 {
   // cache operations we carry out for user space might cause PFs, we just
   // ignore those
@@ -296,7 +296,7 @@ Thread::check_and_handle_mem_op_fault(Mword error_code, Return_frame *ret_frame)
       && is_ignore_mem_op_in_progress()) [[unlikely]]
     {
       set_kernel_mem_op_hit();
-      ret_frame->pc += 4;
+      ts->pc += 4;
       return true;
     }
   else

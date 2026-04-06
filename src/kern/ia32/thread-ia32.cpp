@@ -402,10 +402,6 @@ extern "C" FIASCO_FASTCALL
 int
 thread_page_fault(Address pfa, Trap_state *ts)
 {
-  // temporary -- will be removed with an upcoming change
-  char *im = reinterpret_cast<char*>(ts + 1);
-  auto *regs = reinterpret_cast<Return_frame*>(im) - 1;
-
   // XXX: need to do in a different way, if on debug stack e.g.
 #if 0
   // If we're in the GDB stub -- let generic handler handle it
@@ -430,7 +426,7 @@ thread_page_fault(Address pfa, Trap_state *ts)
      || !Kmem::is_kmem_page_fault(pfa, ts->error())) [[likely]]
     Proc::sti();
 
-  return t->handle_page_fault(pfa, ts->error(), ts->ip(), regs);
+  return t->handle_page_fault(pfa, ts->error(), ts->ip(), ts);
 }
 
 /** The catch-all trap entry point.  Called by assembly code when a 

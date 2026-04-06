@@ -14,8 +14,8 @@ INTERFACE:
 #include "spin_lock.h"
 #include "observer_irq.h"
 
-class Return_frame;
 class Syscall_frame;
+class Trap_state;
 class Task;
 class Thread;
 class Vcpu_state;
@@ -105,7 +105,7 @@ public:
    * \param pfa      Page-fault virtual address.
    * \param pf_info  CPU-specific additional information (e.g. error code).
    * \param pc       Address of the instruction which triggered the page fault.
-   * \param regs     Return frame.
+   * \param ts       Trap state.
    *
    * \retval 0 Page fault could not be resolved.
    * \retval !=0 Page fault successfully resolved.
@@ -114,7 +114,7 @@ public:
    *                    page-fault handling fails (i.e., return value would be
    *                    false), but recovery location has been installed.
    */
-  int handle_page_fault(Address pfa, Mword pf_info, Mword pc, Return_frame *regs);
+  int handle_page_fault(Address pfa, Mword pf_info, Mword pc, Trap_state *ts);
 
 private:
   struct Migration_state

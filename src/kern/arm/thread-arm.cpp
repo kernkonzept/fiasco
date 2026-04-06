@@ -17,13 +17,13 @@ public:
 
   static void init_per_cpu(Cpu_number cpu, bool resume);
   static bool check_and_handle_linux_cache_api(Trap_state *);
-  bool check_and_handle_mem_op_fault(Mword error_code, Return_frame *ret_frame);
+  bool check_and_handle_mem_op_fault(Mword error_code, Trap_state *ts);
   bool check_and_handle_coproc_faults(Trap_state *);
   bool check_and_handle_mode_svc_trap(Trap_state *);
 
 private:
   static Mword pagefault_entry(const Mword pfa, Mword error_code,
-                               const Mword pc, Return_frame *ret_frame)
+                               const Mword pc, Trap_state *ts)
     asm ("pagefault_entry");
   static void slowtrap_entry(Trap_state *ts) asm ("slowtrap_entry");
 
@@ -188,21 +188,21 @@ Thread::handle_sigma0_page_fault(Address pfa)
  * \param pfa         Page-fault virtual address.
  * \param error_code  CPU error code.
  * \param pc          Program counter.
- * \param ret_frame   Return_frame.
+ * \param ts          Trap_state.
  *
  * \return true if page fault could be resolved, false otherwise
  */
 IMPLEMENT static
 Mword
 Thread::pagefault_entry(const Mword pfa, Mword error_code,
-                        const Mword pc, Return_frame *ret_frame)
+                        const Mword pc, Trap_state *ts)
 {
   if (PF::is_alignment_error(error_code)) [[unlikely]]
     {
       WARNX(Warning,
             "KERNEL%d: alignment error at %08lx (PC: %08lx, SP: %08lx, FSR: %lx, PSR: %lx)\n",
             cxx::int_value<Cpu_number>(current_cpu()), pfa, pc,
-            ret_frame->usp, error_code, ret_frame->psr);
+            ts->usp, error_code, ts->psr);
       return 0;
     }
 
@@ -211,7 +211,7 @@ Thread::pagefault_entry(const Mword pfa, Mword error_code,
 
   Thread *t = current_thread();
 
-  if (t->check_and_handle_mem_op_fault(error_code, ret_frame)) [[unlikely]]
+  if (t->check_and_handle_mem_op_fault(error_code, ts)) [[unlikely]]
     return 1;
 
   // Pagefault in user mode
@@ -226,11 +226,11 @@ Thread::pagefault_entry(const Mword pfa, Mword error_code,
     }
 
   if (PF::is_usermode_error(error_code)
-      || !(ret_frame->psr & Proc::Status_preempt_disabled)
+      || !(ts->psr & Proc::Status_preempt_disabled)
       || !Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
     Proc::sti();
 
-  return t->handle_page_fault(pfa, error_code, pc, ret_frame);
+  return t->handle_page_fault(pfa, error_code, pc, ts);
 }
 
 IMPLEMENT static
@@ -647,7 +647,7 @@ Thread::check_and_handle_linux_cache_api(Trap_state *)
 
 IMPLEMENT_DEFAULT inline
 bool
-Thread::check_and_handle_mem_op_fault(Mword, Return_frame *)
+Thread::check_and_handle_mem_op_fault(Mword, Trap_state *)
 {
   return false;
 }

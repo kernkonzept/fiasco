@@ -395,7 +395,7 @@ inst_abort_entry:
 	ldr	r0, [sp, #RF(PC, 13*4)] @ Get PC from RF and use as pfa
 #endif
 	mov	r2, r0                  @ assume pc == pfa
-	add 	r3, sp, #(13*4)         @ address of Return_frame
+	sub 	r3, sp, #(2*4)          @ address of Trap_state
 	stmdb	sp!, {r0, r1}           @ push pfa (r0) and error (r1)
 	align_and_save_sp r12           @ use r12 as scratch
 	adr	lr, pagefault_return
@@ -490,7 +490,7 @@ data_abort_entry:
 	orrne   r1, r1, #GET_HSR(0x01)
 	orr	r1, r1, #GET_HSR(0x24)  @ Set error code to data abort
 
-	add 	r3, sp, #(13*4)         @ address of Return_frame
+	sub 	r3, sp, #(2*4)          @ address of Trap_state
 	stmdb	sp!, {r0, r1}           @ push pfa (r0) and error (r1)
 	align_and_save_sp r12           @ use r12 as scratch
 	adr	lr, pagefault_return	@ set return address
@@ -517,7 +517,7 @@ data_abort_entry:
 					@ NE -> kernel
 	orrne	r1, r1, #GET_HSR(0x01)
 	orr	r1, r1, #GET_HSR(0x24)  @ Set error code to data abort
-	add 	r3, sp, #(13*4)         @ address of Return_frame
+	sub 	r3, sp, #(2*4)          @ address of Trap_state
 	stmdb	sp!, {r0, r1}           @ push pfa (r0) and error (r1)
 	align_and_save_sp r12           @ use r12 as scratch
 	adr	lr, pagefault_return	@ set return address
