@@ -37,6 +37,7 @@ public:
   };
 
   static void init(Cpu_number cpu);
+  static bool is_detected();
 
 private:
   enum Functions
@@ -120,6 +121,7 @@ IMPLEMENTATION [arm && arm_psci]:
 #include "mmio_register_block.h"
 #include "kmem.h"
 #include "smc_call.h"
+#include "panic.h"
 
 #include <cstdio>
 
@@ -143,7 +145,7 @@ Psci::psci_fn(unsigned fn)
     };
 }
 
-PUBLIC static inline NEEDS ["smc_call.h"]
+PUBLIC static inline NEEDS ["smc_call.h", "panic.h"]
 Psci::Result FIASCO_ARM_THUMB2_NO_FRAME_PTR
 Psci::psci_call(Mword fn_id,
                 Mword a0 = 0, Mword a1 = 0,
@@ -151,6 +153,9 @@ Psci::psci_call(Mword fn_id,
                 Mword a4 = 0, Mword a5 = 0,
                 Mword a6 = 0)
 {
+  if (!Psci::is_detected())
+    panic("PSCI invoked but not detected.\n");
+
   invoke_test_callback(psci_fn(fn_id), a0, a1, a2, a3, a4, a5, a6);
 
   register Mword r0 FIASCO_ARM_ASM_REG(0) = psci_fn(fn_id);
@@ -205,6 +210,11 @@ Psci::init(Cpu_number cpu)
     printf("PSCI: TOS: Not present or not required.\n");
 }
 
+IMPLEMENT_DEFAULT static
+bool
+Psci::is_detected()
+{ return true; }
+
 PUBLIC static
 int
 Psci::cpu_on(unsigned long target, Address phys_tramp_mp_addr)
@@ -236,6 +246,9 @@ EXTENSION class Psci
 {
 public:
   enum class Call_method { Unknown, Smc, Hvc, Not_supported  };
+
+private:
+  static Call_method _method;
 };
 
 // ------------------------------------------------------------------------
@@ -321,26 +334,33 @@ Psci::init_psci_method()
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_psci && arm_psci_dyn]:
 
+Psci::Call_method Psci::_method;
 bool Psci::_is_hvc;
 
 PRIVATE static
 bool
 Psci::init_psci_method()
 {
-  Call_method call_method = probe_method_dt();
+  _method = probe_method_dt();
 
-  if (   call_method == Call_method::Unknown
-      || call_method == Call_method::Not_supported)
-    call_method = probe_method_acpi();
+  if (!is_detected())
+    Psci::_method = probe_method_acpi();
 
-  if (   call_method == Call_method::Unknown
-      || call_method == Call_method::Not_supported)
+  if (!is_detected())
     {
       printf("PSCI: Could not find a PSCI call method");
       return false;
     }
-  _is_hvc = call_method == Call_method::Hvc;
+
+  _is_hvc = _method == Call_method::Hvc;
   return true;
+}
+
+IMPLEMENT_OVERRIDE static
+bool
+Psci::is_detected()
+{
+    return _method == Call_method::Smc || _method == Call_method::Hvc;
 }
 
 // ------------------------------------------------------------------------
