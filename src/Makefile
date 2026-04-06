@@ -225,8 +225,8 @@ update_globalconfig_tags = \
 	     @$(tooldir)/config-tags globalconfig.out > globalconfig.tags
 
 migrate_kconfig = \
-	     @$(tooldir)/migrate_kconfig globalconfig.out \
-	     --yes --no-interactive
+	     @if [ -e globalconfig.out ]; then $(tooldir)/migrate_kconfig globalconfig.out \
+	     --yes --no-interactive; fi
 
 # save config file dependencies to detect BSP removals
 .$(KCONFIG_FILE).parts: FORCE
