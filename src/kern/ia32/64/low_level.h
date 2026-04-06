@@ -341,7 +341,4 @@
 	pop	%rdi
 	.endm
 
-#define PAGE_FAULT_ADDR	%cr2
-#define PAGE_DIR_ADDR	%cr3
-
 #endif //LOW_LEVEL_H

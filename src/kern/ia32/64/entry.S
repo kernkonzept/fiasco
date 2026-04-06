@@ -208,7 +208,7 @@ entry_vec0e_page_fault:
 	ESP_TO_TCB_AT %rcx
 	RESET_THREAD_CANCEL_AT %rcx
 1:
-	mov	PAGE_FAULT_ADDR, %rdi   /* arg1: page fault address */
+	mov	%cr2, %rdi              /* arg1: page fault address */
 	pushq	%rdi                    /* Save pfa on stack as well */
 	leaq	(SCRATCH_REGISTER_SIZE + 0x10)(%rsp), %r8  /* arg5: ptr to return frame */
 	mov	(SCRATCH_REGISTER_SIZE + 0x08)(%rsp), %rsi /* arg2: error code */

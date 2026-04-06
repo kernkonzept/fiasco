@@ -263,7 +263,7 @@ entry_vec0e_page_fault:
 	SAVE_SCRATCH
 	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
 	movl	12(%esp), %edx          /* Save error code in ARG2 ... */
-	movl	PAGE_FAULT_ADDR, %eax   /* Save page fault address in ARG1 */
+	movl	%cr2, %eax              /* Save page fault address in ARG1 */
 
 /*
  * We must reset the cancel flag here atomically if we are entering fresh from
