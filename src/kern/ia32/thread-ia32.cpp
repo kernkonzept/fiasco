@@ -400,9 +400,12 @@ IMPLEMENTATION [ia32 || amd64]:
  */
 extern "C" FIASCO_FASTCALL
 int
-thread_page_fault(Address pfa, Mword error_code, Address ip, Mword flags,
-		  Return_frame *regs)
+thread_page_fault(Address pfa, Trap_state *ts)
 {
+  // temporary -- will be removed with an upcoming change
+  char *im = reinterpret_cast<char*>(ts + 1);
+  auto *regs = reinterpret_cast<Return_frame*>(im) - 1;
+
   // XXX: need to do in a different way, if on debug stack e.g.
 #if 0
   // If we're in the GDB stub -- let generic handler handle it
@@ -412,22 +415,22 @@ thread_page_fault(Address pfa, Mword error_code, Address ip, Mword flags,
 
   Thread *t = current_thread();
 
-  if (t->update_local_map(pfa, error_code))
+  if (t->update_local_map(pfa, ts->error()))
     return 1;
 
-  // Pagefault in user mode or interrupts were enabled
-  if (PF::is_usermode_error(error_code)) [[likely]]
+  // Page fault in user mode or interrupts were enabled
+  if (PF::is_usermode_error(ts->error())) [[likely]]
     {
-      if (t->vcpu_pagefault(pfa, error_code, ip))
+      if (t->vcpu_pagefault(pfa, ts->error(), ts->ip()))
         return 1;
     }
 
-  if(PF::is_usermode_error(error_code)
-     || (flags & EFLAGS_IF)
-     || !Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
+  if (PF::is_usermode_error(ts->error())
+     || (ts->flags() & EFLAGS_IF)
+     || !Kmem::is_kmem_page_fault(pfa, ts->error())) [[likely]]
     Proc::sti();
 
-  return t->handle_page_fault(pfa, error_code, ip, regs);
+  return t->handle_page_fault(pfa, ts->error(), ts->ip(), regs);
 }
 
 /** The catch-all trap entry point.  Called by assembly code when a 

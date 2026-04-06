@@ -292,6 +292,8 @@
 	pop	%rcx
 .endm
 
+#define SAVE_ALL_SIZE (16*8)
+#define SAVE_ALL_OFFS_CR2 (11*8)
 .macro save_all_regs
 	push	%rax
 	SAVE_STATE 1

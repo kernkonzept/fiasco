@@ -184,55 +184,44 @@ GATE_ENTRY	0x0e, entry_vec0e_page_fault, (ACC_PL_K | ACC_INTR_GATE)
  * XXX: If you make changes to stack layout here, fix thread_page_fault.
  */
 
-/* XXX slow version - sets up nice stack frame for debugger */
-
 .p2align 4
 .type	entry_vec0e_page_fault, @function
 .globl	entry_vec0e_page_fault
 entry_vec0e_page_fault:
 	cld
 	SWITCH_TO_KERNEL_CR3	1
-	SAVE_SCRATCH
+	pushq	$0x0e /* Build full Trap_state. Return_frame + error already on stack */
+	save_all_regs
 	IA32_IBRS
 
 	/*
-	 * We must reset the cancel flag here atomically if we are entering fresh
-	 * from user mode and an IPC might occur. NOTE: We cannot test the
-	 * user-mode bit in the error code because it will flag "kernel" in case an
-	 * I/O-bitmap page is not mapped during an I/O access.
+	 * We must reset the cancel flag here atomically if we are entering
+	 * fresh from user mode and an IPC might occur. NOTE: We cannot test
+	 * the user-mode bit in the error code because it will flag "kernel" in
+	 * case an I/O-bitmap page is not mapped during an I/O access.
 	 */
 
-	mov	(SCRATCH_REGISTER_SIZE + 0x10)(%rsp), %rcx   /* Get CS from stack */
+	mov	(SAVE_ALL_SIZE + 0x18)(%rsp), %rcx /* Get CS from stack */
 	andb	$3, %cl                 /* Retrieve current privilege level (CPL) */
 	jz	1f                      /* CPL == 0 -> kernel, skip resetting state */
 	ESP_TO_TCB_AT %rcx
 	RESET_THREAD_CANCEL_AT %rcx
 1:
-	mov	%cr2, %rdi              /* arg1: page fault address */
-	pushq	%rdi                    /* Save pfa on stack as well */
-	leaq	(SCRATCH_REGISTER_SIZE + 0x10)(%rsp), %r8  /* arg5: ptr to return frame */
-	mov	(SCRATCH_REGISTER_SIZE + 0x08)(%rsp), %rsi /* arg2: error code */
-	mov	(SCRATCH_REGISTER_SIZE + 0x10)(%rsp), %rdx /* arg3: rip */
-	mov	(SCRATCH_REGISTER_SIZE + 0x20)(%rsp), %rcx /* arg4: rflags */
+	mov	(SAVE_ALL_OFFS_CR2)(%rsp), %rdi    /* arg1: page fault address */
+	mov	%rsp, %rsi                         /* arg2: ptr to Trap_state */
 	call	thread_page_fault
 
 in_page_fault:
 	or	%rax, %rax
 	jz	.Lbad_page_fault
-	add	$8, %rsp                /* Drop pfa */
-	RESTORE_SCRATCH
-	add	$8, %rsp                /* Remove error code */
+	restore_all_regs
+	add	$0x10, %rsp              /* Remove error code + trapno */
 	SAFE_IRET
 
 /* recover from a bad page fault by invoking the slow_trap handler */
 .p2align 4
 .Lbad_page_fault:
 	cli
-	popq	%rdi                    /* Pop pfa */
-	mov	%rdi, %cr2              /* Restore pfa */
-	RESTORE_SCRATCH
-	pushq	$0x0e
-	save_all_regs
 	jmp	slowtraps
 
 .section ".entry.text.vec07", "ax", @progbits

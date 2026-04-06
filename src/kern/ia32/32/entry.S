@@ -254,75 +254,51 @@ GATE_ENTRY	0x0e, entry_vec0e_page_fault, (ACC_PL_K | ACC_INTR_GATE)
  * XXX: If you make changes to stack layout here, fix thread_page_fault.
  */
 
-/* XXX slow version - sets up nice stack frame for debugger */
-
 .p2align 4
 .type	entry_vec0e_page_fault, @function
 entry_vec0e_page_fault:
 	cld
-	SAVE_SCRATCH
+	push	$0x0e /* Build full Trap_state. Return_frame + error already on stack */
+	save_all_regs
+	pushl	%fs
+	pushl	%gs
+	leal	-(2*4)(%esp), %esp      /* dummy es, ds */
+
+	/* ESP now points to begin of Trap_state */
+
 	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
-	movl	12(%esp), %edx          /* Save error code in ARG2 ... */
-	movl	%cr2, %eax              /* Save page fault address in ARG1 */
+	movl	%cr2, %eax              /* ARG1: PF address */
+	movl 	%eax, 7*4(%esp)         /* save PFA for slowtraps */
 
-/*
- * We must reset the cancel flag here atomically if we are entering fresh from
- * user mode and an IPC might occur. NOTE: We cannot test the user-mode bit in
- * the error code because it will flag "kernel" in case an I/O-bitmap page is
- * not mapped during an I/O access.
- */
+	/*
+	 * We must reset the cancel flag here atomically if we are entering
+	 * fresh from user mode and an IPC might occur. NOTE: We cannot test
+	 * the user-mode bit in the error code because it will flag "kernel" in
+	 * case an I/O-bitmap page is not mapped during an I/O access.
+	 */
 
-	movl	20(%esp), %ecx  /* Get CS from stack */
+	movl	15*4(%esp), %ecx        /* CS */
 	andb	$3, %cl         /* Retrieve current privilege level (CPL) */
 	jz	1f              /* CPL == 0 -> kernel, skip resetting state */
 	ESP_TO_TCB_AT %ecx
 	RESET_THREAD_CANCEL_AT %ecx
-1:	movl	%ebp, 12(%esp)  /* Save frame pointer */
-	leal	12(%esp), %ebp  /* Load new frame pointer */
-	pushl	%eax            /* Save pf address */
-	pushl	%edx            /* Save error code */
-	leal	24(%esp), %ecx  /* ARG5: ptr to Return_frame */
-	pushl	%ecx
-	pushl	36(%esp)        /* ARG4: eflags */
-	movl	32(%esp), %ecx  /* ARG3: eip */
+1:
+	movl	%esp, %edx              /* ARG2: ptr to Trap_state */
 	call	thread_page_fault
 
 in_page_fault:
+	lea	4*4(%esp), %esp         /* Remove es, ds, gs, fs */
 	orl	%eax, %eax
 	jz	.Lbad_page_fault
-	lea	16(%esp), %esp
-	CHECK_SANITY 20(%esp)   /* Scratches ecx */
-	RESTORE_SCRATCH
-	popl	%ebp
+	CHECK_SANITY (11*4)(%esp)       /* CS: Scratches ecx */
+	restore_all_regs
+	leal	2*4(%esp), %esp         /* Remove trapno + error */
 	iret
 
 /* Recover from a bad page fault by invoking the slow_trap handler */
 .p2align 4
 .Lbad_page_fault:
 	cli
-	addl	$8, %esp        /* Pop ARG4 and ARG5 */
-	movl	(%ebp), %eax    /* Old ebp */
-	popl	(%ebp)          /* Error code */
-	popl	%edx            /* Page fault address */
-	movl	%eax, %ebp
-
-	/*
-	 * We have on stack: error code, eax, ecx, edx
-	 * Move registers down to make room for trap number.
-	 */
-	subl	$4, %esp
-	movl	4(%esp), %eax
-	movl	%eax, (%esp)
-	movl	8(%esp), %eax
-	movl	%eax, 4(%esp)
-	movl	12(%esp), %eax
-	movl	%eax, 8(%esp)
-	movl	$0x0e, 12(%esp) /* Error code */
-	pushl	%ebx            /* Rest of trap state */
-	pushl	%edx            /* Page fault address */
-	pushl	%ebp
-	pushl	%esi
-	pushl	%edi
 	jmp	slowtraps
 
 /* FPU not available in this context. */
