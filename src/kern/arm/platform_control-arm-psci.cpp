@@ -62,5 +62,8 @@ IMPLEMENT_OVERRIDE
 void
 Platform_control::system_off()
 {
-  Psci::system_off();
+  if (Psci::is_detected())
+    Psci::system_off();
+  else
+    printf("PSCI not detected, cannot turn the system off.\n");
 }
