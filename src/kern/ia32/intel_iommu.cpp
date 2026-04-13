@@ -837,10 +837,10 @@ IMPLEMENTATION:
 #include <cstdio>
 #include "warn.h"
 
-Intel::Io_mmu::Io_mmu_vect Intel::Io_mmu::iommus;
-Intel::Io_mmu::Tlb_handler Intel::Io_mmu::tlb;
-Acpi_dmar::Flags Intel::Io_mmu::dmar_flags;
-unsigned Intel::Io_mmu::hw_addr_width;
+constinit Intel::Io_mmu::Io_mmu_vect Intel::Io_mmu::iommus;
+constinit Intel::Io_mmu::Tlb_handler Intel::Io_mmu::tlb;
+constinit Acpi_dmar::Flags Intel::Io_mmu::dmar_flags{0};
+constinit unsigned Intel::Io_mmu::hw_addr_width;
 
 enum { Print_infos = 0 };
 
