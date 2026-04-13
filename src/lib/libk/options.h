@@ -5,8 +5,12 @@
 class Reschedule
 {
 public:
+#if !defined(__GNUC__) || __GNUC__ >= 13 || (__GNUC__ == 12 && __GNUC_MINOR__ > 2)
   enum class Enum { No, Yes };
   using enum Enum;
+#else
+  enum Enum { No, Yes };
+#endif
 
   constexpr Reschedule(Enum v) : _value(v) {}
 
