@@ -29,7 +29,7 @@ Jdb_thread::print_state_bits(Mword bits, unsigned max_size)
     {
       "ready",         "drq_rdy",       "send",         "rcv_wait",
       "rcv_in_progr",  "transfer",      "trans_failed", "cancel",
-      "timeout",       "dead",          "suspended",    "<0x800>",
+      "timeout",       "dead",          "dying",        "<0x800>",
       "migrate",       "resched",       "<0x4000>",     "fpu",
       cxx::const_ite<TAG_ENABLED(alien)>("alien", "0x10000"),
       cxx::const_ite<TAG_ENABLED(alien)>("dealien", "0x20000"),
