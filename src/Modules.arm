@@ -17,7 +17,7 @@ endif
 # On ARMv7 and above Fiasco uses broadcast TLB invalidation instructions. On
 # MPU systems, IPIs are always required because each CPU has its own MPU
 # instance.
-NEED_TLB_IPI := $(if $(CONFIG_MMU),$(if $(CONFIG_ARM_V7PLUS),,y),y)
+NEED_TLB_IPI := $(if $(and $(CONFIG_MMU),$(CONFIG_ARM_V7PLUS)),,y)
 PREPROCESS_PARTS-$(CONFIG_MP)                 += $(if $(NEED_TLB_IPI),need_xcpu_tlb_flush)
 PREPROCESS_PARTS-$(CONFIG_JDB)                += debug log
 PREPROCESS_PARTS-$(CONFIG_ARM_CACHE_L2CXX0)   += outer_cache outer_cache_l2cxx0
@@ -198,7 +198,7 @@ endif
 
 CXXSRC_KERNEL		:= kernel_panic.cc libc_backend_lock.cc
 ASSRC_KERNEL	  	:= $(if $(CONFIG_MP),tramp-mp.S)
-ASSRC_KERNEL            += $(if $(CONFIG_BIT32),$(if $(CONFIG_CPU_VIRT),hvt.S,ivt.S),ivt.S)
+ASSRC_KERNEL            += $(if $(and $(CONFIG_BIT32),$(CONFIG_CPU_VIRT)),hvt.S,ivt.S)
 ASSRC_KERNEL            += kip-time.S
 CPPFLAGS                += $(if $(MPCORE_PHYS_BASE),-DMPCORE_PHYS_BASE=$(MPCORE_PHYS_BASE))
 CPPFLAGS                += -DRAM_PHYS_BASE=$(RAM_PHYS_BASE)
