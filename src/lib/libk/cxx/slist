@@ -147,9 +147,9 @@ public:
   S_list_tail() : Base(), _tail(&this->_f) {}
 
   S_list_tail(S_list_tail &&t)
-  : Base(static_cast<Base&&>(t)), _tail(t.empty() ? &this->_f : t._tail)
+  : Base(static_cast<Base&&>(t)), _tail(Base::empty() ? &this->_f : t._tail)
   {
-    t._tail = &t._f;
+    t._tail = &t._f; // reset the source tail
   }
 
   S_list_tail &operator = (S_list_tail &&t)
@@ -157,8 +157,9 @@ public:
     if (&t != this)
       {
         Base::operator = (static_cast<Base &&>(t));
-        _tail = t.empty() ? &this->_f : t._tail;
-        t._tail = &t._f;
+        // The Basic_list operator= does not clear the tail, so we can use it
+        _tail = Base::empty() ? &this->_f : t._tail;
+        t._tail = &t._f; // reset the source tail
       }
 
     return *this;
