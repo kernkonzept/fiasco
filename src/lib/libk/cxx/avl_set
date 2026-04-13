@@ -333,9 +333,6 @@ public:
    */
   cxx::Pair<Iterator, int> insert(Item_type const &item);
 
-  template<typename... Args>
-  cxx::Pair<Iterator, int> emplace(Args&&... args);
-
   /**
    * Emplace an item into the set.
    *
