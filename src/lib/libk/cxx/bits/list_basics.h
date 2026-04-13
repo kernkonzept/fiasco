@@ -110,7 +110,7 @@ public:
 
   // BSS allocation
   explicit Basic_list(bool) {}
-  Basic_list() : _f(nullptr) {}
+  constexpr Basic_list() : _f(nullptr) {}
 
   Basic_list(Basic_list &&o) : _f(o._f)
   {
