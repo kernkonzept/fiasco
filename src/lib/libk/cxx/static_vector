@@ -17,15 +17,15 @@ class static_vector
 {
 private:
   template<typename X, typename IDX2> friend class static_vector;
-  T *_v;
+  T *_v = nullptr;
   IDX _l = 0;
 
 public:
   typedef T value_type;
   typedef IDX index_type;
 
-  static_vector() = default;
-  static_vector(value_type *v, index_type length) : _v(v), _l(length) {}
+  constexpr static_vector() = default;
+  constexpr static_vector(value_type *v, index_type length) : _v(v), _l(length) {}
 
   template<typename Z,
            typename = enable_if_t<is_same<remove_extent_t<Z>, T>::value>>
