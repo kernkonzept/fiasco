@@ -42,7 +42,7 @@ public:
   Mword ip_syscall_user() const;
 
   Mword sp() const;
-  void  sp(Mword _sp);
+  void  sp(Mword sp);
 };
 
 /**

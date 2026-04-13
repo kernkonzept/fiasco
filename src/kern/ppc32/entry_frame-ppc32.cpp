@@ -80,9 +80,9 @@ Return_frame::sp() const
 
 IMPLEMENT inline
 void
-Return_frame::sp(Mword _sp)
+Return_frame::sp(Mword sp)
 {
-  Return_frame::usp = _sp;
+  Return_frame::usp = sp;
 }
 
 IMPLEMENT inline
