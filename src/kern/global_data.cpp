@@ -8,11 +8,7 @@ INTERFACE[!amp]:
 #define DEFINE_GLOBAL_PRIO(prio) __attribute__((init_priority(prio)))
 #define DEFINE_GLOBAL
 
-#ifdef __cpp_constinit
 #define DEFINE_GLOBAL_CONSTINIT constinit
-#else
-#define DEFINE_GLOBAL_CONSTINIT
-#endif
 
 template< typename T >
 class Global_data_ptr_storage
