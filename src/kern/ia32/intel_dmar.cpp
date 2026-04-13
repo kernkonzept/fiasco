@@ -115,7 +115,7 @@ PRIVATE
 Intel::Io_mmu *
 Dmar::find_mmu(Unsigned16 iommu_idx)
 {
-  if (iommu_idx >= Intel::Io_mmu::Max_iommus)
+  if (iommu_idx >= Intel::Io_mmu::iommus.size())
     return nullptr;
 
   Intel::Io_mmu &iommu = Intel::Io_mmu::iommus[iommu_idx];
