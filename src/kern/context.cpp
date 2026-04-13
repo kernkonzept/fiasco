@@ -28,13 +28,9 @@ class Context_ptr
 {
 public:
   explicit Context_ptr(Cap_index id) : _t(id) {}
-  Context_ptr() {}
-  Context_ptr(Context_ptr const &o) : _t(o._t) {}
-  Context_ptr const &operator = (Context_ptr const &o)
-  {
-    _t = o._t;
-    return *this;
-  }
+  Context_ptr() = default;
+  Context_ptr(Context_ptr const &o) = default;
+  Context_ptr &operator = (Context_ptr const &o) = default;
 
   Kobject_iface *ptr(Space *, L4_fpage::Rights *) const;
 
@@ -56,8 +52,8 @@ public:
   explicit Context_ptr_base(Invalid_type) : Context_ptr(Cap_index(~0UL)) {}
   explicit Context_ptr_base(Null_type) : Context_ptr(Cap_index(0)) {}
   explicit Context_ptr_base(Cap_index id) : Context_ptr(id) {}
-  Context_ptr_base() {}
-  Context_ptr_base(Context_ptr_base<T> const &o) : Context_ptr(o) {}
+  Context_ptr_base() = default;
+  Context_ptr_base(Context_ptr_base<T> const &o) = default;
   template< typename X >
   Context_ptr_base(Context_ptr_base<X> const &o) : Context_ptr(o)
   {
@@ -66,14 +62,10 @@ public:
     static_cast<void>(t);
   }
 
-  Context_ptr_base<T> const &operator = (Context_ptr_base<T> const &o)
-  {
-    Context_ptr::operator = (o);
-    return *this;
-  }
+  Context_ptr_base<T> &operator = (Context_ptr_base<T> const &o) = default;
 
   template< typename X >
-  Context_ptr_base<T> const &operator = (Context_ptr_base<X> const &o)
+  Context_ptr_base<T> &operator = (Context_ptr_base<X> const &o)
   {
     X *x = nullptr;
     T *t = x;

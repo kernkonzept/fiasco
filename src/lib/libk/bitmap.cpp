@@ -948,7 +948,9 @@ public:
    */
   Bitmap &operator =(Bitmap const &o)
   {
-    this->_copy(o);
+    if (&o != this)
+      this->_copy(o);
+
     return *this;
   }
 

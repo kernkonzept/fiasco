@@ -74,9 +74,12 @@ private:
 public:
   Rcu_list() {}
   Rcu_list(Rcu_list &&o) : Base(static_cast<Base &&>(o)) {}
+
   Rcu_list &operator = (Rcu_list &&o)
   {
-    Base::operator = (static_cast<Base &&>(o));
+    if (&o != this)
+      Base::operator = (static_cast<Base &&>(o));
+
     return *this;
   }
 

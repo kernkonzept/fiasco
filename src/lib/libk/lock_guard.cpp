@@ -101,10 +101,14 @@ inline
 Lock_guard<LOCK, POLICY>&
 Lock_guard<LOCK, POLICY>::operator = (Lock_guard &&l)
 {
-  reset();
-  _lock = l._lock;
-  _state = l._state;
-  l.release();
+  if (&l != this)
+    {
+      reset();
+      _lock = l._lock;
+      _state = l._state;
+      l.release();
+    }
+
   return *this;
 }
 

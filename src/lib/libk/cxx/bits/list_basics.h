@@ -118,8 +118,12 @@ public:
 
   Basic_list &operator = (Basic_list &&o)
   {
-    _f = o._f;
-    o.clear();
+    if (&o != this)
+      {
+        _f = o._f;
+        o.clear();
+      }
+
     return *this;
   }
 

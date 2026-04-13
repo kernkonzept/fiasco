@@ -52,7 +52,9 @@ public:
 
   S_list &operator = (S_list &&o)
   {
-    Base::operator = (static_cast<Base&&>(o));
+    if (&o != this)
+      Base::operator = (static_cast<Base&&>(o));
+
     return *this;
   }
 
@@ -152,12 +154,13 @@ public:
 
   S_list_tail &operator = (S_list_tail &&t)
   {
-    if (&t == this)
-      return *this;
+    if (&t != this)
+      {
+        Base::operator = (static_cast<Base &&>(t));
+        _tail = t.empty() ? &this->_f : t._tail;
+        t._tail = &t._f;
+      }
 
-    Base::operator = (static_cast<Base &&>(t));
-    _tail = t.empty() ? &this->_f : t._tail;
-    t._tail = &t._f;
     return *this;
   }
 
