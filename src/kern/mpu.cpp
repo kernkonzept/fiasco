@@ -200,7 +200,7 @@ public:
 struct Mpu_region : public cxx::D_list_item
 {
   constexpr Mpu_region();
-  Mpu_region(Mword start, Mword end, Mpu_region_attr attr);
+  Mpu_region(Mword start, Mword end, Mpu_region_attr a);
 
   constexpr Mword start() const;
   constexpr Mword end() const;
