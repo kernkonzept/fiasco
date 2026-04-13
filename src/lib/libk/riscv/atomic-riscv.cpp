@@ -10,7 +10,7 @@ INTERFACE [riscv]:
     T val = value;                                                             \
     T prev;                                                                    \
                                                                                \
-    __asm__ __volatile__ (                                                     \
+    asm volatile (                                                             \
       "amo" #op "." #suffix " %[prev], %[mask], %[mem]"                        \
       : [prev]"=r" (prev), [mem]"+A"(*mem)                                     \
       : [mask]"r" (val)                                                        \
@@ -36,7 +36,7 @@ ATOMIC_OP(add)
     T val = value;                                                             \
     T prev;                                                                    \
                                                                                \
-    __asm__ __volatile__ (                                                     \
+    asm volatile (                                                             \
       "amo" #op "." #suffix " %[prev], %[mask], %[mem]"                        \
       : [prev]"=r" (prev), [mem]"+A"(*mem)                                     \
       : [mask]"r" (val)                                                        \
@@ -65,7 +65,7 @@ ATOMIC_FETCH_OP(exchange, swap)
     T val = value;                                                             \
     T res;                                                                     \
                                                                                \
-    __asm__ __volatile__ (                                                     \
+    asm volatile (                                                             \
       "amo" #op "." #suffix " %[res], %[val], %[mem] \n"                       \
       #op "         %[res], %[res], %[val] \n"                                 \
       : [res]"=&r" (res), [mem]"+A"(*mem)                                      \
@@ -95,7 +95,7 @@ T
 atomic_load(T const *mem)
 {
   T res;
-  __asm__ __volatile__ ("lw %0, %1" : "=r" (res) : "m"(*mem));
+  asm volatile ("lw %0, %1" : "=r" (res) : "m"(*mem));
   return res;
 }
 
@@ -104,7 +104,7 @@ T
 atomic_load(T const *mem)
 {
   T res;
-  __asm__ __volatile__ ("ld %0, %1" : "=r" (res) : "m"(*mem));
+  asm volatile ("ld %0, %1" : "=r" (res) : "m"(*mem));
   return res;
 }
 
@@ -113,7 +113,7 @@ void
 atomic_store(T *mem, V value)
 {
   T val = value;
-  __asm__ __volatile__ ("sw %1, %0" : "=m" (*mem) : "r" (val));
+  asm volatile ("sw %1, %0" : "=m" (*mem) : "r" (val));
 }
 
 template<typename T, typename V> requires(sizeof(T) == 8) inline
@@ -121,7 +121,7 @@ void
 atomic_store(T *mem, V value)
 {
   T val = value;
-  __asm__ __volatile__ ("sd %1, %0" : "=m" (*mem) : "r" (val));
+  asm volatile ("sd %1, %0" : "=m" (*mem) : "r" (val));
 }
 
 inline
@@ -158,7 +158,7 @@ local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
   // Holds return value of SC instruction: 0 if successful, !0 otherwise
   Mword ret = 1;
 
-  __asm__ __volatile__ (
+  asm volatile (
     "0:                               \n"
     REG_LR " %[prev], %[ptr]          \n"
     "bne     %[prev], %[old], 1f      \n"
@@ -190,7 +190,7 @@ cas_arch(Mword *ptr, Mword oldval, Mword newval)
     An SC instruction can never be observed by another RISC-V hart before the
     immediately preceding LR. Therefore no acquire semantics on LR are needed.
   */
-  __asm__ __volatile__ (
+  asm volatile (
     "0:                                  \n"
     REG_LR "    %[prev], %[ptr]          \n"
     "bne        %[prev], %[old], 1f      \n"
