@@ -564,7 +564,7 @@ Thread::do_kill()
   // thread for doing the last bits.
   force_to_invalid_cpu();
   kernel_context_drq(handle_kill_helper, nullptr);
-  kdb_ke("Im dead");
+  kdb_ke("I'm dead");
   return true;
 }
 
