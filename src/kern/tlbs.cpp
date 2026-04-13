@@ -64,4 +64,4 @@ private:
 IMPLEMENTATION:
 
 DEFINE_PER_CPU Per_cpu<Tlb::Tlb_list> Tlb::_cpu_tlbs;
-DEFINE_GLOBAL Global_data<Tlb::Tlb_list> Tlb::_iommu_tlbs;
+DEFINE_GLOBAL_CONSTINIT Global_data<Tlb::Tlb_list> Tlb::_iommu_tlbs;
