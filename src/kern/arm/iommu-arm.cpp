@@ -240,7 +240,7 @@ IMPLEMENTATION [iommu]:
 #include "static_init.h"
 #include <cstdio>
 
-Iommu::Iommu_array Iommu::_iommus;
+constinit Iommu::Iommu_array Iommu::_iommus;
 
 IMPLEMENT_DEFAULT
 Iommu*
