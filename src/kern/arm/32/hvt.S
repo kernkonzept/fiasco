@@ -164,8 +164,8 @@ hyp_trap_entry:
 	switch_to_hyp_kernel
 	stmdb	sp!, {r0 - r12}   	@ Stack rest of user state
 	mpu_kernel_enter 0
-	add	r0, sp, #13*4		@ dummy PFA and dummy error code
-	sub	sp, sp, #8
+	sub	sp, sp, #8		@ dummy PFA and dummy error code
+	mov	r0, sp
 	mov	lr, pc
 	ldr	pc, 1f
 	add	sp, sp, #8

@@ -703,14 +703,13 @@ IMPLEMENTATION [arm && arm_esr_traps]:
 
 EXTENSION class Thread
 {
-  static void arm_esr_entry(Return_frame *rf) asm ("arm_esr_entry");
+  static void arm_esr_entry(Trap_state *ts) asm ("arm_esr_entry");
 };
 
 IMPLEMENT
 void
-Thread::arm_esr_entry(Return_frame *rf)
+Thread::arm_esr_entry(Trap_state *ts)
 {
-  Trap_state *ts = static_cast<Trap_state*>(rf);
   Thread *ct = current_thread();
 
   Arm_esr esr = Thread::get_esr();
@@ -723,7 +722,7 @@ Thread::arm_esr_entry(Return_frame *rf)
     {
     case 0x20: // Instruction abort from a lower exception level
       tmp = get_fault_pfa(esr, true, state & Thread_ext_vcpu_enabled);
-      if (!pagefault_entry(tmp, esr.raw(), rf->pc, rf))
+      if (!pagefault_entry(tmp, esr.raw(), ts->pc, ts))
         {
           Proc::cli();
           ts->pf_address = tmp;
@@ -734,7 +733,7 @@ Thread::arm_esr_entry(Return_frame *rf)
 
     case 0x24: // Data abort from a lower exception Level
       tmp = get_fault_pfa(esr, false, state & Thread_ext_vcpu_enabled);
-      if (!pagefault_entry(tmp, esr.raw(), rf->pc, rf))
+      if (!pagefault_entry(tmp, esr.raw(), ts->pc, ts))
         {
           Proc::cli();
           ts->pf_address = tmp;
