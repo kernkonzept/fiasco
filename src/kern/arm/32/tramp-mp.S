@@ -39,10 +39,10 @@
 cache_invalidate_l1_v7:
 	mrc     p15, 1, r0, c0, c0, 1   @ read CLIDR
 	tst     r0, #0x07000000         @ CLIDR.LoC == 0?
-	beq     finished
+	beq     .Lfinished
 	and     r1, r0, #7              @ CLIDR.ctype0
 	cmp     r1, #2
-	blt     skip                    @ skip on no cache or I cache only
+	blt     .Lskip                  @ skip on no cache or I cache only
 	mov     r0, #0
 	mcr     p15, 2, r0, c0, c0, 0   @ CSSELR = 0 (L1)
 	isb
@@ -53,20 +53,20 @@ cache_invalidate_l1_v7:
 	ands    r4, r4, r1, lsr #3      @ CCSIDR.Associativity
 	clz     r5, r4
 	mov     r9, r4
-loop1:
+.Lloop1:
 	movw    r7, #0x7fff
 	ands    r7, r7, r1, lsr #13     @ CCSIDR.NumSets
-loop2:
+.Lloop2:
 	orr     r11, r0, r9, lsl r5
 	orr     r11, r11, r7, lsl r2
 	mcr     p15, 0, r11, c7, c6, 2  @ DCISW
 	subs    r7, r7, #1
-	bge     loop2
+	bge     .Lloop2
 	subs    r9, r9, #1
-	bge     loop1
-skip:
+	bge     .Lloop1
+.Lskip:
 	dsb
-finished:
+.Lfinished:
 	mov     r0, #0
 	mcr     p15, 2, r0, c0, c0, 0   @ reset CSSELR
 	dsb

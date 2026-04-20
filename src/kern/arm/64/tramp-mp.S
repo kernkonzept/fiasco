@@ -33,10 +33,10 @@ cache_invalidate_l1:
 	mrs     x0, CLIDR_EL1
 	ands    x3, x0, #0x07000000
 	orr     x3, xzr, x3, lsr #23
-	b.eq    finished
+	b.eq    .Lfinished
 	and     x1, x0, #7
 	cmp     x1, #2
-	b.lt    skip
+	b.lt    .Lskip
 	msr     CSSELR_EL1, xzr
 	isb
 	mrs     x1, CCSIDR_EL1
@@ -46,21 +46,21 @@ cache_invalidate_l1:
 	ands    w4, w4, w1, lsr #3
 	clz     w5, w4
 	mov     x9, x4
-loop1:
+.Lloop1:
 	movz    w7, #0x7fff
 	ands    w7, w7, w1, lsr #13
-loop2:
+.Lloop2:
 	lslv    x11, x9, x5
 	lslv    x18, x7, x2
 	orr     x11, x11, x18
 	dc      isw, x11
 	subs    x7, x7, #1
-	b.ge    loop2
+	b.ge    .Lloop2
 	subs    x9, x9, #1
-	b.ge    loop1
-skip:
+	b.ge    .Lloop1
+.Lskip:
 	dsb     sy
-finished:
+.Lfinished:
 	msr     CSSELR_EL1, xzr
 	dsb     sy
 	isb     sy
