@@ -113,7 +113,7 @@
 #define LOG_MSG_3VAL(context, text, v1, v2, v3)                         \
   do {                                                                  \
     Tb_sequence seq;                                                    \
-    auto *tb = Jdb_tbuf::new_entry<Tb_entry_ke_reg>(seq);               \
+    auto *tb = Jdb_tbuf::next_entry<Tb_entry_ke_reg>(seq);              \
     tb->set(context, Proc::program_counter());                          \
     tb->v[0] = v1; tb->v[1] = v2; tb->v[2] = v3;                        \
     tb->msg.set_const(text);                                            \
