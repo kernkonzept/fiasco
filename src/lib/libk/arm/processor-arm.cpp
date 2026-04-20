@@ -84,7 +84,7 @@ public:
   static Arm_esr make_breakpoint()
   { return Arm_esr((0x30U << 26) | (1U << 25) | 0x22U); }
 
-  static Arm_esr make_watchpoint(Mword cm, Mword wnr)
+  static Arm_esr make_watchpoint(bool cm, bool wnr)
   {
     Arm_esr esr((0x34U << 26) | (1U << 25));
     esr.wp_cache_maint() = cm;
@@ -93,8 +93,8 @@ public:
     return esr;
   }
 
-  static Arm_esr make_bkpt_insn(Mword il)
-  { return Arm_esr((0x38 << 26) | (il << 25)); }
+  static Arm_esr make_bkpt_insn(bool il)
+  { return Arm_esr((0x38U << 26) | (il ? 1U << 25 : 0U)); }
 
   static Arm_esr make_vector_catch_aarch32()
   { return Arm_esr((0x3aU << 26) | (1U << 25) | 0x22U); }

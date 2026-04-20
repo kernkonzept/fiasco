@@ -6,13 +6,13 @@ public:
   void set_ignore_mem_op_in_progress(bool);
   bool is_ignore_mem_op_in_progress() const { return _kernel_mem_op.do_ignore; }
   bool is_kernel_mem_op_hit_and_clear();
-  void set_kernel_mem_op_hit() { _kernel_mem_op.hit = 1; }
+  void set_kernel_mem_op_hit() { _kernel_mem_op.hit = true; }
 
 private:
   struct Kernel_mem_op
   {
-    Unsigned8 do_ignore;
-    Unsigned8 hit;
+    bool do_ignore;
+    bool hit;
   };
   Kernel_mem_op _kernel_mem_op;
 };
@@ -92,7 +92,7 @@ Context::is_kernel_mem_op_hit_and_clear()
 {
   bool h = _kernel_mem_op.hit;
   if (h)
-    _kernel_mem_op.hit = 0;
+    _kernel_mem_op.hit = false;
   return h;
 }
 
