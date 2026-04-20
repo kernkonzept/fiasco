@@ -111,7 +111,7 @@ DEFINE_PER_CPU Per_cpu<Jdb::Step_state> Jdb::ss_state;
 DEFINE_PER_CPU Per_cpu<int> Jdb::ss_level;  // current call level
 
 const Unsigned8*Jdb::debug_ctrl_str;    // string+length for remote control of
-int             Jdb::debug_ctrl_len;    // Jdb via enter_kdebugger("*#");
+int             Jdb::debug_ctrl_len;    // Jdb via l4_kd_enter("*#");
 
 Unsigned16 Jdb::pic_status;
 DEFINE_PER_CPU Per_cpu<unsigned> Jdb::apic_tpr;

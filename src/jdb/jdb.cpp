@@ -176,7 +176,7 @@ Jdb_handler_queue Jdb::jdb_leave;
 DEFINE_PER_CPU Per_cpu<String_buf<81> > Jdb::error_buffer;
 char Jdb::next_cmd;			// next global command to execute
 
-char Jdb::hide_statline;		// show status line on enter_kdebugger
+char Jdb::hide_statline;		// show status line on l4_kd_enter
 DEFINE_PER_CPU Per_cpu<Jdb_entry_frame*> Jdb::entry_frame;
 Cpu_number Jdb::triggered_on_cpu = Cpu_number::nil(); // first CPU entered JDB
 bool Jdb::was_input_error;		// error in command sequence
@@ -284,7 +284,7 @@ Jdb::get_next_cmd()
 { return next_cmd; }
 
 /** Command aborted. If we are interpreting a debug command like
- *  enter_kdebugger("*#...") this is an error
+ *  l4_kd_enter("*#...") this is an error
  */
 PUBLIC
 static void
