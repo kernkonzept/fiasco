@@ -914,7 +914,8 @@ Gic_its::bind_lpi_to_device(Lpi &lpi, Unsigned32 src, Irq_mgr::Msi_info *inf)
     }
 
   inf->data = lpi.event_id();
-  // TODO: Must be mapped in the DMA space of the device if IOMMU is enabled.
+  // User space must map the physical address in the DMA space of the device if
+  // it is managed by an IOMMU.
   inf->addr
     = cxx::int_value<Phys_mem_addr>(Kmem::kdir->virt_to_phys(_its.get_mmio_base()))
       + GITS_TRANSLATER;
