@@ -105,14 +105,20 @@ Jdb_log_list_hdl::invoke(Kobject_common *, Syscall_frame *f, Utcb *utcb) overrid
                     sizeof(nbuf));
             nbuf[sizeof(nbuf) - 1] = 0;
 
+            size_t count = 0;
             Tb_log_table_entry *r = _jdb_log_table;
             while ((r = Jdb_log_list::find_next_log(nbuf, nbuf, r)))
               {
                 Jdb_log_list::patch_item(r, on ? Jdb_log_list::patch_val(r) : 0);
-                r++;
+                ++count;
+                ++r;
               }
 
-            f->tag(Kobject_iface::commit_result(0));
+            if (count > 0)
+              f->tag(Kobject_iface::commit_result(0));
+            else
+              f->tag(Kobject_iface::commit_result(-L4_err::ENoent));
+
             return true;
           }
       default:
