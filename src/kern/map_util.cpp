@@ -240,6 +240,7 @@ inline
 Page::Flags
 v_delete(M *m, O order, Page::Rights rights,
          [[maybe_unused]] bool full_flush, Auto_tlb_flush<SPACE> &tlb)
+requires(!cxx::is_same_v<SPACE, Obj_space>)
 {
   SPACE *child_space = m->space();
   assert_opt(child_space);
@@ -253,11 +254,11 @@ v_delete(M *m, O order, Page::Rights rights,
   return flags;
 }
 
-template<>
+template< typename SPACE, typename M, typename O >
 inline
 Page::Flags
-v_delete<Obj_space>(Kobject_mapdb::Mapping *m, int, Page::Rights rights,
-                    bool, Auto_tlb_flush<Obj_space> &)
+v_delete(M *m, O, Page::Rights rights, bool, Auto_tlb_flush<Obj_space> &)
+requires(cxx::is_same_v<SPACE, Obj_space>)
 {
   Obj_space::Entry *c = static_cast<Obj_space::Entry *>(m);
 
@@ -312,14 +313,7 @@ void free_constraint(Addr &snd_addr, Size &snd_size,
 
 template< typename SPACE >
 class Map_traits
-{
-public:
-  static bool match(L4_fpage const &from, L4_fpage const &to);
-  static void free_object(typename SPACE::Phys_addr o,
-                          Kobjects_list &reap_list);
-  static bool is_mappable(typename SPACE::Phys_addr o);
-};
-
+{};
 
 
 //------------------------------------------------------------------------
@@ -334,94 +328,66 @@ IMPLEMENTATION:
 #include "warn.h"
 
 
-IMPLEMENT template<typename SPACE>
-inline
+PUBLIC template<typename SPACE>
+static inline
 bool
-Map_traits<SPACE>::match(L4_fpage const &, L4_fpage const &)
-{ return false; }
+Map_traits<SPACE>::match(L4_fpage const &from, L4_fpage const &to)
+{
+  if constexpr (TAG_ENABLED(io) && cxx::is_same_v<SPACE, Io_space>)
+    return from.is_iopage() && (to.is_iopage() || to.is_all_spaces());
 
-IMPLEMENT template<typename SPACE>
-inline
+  if constexpr (cxx::is_same_v<SPACE, Mem_space>)
+    return from.is_mempage() && (to.is_mempage() || to.is_all_spaces());
+
+  if constexpr (cxx::is_same_v<SPACE, Obj_space>)
+    return from.is_objpage() && (to.is_objpage() || to.is_all_spaces());
+
+  return false;
+}
+
+PUBLIC template<typename SPACE>
+static inline
 void
-Map_traits<SPACE>::free_object(typename SPACE::Phys_addr,
-                               Kobjects_list &)
-{}
+Map_traits<SPACE>::free_object(typename SPACE::Phys_addr o,
+                               Kobjects_list &reap_list)
+{
+  if constexpr (cxx::is_same_v<SPACE, Obj_space>)
+    if (o->map_root()->no_mappings())
+      o->initiate_deletion(reap_list);
+}
 
-IMPLEMENT template<typename SPACE>
-inline
+PUBLIC template<typename SPACE>
+static inline
 bool
-Map_traits<SPACE>::is_mappable(typename SPACE::Phys_addr)
-{ return true; }
+Map_traits<SPACE>::is_mappable(typename SPACE::Phys_addr o)
+{
+  if constexpr (cxx::is_same_v<SPACE, Obj_space>)
+    return !o->map_root()->no_mappings();
+
+  return true;
+}
 
 PUBLIC template< typename SPACE >
 static inline
-typename SPACE::Attr
+SPACE::Attr
 Map_traits<SPACE>::apply_attribs(typename SPACE::Attr attribs,
-                                 typename SPACE::Phys_addr &,
+                                 typename SPACE::Phys_addr &a,
                                  typename SPACE::Attr map_attribs)
-{ return attribs.apply(map_attribs); }
+{
+  if constexpr (cxx::is_same_v<SPACE, Obj_space>)
+   {
+     if (attribs.extra() & ~map_attribs.extra())
+       a = a->downgrade(~map_attribs.extra());
 
-
-//-------------------------------------------------------------------------
-IMPLEMENTATION [io]:
-
-IMPLEMENT template<>
-inline
-bool
-Map_traits<Io_space>::match(L4_fpage const &from, L4_fpage const &to)
-{ return from.is_iopage() && (to.is_iopage() || to.is_all_spaces()); }
-
+     attribs &= map_attribs;
+     return attribs;
+   }
+  else
+   return attribs.apply(map_attribs);
+}
 
 //-------------------------------------------------------------------------
 IMPLEMENTATION:
-
-IMPLEMENT template<>
-inline
-bool
-Map_traits<Mem_space>::match(L4_fpage const &from, L4_fpage const &to)
-{
-  return from.is_mempage() && (to.is_all_spaces() || to.is_mempage());
-}
-
-
-IMPLEMENT template<>
-inline
-bool
-Map_traits<Obj_space>::match(L4_fpage const &from, L4_fpage const &to)
-{ return from.is_objpage() && (to.is_objpage() || to.is_all_spaces()); }
-
-IMPLEMENT template<>
-inline
-void
-Map_traits<Obj_space>::free_object(Obj_space::Phys_addr o,
-                                   Kobjects_list &reap_list)
-{
-  if (o->map_root()->no_mappings())
-    o->initiate_deletion(reap_list);
-}
-
-IMPLEMENT template<>
-inline
-bool
-Map_traits<Obj_space>::is_mappable(Obj_space::Phys_addr o)
-{
-  return !o->map_root()->no_mappings();
-}
-
-IMPLEMENT template<>
-static inline
-Obj_space::Attr
-Map_traits<Obj_space>::apply_attribs(Obj_space::Attr attribs,
-                                     Obj_space::Phys_addr &a,
-                                     Obj_space::Attr map_attribs)
-{
-  if (attribs.extra() & ~map_attribs.extra())
-    a = a->downgrade(~map_attribs.extra());
-
-  attribs &= map_attribs;
-  return attribs;
-}
-
 
 /**
  * Flexpage mapping.
