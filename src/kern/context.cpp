@@ -1988,8 +1988,9 @@ Context::Pending_rqq::handle_requests(Context **mq)
               // we can directly migrate the thread...
               resched |= c->initiate_migration();
 
+              Cpu_number const cpu = current_cpu();
               // if migrated away skip the resched test below
-              if (access_once(&c->_home_cpu) != current_cpu())
+              if (access_once(&c->_home_cpu) != cpu)
                 continue;
             }
           else

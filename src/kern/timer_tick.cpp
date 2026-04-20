@@ -81,7 +81,10 @@ Timer_tick::handle_timer(Thread *t, Cpu_number cpu)
 PUBLIC static inline NEEDS[Timer_tick::handle_timer]
 void
 Timer_tick::handler_all_noack()
-{ handle_timer(current_thread(), current_cpu()); }
+{
+  Cpu_number const cpu = current_cpu();
+  handle_timer(current_thread(), cpu);
+}
 
 PUBLIC static inline NEEDS[Timer_tick::handler_all_noack]
 void
