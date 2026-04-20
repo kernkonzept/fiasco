@@ -655,6 +655,16 @@ Jdb_tbuf_show::show()
   Jdb_tbuf_output::set_filter(_filter_str, &entries);
   Jdb::clear_screen();
 
+  String_buf<14> time_range_str;
+    {
+      Tb_entry *e1 = Jdb_tbuf::lookup(0);
+      Tb_entry *e2 = Jdb_tbuf::lookup(entries - 1);
+      if (e1 && e2)
+        Jdb::write_tsc_s(&time_range_str, e1->tsc() - e2->tsc(), false);
+      else
+        time_range_str.printf("N/A");
+    }
+
 restart:
   unsigned lines = Jdb_screen::height() - 4;
 
@@ -733,8 +743,8 @@ restart:
 
       Jdb::cursor(1, Jdb_screen::width() - 9);
       printf("%10s\n"
-             "%24s 2=" L4_PTR_FMT "(%s%s\033[m%s%s%s\033[m)\033[K\n",
-              mode_str[mode], "",
+             "Range %-14s    2=" L4_PTR_FMT "(%s%s\033[m%s%s%s\033[m)\033[K\n",
+              mode_str[mode], time_range_str.begin(),
               perf_event[1], Jdb::esc_emph, perf_mode[1],
               perf_name[1] && *perf_name[1] ? ":" : "",
               mode==Pmc2_delta_mode || mode==Pmc2_ref_mode ? Jdb::esc_emph : "",
