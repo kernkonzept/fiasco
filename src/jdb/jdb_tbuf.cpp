@@ -133,7 +133,7 @@ Jdb_tbuf::clear_tbuf()
  *
  * \return Pointer to the next tracebuffer entry.
  */
-PUBLIC static
+PUBLIC static inline NEEDS["atomic.h", "mem.h"]
 Tb_entry *
 Jdb_tbuf::next_entry(Tb_sequence &seq)
 {
