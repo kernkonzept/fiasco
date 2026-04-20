@@ -177,6 +177,25 @@ Jdb_tbuf::commit_entry(Tb_entry *entry, Tb_sequence seq)
 }
 
 /**
+ * Return the upper bound of the number of entries in the tracebuffer.
+ *
+ * Note that this method does not return the exact number of valid (committed)
+ * entries, but rather a sensible* upper bound that is suitable for iterating
+ * over the entries.
+ *
+ * \return Upper bound of the number of entries in the tracebuffer.
+ */
+PUBLIC static inline
+size_t
+Jdb_tbuf::entries_majorant()
+{
+  if (_status->tail >= _capacity) [[likely]]
+    return _capacity;
+
+  return _status->tail;
+}
+
+/**
  * Return number of entries currently committed in tracebuffer.
  *
  * \tparam predicate  Filtering predicate (e.g. #filter_hidden).
@@ -184,7 +203,7 @@ Jdb_tbuf::commit_entry(Tb_entry *entry, Tb_sequence seq)
  * \return Number of entries currentry committed in tracebuffer (considering
  *         the filtering predicate).
  */
-PUBLIC static
+PUBLIC static inline
 template<Jdb_tbuf::Predicate predicate>
 size_t
 Jdb_tbuf::entries()
@@ -267,6 +286,28 @@ Jdb_tbuf::lookup(size_t pos)
 
   // No more entries.
   return nullptr;
+}
+
+/**
+ * Get pointer to a tracebuffer event slot.
+ *
+ * \param index  Index of the tracebuffer slot. Must be in the range of
+ *               <0, capacity() - 1>.
+ *
+ * \return Pointer to the tracebuffer event slot at the given index.
+ * \retval nullptr  The event at the given index is not valid.
+ */
+PUBLIC static
+Tb_entry *
+Jdb_tbuf::slot(size_t index)
+{
+  assert(index < _capacity);
+
+  Tb_entry &data = _slots[index].data;
+  if (data.number() == Nil)
+    return nullptr;
+
+  return &data;
 }
 
 /**

@@ -211,44 +211,55 @@ Jdb_tbuf_output::set_filter(const char *filter_str, size_t *entries)
   if (!regex.start(filter_str))
     return false;
 
+  size_t capacity = Jdb_tbuf::capacity();
+  size_t count = 0;
+
   if (!*filter_str)
     {
-      for (size_t n = 0; n < Jdb_tbuf::entries<Jdb_tbuf::all>(); ++n)
-        Jdb_tbuf::lookup<Jdb_tbuf::all>(n)->unhide();
+      for (size_t i = 0; i < capacity; ++i)
+        {
+          auto entry = Jdb_tbuf::slot(i);
+          if (!entry)
+            continue;
+
+          entry->unhide();
+          ++count;
+        }
 
       Jdb_tbuf::show_hidden();
-      if (entries)
-        *entries = Jdb_tbuf::entries<Jdb_tbuf::all>();
-
-      return true;
     }
-
-  size_t cnt = 0;
-  for (size_t n = 0; n < Jdb_tbuf::entries<Jdb_tbuf::all>(); ++n)
+  else
     {
-      auto e = Jdb_tbuf::lookup<Jdb_tbuf::all>(n);
-      String_buf<200> s;
-
-      print_entry(&s, e);
-      if (regex.find(s.begin(), nullptr, nullptr))
+      for (size_t i = 0; i < capacity; ++i)
         {
-          e->unhide();
-          cnt++;
-          continue;
-        }
-      else if (strstr(s.begin(), filter_str))
-        {
-          e->unhide();
-          cnt++;
-          continue;
+          auto entry = Jdb_tbuf::slot(i);
+          if (!entry)
+            continue;
+
+          String_buf<200> str;
+          print_entry(&str, entry);
+
+          if (regex.find(str.begin(), nullptr, nullptr))
+            {
+              entry->unhide();
+              ++count;
+              continue;
+            }
+          else if (strstr(str.begin(), filter_str))
+            {
+              entry->unhide();
+              ++count;
+              continue;
+            }
+
+          entry->hide();
         }
 
-      e->hide();
+      Jdb_tbuf::hide_hidden();
     }
 
   if (entries)
-    *entries = cnt;
+    *entries = count;
 
-  Jdb_tbuf::hide_hidden();
   return true;
 }

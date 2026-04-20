@@ -532,6 +532,7 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
       return Jdb_tbuf::Not_found;
     }
 
+  size_t majorant = Jdb_tbuf::entries_majorant();
   size_t found = Jdb_tbuf::Not_found;
   for (size_t pos = ((direction == 1) ? start - 1 : start + 1);;
        (direction == 1) ? --pos : ++pos)
@@ -545,7 +546,7 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
         break;
 
       // don't wrap around
-      if (pos >= Jdb_tbuf::entries<Jdb_tbuf::all>())
+      if (pos >= majorant)
         {
           error(direction ? "Begin of tracebuffer reached"
                           : "End of tracebuffer reached");
@@ -718,7 +719,7 @@ restart:
       Jdb::cursor();
       printf("%3zu%% of %-6zu Perf:%-4s 1=" L4_PTR_FMT
              "(%s%s\033[m%s%s%s\033[m)\033[K",
-             Jdb_tbuf::entries<Jdb_tbuf::all>() * 100 / Jdb_tbuf::capacity(),
+             Jdb_tbuf::entries_majorant() * 100 / Jdb_tbuf::capacity(),
              Jdb_tbuf::capacity(),
              perf_type, perf_event[0], Jdb::esc_emph, perf_mode[0],
              perf_name[0] && *perf_name[0] ? ":" : "",
