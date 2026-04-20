@@ -111,7 +111,7 @@ Jdb_tbuf_output::register_ff(Unsigned8 type, Format_entry_fn format_entry_fn)
 // return thread+ip of entry <e_nr>
 PUBLIC static
 int
-Jdb_tbuf_output::thread_ip(int e_nr, Thread const **th, Mword *ip)
+Jdb_tbuf_output::thread_ip(size_t e_nr, Thread const **th, Mword *ip)
 {
   Tb_entry *e = Jdb_tbuf::lookup(e_nr);
 

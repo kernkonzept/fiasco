@@ -376,7 +376,12 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
   Unsigned32 ref_kclock, ref_pmc1, ref_pmc2;
   Mword dummy;
 
-  Jdb_tbuf::event(ref, &dummy, &ref_kclock, &ref_tsc, &ref_pmc1, &ref_pmc2);
+  if (ref == Jdb_tbuf::Not_found) [[unlikely]]
+    return;
+
+  if (!Jdb_tbuf::event(ref, &dummy, &ref_kclock, &ref_tsc, &ref_pmc1,
+                       &ref_pmc2)) [[unlikely]]
+    return;
 
   for (unsigned i = 0; i < count; ++i)
     {
