@@ -20,8 +20,8 @@ private:
   static void bsp_init(Cpu_number);
   static Unsigned32 frequency();
 
-  static Global_data<Mword> _interval;
-  static Global_data<Mword> _freq0;
+  static Global_data<Unsigned32> _interval;
+  static Global_data<Unsigned32> _freq0;
 };
 
 // --------------------------------------------------------------
@@ -33,8 +33,8 @@ IMPLEMENTATION [arm && arm_generic_timer]:
 #include "io.h"
 #include "panic.h"
 
-DEFINE_GLOBAL Global_data<Mword> Timer::_interval;
-DEFINE_GLOBAL Global_data<Mword> Timer::_freq0;
+DEFINE_GLOBAL Global_data<Unsigned32> Timer::_interval;
+DEFINE_GLOBAL Global_data<Unsigned32> Timer::_freq0;
 
 IMPLEMENT_OVERRIDE
 Irq_chip::Mode Timer::irq_mode()
@@ -68,7 +68,7 @@ Timer::init(Cpu_number cpu)
     {
       _freq0 = frequency();
       _interval = interval(Config::Scheduler_granularity);
-      printf("ARM generic timer: %lu Hz (%lu.%lu MHz) interval=%lu cnt=%llu\n",
+      printf("ARM generic timer: %u Hz (%u.%u MHz) interval=%u cnt=%llu\n",
              _freq0.unwrap(), _freq0 / 1000000, (_freq0 % 1000000) / 100000,
              _interval.unwrap(), Gtimer::counter());
       assert(_freq0);
