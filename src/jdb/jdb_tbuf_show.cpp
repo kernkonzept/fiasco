@@ -544,7 +544,7 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
         break;
 
       // don't wrap around
-      if (pos >= Jdb_tbuf::entries(Jdb_tbuf::all))
+      if (pos >= Jdb_tbuf::entries<Jdb_tbuf::all>())
         {
           error(direction ? "Begin of tracebuffer reached"
                           : "End of tracebuffer reached");
@@ -589,12 +589,12 @@ Jdb_tbuf_show::find_group(Entry_group *g, Tb_entry const *e, bool older, unsigne
   typedef Entry_group::Group_order Group_order;
 
   Tb_entry_formatter const *fmt = Tb_entry_formatter::get_fmt(e);
-  size_t pos = Jdb_tbuf::pos(e, Jdb_tbuf::all);
+  size_t pos = Jdb_tbuf::pos<Jdb_tbuf::all>(e);
   int dir = older ? 1 : -1;
   while (pos > 0 && !g->full())
     {
       pos += dir;
-      Tb_entry *e1 = Jdb_tbuf::lookup(pos, Jdb_tbuf::all);
+      Tb_entry *e1 = Jdb_tbuf::lookup<Jdb_tbuf::all>(pos);
       if (!e1)
         return;
 
@@ -717,7 +717,7 @@ restart:
       Jdb::cursor();
       printf("%3zu%% of %-6zu Perf:%-4s 1=" L4_PTR_FMT
              "(%s%s\033[m%s%s%s\033[m)\033[K",
-             Jdb_tbuf::entries(Jdb_tbuf::all) * 100 / Jdb_tbuf::capacity(),
+             Jdb_tbuf::entries<Jdb_tbuf::all>() * 100 / Jdb_tbuf::capacity(),
              Jdb_tbuf::capacity(),
              perf_type, perf_event[0], Jdb::esc_emph, perf_mode[0],
              perf_name[0] && *perf_name[0] ? ":" : "",

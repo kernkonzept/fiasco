@@ -179,14 +179,15 @@ Jdb_tbuf::commit_entry(Tb_entry *entry, Tb_sequence seq)
 /**
  * Return number of entries currently committed in tracebuffer.
  *
- * \param predicate  Filtering predicate (e.g. #filter_hidden).
+ * \tparam predicate  Filtering predicate (e.g. #filter_hidden).
  *
  * \return Number of entries currentry committed in tracebuffer (considering
  *         the filtering predicate).
  */
 PUBLIC static
+template<Jdb_tbuf::Predicate predicate>
 size_t
-Jdb_tbuf::entries(Predicate predicate)
+Jdb_tbuf::entries()
 {
   size_t cnt = 0;
   for (size_t i = 0; i < _capacity; ++i)
@@ -223,10 +224,11 @@ Jdb_tbuf::entry_valid(Tb_sequence seq)
 /**
  * Get pointer to a tracebuffer event.
  *
- * \param pos        Position of the event in the tracebuffer. 0 represents the
- *                   last event, 1 represents the penultimate event, etc.
- *                   The filtering predicate is taken into account.
- * \param predicate  Filtering predicate (e.g. #filter_hidden).
+ * \tparam predicate  Filtering predicate (e.g. #filter_hidden).
+ *
+ * \param pos  Position of the event in the tracebuffer. 0 represents the last
+ *             event, 1 represents the penultimate event, etc. The filtering
+ *             predicate is taken into account.
  *
  * \return Pointer to the tracebuffer event with the given position (with
  *         the filtering predicate taken into account).
@@ -234,8 +236,9 @@ Jdb_tbuf::entry_valid(Tb_sequence seq)
  *                  the filtering predicate taken into account) found.
  */
 PUBLIC static
+template<Jdb_tbuf::Predicate predicate>
 Tb_entry *
-Jdb_tbuf::lookup(size_t pos, Predicate predicate)
+Jdb_tbuf::lookup(size_t pos)
 {
   Tb_sequence seq = _status->tail;
   size_t bound = seq > _capacity ? seq - _capacity : 0;
@@ -283,17 +286,18 @@ Tb_entry *
 Jdb_tbuf::lookup(size_t pos)
 {
   if (_filter_hidden)
-    return lookup(pos, filter_hidden);
+    return lookup<filter_hidden>(pos);
 
-  return lookup(pos, all);
+  return lookup<all>(pos);
 }
 
 /**
  * Get the position of the given tracebuffer event.
  *
- * \param entry      Tracebuffer event to find in the tracebuffer. The
- *                   filtering predicate is taken into account.
- * \param predicate  Filtering predicate (e.g. #filter_hidden).
+ * \tparam predicate  Filtering predicate (e.g. #filter_hidden).
+ *
+ * \param entry  Tracebuffer event to find in the tracebuffer. The filtering
+ *               predicate is taken into account.
  *
  * \return Position of the given event in the tracebuffer (with the filtering
  *         predicate taken into account). 0 represents the last event,
@@ -302,8 +306,9 @@ Jdb_tbuf::lookup(size_t pos)
  *                    tracebuffer.
  */
 PUBLIC static
+template<Jdb_tbuf::Predicate predicate>
 size_t
-Jdb_tbuf::pos(Tb_entry const *event, Predicate predicate)
+Jdb_tbuf::pos(Tb_entry const *event)
 {
   Tb_sequence seq = _status->tail;
   size_t bound = seq > _capacity ? seq - _capacity : 0;
@@ -351,9 +356,9 @@ size_t
 Jdb_tbuf::pos(Tb_entry const *event)
 {
   if (_filter_hidden)
-    return pos(event, filter_hidden);
+    return pos<filter_hidden>(event);
 
-  return pos(event, all);
+  return pos<all>(event);
 }
 
 /**
@@ -397,12 +402,12 @@ Jdb_tbuf::search_to_pos(Tb_sequence seq)
     return Not_found;
 
   if (!_filter_hidden)
-    return pos(entry, all);
+    return pos<all>(entry);
 
   if (entry->is_hidden())
     return Hidden;
 
-  return pos(entry, filter_hidden);
+  return pos<filter_hidden>(entry);
 }
 
 /**
