@@ -1018,6 +1018,9 @@ Jdb_tcb::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) overrid
   if (t->home_cpu() != t->get_current_cpu())
     buf->printf(":%u", cxx::int_value<Cpu_number>(t->get_current_cpu()));
 
+  String_buf<12> time_str;
+  Jdb::write_ll_ns(&time_str, t->consumed_time() * 1000, false);
+
   if (t->space() == Kernel_task::kernel_task())
     buf->printf(" R=%ld rdy%s", t->ref_cnt(),
                 is_current ? " " JDB_ANSI_COLOR(green) "cur" JDB_ANSI_END : "");
@@ -1027,6 +1030,8 @@ Jdb_tcb::show_kobject_short(String_buffer *buf, Kobject_common *o, bool) overrid
                 t->ref_cnt(),
                 t->in_ready_list() ? " rdy" : "",
                 is_current ? " " JDB_ANSI_COLOR(green) "cur" JDB_ANSI_END : "");
+
+  buf->printf(" %s", time_str.begin());
 }
 
 PUBLIC
