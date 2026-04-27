@@ -266,8 +266,7 @@ Pic::post_pending_irqs()
   else
     return;
 
-  Irq_base *i = nonull_static_cast<Irq_base*>(this->irq(irq));
-  i->hit(0);
+  handle_irq<Pic>(irq, nullptr);
 }
 
 // ------------------------------------------------------------------------
