@@ -10,7 +10,6 @@ IMPLEMENTATION [sparc]:
 IMPLEMENTATION:
 
 #include "irq_chip_generic.h"
-#include "irq.h"
 
 extern "C"
 void irq_handler()
@@ -26,7 +25,5 @@ void irq_handler()
   if (irq == Pic::No_irq_pending) [[unlikely]]
     return;
 
-  Irq *i = nonull_static_cast<Irq*>(Pic::main->irq(irq));
-//  Irq::log_irq(i, irq);
-  i->hit();
+  Pic::main->handle_irq<Pic>(irq, nullptr);
 }
