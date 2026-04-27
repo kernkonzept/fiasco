@@ -204,8 +204,6 @@ public:
   virtual ~Irq_chip_icu() = 0;
 };
 
-class Kobject_iface;
-
 /**
  * Base class for all kinds of IRQ consuming objects.
  */
