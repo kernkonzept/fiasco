@@ -36,7 +36,7 @@ Jdb_kern_info_cpu::mrc(Mword insn)
 {
   char *m = reinterpret_cast<char *>(jdb_mrc_insn);
   *reinterpret_cast<Mword *>(m) = insn;
-  Mem_unit::flush_cache(m, m);
+  Mem_unit::flush_cache(m, m + 4);
   Mem::isb();
   return jdb_mrc_insn(0);
 }
