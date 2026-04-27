@@ -436,7 +436,7 @@ Irq_chip::handle_irq(Mword pin, Upstream_irq const *ui)
 PUBLIC inline
 template<typename CHIP>
 void
-Irq_chip::handle_multi_pending(Upstream_irq const *ui)
+Irq_chip::handle_multi_pending()
 {
   while (Mword pend = nonull_static_cast<CHIP *>(this)->CHIP::pending())
     {
@@ -444,7 +444,7 @@ Irq_chip::handle_multi_pending(Upstream_irq const *ui)
         {
           if (pend & 1)
             {
-              handle_irq<CHIP>(i, ui);
+              handle_irq<CHIP>(i, nullptr);
               break; // Read the pending ints again
             }
         }

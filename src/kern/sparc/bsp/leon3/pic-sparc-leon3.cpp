@@ -108,7 +108,7 @@ extern "C"
 void irq_handler(unsigned irq)
 {
   if (0)
-    mgr->c.handle_multi_pending<Irq_chip_sparc>(0);
+    mgr->c.handle_multi_pending<Irq_chip_sparc>();
 
   mgr->c.handle_irq<Irq_chip_sparc>(irq, 0);
 }

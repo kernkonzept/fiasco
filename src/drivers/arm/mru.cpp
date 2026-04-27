@@ -58,7 +58,7 @@ class Mru : public Irq_chip_gen, Mmio_register_block
       // take the shortcut to user space.
       chip()->ack(pin());
       Upstream_irq::ack(ui);
-      _mru->handle_multi_pending<Mru>(ui);
+      _mru->handle_multi_pending<Mru>();
     }
 
   private:

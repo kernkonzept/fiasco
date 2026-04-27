@@ -84,7 +84,7 @@ Unsigned32 Irq_chip_arm_integr::pending()
 
 extern "C"
 void irq_handler()
-{ mgr->c.handle_multi_pending<Irq_chip_arm_integr>(0); }
+{ mgr->c.handle_multi_pending<Irq_chip_arm_integr>(); }
 
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && pf_integrator && arm_em_tz]:
