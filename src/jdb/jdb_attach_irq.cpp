@@ -58,7 +58,7 @@ Jdb_attach_irq::action( int cmd, void *&args, char const *&, int & ) override
 
             for (unsigned gsi = 0; gsi < nr; ++gsi)
               {
-                Irq_base *irq = static_cast<Irq *>(Irq_mgr::mgr->gsi_irq(gsi));
+                Irq_base *irq = Irq_mgr::mgr->gsi_irq(gsi);
                 if (!irq)
                   continue;
 
