@@ -197,9 +197,8 @@ public:
   void handle(Upstream_irq const *ui)
   {
     Kernel_uart::uart()->irq_ack();
-    mask_and_ack();
+    ack();
     Upstream_irq::ack(ui);
-    unmask();
     if (!Vkey::check_())
       kdb_ke("IRQ ENTRY");
   }
