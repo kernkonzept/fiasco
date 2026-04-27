@@ -100,7 +100,7 @@ Irq_chip_imx_icoll::irq_handler()
 {
   Unsigned32 p = pending();
   _reg[HW_ICOLL_VECTOR] = p; // write anything
-  handle_irq<Irq_chip_imx_icoll>(p, 0);
+  handle_irq<Irq_chip_imx_icoll>(p, nullptr);
 }
 
 extern "C"

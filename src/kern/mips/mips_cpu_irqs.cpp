@@ -144,7 +144,7 @@ Mips_cpu_irqs::init()
 extern "C" void
 handle_irq(unsigned long irq)
 {
-  _chip->handle_irq<Mips_cpu_irq_chip>(irq, 0);
+  _chip->handle_irq<Mips_cpu_irq_chip>(irq, nullptr);
 }
 
 

@@ -122,7 +122,7 @@ void irq_handler()
 {
   Unsigned32 i = mgr->c.pending();
   if (i)
-    mgr->c.handle_irq<Chip>(i, 0);
+    mgr->c.handle_irq<Chip>(i, nullptr);
 }
 
 // -------------------------------------------------------------

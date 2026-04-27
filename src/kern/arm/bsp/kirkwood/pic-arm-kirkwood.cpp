@@ -111,7 +111,7 @@ void irq_handler()
 {
   Unsigned32 i;
   while ((i = mgr->c.pending()) < 64)
-    mgr->c.handle_irq<Irq_chip_kirkwood>(i, 0);
+    mgr->c.handle_irq<Irq_chip_kirkwood>(i, nullptr);
 }
 
 //---------------------------------------------------------------------------

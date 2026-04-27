@@ -239,7 +239,7 @@ void irq_handler()
 {
   Unsigned32 i = mgr->c.pending();
   if (i != 32)
-    mgr->c.handle_irq<S3c_chip>(i, 0);
+    mgr->c.handle_irq<S3c_chip>(i, nullptr);
 }
 
 //---------------------------------------------------------------------------

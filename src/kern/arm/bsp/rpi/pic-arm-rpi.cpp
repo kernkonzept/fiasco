@@ -99,13 +99,13 @@ Irq_chip_bcm::irq_handler()
               m >>= 10;
               char map[11] = { 7, 9, 10, 18, 19, 53, 54, 55, 56, 57, 62 };
 
-              handle_irq<Irq_chip_bcm>(map[cxx::log2u(m)], 0);
+              handle_irq<Irq_chip_bcm>(map[cxx::log2u(m)], nullptr);
               continue;
             }
         }
 
       if (p)
-        handle_irq<Irq_chip_bcm>(b + cxx::log2u(p), 0);
+        handle_irq<Irq_chip_bcm>(b + cxx::log2u(p), nullptr);
       else
         return;
     }

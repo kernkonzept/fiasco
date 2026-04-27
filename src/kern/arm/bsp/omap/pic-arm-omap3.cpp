@@ -146,7 +146,7 @@ void irq_handler()
 {
   Unsigned32 i;
   while ((i = mgr->c.pending()))
-    mgr->c.handle_irq<Irq_chip_arm_omap3>(i, 0);
+    mgr->c.handle_irq<Irq_chip_arm_omap3>(i, nullptr);
 }
 
 // ------------------------------------------------------------------------

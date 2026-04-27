@@ -121,7 +121,7 @@ Irq_chip_arm_imx::irq_handler()
 {
   Unsigned32 p = pending();
   if (p != 0xffff) [[likely]]
-    handle_irq<Irq_chip_arm_imx>(p, 0);
+    handle_irq<Irq_chip_arm_imx>(p, nullptr);
 }
 
 extern "C"
