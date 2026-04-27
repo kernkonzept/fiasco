@@ -19,6 +19,7 @@ public:
   static bool check_and_handle_linux_cache_api(Trap_state *);
   bool check_and_handle_mem_op_fault(Mword error_code, Return_frame *ret_frame);
   bool check_and_handle_coproc_faults(Trap_state *);
+  bool check_and_handle_mode_svc_trap(Trap_state *);
 
 private:
   bool handle_sve_trap(Trap_state *);
@@ -246,6 +247,9 @@ extern "C" {
         t->handle_debug_exception(ts);
         return;
       }
+
+    if (t->check_and_handle_mode_svc_trap(ts))
+      return;
 
     // send exception IPC if requested
     if (t->send_exception(ts))
@@ -641,6 +645,13 @@ Thread::check_and_handle_mem_op_fault(Mword, Return_frame *)
 IMPLEMENT_DEFAULT inline
 bool
 Thread::check_and_handle_coproc_faults(Trap_state *)
+{
+  return false;
+}
+
+IMPLEMENT_DEFAULT inline
+bool
+Thread::check_and_handle_mode_svc_trap(Trap_state *)
 {
   return false;
 }

@@ -484,6 +484,23 @@ Thread::handle_svc(Trap_state *ts)
 }
 
 //-----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 32bit && !cpu_virt]:
+IMPLEMENT_OVERRIDE
+bool
+Thread::check_and_handle_mode_svc_trap(Trap_state *ts)
+{
+  if ((ts->psr & Proc::Status_mode_mask) == Proc::PSR_m_svc)
+    {
+      // Only necessary for ARM32. With ARM64, the kernel is entered through
+      // Thread::arm_kernel_sync_entry() to handle a trap in supervisor mode.
+      call_nested_trap_handler(ts);
+      return true;
+    }
+
+  return false;
+}
+
+//-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && (!cpu_virt || mpu)]:
 
 PUBLIC static inline template<typename T>
