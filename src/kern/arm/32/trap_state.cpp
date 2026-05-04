@@ -8,8 +8,6 @@ INTERFACE:
 class Trap_state_regs
 {
 public:
-//  static int (*base_handler)(Trap_state *) asm ("BASE_TRAP_HANDLER");
-
   Mword pf_address;
   union
   {

@@ -6,7 +6,6 @@ INTERFACE:
 
 class Trap_state_regs
 {
-//  static int (*base_handler)(Trap_state *) asm ("BASE_TRAP_HANDLER");
 public:
   Mword pf_address;
   Mword error_code;
