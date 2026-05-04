@@ -130,7 +130,7 @@ Mapping_tree::erase(Space *owner)
   for (Iterator d = begin(); *d;)
     {
       // space is nullptr if the Mapping references a submap and
-      // in this case trhe predecessor is the parent mapping that
+      // in this case the predecessor is the parent mapping that
       // contains the space pointer for this submap, so just use
       // the quota from the previous iteration.
       if (d->space())

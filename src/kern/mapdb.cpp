@@ -58,7 +58,7 @@ private:
                      + sizeof(Treemap));
   }
 
-  // get the virtual address coresponding to the given physframe
+  // get the virtual address corresponding to the given physframe
   // inside this map
   Pfn frame_vaddr(Physframe const *f) const
   {

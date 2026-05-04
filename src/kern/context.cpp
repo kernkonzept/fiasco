@@ -372,8 +372,8 @@ protected:
   // for trigger_exception
   Continuation _exc_cont;
 
-  // Migration pending for this context. Must not be derefrenced directly, only
-  // after gaining exlusive access by extracting the value with a cas operation.
+  // Migration pending for this context. Must not be dereferenced directly, only
+  // after gaining exclusive access by extracting the value with a cas operation.
   Migration *_migration;
 
 public:

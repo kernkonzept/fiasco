@@ -136,7 +136,7 @@ Prio_list::insert(Prio_list_elem *e, unsigned short prio)
 
 /**
  * Is the element actually enqueued?
- * @return true if the element is actaully enqueued in a list.
+ * @return true if the element is actually enqueued in a list.
  */
 PUBLIC inline
 bool Prio_list_elem::in_list() const { return S_list::in_list(this); }

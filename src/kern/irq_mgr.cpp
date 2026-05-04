@@ -104,7 +104,7 @@ public:
    *                      payload).
    *
    * \retval 0                Message signaling information returned
-   *                          succesfully.
+   *                          successfully.
    * \retval -L4_err::ENosys  No MSIs supported.
    * \retval -L4_err::ERange  MSIs supported, but the given global system
    *                          interrupt is not an MSI.

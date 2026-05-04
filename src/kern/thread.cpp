@@ -286,7 +286,7 @@ Thread::bind(Task *t, User_ptr<Utcb> utcb)
 /**
  * Unbind the thread from its task.
  *
- * \attention This is a potential preemtion point. The last bound thread of
+ * \attention This is a potential preemption point. The last bound thread of
  *            a task clears the reply capability space.
  */
 PUBLIC

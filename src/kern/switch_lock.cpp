@@ -338,7 +338,7 @@ IMPLEMENTATION:
  *
  * \pre caller holds cpu lock
  *
- * \post switch_dirty() must be called in the same atomical section
+ * \post switch_dirty() must be called in the same atomic section
  */
 PRIVATE
 inline NEEDS[Switch_lock::clear_lock_owner, Switch_lock::lock_owner, "context.h", "mem.h"]

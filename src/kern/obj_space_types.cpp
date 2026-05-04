@@ -221,7 +221,7 @@ namespace Obj
 
     if (!info) [[unlikely]]
       {
-        WARN("oom: could not allocate debug info fo page %p\n", p);
+        WARN("oom: could not allocate debug info for page %p\n", p);
         return;
       }
 
