@@ -743,7 +743,7 @@ restart:
 
       Jdb::cursor(1, Jdb_screen::width() - 9);
       printf("%10s\n"
-             "Range %-14s    2=" L4_PTR_FMT "(%s%s\033[m%s%s%s\033[m)\033[K\n",
+             "Range %-18s 2=" L4_PTR_FMT "(%s%s\033[m%s%s%s\033[m)\033[K\n",
               mode_str[mode], time_range_str.begin(),
               perf_event[1], Jdb::esc_emph, perf_mode[1],
               perf_name[1] && *perf_name[1] ? ":" : "",
