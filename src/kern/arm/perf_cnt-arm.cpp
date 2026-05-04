@@ -94,7 +94,7 @@ Mword Perf_cnt::get_max_perf_event() { return is_avail() ? 32 : 0; }
 // ------------------------------------------------------------------------
 IMPLEMENTATION [arm && perf_cnt && !(arm_mpcore || arm_v7 || arm_v8)]:
 
-char const *Perf_cnt::perf_type_str = "none";
+char const *Perf_cnt::perf_type_str = "n/a";
 
 PUBLIC static inline FIASCO_INIT_CPU_SFX(init_cpu)
 void

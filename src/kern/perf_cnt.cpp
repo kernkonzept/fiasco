@@ -42,7 +42,7 @@ PUBLIC static inline void  Perf_cnt::split_event(Mword, unsigned *, Mword *) {}
 PUBLIC static inline Mword Perf_cnt::lookup_event(Mword) { return 0; }
 PUBLIC static inline void  Perf_cnt::combine_event(Mword, Mword, Mword *) {}
 
-PUBLIC static inline char const * Perf_cnt::perf_type() { return "nothing"; }
+PUBLIC static inline char const * Perf_cnt::perf_type() { return "n/a"; }
 
 PUBLIC static inline
 int
