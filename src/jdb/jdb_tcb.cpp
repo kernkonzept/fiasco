@@ -488,7 +488,8 @@ Jdb_disasm_view::show(Jdb_address addr, bool dump_only)
         {
           Unsigned32 word = 0;
           Jdb::peek_task(addr, &word, 4);
-          if constexpr (TAG_ENABLED(arm) || TAG_ENABLED(riscv) || TAG_ENABLED(mips))
+          // the '|' operator avoids a Clang warning about dead code
+          if constexpr (TAG_ENABLED(arm) | TAG_ENABLED(riscv) | TAG_ENABLED(mips))
             printf("%08x ", word);
           else
             printf("%02x %02x %02x %02x ",
