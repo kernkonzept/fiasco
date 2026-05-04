@@ -1147,17 +1147,17 @@ vcpu_resume:
 #else
 	add	sp, r1, #RF_SIZE
 #endif
-	add	lr, r0, #8			@ pfa, err
-#if !defined(CONFIG_ARM_V6PLUS)
-	ldr	r1, [lr, #RF(PSR, 13*4)]	@ Unstack SPSR
-	msr	spsr_cfsx, r1			@ Load SPSR from kernel_lr
-#endif
+	add	lr, r0, #8			@ skip pfa, err
+#ifdef CONFIG_ARM_V6PLUS
 	ldmia	lr!, {r0 - r12}
-	ldmia	lr, {sp,lr}^			@ restore user sp and lr (now lazy)
-#if defined(CONFIG_ARM_V6PLUS)
-	add	lr, lr, #RF_SIZE		@ Read return address
+	ldmia	lr, {sp, lr}^			@ restore user sp and lr (now lazy)
+	add	lr, lr, #RF_SIZE		@ return address
 	rfedb	lr
 #else
-	add	lr, lr, #(RF_SIZE - 4)		@ Read return address
+	ldr	r1, [lr, #RF(PSR, 13*4)]	@ Unstack SPSR
+	msr	spsr_cfsx, r1			@ Load SPSR from kernel_lr
+	ldmia	lr!, {r0 - r12}
+	ldmia	lr, {sp, lr}^			@ restore user sp and lr (now lazy)
+	add	lr, lr, #(RF_SIZE - 4)		@ return address
 	ldmdb	lr, {pc}^			@ go back to interrupted insn 
 #endif
