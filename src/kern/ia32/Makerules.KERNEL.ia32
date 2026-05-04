@@ -14,6 +14,6 @@ vm_svm_asm.o:		$(TCBOFFSET)
 
 # $(1) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 KERNEL_PREREQUISITES = kernel.ia32.lds boot_img.o $$(CRT0) $$(OBJ_KERNEL) $(1) \
-                       $$(JDB) $$(KERNEL_EXTRA_LIBS) $$(ABI) $$(JABI) \
-                       libdrivers.a $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) \
+                       $$(JDB) $$(ABI) $$(JABI) libdrivers.a $$(LIBUART) \
+                       $$(KERNEL_EXTRA_LIBS) $$(LIBK) $$(CXXLIB) $$(LIBC) \
                        $$(FONTS) libgluedriverslibc.a
