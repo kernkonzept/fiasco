@@ -107,7 +107,7 @@ Thread_object::destroy(Kobjects_list &reap_list) override
   Kobject::destroy(reap_list);
 
   if (!is_invalid(false))
-    check(kill());
+    kill();
   else
     unbind();
 

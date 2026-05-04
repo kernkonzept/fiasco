@@ -620,7 +620,7 @@ Thread::handle_remote_kill(Drq *, Context *self, void *)
 
 
 PUBLIC
-bool
+void
 Thread::kill()
 {
   auto guard = lock_guard(cpu_lock);
@@ -629,12 +629,9 @@ Thread::kill()
     {
       prepare_kill();
       Sched_context::rq.current().deblock(sched(), current()->sched());
-      return true;
     }
-
-  drq(Thread::handle_remote_kill, nullptr);
-
-  return true;
+  else
+    drq(Thread::handle_remote_kill, nullptr);
 }
 
 
