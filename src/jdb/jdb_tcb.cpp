@@ -472,7 +472,33 @@ void
 Jdb_disasm_view::show(Jdb_address addr, bool dump_only)
 {
   if (!Jdb_disasm::avail())
-    return;
+    {
+      unsigned num_words;
+      if (dump_only)
+        {
+          printf("Code: ");
+          num_words = 4;
+        }
+      else
+        {
+          Jdb::cursor(_y, _x);
+          num_words = 2;
+        }
+      for (unsigned i = 0; i < num_words; ++i)
+        {
+          Unsigned32 word = 0;
+          Jdb::peek_task(addr, &word, 4);
+          if constexpr (TAG_ENABLED(arm) || TAG_ENABLED(riscv) || TAG_ENABLED(mips))
+            printf("%08x ", word);
+          else
+            printf("%02x %02x %02x %02x ",
+                   (word       & 0xff), (word >>  8 & 0xff),
+                   (word >> 16 & 0xff), (word >> 24 & 0xff));
+          addr += 4;
+        }
+      putchar('\n');
+      return;
+    }
 
   Jdb_address disass_addr = addr;
   if (dump_only)
