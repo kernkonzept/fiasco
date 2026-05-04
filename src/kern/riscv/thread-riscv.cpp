@@ -301,8 +301,8 @@ Thread::thread_handle_trap(Mword cause, Mword val, Trap_state *ts)
 
     // PMA/PMP check failed
     case Cpu::Exc_inst_access:
-    case Cpu::Exc_load_acesss:
-    case Cpu::Exc_store_acesss:
+    case Cpu::Exc_load_access:
+    case Cpu::Exc_store_access:
 
     default:
       WARN("Unhandled Trap: Cause=" L4_MWORD_FMT ", Epc=" L4_MWORD_FMT ", Val=" L4_MWORD_FMT "\n",
