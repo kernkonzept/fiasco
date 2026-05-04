@@ -67,10 +67,17 @@ private:
 };
 
 /**
- * Helper class for maintaining a linked list of #Kobject objects.
+ * Helper class for appending to a linked list of #Kobject objects.
  *
- * The list is a singly-linked list with a head. The head is a reference to
- * the location where the pointer to the list item is stored.
+ * The list is a singly-linked list with a head.
+ *
+ * This class is actually merely a thin helper for appending items to such a
+ * list. In order to achieve this, this class maintains a pointer to the next
+ * pointer of the currently last item of the list. Initially it points to the
+ * head pointer (which can be considered a special next pointer).
+ *
+ * References to the head pointer and the next pointers must be provided by the
+ * user of this class.
  */
 class Kobjects_list
 {
@@ -88,9 +95,9 @@ public:
    * \param head  Head of the list, i.e. a reference to the location where
    *              the pointer to the first item is stored.
    */
-  Kobjects_list(Ptr &head) : _head(&head)
+  Kobjects_list(Ptr &head) : _last_next(&head)
   {
-    *_head = nullptr;
+    *_last_next = nullptr;
   }
 
   /**
@@ -104,34 +111,36 @@ public:
    */
   void reset(Ptr &head)
   {
-    _head = &head;
-    *_head = nullptr;
+    _last_next = &head;
+    *_last_next = nullptr;
   }
 
   /**
    * Push an item into the list.
    *
-   * Store an item into the head and set a new head of the list. This
-   * effectively pushes the item into the linked list and creates the space
-   * for the next item.
+   * Store an item into the current last next pointer and update the pointer to
+   * the last next pointer of the list. This effectively pushes the item into
+   * the linked list and prepares the next push.
    *
-   * \param item      Item to be stored in the current head of the list.
-   * \param new_head  New head of the list, i.e. a reference to the location
-   *                  where the pointer to the next item is stored. This new
-   *                  head is initially set to nullptr.
+   * \param item      Item to be appended to the list.
+   * \param new_next  A reference to the next pointer of `item`. It is initially
+   *                  set to nullptr.
    */
-  void push(Ptr item, Ptr &new_head)
+  void push(Ptr item, Ptr &new_next)
   {
     // Set the current item.
-    *_head = item;
+    *_last_next = item;
 
-    // Prepare new head for the next item.
-    _head = &new_head;
-    *_head = nullptr;
+    // Prepare next pointer for the next item.
+    _last_next = &new_next;
+    *_last_next = nullptr;
   }
 
 private:
-  Ptr *_head;
+  /// A pointer to next pointer of the last item of the list. This is used for
+  /// efficient appending to the list. When the list is empty, this points to
+  /// the head pointer of the list.
+  Ptr *_last_next;
 };
 
 /**
