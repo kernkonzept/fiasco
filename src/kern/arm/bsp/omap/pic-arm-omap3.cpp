@@ -46,7 +46,7 @@ private:
     INTCPS_SYSCONFIG         = 0x010,
     INTCPS_SYSSTATUS         = 0x014,
     INTCPS_CONTROL           = 0x048,
-    INTCPS_TRESHOLD          = 0x068,
+    INTCPS_THRESHOLD         = 0x068,
     INTCPS_ITRn_base         = 0x080,
     INTCPS_MIRn_base         = 0x084,
     INTCPS_MIR_CLEARn_base   = 0x088,
@@ -76,7 +76,7 @@ Irq_chip_arm_omap3::Irq_chip_arm_omap3()
   write<Mword>(1, INTCPS_SYSCONFIG);
 
   // disable treshold
-  write<Mword>(0xff, INTCPS_TRESHOLD);
+  write<Mword>(0xff, INTCPS_THRESHOLD);
 
   // set priority for each interrupt line, lets take 0x20
   // setting bit0 to 0 means IRQ (1 would mean FIQ)
