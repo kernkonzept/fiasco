@@ -45,6 +45,7 @@ help:
 	@echo "  DEPS.tred.ps   - transitive reduction of DEPS.ps"
 	@echo "  DEPS.tred.svg  - transitive reduction of DEPS.svg"
 	@echo "  doc            - doxygen HTML documentation into docs/"
+	@echo "  jdb_manual.pdf - JDB manual"
 	@echo "  report         - show host configuration information"
 	@echo "  TAGS tags      - create tags files"
 

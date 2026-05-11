@@ -88,6 +88,9 @@ docs/stamp-doc.ready: $(srcdir)/doxygen.conf \
 	@touch $@
 	$(VERBOSE)doxygen $(srcdir)/doxygen.conf
 
+jdb_manual.pdf: $(srcdir)/../doc/jdb_manual.rst
+	rst2pdf -o $@ -s tango $<
+
 docs:
 	@mkdir -p docs
 
