@@ -44,8 +44,22 @@ public:
    * eagerly, and this function then maps them.
    */
   void map_all_segs(Mem_desc::Mem_type mt);
-};
 
+  /**
+   * Leave the kernel directly into a vCPU context.
+   *
+   * \param ts  Trap_state to be loaded before returning to vCPU context.
+   * \param sp  The kernel stack pointer to be loaded before loading the
+   *            Trap_state and returning to vCPU context. As the interrupts are
+   *            disabled and the relevant state is loaded from `ts`, many
+   *            architectures ignore this parameter. For ARM32 with banked
+   *            registers, this parameter is essential.
+   *
+   * \pre Interrupts must be disabled.
+   */
+  [[noreturn]] static void vcpu_resume(Trap_state *ts, Return_frame *sp)
+    asm ("vcpu_resume") FIASCO_FASTCALL;
+};
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION:
@@ -68,9 +82,6 @@ IMPLEMENTATION:
 #include "global_data.h"
 
 JDB_DEFINE_TYPENAME(Task, "\033[31mTask\033[m");
-
-extern "C" [[noreturn]] void vcpu_resume(Trap_state *, Return_frame *sp)
-   FIASCO_FASTCALL;
 
 IMPLEMENT_DEFAULT
 int

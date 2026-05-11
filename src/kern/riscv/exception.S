@@ -314,11 +314,6 @@ ENTRY(handle_trap)
 END(handle_trap)
 
 
-/**
- * Restore vCPU state and reset kernel stack pointer to top of stack.
- *
- * \pre Interrupts must be disabled.
- */
 ENTRY(vcpu_resume)
     /* Reset kernel stack pointer to return frame */
     mv sp, a1
