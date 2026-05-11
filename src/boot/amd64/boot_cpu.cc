@@ -414,7 +414,7 @@ base_cpu_setup(void)
 static void
 ptab_alloc(Address *out_ptab_pa)
 {
-  static char pool[69<<12] __attribute__((aligned(4096)));
+  alignas(4096) static char pool[69 << 12];
   static Address pdirs;
   static int initialized;
 

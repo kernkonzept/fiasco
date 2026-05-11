@@ -115,7 +115,7 @@ private:
   static void _construct(Global_data_obj_storage *self, A&&... args)
   { new (local_addr(self->_i)) T(cxx::forward<A>(args)...); }
 
-  mutable char __attribute__((aligned(alignof(T)))) _i[sizeof(T)];
+  alignas(alignof(T)) mutable char _i[sizeof(T)];
 };
 
 // --------------------------------------------------------------------------

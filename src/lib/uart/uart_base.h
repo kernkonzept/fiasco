@@ -213,7 +213,7 @@ l4re_dev_uart_create_by_dt_compatible_once(const char *dt_compatible, unsigned f
   if (once_done)
     return nullptr;
 
-  static char __attribute__((aligned(sizeof(long) * 2))) obj_buf[64];
+  alignas(sizeof(long) * 2) static char obj_buf[64];
   L4::Uart *uart
     = l4re_dev_uart_create_by_dt_compatible(dt_compatible,
                                             obj_buf, sizeof(obj_buf),

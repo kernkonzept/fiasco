@@ -488,8 +488,7 @@ Kmem::get_realmode_startup_pdbr()
 {
   // For amd64, we need to make sure that our boot-up page directory is below
   // 4 GiB in physical memory.
-  static char _boot_pdir[Config::PAGE_SIZE]
-    __attribute__((aligned(Config::PAGE_SIZE)));
+  alignas(Config::PAGE_SIZE) static char _boot_pdir[Config::PAGE_SIZE];
 
   memcpy(_boot_pdir, kdir, sizeof(_boot_pdir));
   return Kmem::virt_to_phys(_boot_pdir);
@@ -511,7 +510,7 @@ Kmem::get_realmode_startup_gdt_pdesc()
 {
   // For amd64, we need to make sure that our boot-up Global Descriptor Table
   // is accessible via the kdir mapping.
-  static char _boot_gdt[Gdt::gdt_max] __attribute__((aligned(0x10)));
+  alignas(0x10) static char _boot_gdt[Gdt::gdt_max];
 
   memcpy(_boot_gdt, Cpu::boot_cpu()->get_gdt(), sizeof(_boot_gdt));
   return Pseudo_descriptor(reinterpret_cast<Address>(&_boot_gdt),

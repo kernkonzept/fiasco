@@ -157,7 +157,7 @@ public:
   }
 
 private:
-  mutable char __attribute__((aligned(sizeof(Mword)*2))) _i[sizeof(T)];
+  alignas(sizeof(Mword) * 2) mutable char _i[sizeof(T)];
 
   /**
    * Internal metadata indicating whether the \ref construct() method has been
