@@ -248,7 +248,7 @@ out:
   jnz out
 
   /* if we reach this code, suspend failed (this should *never* happen) */
-  /* otherwise the machine started up from from _tramp_acpi_wakeup */
+  /* otherwise the machine started up from _tramp_acpi_wakeup */
   movl $1, %eax
   ret
 

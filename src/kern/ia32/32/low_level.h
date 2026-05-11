@@ -34,7 +34,7 @@
  */
 
 /** Setting up ds/es resp. fs/gs when entering/
- * leaving the kernel is not neccessary anymore
+ * leaving the kernel is not necessary anymore
  * since the user can only load the null selector
  * without exception. But then, the first access
  * to code/data with the wrong selector loaded

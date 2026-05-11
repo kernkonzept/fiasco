@@ -122,7 +122,7 @@ Vm_svm::get_vm_cr3(Vmcb *v)
   //    the transition from real to long-mode via protected mode or for
   //    32bit only guests.
   //    There's one trick to avoid having two PTs: 4lvl-PTs and 3lvl-PAE-PTs
-  //    have much in common so that it's possible to just take the the PDPE
+  //    have much in common so that it's possible to just take the PDPE
   //    one of the host as the 3lvl-PAE-PT for the guest. Well, not quite.
   //    The problem is that SVM checks that MBZ bits in the PAE-PT entries
   //    are really 0 as written in the spec. Now the 4lvl PT contains rights
@@ -590,7 +590,7 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
   // - initialize VM_HSAVE_PA (done)
   // - supply trusted msrpm_base_pa and iopm_base_pa (done)
   // - save host state not covered by VMRUN/VMEXIT (ldt, some segments etc) (done)
-  // - disable interupts (done)
+  // - disable interrupts (done)
   // - trigger intercepted device and timer interrupts (done, not necessary)
   // - check host CR0.TS (floating point registers) (done)
 
