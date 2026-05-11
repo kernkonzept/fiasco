@@ -4,7 +4,7 @@ IMPLEMENTATION [arm && pf_arm_gen]:
 #include "psci.h"
 #include <cstdio>
 
-void __attribute__ ((noreturn))
+[[noreturn]] void
 platform_reset(void)
 {
   if (Psci::is_detected())
