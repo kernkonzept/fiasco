@@ -718,7 +718,7 @@ PRIVATE inline
 bool
 Mem_space::mpu_state_in_sync()
 {
-  // On UP sytems, the hardware state is always in sync to the currently active
+  // On UP systems, the hardware state is always in sync to the currently active
   // Mem_space.
   return true;
 }

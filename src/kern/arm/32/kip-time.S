@@ -105,7 +105,7 @@ kip_time_fn_read_us:
 kip_time_fn_read_us_end:
 
 /**
- * Read the ARM generic timer and and transform the value into nanoseconds.
+ * Read the ARM generic timer and transform the value into nanoseconds.
  *
  * In case of CONFIG_SYNC_CLOCK is enabled, provide the same value as the
  * KIP clock but with nanoseconds resolution/accuracy. Otherwise, read the KIP

@@ -263,7 +263,7 @@ fast_ret_from_irq:
 // MMU kernels map the exception vectors in a separate page to the high vectors.
 .section	.vect,"a"
 #else
-// MPU kernel can embed sufficently aligned exception vectors in the image.
+// MPU kernel can embed sufficiently aligned exception vectors in the image.
 .p2align 5
 .section	.text.ivt,"xa"
 #endif

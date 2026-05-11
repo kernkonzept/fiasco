@@ -108,7 +108,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
   if (tag.transfer_fpu() && (rights & L4_fpage::Rights::CS()))
     snd->transfer_fpu(rcv);
 
-  // FIXME: this is an old l4linux specific hack, will be replaced/remved
+  // FIXME: this is an old l4linux specific hack, will be replaced/removed
   if ((tag.flags() & 0x8000) && (rights & L4_fpage::Rights::CS()))
     rcv->utcb().access()->user[2] = snd_utcb->values[25];
 

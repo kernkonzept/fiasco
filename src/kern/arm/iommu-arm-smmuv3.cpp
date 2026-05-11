@@ -2394,7 +2394,7 @@ void
 Iommu::handle_cmdq_error()
 {
   Cmdq_cons cmdq_cons = read_reg<Cmdq_cons>();
-  WARNX(Error, "IOMMU: Global error CMDQ_ERR occured: Err=%u Index=%u\n",
+  WARNX(Error, "IOMMU: Global error CMDQ_ERR occurred: Err=%u Index=%u\n",
         cmdq_cons.err().get(), cmdq_cons.rd().get());
 
   switch (cmdq_cons.err())
@@ -2445,21 +2445,21 @@ Iommu::handle_gerror_irq()
   if (active.cmdq_err())
     handle_cmdq_error();
   if (active.eventq_abt_err())
-    WARNX(Error, "IOMMU: Global error EVENTQ_ABT_ERR occured.\n");
+    WARNX(Error, "IOMMU: Global error EVENTQ_ABT_ERR occurred.\n");
   if (active.priq_abt_err())
-    WARNX(Error, "IOMMU: Global error PRIQ_ABT_ERR occured.\n");
+    WARNX(Error, "IOMMU: Global error PRIQ_ABT_ERR occurred.\n");
   if (active.msi_cmdq_abt_err())
-    WARNX(Error, "IOMMU: Global error MSI_CMDQ_ABT_ERR occured.\n");
+    WARNX(Error, "IOMMU: Global error MSI_CMDQ_ABT_ERR occurred.\n");
   if (active.msi_eventq_abt_err())
-    WARNX(Error, "IOMMU: Global error MSI_EVENTQ_ABT_ERR occured.\n");
+    WARNX(Error, "IOMMU: Global error MSI_EVENTQ_ABT_ERR occurred.\n");
   if (active.msi_priq_abt_err())
-    WARNX(Error, "IOMMU: Global error MSI_PRIQ_ABT_ERR occured.\n");
+    WARNX(Error, "IOMMU: Global error MSI_PRIQ_ABT_ERR occurred.\n");
   if (active.msi_gerror_abt_err())
-    WARNX(Error, "IOMMU: Global error MSI_GERROR_ABT_ERR occured.\n");
+    WARNX(Error, "IOMMU: Global error MSI_GERROR_ABT_ERR occurred.\n");
   if (active.sfm_err())
-    WARNX(Error, "IOMMU: Global error SFM_ERR occured.\n");
+    WARNX(Error, "IOMMU: Global error SFM_ERR occurred.\n");
   if (active.cmdqp_err())
-    WARNX(Error, "IOMMU: Global error CMDQP_ERR occured.\n");
+    WARNX(Error, "IOMMU: Global error CMDQP_ERR occurred.\n");
 
   // Acknowledge error conditions.
   write_reg<Gerrorn>(gerror.raw);
@@ -2585,7 +2585,7 @@ Iommu::handle_eventq_irq()
   Event event;
   while (_event_queue.read(event, on_overflow))
     {
-      printf("IOMMU: Event %s (%u) occured for stream ID %u:\n"
+      printf("IOMMU: Event %s (%u) occurred for stream ID %u:\n"
              "  [  0: 63] 0x%016llx\n"
              "  [ 64:127] 0x%016llx\n"
              "  [128:191] 0x%016llx\n"

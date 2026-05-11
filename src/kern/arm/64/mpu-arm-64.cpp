@@ -561,7 +561,7 @@ Mpu::update(Mpu_regions const &regions)
 {
   Mpu_regions_mask reserved = regions.reserved();
 
-  // Disable regions that we're updating. Otherwise there is the possiblity to
+  // Disable regions that we're updating. Otherwise there is the possibility to
   // have an invalid, colliding region when prbar is updated and the current
   // prlar of the updated region is still enabled.
   Mpu_arm::prenr(Mpu_arm::prenr() & *reserved.raw());

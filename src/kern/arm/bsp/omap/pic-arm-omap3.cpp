@@ -75,7 +75,7 @@ Irq_chip_arm_omap3::Irq_chip_arm_omap3()
   // auto-idle
   write<Mword>(1, INTCPS_SYSCONFIG);
 
-  // disable treshold
+  // disable threshold
   write<Mword>(0xff, INTCPS_THRESHOLD);
 
   // set priority for each interrupt line, lets take 0x20
