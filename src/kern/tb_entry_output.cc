@@ -203,9 +203,12 @@ print_words(String_buffer *buf, L4_msg_tag const &tag, Mword dw0, Mword dw1)
             TB_ENTRY(Thread, Register_del_irq);
             TB_ENTRY(Thread, Modify_senders);
             TB_ENTRY(Thread, Vcpu_control);
-#if defined(ARCH_x86) || defined(ARCH_AMD64)
+#if defined(CONFIG_IA32) || defined(CONFIG_AMD64)
+            // unfortunately same value as Set_tpidruro_arm
             TB_ENTRY(Thread, Gdt_x86);
-#elif defined (ARCH_ARM)
+#endif
+#if defined(CONFIG_ARM)
+            // unfortunately same value as Gdt_x86
             TB_ENTRY(Thread, Set_tpidruro_arm);
 #endif
             TB_ENTRY(Thread, Set_segment_base_amd64);
