@@ -133,7 +133,7 @@ protected:
   virtual void finish_migration() = 0;
   virtual Reschedule initiate_migration() = 0;
 
-  void save_fpu_state_to_utcb(Trap_state *, Utcb *);
+  void save_fpu_state_to_utcb(Trap_state const *, Utcb *);
 
 public:
   /**
@@ -1606,7 +1606,7 @@ Context::copy_and_sanitize_trap_state(Trap_state *dst,
 
 IMPLEMENT_DEFAULT inline
 void
-Context::save_fpu_state_to_utcb(Trap_state *, Utcb *)
+Context::save_fpu_state_to_utcb(Trap_state const *, Utcb *)
 {}
 
 //----------------------------------------------------------------------------

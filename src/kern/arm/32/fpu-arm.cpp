@@ -344,7 +344,7 @@ Fpu::state_align()
 PUBLIC static inline NEEDS["trap_state.h", <cassert>, Fpu::fpexc]
 void
 Fpu::save_user_exception_state(bool owner, Fpu_state *fpu_regs,
-                               Trap_state *ts, Exception_state_user *esu)
+                               Trap_state const *ts, Exception_state_user *esu)
 {
   if (!(ts->esr.ec() == 7 && ts->esr.cpt_cpnr() == 10))
     return;

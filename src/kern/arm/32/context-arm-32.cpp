@@ -210,7 +210,7 @@ IMPLEMENTATION [arm && fpu]:
 
 IMPLEMENT_OVERRIDE inline
 void
-Context::save_fpu_state_to_utcb(Trap_state *ts, Utcb *u)
+Context::save_fpu_state_to_utcb(Trap_state const *ts, Utcb *u)
 {
   auto *esu = reinterpret_cast<Fpu::Exception_state_user *>(&u->values[21]);
   Fpu::save_user_exception_state(state() & Thread_fpu_owner, fpu_state().get(),

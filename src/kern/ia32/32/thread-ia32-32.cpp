@@ -68,11 +68,11 @@ Thread::restore_exc_state()
 }
 
 PRIVATE static inline
-Return_frame *
-Thread::trap_state_to_rf(Trap_state *ts)
+Return_frame const *
+Thread::trap_state_to_rf(Trap_state const *ts)
 {
-  char *im = reinterpret_cast<char*>(ts + 1);
-  return reinterpret_cast<Return_frame*>(im)-1;
+  char const *im = reinterpret_cast<char const *>(ts + 1);
+  return reinterpret_cast<Return_frame const *>(im) - 1;
 }
 
 PRIVATE [[nodiscard]] static inline NEEDS[Thread::trap_state_to_rf,
@@ -102,7 +102,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
 
       // sanitize flags
       urf.flags(sanitize_user_flags(urf.flags()));
-      rcv->_exc_cont.set(trap_state_to_rf(ts), &urf);
+      rcv->_exc_cont.set(const_cast<Return_frame *>(trap_state_to_rf(ts)), &urf);
     }
   else
     {
@@ -133,7 +133,7 @@ bool
 Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
-  Trap_state *ts = static_cast<Trap_state*>(snd->_utcb_handler);
+  Trap_state const *ts = static_cast<Trap_state const *>(snd->_utcb_handler);
   Utcb *rcv_utcb = rcv->utcb().access();
   Trex *dst = reinterpret_cast<Trex *>(rcv_utcb->values);
     {

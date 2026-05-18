@@ -192,7 +192,7 @@ bool
 Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
-  Trap_state *ts = static_cast<Trap_state*>(snd->_utcb_handler);
+  Trap_state const *ts = static_cast<Trap_state const *>(snd->_utcb_handler);
 
   {
     auto guard = lock_guard(cpu_lock);

@@ -178,7 +178,7 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   if (tag.words() < (sizeof(Trex) / sizeof(Mword))) [[unlikely]]
     return true;
 
-  Trap_state *ts = reinterpret_cast<Trap_state*>(rcv->_utcb_handler);
+  Trap_state *ts = static_cast<Trap_state*>(rcv->_utcb_handler);
   Utcb *snd_utcb = snd->utcb().access();
 
   Trex const *r = reinterpret_cast<Trex const *>(snd_utcb->values);
@@ -198,7 +198,7 @@ bool
 Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
-  Trap_state *ts = reinterpret_cast<Trap_state*>(snd->_utcb_handler);
+  Trap_state const *ts = static_cast<Trap_state const *>(snd->_utcb_handler);
   {
     auto guard = lock_guard(cpu_lock);
     Utcb *rcv_utcb = rcv->utcb().access();
