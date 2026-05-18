@@ -21,8 +21,7 @@ IMPLEMENTATION:
 /**
  * 'IRQ' module.
  *
- * This module handles the 'R' command that
- * provides IRQ attachment and listing functions.
+ * This module handles the 'R' command that provides IRQ listing functions.
  */
 class Jdb_attach_irq : public Jdb_module
 {
@@ -83,7 +82,7 @@ Jdb_module::Cmd const *
 Jdb_attach_irq::cmds() const override
 {
   static Cmd cs[] =
-    {   { 0, "R", "irq", " [l]ist/[a]ttach: %c",
+    {   { 0, "R", "irq", " [l]ist: %c",
 	   "R{l}\tlist IRQ threads", &subcmd }
     };
 
