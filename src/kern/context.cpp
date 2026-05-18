@@ -308,6 +308,19 @@ public:
 
   void spill_user_state();
   void fill_user_state();
+
+  /**
+   * Copy relevant parts of the untrusted Trap_state `src` to `dst` sanitizing
+   * certain security-critical fields, for example the privilege level to return
+   * to.
+   *
+   * \note There must be no exception pending for `dst` and relevant information
+   *       for pending exceptions is **not** copied from `src` to `dst`. On
+   *       architectures where Continuation contains backup information of
+   *       certain Return_frame members, these backup values are not touched. On
+   *       architectures which store a Continuation information in `eret_work`,
+   *       this member is skipped and **not initialized** in `dst`.
+   */
   void copy_and_sanitize_trap_state(Trap_state *dst,
                                     Trap_state const *src) const;
 
