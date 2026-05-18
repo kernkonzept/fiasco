@@ -169,9 +169,9 @@ Thread::invoke_arch(L4_msg_tag, Utcb *, Utcb *)
   return commit_result(-L4_err::ENosys);
 }
 
-PRIVATE [[nodiscard]] static inline
+IMPLEMENT [[nodiscard]] static inline
 bool
-Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
+Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
   // only a complete state will be used.
@@ -193,10 +193,9 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   return ret;
 }
 
-PRIVATE [[nodiscard]] static inline
+IMPLEMENT [[nodiscard]] static inline
 bool
-Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
-                        L4_fpage::Rights rights)
+Thread::copy_ts_to_utcb(Thread *snd, Thread *rcv, L4_fpage::Rights rights)
 {
   Trap_state const *ts = static_cast<Trap_state const *>(snd->_utcb_handler);
   {

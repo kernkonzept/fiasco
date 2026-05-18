@@ -157,6 +157,49 @@ private:
 
   static void do_leave_and_kill_myself() asm("thread_do_leave_and_kill_myself");
 
+  /**
+   * Copy the sender's (`snd`) Trap_state to the receiver's (`rcv`) UTCB.
+   *
+   * If the sender has an exception pending (its continuation is active) and the
+   * Continuation class of the architecture stores backup values of certain
+   * Return_frame members, these backup values are transferred instead of the
+   * corresponding Trap_state members.
+   *
+   * If the IPC rights permit and the receiver's UTCB signals readiness for
+   * receiving the FPU state, the FPU state is transferred from sender to
+   * receiver.
+   *
+   * \param snd     Sender thread (this).
+   * \param rcv     Receiver thread.
+   * \param rights  IPC rights.
+   */
+  [[nodiscard]] static bool copy_ts_to_utcb(Thread *snd, Thread *rcv,
+                                            L4_fpage::Rights rights);
+
+  /**
+   * Copy the sender's (`snd`) UTCB to the receiver's (`rcv`) Trap_state.
+   *
+   * The copy operation sanitizes certain security-critical fields, for example
+   * the privilege level to return to.
+   *
+   * If the receiver has an exception pending (its continuation is active) and
+   * the Continuation class of the architecture stores backup values of certain
+   * Return_frame members, these backup values are written instead of the
+   * corresponding Trap_state members, leaving the continuation active.
+   *
+   * If the IPC rights permit and the receiver's UTCB signals readiness for
+   * receiving the FPU state, the FPU state is transferred from sender to
+   * receiver.
+   *
+   * \param tag     Message tag.
+   * \param snd     Sender thread (this).
+   * \param rcv     Receiver thread.
+   * \param rights  IPC rights.
+   */
+  [[nodiscard]] static bool copy_utcb_to_ts(L4_msg_tag tag,
+                                            Thread *snd, Thread *rcv,
+                                            L4_fpage::Rights rights);
+
 public:
   inline Mword user_ip() const;
   inline void user_ip(Mword);

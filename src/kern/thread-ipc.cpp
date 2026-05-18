@@ -1101,7 +1101,7 @@ Thread::copy_utcb_to(L4_msg_tag tag, Thread* receiver,
   // we cannot copy trap state to trap state!
   assert (!this->_utcb_handler || !receiver->_utcb_handler);
   if (this->_utcb_handler != nullptr) [[unlikely]]
-    return copy_ts_to_utcb(tag, this, receiver, rights);
+    return copy_ts_to_utcb(this, receiver, rights);
   else if (receiver->_utcb_handler != nullptr) [[unlikely]]
     return copy_utcb_to_ts(tag, this, receiver, rights);
   else

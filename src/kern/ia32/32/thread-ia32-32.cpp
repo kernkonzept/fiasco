@@ -75,10 +75,10 @@ Thread::trap_state_to_rf(Trap_state const *ts)
   return reinterpret_cast<Return_frame const *>(im) - 1;
 }
 
-PRIVATE [[nodiscard]] static inline NEEDS[Thread::trap_state_to_rf,
-                                          Thread::sanitize_user_flags]
+IMPLEMENT [[nodiscard]] static inline NEEDS[Thread::trap_state_to_rf,
+                                            Thread::sanitize_user_flags]
 bool
-Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
+Thread::copy_utcb_to_ts(L4_msg_tag tag, Thread *snd, Thread *rcv,
                         L4_fpage::Rights rights)
 {
   if ((tag.words() * sizeof(Mword)) < sizeof(Trex)) [[unlikely]]
@@ -128,10 +128,9 @@ Thread::copy_utcb_to_ts(L4_msg_tag const &tag, Thread *snd, Thread *rcv,
   return ret;
 }
 
-PRIVATE [[nodiscard]] static inline
+IMPLEMENT [[nodiscard]] static inline
 bool
-Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
-                        L4_fpage::Rights rights)
+Thread::copy_ts_to_utcb(Thread *snd, Thread *rcv, L4_fpage::Rights rights)
 {
   Trap_state const *ts = static_cast<Trap_state const *>(snd->_utcb_handler);
   Utcb *rcv_utcb = rcv->utcb().access();
@@ -140,6 +139,7 @@ Thread::copy_ts_to_utcb(L4_msg_tag const &, Thread *snd, Thread *rcv,
       auto guard = lock_guard(cpu_lock);
       if (snd->exception_triggered()) [[unlikely]]
         {
+          // copy Return_frame values before Continuation got active to receiver
           Mem::memcpy_mwords(&dst->s, ts, Ts::Reg_words + Ts::Code_words);
           Continuation::User_return_frame *d
             = reinterpret_cast<Continuation::User_return_frame *>(&dst->s._ip);
