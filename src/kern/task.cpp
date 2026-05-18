@@ -56,6 +56,11 @@ public:
    *            registers, this parameter is essential.
    *
    * \pre Interrupts must be disabled.
+   * \pre There must be no exception pending.
+   *
+   * This function may safely assume that there is no exception pending because
+   * interrupts remained disabled since entering the kernel and the continuation
+   * can only be activated by the thread context itself.
    */
   [[noreturn]] static void vcpu_resume(Trap_state *ts, Return_frame *sp)
     asm ("vcpu_resume") FIASCO_FASTCALL;
