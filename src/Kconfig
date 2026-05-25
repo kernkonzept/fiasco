@@ -109,7 +109,7 @@ config FPU
 	  Enable this if your platform has hardware floating point support.
 
 config LAZY_FPU
-	bool "Enable lazy FPU switching" if HAS_LAZY_FPU && FPU
+	bool "Enable lazy FPU switching" if HAS_LAZY_FPU && FPU && !PERFORMANCE
 	depends on FPU && HAS_LAZY_FPU
 	default y if !AMD64
 	help
@@ -273,7 +273,7 @@ config TICKLESS_IDLE
 	  On x86, tickless idle adds a small overhead to each interrupt entry.
 
 config FINE_GRAINED_CPUTIME
-	bool "Fine-grained CPU time"
+	bool "Fine-grained CPU time" if !ONE_SHOT
 	depends on !PERFORMANCE || ONE_SHOT
 	help
 	  Measure CPU time consumed by a thread from switching to the thread
@@ -588,7 +588,7 @@ config PERF_CNT_USER
 	  Do ONLY enable this when debugging, experimenting or evaluating!
 
 config INLINE
-	bool "Generate inline code"
+	bool "Generate inline code" if !PERFORMANCE
 	default y
 	help
 	  Inlining specifies that it is desirable for the compiler to
@@ -597,13 +597,13 @@ config INLINE
 	  kernel you should say 'Y' here.
 
 config NDEBUG
-	bool "Do not compile assertions"
+	bool "Do not compile assertions" if !PERFORMANCE
 	help
 	  Don't insert assertions into the code. Should be enabled for
 	  kernels which are used for measurements.
 
 config NO_FRAME_PTR
-	bool "Compile without frame pointer"
+	bool "Compile without frame pointer" if !PERFORMANCE
 	default y
 	help
 	  Enabling this option optimizes for speed but makes debugging more
@@ -663,7 +663,7 @@ config UNIT_TEST
 	  Compile fiasco unit tests.
 
 config TEST_SUPPORT_CODE
-	bool "Compile test support code"
+	bool "Compile test support code" if !UNIT_TEST
 	help
 	  Include test support code when compiling Fiasco.
 
@@ -709,8 +709,8 @@ config OUTPUT
 menuconfig JDB
 	bool "JDB kernel debugger"
 	default y
-	select RT_DBG
-	select INPUT
+	depends on RT_DBG
+	depends on INPUT
 	depends on !AMP
 	depends on OUTPUT
 	help
