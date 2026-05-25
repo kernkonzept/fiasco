@@ -396,7 +396,7 @@ config EXPLICIT_REPLY_CAPS
 	  If unsure, say Y.
 
 config KERNEL_ISOLATION
-	bool "Enable Kernel Address-Space Isolation" if AMD64
+	bool "Enable Kernel Address-Space Isolation"
 	depends on AMD64
 	select NO_LDT
 	select NO_IO_PAGEFAULT
@@ -474,9 +474,9 @@ config CPU_LOCAL_MAP
 	  If unsure say N.
 
 config NO_IO_PAGEFAULT
-	bool "Disable IO-Port fault IPC" if (IA32 || AMD64) && !KERNEL_ISOLATION
+	bool "Disable IO-Port fault IPC" if !KERNEL_ISOLATION
 	depends on IA32 || AMD64
-	default y if IA32 || AMD64
+	default y
 	help
 	  Disable page-fault IPC for IO-Port accesses. If this option is
 	  enabled, the kernel does not generate page-fault IPC for failed
@@ -640,8 +640,8 @@ config IRQ_SPINNER
 	  Display IRQ activity on VGA screen.
 
 config WATCHDOG
-	bool "Enable Watchdog support" if HAS_WATCHDOG_OPTION
-	default y if HAS_WATCHDOG_OPTION
+	bool "Enable Watchdog support"
+	default y
 	depends on HAS_WATCHDOG_OPTION
 	help
 	  Enable support for watchdog using the builtin Local APIC and a
@@ -649,9 +649,9 @@ config WATCHDOG
 	  -watchdog command line option.
 
 config SERIAL
-	bool "Support for debugging over serial line" if HAS_SERIAL_OPTION
+	bool "Support for debugging over serial line"
 	depends on HAS_SERIAL_OPTION
-	default y if HAS_SERIAL_OPTION
+	default y
 	select OUTPUT
 	help
 	  This option enables support for input/output over serial interface.
