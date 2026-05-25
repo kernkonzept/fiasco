@@ -37,7 +37,8 @@ ifeq ($(CONFIG_NO_VERSION),)
 		echo $$nr > .build_nr;                                 \
 		echo "#define BUILD_NR \"$$nr\"" >> $@.new
 else
-		$(VERBOSE)echo "#define CODE_VERSION \"Unknown version\"" > $@.new; \
+		$(VERBOSE)echo "#pragma once" > $@.new; \
+		echo "#define CODE_VERSION \"Unknown version\"" >> $@.new; \
 		echo "#define BUILD_DATE \"No date\"" >> $@.new; \
 		echo "#define BUILD_NR \"1\"" >> $@.new
 endif
