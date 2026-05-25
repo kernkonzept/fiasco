@@ -100,6 +100,12 @@ NOOPT			+= $(filter jdb%,\
 NOOPT			+= tb_entry #tb_entry_output
 
 #
+# LIBK subsystem
+#
+CSRC_LIBK  += gcc_lib.c
+ASSRC_LIBK += gcc_lib-ppc32.S
+
+#
 # LIBDISASM subsystem (only for Jdb)
 #
 ifeq ("$(CONFIG_JDB_DISASM)","y")
