@@ -20,5 +20,5 @@ phys_mem.o: $(TCBOFFSET)
 
 # $(1) = Additional $(OBJ_X), e.g. OBJ_<unittest>
 KERNEL_PREREQUISITES = kernel.ppc32.lds $$(CRT0) $$(OBJ_KERNEL) $(1) \
-                       $$(JDB) $$(LIBK) $$(LIBDISASM) libdrivers.a $$(ABI) \
-                       $$(LIBUART) $$(CXXLIB) $$(LIBC) libgluedriverslibc.a
+                       $$(JDB) $$(LIBDISASM) libdrivers.a $$(ABI) \
+                       $$(LIBUART) $$(LIBK) $$(CXXLIB) $$(LIBC) libgluedriverslibc.a
