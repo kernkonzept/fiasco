@@ -29,7 +29,6 @@ extern "C" {
 #define NULL ((void*)0)
 #endif
 
-#undef EOF
 #define EOF (-1)
 
 #ifdef CONFIG_OUTPUT

@@ -14,7 +14,6 @@ __END_DECLS
 
 #define ASSERT_EXPECT_FALSE(exp)  __builtin_expect((exp), 0)
 
-#undef assert
 #ifdef NDEBUG
 #define assert(expr) do {} while (0)
 #define check(expr) (void)(expr)
