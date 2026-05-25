@@ -3,9 +3,6 @@ INTERFACE:
 #include "member_offs.h"
 #include <types.h>
 
-#ifdef NO_INSTRUMENT
-#undef NO_INSTRUMENT
-#endif
 #define NO_INSTRUMENT __attribute__((no_instrument_function))
 
 class Context;
@@ -67,9 +64,6 @@ private:
     Context *owner;
   };
 };
-
-#undef NO_INSTRUMENT
-#define NO_INSTRUMENT
 
 // ----------------------------------------------------------------------
 IMPLEMENTATION:

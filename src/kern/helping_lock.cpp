@@ -4,9 +4,6 @@ INTERFACE:
 #include "switch_lock.h"
 #include "global_data.h"
 
-#ifdef NO_INSTRUMENT
-#undef NO_INSTRUMENT
-#endif
 #define NO_INSTRUMENT __attribute__((no_instrument_function))
 
 /**
@@ -32,9 +29,6 @@ public:
 
   static Global_data<bool> threading_system_active;
 };
-
-#undef NO_INSTRUMENT
-#define NO_INSTRUMENT
 
 IMPLEMENTATION:
 
