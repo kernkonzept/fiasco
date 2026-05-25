@@ -22,7 +22,7 @@ private:
 
 public:
   void *operator new (size_t) noexcept { return alloc(); }
-  void operator delete (void *p, size_t) { free(p); }
+  void operator delete (void *p) { free(p); }
 
   enum { Buffer_size = sizeof(Buf) };
 
