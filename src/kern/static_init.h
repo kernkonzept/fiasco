@@ -1,4 +1,5 @@
 /* -*- c++ -*- */
+#pragma once
 
 #include "initcalls.h"
 

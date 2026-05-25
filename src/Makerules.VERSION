@@ -26,7 +26,8 @@ ifeq ($(CONFIG_NO_VERSION),)
 		     fi                                                \
 		   fi                                                  \
 		fi;                                                    \
-		echo "#define CODE_VERSION \"$$v\"" > $@.new
+		echo "#pragma once" > $@.new;                          \
+		echo "#define CODE_VERSION \"$$v\"" >> $@.new
 		$(VERBOSE)echo "#define BUILD_DATE \"$$(LC_ALL=C date)\"" >> $@.new
 		$(VERBOSE)if [ -e .build_nr ]; then                    \
 		  nr=$$(($$(cat .build_nr) + 1));                      \
