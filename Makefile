@@ -155,9 +155,8 @@ $(addprefix $(ALLBUILDDIR)/,$(TEST_TEMPLATES)):
 	$(call buildmakefile,$@)
 	cp $(TEMPLDIR)/globalconfig.out.$(patsubst $(ALLBUILDDIR)/%,%,$@)     \
 	   $@/globalconfig.out
-	INCLUDE_PPC32=y INCLUDE_SPARC=y                                       \
 	$(MAKE) -C $@ olddefconfig 2>&1 | tee -a $@/build.log
-	CHECK_CI_BUILDCHECK=y INCLUDE_PPC32=y INCLUDE_SPARC=y                 \
+	CHECK_CI_BUILDCHECK=y                                                 \
 	$(MAKE) -C $@ 2>&1 | tee -a $@/build.log;                             \
 	buildexitcode=$${PIPESTATUS[0]};                                      \
 	grep -2 ": warning: " $@/build.log > $@/warnings.log;                 \
@@ -218,9 +217,7 @@ endef
 $(RANDBUILDDIRS):
 	cp -a $(RANDBUILDDIR)/build-templ $@
 	until                                                 \
-	  INCLUDE_PPC32=y INCLUDE_SPARC=y                     \
 	    $(MAKE) -C $@ randconfig | tee -a $@/build.log;   \
-	  INCLUDE_PPC32=y INCLUDE_SPARC=y                     \
 	    $(MAKE) -C $@ oldconfig  | tee -a $@/build.log;   \
 	do [ $${PIPESTATUS[0]} != 0 ]; done
 	+fn=$$(cat $@/globalconfig.out                        \

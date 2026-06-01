@@ -113,8 +113,7 @@ public:
   //@}
 };
 
-// ----------------------------------------------------------------------
-IMPLEMENTATION [!ppc32]:
+IMPLEMENTATION:
 
 IMPLEMENT inline
 template< typename T >
@@ -125,9 +124,6 @@ IMPLEMENT inline
 template< typename T>
 void Io::write(T value, void *address)
 { *static_cast<volatile T *>(address) = value; }
-
-// ----------------------------------------------------------------------
-IMPLEMENTATION:
 
 IMPLEMENT inline
 template< typename T>

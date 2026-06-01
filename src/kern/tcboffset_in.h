@@ -53,21 +53,6 @@
   DUMP_MEMBER1 (CPU, Cpu, _tss, TSS)
 #endif
 
-#ifdef CONFIG_PPC32
-  //offset of entry frame
-  DUMP_OFFSET (ENTRY, FRAME, THREAD_BLOCK_SIZE-4)
-  //offset of syscall frame 
-  DUMP_OFFSET (SYSCALL, FRAME, sizeof(Return_frame))
-  DUMP_CONSTANT(ENTRY__FRAME, (sizeof(Entry_frame)))
-  //Entry_frame size + SysV LR (16 byte aligned)
-  DUMP_CONSTANT(STACK__FRAME, ((sizeof(Entry_frame) + 8 + 0xf) & ~0xf))
-  //SRR1 || MSR flags
-  DUMP_CONSTANT(MSR__KERNEL, Msr::Msr_kernel)
-  DUMP_CONSTANT(MSR__PR, Msr::Msr_pr)
-
-  //physical atddress of kernel image
-  DUMP_CONSTANT(KERNEL__START, Mem_layout::Kernel_start)
-#endif
 #ifdef  CONFIG_MIPS
   DUMP_MEMBER1 (THREAD, Context, _ulr, ULR)
 #endif

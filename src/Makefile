@@ -218,8 +218,6 @@ kconfig_call = $(MAKE) -C $(tooldir)/kconfig O=$(objbase) \
 	       KCONFIG_CONFIG=globalconfig.out \
 	       KCONFIG_AUTOCONFIG=include/config/auto.conf \
 	       MENUCONFIG_COLOR=blackbg \
-	       INCLUDE_PPC32=$(INCLUDE_PPC32) \
-	       INCLUDE_SPARC=$(INCLUDE_SPARC) \
 	       fiasco_srcdir=$(srcdir)/..
 
 update_globalconfig_tags = \

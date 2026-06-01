@@ -6,9 +6,7 @@ srcdir = $(CURDIR)/../
 
 all:
 
-runconfig = export INCLUDE_PPC32=y;                      \
-	    export INCLUDE_SPARC=y;                      \
-            make $(1)
+runconfig = make $(1)
 
 copyin   = cp globalconfig.out.$(1) globalconfig.out
 #copyback = sed -e '3,4d' $(1) > globalconfig.out.$(2)

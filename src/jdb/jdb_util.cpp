@@ -37,12 +37,3 @@ Jdb_util::is_mapped(void const* addr)
   return Kmem::kdir->virt_to_phys(reinterpret_cast<Address>(addr))
          != Invalid_address;
 }
-
-IMPLEMENTATION[sparc]:
-
-IMPLEMENT_OVERRIDE inline
-bool
-Jdb_util::is_mapped(void const * /*addr*/)
-{
-  return false; // TBD
-}

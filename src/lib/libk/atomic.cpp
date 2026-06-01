@@ -191,7 +191,7 @@ INTERFACE[generic_atomic && !mp]:
 #include "processor.h"
 
 // preprocess off
-// Fall-back UP implementations for ppc32, sparc and armv5
+// Fall-back UP implementations for armv5
 #define ATOMIC_OP(name, op)                                                    \
   template<typename T, typename V>                                             \
   requires(sizeof(T) == 4) inline                                              \

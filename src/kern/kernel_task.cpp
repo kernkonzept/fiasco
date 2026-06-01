@@ -14,7 +14,7 @@ private:
   static Global_data<Static_object<Kernel_task>> _t;
 };
 
-IMPLEMENTATION[!(arm || ppc32 || sparc)]:
+IMPLEMENTATION [!arm]:
 
 #include "config.h"
 #include "globals.h"

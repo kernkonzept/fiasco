@@ -42,8 +42,8 @@ public:
   static constexpr unsigned super_level() { return PTE_PTR::super_level(); }
 };
 
-IMPLEMENTATION:
 //---------------------------------------------------------------------------
+IMPLEMENTATION:
 
 template<typename ALLOC>
 inline Pdir_alloc_simple<ALLOC> pdir_alloc(ALLOC *a)
@@ -56,9 +56,6 @@ Pdir_t<PTE_PTR, TRAITS, VA>::virt_to_phys(void *virt) const
   return Phys_mem_addr(virt_to_phys(reinterpret_cast<Address>(virt)));
 }
 
-//---------------------------------------------------------------------------
-IMPLEMENTATION[!ppc32]:
-
 PUBLIC template<typename PTE_PTR, typename TRAITS, typename VA>
 Address
 Pdir_t<PTE_PTR, TRAITS, VA>::virt_to_phys(Address virt) const
@@ -70,23 +67,4 @@ Pdir_t<PTE_PTR, TRAITS, VA>::virt_to_phys(Address virt) const
 
   auto page_addr = i.page_addr();
   return page_addr | cxx::get_lsb(virt, i.page_order());
-}
-
-//---------------------------------------------------------------------------
-IMPLEMENTATION[ppc32]:
-
-PUBLIC template<typename PTE_PTR, typename TRAITS, typename VA>
-Address
-Pdir_t<PTE_PTR, TRAITS, VA>::virt_to_phys(Address virt) const
-{
-  auto i = this->walk(Virt_addr(virt));
-
-  //if (!i.is_valid())
-    return ~0UL;
-
-#ifdef FIX_THIS
-  Address phys;
-  Pte_htab::pte_lookup(i.e, &phys);
-  return phys | (virt & ~(~0UL << i.page_order()));
-#endif
 }
