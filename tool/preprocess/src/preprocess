@@ -827,6 +827,7 @@ sub parse_file
 
 	      if (/^$s(?:$template)?
 		    (?:enum|struct|class)
+		    (?:$s $attribute_spec)?
 		    $s ($identifier (?:$s $template_arg)?)
 		    $s (?::(?!:)|\{)/sx)
 		{

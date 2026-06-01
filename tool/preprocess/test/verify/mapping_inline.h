@@ -30,7 +30,7 @@ enum mapping_type_t { Map_mem = 0, Map_io };
 // 
 // class mapping_t
 // 
-class mapping_t 
+class alignas(8) mapping_t 
 {
   friend class mapdb_t;
   friend class mapping_tree_t;

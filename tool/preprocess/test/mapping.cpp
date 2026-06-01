@@ -11,7 +11,7 @@ struct mapping_s;
 // 
 // class mapping_t
 // 
-class mapping_t 
+class alignas(8) mapping_t 
 {
   friend class mapdb_t;
   friend class mapping_tree_t;
