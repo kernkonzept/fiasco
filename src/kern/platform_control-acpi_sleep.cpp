@@ -263,16 +263,17 @@ Platform_control::system_suspend(Mword extra)
   return result;
 }
 
-IMPLEMENT_OVERRIDE
+IMPLEMENT_OVERRIDE [[noreturn]]
 static void
 Platform_control::system_reboot()
 {
   auto guard = lock_guard(cpu_lock);
 
-  if (!_system_suspend_enabled)
-    return;
-
-  Io::out8(_fadt_reset_value, _fadt_reset_regs_addr);
+  // The _fadt_reset_value and _fadt_reset_regs_addr values are only set
+  // when the initialization of the ACPI subsystem has been successfully
+  // completed. So we need to check this here.
+  if (_system_suspend_enabled)
+    Io::out8(_fadt_reset_value, _fadt_reset_regs_addr);
 
   // if ACPI reset failed, try other methods
   platform_reset();

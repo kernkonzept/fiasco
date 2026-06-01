@@ -25,7 +25,7 @@ public:
    */
   static int system_suspend(Mword extra);
   static void system_off();
-  static void system_reboot();
+  [[noreturn]] static void system_reboot();
 };
 
 // ------------------------------------------------------------------------
@@ -59,7 +59,7 @@ void
 Platform_control::system_off()
 {}
 
-IMPLEMENT_DEFAULT inline NEEDS["reset.h"]
+IMPLEMENT_DEFAULT [[noreturn]] inline NEEDS["reset.h"]
 void
 Platform_control::system_reboot()
 {
