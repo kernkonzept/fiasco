@@ -299,7 +299,9 @@ thread_handle_tlb_fault(Mword cause, Trap_state *ts, Mword pfa)
       if (t->vcpu_pagefault(pfa, cause, ts->epc))
         return;
 
-      if (!t->handle_page_fault(pfa, cause, ts->epc, ts)
+      // With MIPS, we never release the CPU lock.
+      constexpr bool release_cpulock = false;
+      if (!t->handle_page_fault(pfa, cause, ts->epc, ts, release_cpulock)
           && t->handle_slow_trap(cause, ts, false))
         {
           t->kill();

@@ -421,12 +421,14 @@ thread_page_fault(Address pfa, Trap_state *ts)
         return 1;
     }
 
+  bool release_cpulock = false;
   if (PF::is_usermode_error(ts->error())
-     || (ts->flags() & EFLAGS_IF)
-     || !Kmem::is_kmem_page_fault(pfa, ts->error())) [[likely]]
-    Proc::sti();
+      || (ts->flags() & EFLAGS_IF)
+      || !Kmem::is_kmem_page_fault(pfa, ts->error())) [[likely]]
+    release_cpulock = true;
 
-  return t->handle_page_fault(pfa, ts->error(), ts->ip(), ts);
+  return t->handle_page_fault(pfa, ts->error(), ts->ip(), ts,
+                              release_cpulock);
 }
 
 /** The catch-all trap entry point.  Called by assembly code when a 

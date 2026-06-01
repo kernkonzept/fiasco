@@ -6,7 +6,8 @@ IMPLEMENTATION:
 
 
 IMPLEMENT inline NEEDS["kmem.h", "paging.h", "warn.h", Thread::page_fault_log]
-int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc, Trap_state *)
+int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc,
+                              Trap_state *, bool release_cpulock)
 {
   CNT_PAGE_FAULT;
 
@@ -25,13 +26,21 @@ int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc, Trap_state *
 
       if (mem_space()->is_sigma0()) [[unlikely]]
         {
+          if (release_cpulock)
+            Proc::sti();
+
           // special case: sigma0 can map in anything from the kernel
-	  if(handle_sigma0_page_fault(pfa))
+	  if (handle_sigma0_page_fault(pfa))
             return 1;
 
           ipc_code.set_error();
           goto error;
         }
+
+      // Maybe not necessary because handle_page_fault_pager() acquires the CPU
+      // lock again. But this is at least a preemption point.
+      if (release_cpulock)
+        Proc::sti();
 
       // user mode page fault -- send pager request
       if (handle_page_fault_pager(_pager, pfa, pf_info,
@@ -52,6 +61,9 @@ int Thread::handle_page_fault(Address pfa, Mword pf_info, Mword pc, Trap_state *
   // An error occurred.  Our last chance to recover is an exception
   // handler a kernel function may have set.
  error:
+
+  if (release_cpulock)
+    Proc::sti();
 
   longjmp_recover_jmpbuf();
 

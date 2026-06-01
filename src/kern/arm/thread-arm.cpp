@@ -225,12 +225,13 @@ Thread::pagefault_entry(const Mword pfa, Mword error_code,
       t->state_del(Thread_cancel);
     }
 
+  bool release_cpulock = false;
   if (PF::is_usermode_error(error_code)
       || !(ts->psr & Proc::Status_preempt_disabled)
       || !Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
-    Proc::sti();
+    release_cpulock = true;
 
-  return t->handle_page_fault(pfa, error_code, pc, ts);
+  return t->handle_page_fault(pfa, error_code, pc, ts, release_cpulock);
 }
 
 IMPLEMENT static
