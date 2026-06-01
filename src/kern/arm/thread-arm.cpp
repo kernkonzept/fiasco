@@ -22,6 +22,11 @@ public:
   bool check_and_handle_mode_svc_trap(Trap_state *);
 
 private:
+  static Mword pagefault_entry(const Mword pfa, Mword error_code,
+                               const Mword pc, Return_frame *ret_frame)
+    asm ("pagefault_entry");
+  static void slowtrap_entry(Trap_state *ts) asm ("slowtrap_entry");
+
   bool handle_sve_trap(Trap_state *);
 };
 
@@ -161,7 +166,8 @@ Thread::user_invoke()
 }
 
 IMPLEMENT inline NEEDS["space.h", "types.h", "config.h", "paging_bits.h"]
-bool Thread::handle_sigma0_page_fault(Address pfa)
+bool
+Thread::handle_sigma0_page_fault(Address pfa)
 {
   return mem_space()
     ->v_insert(Mem_space::Phys_addr(Sigma0_pg::trunc(pfa)),
@@ -172,92 +178,96 @@ bool Thread::handle_sigma0_page_fault(Address pfa)
 }
 
 
-extern "C" {
-  Mword pagefault_entry(const Mword pfa, Mword error_code,
-                        const Mword pc, Return_frame *ret_frame);
-  void slowtrap_entry(Trap_state *ts);
-
-  /**
-   * The low-level page fault handler called from entry.S.  We're invoked with
-   * interrupts turned off.  Apart from turning on interrupts in almost
-   * all cases (except for kernel page faults in TCB area), just forwards
-   * the call to Thread::handle_page_fault().
-   * @param pfa page-fault virtual address
-   * @param error_code CPU error code
-   * @return true if page fault could be resolved, false otherwise
-   */
-  Mword pagefault_entry(const Mword pfa, Mword error_code,
+/**
+ * The low-level page fault handler called from entry.S.
+ *
+ * We're invoked with interrupts turned off. Apart from turning on interrupts in
+ * almost all cases (except for kernel page faults in TCB area), just forward
+ * the call to Thread::handle_page_fault().
+ *
+ * \param pfa         Page-fault virtual address.
+ * \param error_code  CPU error code.
+ * \param pc          Program counter.
+ * \param ret_frame   Return_frame.
+ *
+ * \return true if page fault could be resolved, false otherwise
+ */
+IMPLEMENT static
+Mword
+Thread::pagefault_entry(const Mword pfa, Mword error_code,
                         const Mword pc, Return_frame *ret_frame)
-  {
-    if (PF::is_alignment_error(error_code)) [[unlikely]]
-      {
-        WARNX(Warning,
-              "KERNEL%d: alignment error at %08lx (PC: %08lx, SP: %08lx, FSR: %lx, PSR: %lx)\n",
-              cxx::int_value<Cpu_number>(current_cpu()), pfa, pc,
-              ret_frame->usp, error_code, ret_frame->psr);
-        return 0;
-      }
-
-    if (Thread::is_debug_exception_fsr(error_code)) [[unlikely]]
+{
+  if (PF::is_alignment_error(error_code)) [[unlikely]]
+    {
+      WARNX(Warning,
+            "KERNEL%d: alignment error at %08lx (PC: %08lx, SP: %08lx, FSR: %lx, PSR: %lx)\n",
+            cxx::int_value<Cpu_number>(current_cpu()), pfa, pc,
+            ret_frame->usp, error_code, ret_frame->psr);
       return 0;
+    }
 
-    Thread *t = current_thread();
+  if (Thread::is_debug_exception_fsr(error_code)) [[unlikely]]
+    return 0;
 
-    if (t->check_and_handle_mem_op_fault(error_code, ret_frame)) [[unlikely]]
-      return 1;
+  Thread *t = current_thread();
 
-    // Pagefault in user mode
-    if (PF::is_usermode_error(error_code))
-      {
-        error_code = Thread::mangle_kernel_lib_page_fault(pc, error_code);
+  if (t->check_and_handle_mem_op_fault(error_code, ret_frame)) [[unlikely]]
+    return 1;
 
-        // TODO: Avoid calling Thread::map_fsr_user here everytime!
-        if (t->vcpu_pagefault(pfa, Thread::map_fsr_user(error_code), pc))
-          return 1;
-        t->state_del(Thread_cancel);
-      }
+  // Pagefault in user mode
+  if (PF::is_usermode_error(error_code))
+    {
+      error_code = Thread::mangle_kernel_lib_page_fault(pc, error_code);
 
-    if (PF::is_usermode_error(error_code)
-        || !(ret_frame->psr & Proc::Status_preempt_disabled)
-        || !Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
-      Proc::sti();
+      // TODO: Avoid calling Thread::map_fsr_user here every time!
+      if (t->vcpu_pagefault(pfa, Thread::map_fsr_user(error_code), pc))
+        return 1;
+      t->state_del(Thread_cancel);
+    }
 
-    return t->handle_page_fault(pfa, error_code, pc, ret_frame);
-  }
+  if (PF::is_usermode_error(error_code)
+      || !(ret_frame->psr & Proc::Status_preempt_disabled)
+      || !Kmem::is_kmem_page_fault(pfa, error_code)) [[likely]]
+    Proc::sti();
 
-  void slowtrap_entry(Trap_state *ts)
-  {
-    if (Thread::is_fsr_exception(ts->esr))
-      ts->error_code = Thread::map_fsr_user(ts->error_code);
+  return t->handle_page_fault(pfa, error_code, pc, ret_frame);
+}
 
-    if constexpr (0) // Intentionally disabled, only used for diagnostics
-      printf("Trap: pfa=%08lx pc=%08lx err=%08lx psr=%lx\n", ts->pf_address, ts->pc, ts->error_code, ts->psr);
-    Thread *t = current_thread();
+IMPLEMENT static
+void
+Thread::slowtrap_entry(Trap_state *ts)
+{
+  if (Thread::is_fsr_exception(ts->esr))
+    ts->error_code = Thread::map_fsr_user(ts->error_code);
 
-    LOG_TRAP;
+  if constexpr (0) // Intentionally disabled, only used for diagnostics
+    printf("Trap: pfa=%08lx pc=%08lx err=%08lx psr=%lx\n",
+           ts->pf_address, ts->pc, ts->error_code, ts->psr);
 
-    if (t->check_and_handle_linux_cache_api(ts))
+  LOG_TRAP;
+
+  Thread *t = current_thread();
+
+  if (t->check_and_handle_linux_cache_api(ts))
+    return;
+
+  if (t->check_and_handle_coproc_faults(ts))
+    return;
+
+  if (Thread::is_debug_exception(ts->esr))
+    {
+      t->handle_debug_exception(ts);
       return;
+    }
 
-    if (t->check_and_handle_coproc_faults(ts))
-      return;
+  if (t->check_and_handle_mode_svc_trap(ts))
+    return;
 
-    if (Thread::is_debug_exception(ts->esr))
-      {
-        t->handle_debug_exception(ts);
-        return;
-      }
+  if (t->send_exception(ts))
+    return;
 
-    if (t->check_and_handle_mode_svc_trap(ts))
-      return;
-
-    // send exception IPC if requested
-    if (t->send_exception(ts))
-      return;
-
-    t->kill();
-  }
-};
+  t->kill();
+}
 
 
 /** Constructor.
