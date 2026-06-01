@@ -142,10 +142,9 @@ __iret:
 	eret
 
 __return_from_user_invoke:
-// In case that a continuation is invoked before exit, make sure that
-// the handler returns to the normal exit ret_from_exception exit path and
-// finds the kernel stack address at the expected place.
-	adr x30, .Lret_from_exception
+// In case that a continuation is invoked before exit, make sure that the
+// ret_from_exception exit path finds the kernel stack address at the expected
+// place.
 	str x0, [sp, #EF_KSP]
 	b 6f
 
@@ -170,7 +169,8 @@ fast_ret_from_irq:
 	eret
 
 1:	str	xzr, [x0, #EF_ERETW] // reset continuation
-	br	x1                   // handle continuation in x1
+	blr	x1                   // handle continuation in x1
+	b	.Lret_from_exception
 
 #ifdef CONFIG_MPU
 .if OFS__THREAD__MPU_PRBAR2+8 != OFS__THREAD__MPU_PRLAR2
