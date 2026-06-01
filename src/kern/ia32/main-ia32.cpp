@@ -22,49 +22,37 @@ IMPLEMENTATION[ia32 || amd64]:
 #include "timer_tick.h"
 #include "terminate.h"
 
-static int exit_question_active;
-
-
-extern "C" [[noreturn]] void
-_exit(int)
-{
-  if (exit_question_active)
-    Platform_control::system_reboot();
-
-  while (1)
-    {
-      Proc::halt();
-      Proc::pause();
-    }
-}
-
-
 static
 void
 exit_question()
 {
   Proc::cli();
-  exit_question_active = 1;
 
   Unsigned16 irqs = Pic::disable_all_save();
 
   // make sure that we don't acknowledge the exit question automatically
   Kconsole::console()->change_state(Console::PUSH, 0, ~Console::INENABLED, 0);
-  puts("\nReturn reboots, \"k\" enters L4 kernel debugger...");
 
-  char c = Kconsole::console()->getchar();
+  while (1)
+    {
+      puts("\nReturn reboots, \"k\" enters L4 kernel debugger...");
 
-  if (c == 'k' || c == 'K') 
-    {
-      Pic::restore_all(irqs);
-      kdb_ke("_exit");
-    }
-  else
-    {
-      // It may be better to not call all the destruction stuff because of
-      // unresolved static destructor dependency problems. So just do the
-      // reset at this point.
-      puts("\033[1mRebooting.\033[m");
+      char c = Kconsole::console()->getchar();
+
+      if (c == 'k' || c == 'K')
+        {
+          Pic::restore_all(irqs);
+          kdb_ke("terminate");
+          irqs = Pic::disable_all_save();
+        }
+      else
+        {
+          // It may be better to not call all the destruction stuff because of
+          // unresolved static destructor dependency problems. So just do the
+          // reset at this point.
+          puts("\033[1mRebooting.\033[m");
+          Platform_control::system_reboot();
+        }
     }
 }
 
@@ -72,7 +60,7 @@ void
 main_arch()
 {
   // console initialization
-  set_exit_question(&exit_question);
+  Exit_question::set(&exit_question);
 }
 
 

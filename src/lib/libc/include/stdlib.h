@@ -43,7 +43,6 @@ void *aligned_alloc(size_t, size_t);
 
 int atexit (void (*) (void));
 _Noreturn void exit (int);
-_Noreturn void _exit (int); // Fiasco added
 
 char *getenv (const char *);
 

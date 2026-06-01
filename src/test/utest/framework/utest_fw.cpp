@@ -431,6 +431,7 @@ IMPLEMENTATION:
 #include "mem.h"
 #include "poll_timeout_kclock.h"
 #include "timer_tick.h"
+#include "terminate.h"
 
 DEFINE_GLOBAL Global_data<Utest::Slab_store> Utest::slab_store;
 
@@ -569,7 +570,7 @@ Utest_fw::finish(char const *skip_msg = nullptr)
   }
 
   // Exit kernel without calling destructors.
-  _exit(_sum_failed);
+  terminate(_sum_failed);
 }
 
 /// Use a new `group` and `test` name for subsequent TAP output.

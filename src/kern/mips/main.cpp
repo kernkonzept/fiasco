@@ -28,47 +28,6 @@ IMPLEMENTATION [mips]:
 
 #include "processor.h"
 
-static int exit_question_active = 0;
-
-extern "C" [[noreturn]] void
-_exit(int)
-{
-  if (exit_question_active)
-    platform_reset();
-
-  while (1)
-    {
-      Proc::halt();
-      Proc::pause();
-    }
-}
-
-
-static void exit_question()
-{
-  exit_question_active = 1;
-
-  while (1)
-    {
-      puts("\nReturn reboots, \"k\" enters L4 kernel debugger...");
-
-      char c = Kconsole::console()->getchar();
-
-      if (c == 'k' || c == 'K')
-        {
-          kdb_ke("_exit");
-        }
-      else
-        {
-          // it may be better to not call all the destruction stuff
-          // because of unresolved static destructor dependency
-          // problems.
-          // SO just do the reset at this point.
-          puts("\033[1mRebooting...\033[0m");
-          cxx::check_noreturn<platform_reset>();
-        }
-    }
-}
 
 extern "C" [[noreturn]] void kernel_main()
 {
@@ -76,9 +35,7 @@ extern "C" [[noreturn]] void kernel_main()
   // caution: no stack variables in this function because we're going
   // to change the stack pointer!
 
-  // make some basic initializations, then create and run the kernel
-  // thread
-  set_exit_question(&exit_question);
+  Exit_question::set(&Exit_question::ask);
 
   // create kernel thread
   Kernel_thread *kernel = Kernel_thread::create_for_boot_cpu();

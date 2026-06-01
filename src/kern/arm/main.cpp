@@ -10,13 +10,10 @@ IMPLEMENTATION [arm]:
 #include <cstdio>
 #include <cstring>
 
-#include <cxx/defensive>
-
 #include "config.h"
 #include "globals.h"
 #include "initcalls.h"
 #include "kmem_alloc.h"
-#include "kdb_ke.h"
 #include "kernel_thread.h"
 #include "kernel_task.h"
 #include "kernel_console.h"
@@ -25,53 +22,6 @@ IMPLEMENTATION [arm]:
 #include "terminate.h"
 
 #include "processor.h"
-#include "global_data.h"
-
-static DEFINE_GLOBAL Global_data<int> exit_question_active;
-extern "C" void cov_print() __attribute__((weak));
-
-extern "C" [[noreturn]] void
-_exit(int)
-{
-  if (exit_question_active)
-    platform_reset();
-
-  if (cov_print)
-    cov_print();
-
-  while (1)
-    {
-      Proc::halt();
-      Proc::pause();
-    }
-}
-
-
-static void exit_question()
-{
-  exit_question_active = 1;
-
-  while (1)
-    {
-      puts("\nReturn reboots, \"k\" enters L4 kernel debugger...");
-
-      char c = Kconsole::console()->getchar();
-
-      if (c == 'k' || c == 'K')
-	{
-	  kdb_ke("_exit");
-	}
-      else
-	{
-	  // it may be better to not call all the destruction stuff
-	  // because of unresolved static destructor dependency
-	  // problems.
-	  // SO just do the reset at this point.
-	  puts("\033[1mRebooting...\033[0m");
-	  cxx::check_noreturn<platform_reset>();
-	}
-    }
-}
 
 [[noreturn]]
 void
@@ -80,12 +30,7 @@ kernel_main()
   // caution: no stack variables in this function because we're going
   // to change the stack pointer!
 
-  // make some basic initializations, then create and run the kernel
-  // thread
-  if (cov_print)
-    set_exit_question(nullptr);
-  else
-    set_exit_question(&exit_question);
+  Exit_question::set(&Exit_question::ask);
 
   // create kernel thread
   Kernel_thread *kernel = Kernel_thread::create_for_boot_cpu();
