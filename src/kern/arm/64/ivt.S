@@ -283,8 +283,8 @@ sys_call_table:
 	stp	x3, x4, [sp, #EF_PC]
 	mov	x0, sp
 	str	x0, [sp, #EF_KSP]
-	adr	x30, .Lret_from_exception
-	br	x7
+	blr	x7
+	b	.Lret_from_exception
 
 .macro ENTRY func
 	sub	sp, sp, #EF_SIZE
@@ -317,11 +317,11 @@ sys_call_table:
 	stp	x3, x4, [sp, #EF_PC]
 	mov	x0, sp
 	str	x0, [sp, #EF_KSP]
-	adr	x30, .Lret_from_exception
 
 	.global __irq_handler_b_irq
 __irq_handler_b_irq:
-	b	irq_handler
+	bl	irq_handler
+	b	.Lret_from_exception
 
 
 .section	.text.ivt,"xa"
