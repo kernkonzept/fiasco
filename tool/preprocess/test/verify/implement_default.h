@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef implement_default_h
-#define implement_default_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -21,5 +20,3 @@ public:
   // skip this as the test cannot deal with errors
   // void err_func1();
 };
-
-#endif // implement_default_h

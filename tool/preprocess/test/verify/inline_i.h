@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef inline_i_h
-#define inline_i_h
+#pragma once
 #include "inline.h"
 
 //
@@ -16,5 +15,3 @@ constexpr bool
 Frob::private_cexpr()
 {
 }
-
-#endif // inline_i_h

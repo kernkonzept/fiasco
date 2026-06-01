@@ -1,7 +1,4 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef func_defs_i_h
-#define func_defs_i_h
+#pragma once
 #include "func_defs.h"
-
-#endif // func_defs_i_h

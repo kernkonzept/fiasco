@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef mapping_inline_i_h
-#define mapping_inline_i_h
+#pragma once
 #include "mapping_inline.h"
 #line 148 "mapping.cpp"
 
@@ -114,5 +113,3 @@ mapping_tree_t::mappings()
 {
   return & _mappings[0];
 }
-
-#endif // mapping_inline_i_h

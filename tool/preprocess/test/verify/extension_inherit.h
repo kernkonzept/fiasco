@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef extension_inherit_h
-#define extension_inherit_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -281,5 +280,3 @@ private: // EXTENSION
 
 #line 153 "extension_inherit.cpp"
                                          };
-
-#endif // extension_inherit_h

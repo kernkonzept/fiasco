@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef parser_i_h
-#define parser_i_h
+#pragma once
 #include "parser.h"
 
 //
@@ -16,5 +15,3 @@ typedef int (* diag_printf_t) (const char *, ...);
 typedef int (**dblfptr) (void);
 #line 45 "parser.cpp"
 typedef int (* arrfptr[20]) (void);
-
-#endif // parser_i_h

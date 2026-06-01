@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef random_inline_h
-#define random_inline_h
+#pragma once
 #line 3 "random.cpp"
 
 #include "bar.h"
@@ -384,5 +383,3 @@ inline void function67() {}
 
    
 inline void function68() {}
-
-#endif // random_inline_h

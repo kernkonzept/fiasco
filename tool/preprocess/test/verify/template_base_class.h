@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef template_base_class_h
-#define template_base_class_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -31,5 +30,3 @@ public:
  
 template<typename T> Derived<T>::Derived() : Base<int>()
 {}
-
-#endif // template_base_class_h

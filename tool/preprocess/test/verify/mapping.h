@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef mapping_h
-#define mapping_h
+#pragma once
 #line 2 "mapping.cpp"
 
 #include <flux/x86/types.h>	// for vm_offset_t, vm_size_t
@@ -151,5 +150,3 @@ public:
   void 
   grant(mapping_t *m, space_t *new_space, vm_offset_t va);
 };
-
-#endif // mapping_h

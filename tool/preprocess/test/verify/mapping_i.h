@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef mapping_i_h
-#define mapping_i_h
+#pragma once
 #include "mapping.h"
 #line 148 "mapping.cpp"
 
@@ -97,5 +96,3 @@ struct physframe_data {
   mapping_tree_t *tree;
   helping_lock_t lock;
 };
-
-#endif // mapping_i_h

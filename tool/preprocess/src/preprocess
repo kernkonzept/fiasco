@@ -260,18 +260,10 @@ parse_file ();
 #
 # Print header file
 # 
-
-# Fixup incfile_base preproc macro if it contains invalid chars.
-my $incfile_base_macro;
-
-$incfile_base_macro = $incfile_base;
-$incfile_base_macro =~ s/[+-]/_/g;
-
 open(OUT, ">${headerfile_base}.$header_ext")
   || die "Cannot open ${headerfile_base}.$header_ext for writing!";
 print OUT "// AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-\n\n";
-print OUT "#ifndef ${incfile_base_macro}_$header_ext\n" .
-          "#define ${incfile_base_macro}_$header_ext\n";
+print OUT "#pragma once\n";
 
 foreach my $i (grep {$_->{type} eq 'include'} @{$Chunk::sections{"INTERFACE"}})
   {
@@ -364,7 +356,6 @@ foreach my $i (@public_templates)
 
 clear_head();
 
-print OUT "\n#endif // ${incfile_base_macro}_$header_ext\n";
 close OUT;
 
 #
@@ -374,8 +365,7 @@ close OUT;
 open(OUT, ">${outfile_base}_i.$header_ext")
   || die "Cannot open ${outfile_base}_i.$header_ext for writing!";
 print OUT "// AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-\n\n";
-print OUT "#ifndef ${incfile_base_macro}_i_$header_ext\n" .
-          "#define ${incfile_base_macro}_i_$header_ext\n";
+print OUT "#pragma once\n";
 print OUT "#include \"${public_base}.$header_ext\"\n";
 
 foreach my $i (grep { $_->{type} eq 'include' }
@@ -430,7 +420,6 @@ foreach my $i (grep
 
 clear_head();
 
-print OUT "\n#endif // ${incfile_base_macro}_i_$header_ext\n";
 close OUT;
 
 $doing_linenumbers = (! $opt_l);

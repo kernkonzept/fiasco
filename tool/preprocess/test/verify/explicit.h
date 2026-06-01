@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef explicit_h
-#define explicit_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -16,5 +15,3 @@ public:
 #line 10 "explicit.cpp"
   explicit Foo (int bar);
 };
-
-#endif // explicit_h

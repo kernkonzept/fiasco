@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef random_h
-#define random_h
+#pragma once
 #line 3 "random.cpp"
 
 #include "bar.h"
@@ -223,5 +222,3 @@ void function68();
 
 #line 235 "random.cpp"
 void function69();
-
-#endif // random_h

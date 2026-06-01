@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef parser_h
-#define parser_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -97,5 +96,3 @@ inline int baz()
 
 inline int bak()
 {}
-
-#endif // parser_h

@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef drop_single2_h
-#define drop_single2_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -35,5 +34,3 @@ public:
   void 
   test();
 };
-
-#endif // drop_single2_h

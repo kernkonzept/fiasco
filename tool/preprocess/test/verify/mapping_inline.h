@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef mapping_inline_h
-#define mapping_inline_h
+#pragma once
 #line 2 "mapping.cpp"
 
 #include <flux/x86/types.h>	// for vm_offset_t, vm_size_t
@@ -227,5 +226,3 @@ mapping_t::type()
   // return data()->type;;
   return Map_mem;
 }
-
-#endif // mapping_inline_h

@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef nested_class_h
-#define nested_class_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -57,5 +56,3 @@ Outer::Inner_template<T>::test() const
  template<typename T> template<typename R> R *
 Outer::Inner_template<T>::test_template(T *a) const
 { return reinterpret_cast<R *>(a); }
-
-#endif // nested_class_h

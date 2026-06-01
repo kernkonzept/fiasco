@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef interface_h
-#define interface_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -18,5 +17,3 @@ public:
   void
   func1();
 };
-
-#endif // interface_h

@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef inline_h
-#define inline_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -164,5 +163,3 @@ Cexpr::test2()
 {
   return (void*) t;
 }
-
-#endif // inline_h

@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef multifile_h
-#define multifile_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -63,5 +62,3 @@ Foo::rambo ()
 inline void
 Foo::baz ()
 {}
-
-#endif // multifile_h

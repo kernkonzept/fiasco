@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef tag_enabled_h
-#define tag_enabled_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -26,5 +25,3 @@ private:
 #line 25 "tag_enabled.cpp"
   bool function4(void);
 };
-
-#endif // tag_enabled_h

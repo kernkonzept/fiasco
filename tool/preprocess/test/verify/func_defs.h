@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef func_defs_h
-#define func_defs_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -55,5 +54,3 @@ public:
  */
 Test const &
 free_function(int, long a) noexcept;
-
-#endif // func_defs_h

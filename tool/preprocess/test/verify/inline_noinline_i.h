@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef inline_noinline_i_h
-#define inline_noinline_i_h
+#pragma once
 #include "inline_noinline.h"
 
 //
@@ -37,5 +36,3 @@ constexpr bool
 Frob::private_cexpr()
 {
 }
-
-#endif // inline_noinline_i_h

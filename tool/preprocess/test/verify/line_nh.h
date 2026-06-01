@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef line_nh_h
-#define line_nh_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -18,5 +17,3 @@ public:
   
   static void func1();
 };
-
-#endif // line_nh_h

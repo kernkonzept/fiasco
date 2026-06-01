@@ -1,7 +1,4 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef default_args_i_h
-#define default_args_i_h
+#pragma once
 #include "default_args.h"
-
-#endif // default_args_i_h

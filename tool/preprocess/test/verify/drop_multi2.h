@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef drop_multi2_h
-#define drop_multi2_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -68,5 +67,3 @@ public:
   void 
   test();
 };
-
-#endif // drop_multi2_h

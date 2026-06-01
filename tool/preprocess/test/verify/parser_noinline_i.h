@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef parser_noinline_i_h
-#define parser_noinline_i_h
+#pragma once
 #include "parser_noinline.h"
 #line 16 "parser.cpp"
 
@@ -19,5 +18,3 @@ typedef int (* diag_printf_t) (const char *, ...);
 typedef int (**dblfptr) (void);
 #line 45 "parser.cpp"
 typedef int (* arrfptr[20]) (void);
-
-#endif // parser_noinline_i_h

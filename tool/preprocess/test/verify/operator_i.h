@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef operator_i_h
-#define operator_i_h
+#pragma once
 #include "operator.h"
 
 //
@@ -146,5 +145,3 @@ public:
 #line 88 "operator.cpp"
   int operator[] (const X&);
 };
-
-#endif // operator_i_h

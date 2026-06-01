@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef parser_noinline_h
-#define parser_noinline_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -56,5 +55,3 @@ int bak();
 unsigned
 somefunc(unsigned (*func1)(), 
 	 unsigned (*func2)());
-
-#endif // parser_noinline_h

@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef template_i_h
-#define template_i_h
+#pragma once
 #include "template.h"
 
 //
@@ -67,5 +66,3 @@ template <class Bar> template <typename T> T*
 TFoo::baz (T* t)
 {
 }
-
-#endif // template_i_h

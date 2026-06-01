@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef template_h
-#define template_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -349,5 +348,3 @@ template_with_dfl_arg2()
 
 template<T> [[nodiscard]] T template_with_attribute()
 {}
-
-#endif // template_h

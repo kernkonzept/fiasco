@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef comment_in_string_h
-#define comment_in_string_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -13,5 +12,3 @@ void irq_init(unsigned char master_base, unsigned char slave_base);
 
 #line 19 "comment_in_string.cpp"
 void bar();
-
-#endif // comment_in_string_h

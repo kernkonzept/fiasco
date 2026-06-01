@@ -1,7 +1,4 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef static_i_h
-#define static_i_h
+#pragma once
 #include "static.h"
-
-#endif // static_i_h

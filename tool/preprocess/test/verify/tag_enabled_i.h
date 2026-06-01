@@ -1,7 +1,4 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef tag_enabled_i_h
-#define tag_enabled_i_h
+#pragma once
 #include "tag_enabled.h"
-
-#endif // tag_enabled_i_h

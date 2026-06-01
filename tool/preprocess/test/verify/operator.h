@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef operator_h
-#define operator_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -52,5 +51,3 @@ operator<< (std::vector<T, A>& in, const T& new_elem)
   in.push_back (new_elem);
   return in;
 }
-
-#endif // operator_h

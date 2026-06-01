@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef random_i_h
-#define random_i_h
+#pragma once
 #include "random.h"
 #line 16 "random.cpp"
 
@@ -18,5 +17,3 @@
 class Rambo
 {
 };
-
-#endif // random_i_h

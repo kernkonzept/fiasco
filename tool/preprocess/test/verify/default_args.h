@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef default_args_h
-#define default_args_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -48,5 +47,3 @@ vec(T f1, T f2, T f3,
             }}}}}}
   return v;
 }
-
-#endif // default_args_h

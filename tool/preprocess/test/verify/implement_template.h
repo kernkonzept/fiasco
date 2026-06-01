@@ -1,7 +1,6 @@
 // AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-
 
-#ifndef implement_template_h
-#define implement_template_h
+#pragma once
 
 //
 // INTERFACE definition follows
@@ -54,5 +53,3 @@ template< typename T > template<
 Test<T>::test_func2<X, X2>()
 {
 }
-
-#endif // implement_template_h
