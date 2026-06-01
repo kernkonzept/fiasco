@@ -85,10 +85,7 @@ IMPLEMENTATION:
 // default deallocator must not be called -- must use explicit destruction
 inline NOEXPORT
 void
-Slab::operator delete(void * /*block*/)
-{
-  assert (!"slab::operator delete called");
-}
+Slab::operator delete(void * /*block*/) = delete;
 
 PUBLIC
 Slab::Slab(unsigned elems, unsigned entry_size, void *mem)
