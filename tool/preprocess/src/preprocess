@@ -289,6 +289,10 @@ foreach my $i ( (grep {$_->{type} eq 'classdef'
       {
 	print_classdecl ($i);
       }
+    elsif ($i->{type} eq 'function')
+      {
+        print_funcdef ($i);
+      }
   }
 
 foreach my $i (grep {$_->{type} eq 'function' && $_->{class} eq ''
