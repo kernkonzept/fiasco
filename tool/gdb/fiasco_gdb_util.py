@@ -360,10 +360,12 @@ class Fiasco_tbuf(gdb.Command):
 
     # Unfortunately we are not able to extract Tb_entry::Tb_entry_size
     # so apply this guess:
-    mword = gdb.lookup_type("Mword")
-    self.tb_entry_size = 128 if mword.sizeof == 8 else 64
-
-    print("Guessed Tb_entry size:", self.tb_entry_size)
+    u = gdb.lookup_type("Tb_entry_union")
+    if u.code is gdb.TYPE_CODE_STRUCT:
+      self.tb_entry_size = u.sizeof
+      print("Tb_entry size:", self.tb_entry_size)
+    else:
+      raise gdb.GdbError("Missing Tbuf_entry_union, old Fiasco?")
 
     self.printlog_set_current_section(2)
 
