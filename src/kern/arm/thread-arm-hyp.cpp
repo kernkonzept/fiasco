@@ -72,7 +72,6 @@ Thread::ex_regs_arch(Mword ops)
 //-----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit && cpu_virt]:
 
-#include "slowtrap_entry.h"
 #include "infinite_loop.h"
 
 IMPLEMENT_OVERRIDE
