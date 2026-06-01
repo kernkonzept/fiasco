@@ -4,7 +4,8 @@
 include $(srcdir)/Modules.generic
 
 # UTEST depends on KERNEL and CHECKSUM, must be listed after them
-SUBSYSTEMS := $(filter-out UTEST,$(SUBSYSTEMS)) BOOT CHECKSUM GBLCFG \
+# KERNEL depends on BOOT because of $(INTEL_MICROCODE_IMG)
+SUBSYSTEMS := BOOT $(filter-out BOOT UTEST,$(SUBSYSTEMS)) CHECKSUM GBLCFG \
               $(filter UTEST,$(SUBSYSTEMS))
 
 PREPROCESS_PARTS 	+= arch $(CONFIG_ABI) 64bit iofp recover_jmpbuf \
