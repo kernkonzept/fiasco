@@ -21,6 +21,9 @@ public:
   Mword km_lr;
   Mword pc;
   Mword psr;
+
+  void disable_continuation()
+  {}
 };
 
 //---------------------------------------------------------------------------

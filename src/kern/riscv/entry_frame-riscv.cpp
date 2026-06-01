@@ -124,6 +124,9 @@ public:
 
   Syscall_frame const *syscall_frame() const
   { return reinterpret_cast<Syscall_frame const *>(&a0); }
+
+  void disable_continuation()
+  { eret_work = 0; }
 };
 
 class Entry_frame : public Return_frame

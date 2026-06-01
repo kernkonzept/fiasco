@@ -84,6 +84,9 @@ public:
     return reinterpret_cast<Entry_frame *>
       (  reinterpret_cast<char *>(sf) - offsetof(Return_frame, r[0]));
   }
+
+  void disable_continuation()
+  { eret_work = 0; }
 };
 
 class Entry_frame : public Return_frame {};
