@@ -83,6 +83,34 @@ sub write_kconfig
   return join "", map { "$_\n" } grep { defined $_ } @{$config->{lines}};
 }
 
+sub validate_migration
+{
+  my ($idx, $migration) = @_;
+
+  my $ident = $migration->{prompt} ?
+    "Migration '$migration->{prompt}'" :
+    "Migration at index $idx";
+
+  my %allowed_keys = map { $_ => 1 } qw(match replace prompt);
+  my @required_keys = qw(match replace);
+
+  foreach my $key (keys %$migration)
+    {
+      die "$ident: Invalid key '$key'\n"
+        unless $allowed_keys{$key};
+
+      die "$ident: Key '$key' must be a string"
+        unless ref($migration->{$key}) eq "";
+    }
+
+  foreach my $key (@required_keys)
+    {
+      next if exists $migration->{$key};
+
+      die "$ident: Missing required key '$key'\n";
+    }
+}
+
 sub match_migration
 {
   my ($config, $match) = @_;
@@ -213,8 +241,7 @@ my $anychanges = 0;
 my $spec_idx = 0;
 foreach my $spec (@$migrations)
   {
-    die "Invalid migration (Index $spec_idx)"
-      unless defined($spec->{match}) && defined($spec->{replace});
+    validate_migration($spec_idx, $spec);
     $spec_idx++;
 
     my $match = read_kconfig($spec->{match});
