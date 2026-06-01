@@ -306,7 +306,25 @@ public:
    */
   Entry_frame *regs() const;
 
+  /**
+   * Save certain architecture-specific userland registers only during context
+   * switches, not at every kernel entry.
+   *
+   * Affected registers:
+   * - AMD64: ds, es, fs, gs, fs_base and gs_base), stored in Context.
+   *   (On x86, the segments registers are stored/restored as part of the
+   *   Trap_state on kernel entry/exit.)
+   * - ARM32/novirt: sp, lr (banked user registers), stored in Entry_frame.
+   * - ARM64: SP_EL0, stored in Entry_frame.
+   */
   void spill_user_state();
+
+  /**
+   * Restore certain architecture-specific userland registers during context
+   * switches, not at every kernel exit.
+   *
+   * Affected registers: See spill_user_state().
+   */
   void fill_user_state();
 
   /**
