@@ -111,3 +111,39 @@ Cpudefs::midr()
   asm volatile ("mrs %0, midr_el1" : "=r" (midr));
   return midr;
 }
+
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm]:
+
+PUBLIC static inline
+bool
+Cpudefs::needs_workaround_repeat_tlbi()
+{
+  switch (midr() & Midr_mask)
+    {
+    case Midr_arm(Part_c1_premium):
+    case Midr_arm(Part_c1_ultra):
+    case Midr_arm(Part_cortex_a76):
+    case Midr_arm(Part_cortex_a76ae):
+    case Midr_arm(Part_cortex_a77):
+    case Midr_arm(Part_cortex_a78):
+    case Midr_arm(Part_cortex_a78ae):
+    case Midr_arm(Part_cortex_a78c):
+    case Midr_arm(Part_cortex_a710):
+    case Midr_arm(Part_cortex_x1):
+    case Midr_arm(Part_cortex_x1c):
+    case Midr_arm(Part_cortex_x2):
+    case Midr_arm(Part_cortex_x3):
+    case Midr_arm(Part_cortex_x4):
+    case Midr_arm(Part_cortex_x925):
+    case Midr_arm(Part_neoverse_n1):
+    case Midr_arm(Part_neoverse_n2):
+    case Midr_arm(Part_neoverse_v1):
+    case Midr_arm(Part_neoverse_v2):
+    case Midr_arm(Part_neoverse_v3):
+    case Midr_arm(Part_neoverse_v3ae):
+      return true;
+    default:
+      return false;
+    }
+}

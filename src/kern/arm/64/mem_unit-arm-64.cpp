@@ -1,6 +1,25 @@
 IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
-IMPLEMENT inline
+#include "alternatives.h"
+#include "cpudefs.h"
+
+PRIVATE static inline NEEDS["alternatives.h", "cpudefs.h"]
+void
+Mem_unit::repeat_tlb_el1()
+{
+  asm volatile(
+      ALTERNATIVE_INSN(
+        "nop; nop          \n",
+        "tlbi vale1is, xzr \n"  // Invalidate at VA=0, EL1, IS
+        "dsb ish           \n")
+      :
+      :
+      [alt_probe] "i"(Cpudefs::needs_workaround_repeat_tlbi)
+      :
+      "memory");
+}
+
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el1]
 void
 Mem_unit::tlb_flush()
 {
@@ -8,9 +27,10 @@ Mem_unit::tlb_flush()
   asm volatile("tlbi vmalle1is" // Invalidate by VMID, stage 1, EL1, IS
                : : : "memory");
   Mem::dsb();
+  repeat_tlb_el1();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el1]
 void
 Mem_unit::tlb_flush(unsigned long asid)
 {
@@ -18,9 +38,10 @@ Mem_unit::tlb_flush(unsigned long asid)
   asm volatile("tlbi aside1is, %0" // Invalidate by ASID, EL1, IS
                : : "r" (asid << 48) : "memory");
   Mem::dsb();
+  repeat_tlb_el1();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el1]
 void
 Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
@@ -32,6 +53,7 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
                : : "r" ((reinterpret_cast<unsigned long>(va) >> 12)
                         | (asid << 48)) : "memory");
   Mem::dsb();
+  repeat_tlb_el1();
 }
 
 IMPLEMENT inline
@@ -39,7 +61,7 @@ void
 Mem_unit::tlb_flush_kernel()
 { tlb_flush(); }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el1]
 void
 Mem_unit::tlb_flush_kernel(Address va)
 {
@@ -48,12 +70,38 @@ Mem_unit::tlb_flush_kernel(Address va)
                : : "r" ((va >> 12) & 0x00000ffffffffffful)
                : "memory");
   Mem::dsb();
+  repeat_tlb_el1();
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [arm && cpu_virt]:
+
+#include "alternatives.h"
+#include "cpudefs.h"
+
+PRIVATE static inline NEEDS["alternatives.h", "cpudefs.h"]
+void
+Mem_unit::repeat_tlb_el2()
+{
+  asm volatile(
+      ALTERNATIVE_INSN(
+        "nop; nop          \n",
+        "tlbi vale2is, xzr \n"  // Invalidate at VA=0, EL2, IS
+        "dsb ish           \n")
+      :
+      :
+      [alt_probe] "i"(Cpudefs::needs_workaround_repeat_tlbi)
+      :
+      "memory");
 }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && cpu_virt]:
 
-IMPLEMENT inline
+#include "alternatives.h"
+#include "cpudefs.h"
+
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush()
 {
@@ -61,9 +109,10 @@ Mem_unit::tlb_flush()
   asm volatile("tlbi alle1is" // Invalidate All, EL1, IS
                : : : "memory");
   Mem::dsb();
+  repeat_tlb_el2();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush(unsigned long asid)
 {
@@ -84,9 +133,10 @@ Mem_unit::tlb_flush(unsigned long asid)
       [asid] "r" (asid << 48)
       :
       "memory");
+  repeat_tlb_el2();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
@@ -113,9 +163,10 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
       [asid] "r" (asid << 48)
       :
       "memory");
+  repeat_tlb_el2();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush_kernel()
 {
@@ -123,9 +174,10 @@ Mem_unit::tlb_flush_kernel()
   asm volatile("tlbi alle2is" // Invalidate All, EL2, IS
                : : : "memory");
   Mem::dsb();
+  repeat_tlb_el2();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush_kernel(Address va)
 {
@@ -134,6 +186,7 @@ Mem_unit::tlb_flush_kernel(Address va)
                : : "r" ((va >> 12) & 0x00000ffffffffffful)
                : "memory");
   Mem::dsb();
+  repeat_tlb_el2();
 }
 
 //---------------------------------------------------------------------------
@@ -176,7 +229,7 @@ IMPLEMENTATION [arm && !mmu && cpu_virt]:
  * => We still need to do TLB maintenance.
  */
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush()
 {
@@ -184,9 +237,10 @@ Mem_unit::tlb_flush()
   asm volatile("tlbi alle1is" // Invalidate All, EL1, IS
                : : : "memory");
   Mem::dsb();
+  repeat_tlb_el2();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush(unsigned long asid)
 {
@@ -220,9 +274,10 @@ Mem_unit::tlb_flush(unsigned long asid)
       [asid] "r" (asid << 48)
       :
       "memory");
+  repeat_tlb_el2();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
@@ -264,6 +319,7 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
       [asid] "r" (asid << 48)
       :
       "memory");
+  repeat_tlb_el2();
 }
 
 IMPLEMENT inline

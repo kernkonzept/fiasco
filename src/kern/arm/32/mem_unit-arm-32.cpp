@@ -98,7 +98,35 @@ Mem_unit::tlb_flush_kernel(Address)
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && ((arm_v7 && mp) || arm_v8) && !cpu_virt]:
 
-IMPLEMENT inline
+#include "alternatives.h"
+#include "cpudefs.h"
+
+PRIVATE static inline NEEDS["alternatives.h", "cpudefs.h"]
+void
+Mem_unit::repeat_tlb_el1()
+{
+  if constexpr (TAG_ENABLED(arm_v8plus))
+    {
+      asm volatile (
+        ALTERNATIVE_INSN(
+#ifdef __thumb__
+          "nop.w; nop.w                   \n",
+#else
+          "nop; nop                       \n",
+#endif
+          "mcr  p15, 0, %[mva], c8, c3, 3 \n" // TLBIMVAAIS
+                                              // Invalidate at 0, all ASIDs, IS
+          "dsb ish                        \n")
+        :
+        :
+        [alt_probe] "i"(Cpudefs::needs_workaround_repeat_tlbi),
+        [mva] "r"(0)
+        :
+        "memory");
+    }
+}
+
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el1]
 void
 Mem_unit::tlb_flush()
 {
@@ -107,9 +135,10 @@ Mem_unit::tlb_flush()
   asm volatile("mcr p15, 0, %0, c8, c3, 0" // TLBIALLIS: Invalidate All, IS
                : : "r" (0) : "memory");
   Mem::dsb();
+  repeat_tlb_el1();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el1]
 void
 Mem_unit::tlb_flush(unsigned long asid)
 {
@@ -118,9 +147,10 @@ Mem_unit::tlb_flush(unsigned long asid)
   asm volatile("mcr p15, 0, %0, c8, c3, 2" // TLBIASIDIS: Invalidate by ASID, IS
                : : "r" (asid) : "memory");
   Mem::dsb();
+  repeat_tlb_el1();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el1]
 void
 Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
@@ -131,9 +161,10 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
   asm volatile("mcr p15, 0, %0, c8, c3, 1" // TLBIMVAIS: Invalidate by MVA, IS
                : : "r" ((reinterpret_cast<Address>(va) & 0xfffff000) | asid) : "memory");
   Mem::dsb();
+  repeat_tlb_el1();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el1]
 void
 Mem_unit::tlb_flush_kernel()
 { tlb_flush(); }
@@ -147,12 +178,41 @@ Mem_unit::tlb_flush_kernel(Address va)
                                            // Invalidate by MVA, all ASIDs, IS
                : : "r" (va & 0xfffff000) : "memory");
   Mem::dsb();
+  repeat_tlb_el1();
 }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && mmu && arm_v7plus && cpu_virt]:
 
-IMPLEMENT inline
+#include "alternatives.h"
+#include "cpudefs.h"
+
+PRIVATE static inline NEEDS["alternatives.h", "cpudefs.h"]
+void
+Mem_unit::repeat_tlb_el2()
+{
+  if constexpr (TAG_ENABLED(arm_v8plus))
+    {
+      asm volatile (
+        ALTERNATIVE_INSN(
+#ifdef __thumb__
+          "nop.w; nop.w                   \n",
+#else
+          "nop; nop                       \n",
+#endif
+          "mcr  p15, 4, %[mva], c8, c3, 1 \n" // TLBIMVAHIS
+                                              // Invalidate at 0
+          "dsb ish                        \n")
+        :
+        :
+        [alt_probe] "i"(Cpudefs::needs_workaround_repeat_tlbi),
+        [mva] "r"(0)
+        :
+        "memory");
+    }
+}
+
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush()
 {
@@ -162,9 +222,10 @@ Mem_unit::tlb_flush()
                                            // Invalidate All, non-secure non-hyp IS
                : : : "memory");
   Mem::dsb();
+  repeat_tlb_el2();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush(unsigned long asid)
 {
@@ -183,9 +244,10 @@ Mem_unit::tlb_flush(unsigned long asid)
       : [tmp1] "=&r" (t1), [tmp2] "=&r" (t2)
       : [asid] "r" (asid << 16)
       : "memory");
+  repeat_tlb_el2();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
@@ -207,9 +269,10 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
       : [mva] "r" ((reinterpret_cast<unsigned long>(va) & 0xfffff000)),
         [asid] "r" (asid << 16)
       : "memory");
+  repeat_tlb_el2();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush_kernel()
 {
@@ -218,9 +281,10 @@ Mem_unit::tlb_flush_kernel()
                                            // TLBIALLHIS:
                                            // Invalidate All, Hyp Mode, IS
   Mem::dsb();
+  repeat_tlb_el2();
 }
 
-IMPLEMENT inline
+IMPLEMENT inline NEEDS[Mem_unit::repeat_tlb_el2]
 void
 Mem_unit::tlb_flush_kernel(Address va)
 {
@@ -229,6 +293,7 @@ Mem_unit::tlb_flush_kernel(Address va)
                                            // Invalidate by MVA, Hyp Mode, IS
                : : "r" (va & 0xfffff000) : "memory");
   Mem::dsb();
+  repeat_tlb_el2();
 }
 
 //---------------------------------------------------------------------------
