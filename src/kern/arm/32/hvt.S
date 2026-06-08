@@ -105,7 +105,7 @@ hyp_irq_entry:
 	ldr	sp, [sp]
 	disable_irqs
 	mpu_kernel_leave 1, 20
-	ldmia	sp, {r0 - r3, r12}		@ Restore user state
+	ldmia	sp, {r0 - r3, r12}	@ Restore user state
 	add	sp, sp, #20
 	return_from_exception
 
@@ -168,10 +168,10 @@ hyp_trap_entry:
 	mov	r0, sp
 	mov	lr, pc
 	ldr	pc, 1f
-	add	sp, sp, #8
 .global fast_ret_from_irq
 .type fast_ret_from_irq, #function
 fast_ret_from_irq:
+	add	sp, sp, #8		@ fast_ret_from_irq expects Entry_frame
 	disable_irqs
 	mpu_kernel_leave 1, (13*4)
 	ldmia	sp, {r0 - r12}		@ Restore user state

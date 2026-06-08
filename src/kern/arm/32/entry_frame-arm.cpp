@@ -2,6 +2,13 @@ INTERFACE [arm]:
 
 #include "types.h"
 
+EXTENSION class Syscall_post_frame
+{
+  // Ensure that sizeof(Entry_frame) >= sizeof(Trap_state).
+  // See Task::resume_vcpu().
+  Mword reserved[2];
+};
+
 EXTENSION class Syscall_frame
 {
 public:

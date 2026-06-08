@@ -231,7 +231,8 @@
 	bhi	\no_sys_call
 
 	stmdb	sp!, {r0 - r12}
-	mpu_kernel_enter (13*4)
+	sub	sp, sp, #(2 * 4)        @ dummy Syscall_post_frame
+	mpu_kernel_enter (15*4)
 	/* stack frame: RF + r12-r0, sp points to r0 */
 	CONTEXT_OF	r1, sp
 	RESET_THREAD_CANCEL_AT r1       @ sets r0 to state
@@ -244,7 +245,8 @@
 .type fast_ret_from_irq, #function
 fast_ret_from_irq:
 2:	disable_irqs
-	mpu_kernel_leave 1, (13*4)
+	mpu_kernel_leave 1, (15*4)
+	add	sp, sp, #(2 * 4)
 	ldmia	sp!, {r0 - r12}
 	add	sp, sp, #(RF_SIZE)
 
@@ -715,6 +717,7 @@ __irq_handler_fiq:
  * \pre sp  points to r0-r12 + RF
  */
 alien_or_vcpu_user_syscall: @ ---------------------------------------------
+	add	sp, sp, #(2 * 4)           @ remove dummy Syscall_post_frame
 #ifdef CONFIG_ALIEN
 	tst	r0, #VAL__Thread_dis_alien
 	bicne	r0, r0, #VAL__Thread_dis_alien
