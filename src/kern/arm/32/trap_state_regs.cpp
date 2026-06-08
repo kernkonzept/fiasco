@@ -1,5 +1,7 @@
 INTERFACE:
 
+#include "processor.h"
+
 class Trap_state_regs
 {
 public:
