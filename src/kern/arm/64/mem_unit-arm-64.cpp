@@ -1,7 +1,8 @@
 IMPLEMENTATION [arm && mmu && !cpu_virt]:
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush()
+void
+Mem_unit::tlb_flush()
 {
   Mem::dsbst();
   asm volatile("tlbi vmalle1is" : : : "memory");
@@ -9,7 +10,8 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long asid)
+void
+Mem_unit::tlb_flush(unsigned long asid)
 {
   Mem::dsbst();
   asm volatile("tlbi aside1is, %0"
@@ -18,7 +20,8 @@ void Mem_unit::tlb_flush(unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(void *va, unsigned long asid)
+void
+Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
   if (asid == Asid_invalid)
     return;
@@ -31,11 +34,13 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel()
+void
+Mem_unit::tlb_flush_kernel()
 { tlb_flush(); }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel(Address va)
+void
+Mem_unit::tlb_flush_kernel(Address va)
 {
   Mem::dsbst();
   asm volatile("tlbi vaae1is, %0"
@@ -48,7 +53,8 @@ void Mem_unit::tlb_flush_kernel(Address va)
 IMPLEMENTATION [arm && mmu && cpu_virt]:
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush()
+void
+Mem_unit::tlb_flush()
 {
   Mem::dsbst();
   asm volatile("tlbi alle1is" : : : "memory");
@@ -56,7 +62,8 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long asid)
+void
+Mem_unit::tlb_flush(unsigned long asid)
 {
   Mword vttbr;
   // FIXME: could do a compare for the current VMID before loading
@@ -78,7 +85,8 @@ void Mem_unit::tlb_flush(unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(void *va, unsigned long asid)
+void
+Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
   if (asid == Asid_invalid)
     return;
@@ -106,7 +114,8 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel()
+void
+Mem_unit::tlb_flush_kernel()
 {
   Mem::dsbst();
   asm volatile("tlbi alle2is" : : : "memory");
@@ -114,7 +123,8 @@ void Mem_unit::tlb_flush_kernel()
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel(Address va)
+void
+Mem_unit::tlb_flush_kernel(Address va)
 {
   Mem::dsbst();
   asm volatile("tlbi vae2is, %0"
@@ -127,23 +137,28 @@ void Mem_unit::tlb_flush_kernel(Address va)
 IMPLEMENTATION [arm && !mmu && !cpu_virt]:
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush()
+void
+Mem_unit::tlb_flush()
 {}
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long)
+void
+Mem_unit::tlb_flush(unsigned long)
 {}
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(void *, unsigned long)
+void
+Mem_unit::tlb_flush(void *, unsigned long)
 {}
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel()
+void
+Mem_unit::tlb_flush_kernel()
 {}
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel(Address)
+void
+Mem_unit::tlb_flush_kernel(Address)
 {}
 
 //---------------------------------------------------------------------------
@@ -159,7 +174,8 @@ IMPLEMENTATION [arm && !mmu && cpu_virt]:
  */
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush()
+void
+Mem_unit::tlb_flush()
 {
   Mem::dsbst();
   asm volatile("tlbi alle1is" : : : "memory");
@@ -167,7 +183,8 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long asid)
+void
+Mem_unit::tlb_flush(unsigned long asid)
 {
   Mword vsctlr;
   asm volatile(
@@ -202,7 +219,8 @@ void Mem_unit::tlb_flush(unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(void *va, unsigned long asid)
+void
+Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
   if (asid == Asid_invalid)
     return;
@@ -245,11 +263,13 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel()
+void
+Mem_unit::tlb_flush_kernel()
 {}
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel(Address /*va*/)
+void
+Mem_unit::tlb_flush_kernel(Address /*va*/)
 {}
 
 //---------------------------------------------------------------------------

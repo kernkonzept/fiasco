@@ -2,7 +2,8 @@
 IMPLEMENTATION [arm && mmu && arm_v5]:
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush()
+void
+Mem_unit::tlb_flush()
 {
   Mem::dsb();
   asm volatile("mcr p15, 0, %0, c8, c7, 0" // TLBIALL
@@ -11,13 +12,15 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long)
+void
+Mem_unit::tlb_flush(unsigned long)
 {
   tlb_flush();
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(void *va, unsigned long)
+void
+Mem_unit::tlb_flush(void *va, unsigned long)
 {
   Mem::dsb();
   asm volatile("mcr p15, 0, %0, c8, c7, 1" // TLBIMVA
@@ -26,11 +29,13 @@ void Mem_unit::tlb_flush(void *va, unsigned long)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel()
+void
+Mem_unit::tlb_flush_kernel()
 { tlb_flush(); }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel(Address va)
+void
+Mem_unit::tlb_flush_kernel(Address va)
 {
   // No ASIDs on ARMv5, so just use the regular tlb_flush() implementation
   // passing a dummy ASID value that is ignored anyway.
@@ -41,7 +46,8 @@ void Mem_unit::tlb_flush_kernel(Address va)
 IMPLEMENTATION [arm && mmu && (arm_v6 || (arm_v7 && !mp)) && !cpu_virt]:
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush()
+void
+Mem_unit::tlb_flush()
 {
   btc_flush();
   Mem::dsbst();
@@ -51,7 +57,8 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long asid)
+void
+Mem_unit::tlb_flush(unsigned long asid)
 {
   btc_flush();
   Mem::dsbst();
@@ -61,7 +68,8 @@ void Mem_unit::tlb_flush(unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(void *va, unsigned long asid)
+void
+Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
   if (asid == Asid_invalid)
     return;
@@ -73,11 +81,13 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel()
+void
+Mem_unit::tlb_flush_kernel()
 { tlb_flush(); }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel(Address)
+void
+Mem_unit::tlb_flush_kernel(Address)
 {
   // On ARMv6 and ARMv7 without multiprocessing extension, it is not possible to
   // flush all non-global TLB entries for an address without considering the
@@ -89,7 +99,8 @@ void Mem_unit::tlb_flush_kernel(Address)
 IMPLEMENTATION [arm && mmu && ((arm_v7 && mp) || arm_v8) && !cpu_virt]:
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush()
+void
+Mem_unit::tlb_flush()
 {
   btc_flush();
   Mem::dsbst();
@@ -99,7 +110,8 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long asid)
+void
+Mem_unit::tlb_flush(unsigned long asid)
 {
   btc_flush();
   Mem::dsbst();
@@ -109,7 +121,8 @@ void Mem_unit::tlb_flush(unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(void *va, unsigned long asid)
+void
+Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
   if (asid == Asid_invalid)
     return;
@@ -121,11 +134,13 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel()
+void
+Mem_unit::tlb_flush_kernel()
 { tlb_flush(); }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel(Address va)
+void
+Mem_unit::tlb_flush_kernel(Address va)
 {
   Mem::dsbst();
   asm volatile("mcr p15, 0, %0, c8, c3, 3" // TLBIMVAAIS
@@ -137,7 +152,8 @@ void Mem_unit::tlb_flush_kernel(Address va)
 IMPLEMENTATION [arm && mmu && arm_v7plus && cpu_virt]:
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush()
+void
+Mem_unit::tlb_flush()
 {
   btc_flush();
   Mem::dsbst();
@@ -146,7 +162,8 @@ void Mem_unit::tlb_flush()
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long asid)
+void
+Mem_unit::tlb_flush(unsigned long asid)
 {
   btc_flush();
   Mword t1, t2;
@@ -164,7 +181,8 @@ void Mem_unit::tlb_flush(unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(void *va, unsigned long asid)
+void
+Mem_unit::tlb_flush(void *va, unsigned long asid)
 {
   if (asid == Asid_invalid)
     return;
@@ -185,7 +203,8 @@ void Mem_unit::tlb_flush(void *va, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel()
+void
+Mem_unit::tlb_flush_kernel()
 {
   Mem::dsbst();
   asm volatile("mcr p15, 4, r0, c8, c3, 0" : : : "memory"); // TLBIALLHIS
@@ -193,7 +212,8 @@ void Mem_unit::tlb_flush_kernel()
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel(Address va)
+void
+Mem_unit::tlb_flush_kernel(Address va)
 {
   Mem::dsbst();
   asm volatile("mcr p15, 4, %0, c8, c3, 1" // TLBIMVAHIS
@@ -231,21 +251,24 @@ Mem_unit::make_coherent_to_pou(void const *start, size_t size)
 IMPLEMENTATION [arm && !mmu]:
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush()
+void
+Mem_unit::tlb_flush()
 {
   btc_flush();
   Mem::dsb();
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(unsigned long /*asid*/)
+void
+Mem_unit::tlb_flush(unsigned long /*asid*/)
 {
   btc_flush();
   Mem::dsb();
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush(void * /*va*/, unsigned long asid)
+void
+Mem_unit::tlb_flush(void * /*va*/, unsigned long asid)
 {
   if (asid == Asid_invalid)
     return;
@@ -254,9 +277,11 @@ void Mem_unit::tlb_flush(void * /*va*/, unsigned long asid)
 }
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel()
+void
+Mem_unit::tlb_flush_kernel()
 {}
 
 IMPLEMENT inline
-void Mem_unit::tlb_flush_kernel(Address /*va*/)
+void
+Mem_unit::tlb_flush_kernel(Address /*va*/)
 {}
