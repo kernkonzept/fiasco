@@ -25,7 +25,7 @@
 /* be sure that we do not enable the interrupts here! */
 	.macro	RESTORE_IOPL
 	pushl	16(%esp)
-	andl	$~EFLAGS_IF,(%esp)
+	andl	$~EFLAGS_IF, (%esp)
 	popf
 	.endm
 
@@ -84,12 +84,10 @@
 	andl	$~(THREAD_BLOCK_SIZE - 1), \reg
 	.endm
 
-/* {SAVE,RESTORE}_STATE save/restore _all_ GP registers (omitting esp) building
- * a stack layout described in
- * - Syscall_frame for IPC (invoked by sysenter/int30h),
- * - Trap_state for exceptions handled in slowtrap handler,
- *   used by save_all_regs. */
+/* {SAVE,RESTORE}_STATE save/restore _all_ GP registers (sans esp) building a
+ * stack layout described in Syscall_frame for IPC (invoked by sysenter/int30h). */
 	.macro	SAVE_STATE
+	pushl	%eax
 	pushl	%ebp
 	pushl	%ebx
 	pushl	%edi
@@ -105,6 +103,7 @@
 	popl	%edi
 	popl	%ebx
 	popl	%ebp
+	popl	%eax
 	.endm
 
 	.macro	RESTORE_STATE_AFTER_IPC
@@ -114,6 +113,7 @@
 	popl	%edi
 	popl	%ebx
 	addl	$4, %esp
+	popl	%eax
 	.endm
 
 /* {SAVE,RESTORE}_SCRATCH save/restore only GP registers which are not saved by

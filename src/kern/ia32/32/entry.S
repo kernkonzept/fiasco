@@ -65,8 +65,7 @@
 	jc	1f
 # endif
 	RESTORE_STATE
-	subl	$2, 4(%esp)             /* Correct EIP to point to insn */
-	popl	%eax
+	subl	$2, (%esp)              /* Correct EIP to point to insn */
 	pushl	$(0x30 << 3 | 2)
 	pushl	$(0xd)
 	save_all_regs
@@ -83,7 +82,6 @@
 .macro	POST_ALIEN_IPC
 	CHECK_SANITY $3                 /* Scratches ECX */
 	RESTORE_STATE_AFTER_IPC
-	popl	%eax
 	pushl	$(0x30 << 3 | 6)
 	pushl	$(0xd)
 	save_all_regs
@@ -492,7 +490,6 @@ GATE_ENTRY	0x30, entry_sys_ipc_c, (ACC_PL_U | ACC_INTR_GATE)
 .globl	entry_sys_ipc_c
 entry_sys_ipc_c:
 	cld
-	pushl	%eax
 	SAVE_STATE
 	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
 	ESP_TO_TCB_AT %ebx
@@ -503,7 +500,6 @@ entry_sys_ipc_c:
 in_sc_ipc1:
 	CHECK_SANITY $3                 /* Scratches ecx */
 	RESTORE_STATE_AFTER_IPC
-	popl	%eax
 	iret
 
 .globl	in_sc_ipc1
@@ -514,7 +510,6 @@ in_sc_ipc1:
 .globl	entry_sys_ipc_log
 entry_sys_ipc_log:
 	cld
-	pushl	%eax
 	SAVE_STATE
 	RESET_KERNEL_SEGMENTS_FORCE_DS_ES
 	ESP_TO_TCB_AT %ebx
@@ -525,7 +520,6 @@ entry_sys_ipc_log:
 in_slow_ipc4:
 	CHECK_SANITY $3                 /* Scratches ecx */
 	RESTORE_STATE_AFTER_IPC
-	popl	%eax
 	iret
 
 .globl	in_slow_ipc4
@@ -672,7 +666,6 @@ vcpu_resume:
 fast_ret_from_irq:
 	CHECK_SANITY $3                 /* Scratches ecx */
 	RESTORE_STATE_AFTER_IPC
-	popl	%eax
 	andl	$0x7f, 4(%esp)          /* If entered using sysenter */
 	iret
 

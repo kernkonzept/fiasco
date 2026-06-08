@@ -13,8 +13,7 @@
 	jc	1f
 # endif
 	RESTORE_STATE
-	popl	%eax
-	andl	$0x7f,4(%esp)
+	andl	$0x7f, 4(%esp)
 	pushl	$(0x30 << 3 | 2)
 	pushl	$(0xd)
 	save_all_regs
@@ -45,7 +44,6 @@
 #ifdef CONFIG_ALIEN
 .macro  POST_FAST_ALIEN_IPC
 	RESTORE_STATE_AFTER_IPC
-	popl	%eax
 	andl	$0x7f,4(%esp)
 	pushl	$(0x30 << 3 | 6)
 	pushl	$(0xd)
@@ -96,7 +94,6 @@ entry_vec01_debug:
 	call	*syscall_table
 	CHECK_SANITY $3			/* scratches ecx */
 	RESTORE_STATE_AFTER_IPC
-	popl	%eax
 	iret
 
 .Ldbg_alien_or_vcpu_user_sys_fast_ipc_log:
@@ -316,7 +313,6 @@ ret_from_fast_alien_ipc:
 	ESP_TO_TCB_AT %ebx
 	RESET_THREAD_IPC_MASK_AT %ebx
 	RESTORE_STATE_AFTER_IPC
-	popl    %eax
 .endm
 
 	.p2align 4
