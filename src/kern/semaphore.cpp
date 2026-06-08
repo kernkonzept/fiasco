@@ -121,10 +121,9 @@ Semaphore::sem_partner()
 { return reinterpret_cast<Sender *>(5); }
 
 PRIVATE inline NOEXPORT ALWAYS_INLINE
-bool
+void
 Semaphore::down(Thread *ct)
 {
-  bool run = true;
     {
       auto g = lock_guard(_waiting.lock());
       if (_queued == 0)
@@ -135,9 +134,8 @@ Semaphore::down(Thread *ct)
           // the thread would block forever (assuming it specified an infinite
           // timeout).
           if (!existence_lock.valid())
-            return true;
+            return;
 
-          run = false;
           // set fake partner to avoid IPCs to the thread
           ct->set_partner(sem_partner());
           ct->state_change_dirty(~Thread_ready, Thread_receive_wait);
@@ -151,8 +149,6 @@ Semaphore::down(Thread *ct)
    // auto unmask edge triggered IRQs if there is just one pending IRQ left
    if (access_once(&_queued) == 1 && hit_func == &hit_edge_irq)
      unmask();
-
-   return run;
 }
 
 /*
