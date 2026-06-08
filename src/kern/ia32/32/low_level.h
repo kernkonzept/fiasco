@@ -24,7 +24,7 @@
 
 /* be sure that we do not enable the interrupts here! */
 	.macro	RESTORE_IOPL
-	pushl	16(%esp)
+	pushl	16 + (7 * 4)(%esp)
 	andl	$~EFLAGS_IF, (%esp)
 	popf
 	.endm
@@ -62,9 +62,9 @@
 	popl	%ebx
 	//CHECK_SANITY $3		/* scratches ecx */
 	RESTORE_IOPL
-	movl	4(%esp), %eax
-	movl	8(%esp), %edx	/* user eip */
-	movl	20(%esp), %ecx	/* user esp */
+	movl	 4 (%esp), %eax
+	movl	 8 + (7 * 4)(%esp), %edx /* user eip */
+	movl	20 + (7 * 4)(%esp), %ecx /* user esp */
 	//subl	$2, %edx	/* adj. eip */
 	sti			/* the interrupts are enabled _after_ the
 				 * next instruction (see Intel Ref-Manual) */
@@ -85,8 +85,10 @@
 	.endm
 
 /* {SAVE,RESTORE}_STATE save/restore _all_ GP registers (sans esp) building a
- * stack layout described in Syscall_frame for IPC (invoked by sysenter/int30h). */
+ * stack layout described by Syscall_frame and Syscall_pre_frame for IPC
+ * (invoked by sysenter/int30h). */
 	.macro	SAVE_STATE
+	subl	$(7 * 4), %esp
 	pushl	%eax
 	pushl	%ebp
 	pushl	%ebx
@@ -104,6 +106,7 @@
 	popl	%ebx
 	popl	%ebp
 	popl	%eax
+	addl	$(7 * 4), %esp
 	.endm
 
 	.macro	RESTORE_STATE_AFTER_IPC
@@ -114,6 +117,7 @@
 	popl	%ebx
 	addl	$4, %esp
 	popl	%eax
+	addl	$(7 * 4), %esp
 	.endm
 
 /* {SAVE,RESTORE}_SCRATCH save/restore only GP registers which are not saved by

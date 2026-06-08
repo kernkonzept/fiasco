@@ -79,6 +79,7 @@ entry_vec01_debug:
 	push	%ebx
 	cld
 
+	subl	$(7 * 4), %esp		/* Syscall_pre_frame */
 	pushl	%eax
 	pushl	$0 // %ebp
 	pushl	$0 // %ebx
@@ -216,6 +217,7 @@ entry_sys_fast_ipc_log:
 	pushl	$(GDT_CODE_USER|SEL_PL_U|0x80)	/* user cs */
 	pushl	%ebx				/* user eip */
 
+	subl	$(7 * 4), %esp			/* Syscall_pre_frame */
 	pushl	%eax
 	pushl	$0 // %ebp
 	pushl	$0 // %ebx
@@ -253,7 +255,7 @@ entry_sys_fast_ipc_c:
 	pop	%esp
 	pushl	$(GDT_DATA_USER|SEL_PL_U)	/* user ss */
 	pushl	%ebp				// push user SP (get in ebp)
-	pushl	$EFLAGS_IF                // fake user eflags
+	pushl	$EFLAGS_IF			// fake user eflags
 	cld
 	// Fake user cs. This cs value is never used with exception
 	// that the thread is ex_regs'd before we leave with sysexit.
@@ -265,12 +267,13 @@ entry_sys_fast_ipc_c:
 	// the thread is ex_regs'd. In that case, we modify the return
 	// value from "call dispatch_syscall" to an alternate exit
 	// path using "iret".
-	pushl	$(GDT_CODE_USER|SEL_PL_U|0x80)	/* user cs */
+	pushl	$(GDT_CODE_USER|SEL_PL_U|0x80)	// user cs
 	pushl	%ebx				// push user return address
 
+	subl	$(7 * 4), %esp			// Syscall_pre_frame
 	pushl	%eax
-	pushl	$0 				// ebp
-	pushl	$0 // %ebx
+	pushl	$0				// ebp
+	pushl	$0				// ebx
 	pushl	%edi
 	pushl	%esi
 	pushl	%edx

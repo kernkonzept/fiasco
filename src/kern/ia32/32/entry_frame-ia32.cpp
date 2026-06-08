@@ -5,23 +5,30 @@ INTERFACE[ia32]:
 EXTENSION class Syscall_frame
 {
 protected:
-  Mword             _ecx;
-  Mword             _edx;
-  Mword             _esi;
-  Mword             _edi;
-  Mword             _ebx;
-  Mword             _ebp;
-  Mword             _eax;
+  Mword      _ecx;
+  Mword      _edx;
+  Mword      _esi;
+  Mword      _edi;
+  Mword      _ebx;
+  Mword      _ebp;
+  Mword      _eax;
+};
+
+EXTENSION class Syscall_pre_frame
+{
+  // Ensure that sizeof(Entry_frame) >= sizeof(Trap_state).
+  // See Task::resume_vcpu().
+  Mword    _reserved[7];
 };
 
 EXTENSION class Return_frame
 {
 private:
-  Mword             _eip;
-  Unsigned16  _cs, __attribute__((unused)) __csu;
-  Mword          _eflags;
-  Mword             _esp;
-  Unsigned16  _ss, __attribute__((unused)) __ssu;
+  Mword      _eip;
+  Unsigned16 _cs, __attribute__((unused)) __csu;
+  Mword      _eflags;
+  Mword      _esp;
+  Unsigned16 _ss, __attribute__((unused)) __ssu;
 };
 
 //----------------------------------------------------------------------------
