@@ -1,14 +1,10 @@
-
 INTERFACE:
 
 #include "l4_types.h"
 
-class Trap_state
+EXTENSION class Trap_state
 {
-  friend class Jdb_tcb;
-  friend class Jdb_stack_view;
 public:
-  typedef FIASCO_FASTCALL int (*Handler)(Trap_state*, Cpu_number cpu);
   static Handler base_handler asm ("BASE_TRAP_HANDLER");
 
   // No saved segment registers
@@ -45,20 +41,12 @@ public:
   Mword  _ss;
 };
 
-struct Trex
+EXTENSION struct Trex
 {
-  Trap_state s;
+public:
   Mword fs_base;
   Mword gs_base;
   Unsigned16 ds, es, fs, gs;
-
-  void set_ipc_upcall()
-  {
-    s._err = 0;
-    s._trapno = 0xfe;
-  }
-
-  void dump() { s.dump(); }
 };
 
 namespace Ts
@@ -78,17 +66,27 @@ namespace Ts
   };
 }
 
+//---------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include <cstdio>
 #include <panic.h>
-#include "cpu.h"
 #include "atomic.h"
+#include "cpu.h"
 #include "gdt.h"
-#include "regdefs.h"
 #include "mem.h"
+#include "regdefs.h"
 
 Trap_state::Handler Trap_state::base_handler FIASCO_FASTCALL;
+
+IMPLEMENT inline
+void
+Trex::set_ipc_upcall()
+{
+  s._err = 0;
+  s._trapno = 0xfe;
+}
+
 
 PUBLIC inline NEEDS["regdefs.h", "gdt.h"]
 void
@@ -108,7 +106,7 @@ Trap_state::copy_and_sanitize(Trap_state const *src)
   sanitize_user_state();
 }
 
-PUBLIC inline
+IMPLEMENT inline
 void
 Trap_state::set_pagefault(Mword pfa, Mword error)
 {
@@ -117,17 +115,17 @@ Trap_state::set_pagefault(Mword pfa, Mword error)
   _err = error;
 }
 
-PUBLIC inline
+IMPLEMENT inline
 Mword
 Trap_state::trapno() const
 { return _trapno; }
 
-PUBLIC inline
+IMPLEMENT inline
 Mword
 Trap_state::error() const
 { return _err; }
 
-PUBLIC inline
+IMPLEMENT inline
 Mword
 Trap_state::ip() const
 { return _ip; }
@@ -142,7 +140,7 @@ Mword
 Trap_state::flags() const
 { return _flags; }
 
-PUBLIC inline
+IMPLEMENT inline
 Mword
 Trap_state::sp() const
 { return _sp; }
@@ -187,10 +185,10 @@ void
 Trap_state::error(Mword error)
 { _err = error; }
 
-PUBLIC inline
+IMPLEMENT inline
 void
-Trap_state::ip(Mword ip)
-{ _ip = ip; }
+Trap_state::ip(Mword new_ip)
+{ _ip = new_ip; }
 
 PUBLIC inline
 void
@@ -227,9 +225,9 @@ void
 Trap_state::consume_instruction(unsigned count)
 { local_cas(reinterpret_cast<Address*>(&_ip), _ip, _ip + count); }
 
-PUBLIC
+IMPLEMENT
 void
-Trap_state::dump()
+Trap_state::dump() const
 {
   int from_user = _cs & 3;
 
@@ -251,18 +249,14 @@ Trap_state::dump()
   if (_trapno == 13)
     {
       if (_err & 1)
-	printf("(external event");
+        printf("(external event");
       else
-	printf("(internal event");
+        printf("(internal event");
       if (_err & 2)
-	{
-	  printf(" regarding IDT gate descriptor no. 0x%02lx)\n", _err >> 3);
-	}
+        printf(" regarding IDT gate descriptor no. 0x%02lx)\n", _err >> 3);
       else
-	{
-	  printf(" regarding %s entry no. 0x%02lx)\n",
-	      _err & 4 ? "LDT" : "GDT", _err >> 3);
-	}
+        printf(" regarding %s entry no. 0x%02lx)\n",
+               _err & 4 ? "LDT" : "GDT", _err >> 3);
     }
   else if (_trapno == 14)
     printf("page fault linear address %16lx\n", _cr2);
@@ -276,7 +270,7 @@ trap_dump_panic(Trap_state *ts)
   panic("terminated due to trap");
 }
 
-PUBLIC inline
+IMPLEMENT inline
 bool
-Trap_state::exclude_logging()
+Trap_state::exclude_logging() const
 { return _trapno == 1 || _trapno == 3; }

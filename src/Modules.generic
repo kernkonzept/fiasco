@@ -67,6 +67,7 @@ kip_init_IMPL           := kip_init
 platform_control_IMPL   := platform_control
 syscalls_IMPL		:= syscalls syscalls-log
 timer_tick_IMPL         := timer_tick
+trap_state_IMPL         := trap_state trap_state-$(CONFIG_XARCH)
 vcpu_host_regs_IMPL	:= vcpu_host_regs-$(CONFIG_XARCH)
 
 INTERFACES_STDWORKLOAD := std_workload

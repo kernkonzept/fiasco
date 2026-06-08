@@ -1,41 +1,19 @@
-
 INTERFACE:
 
 #include "l4_types.h"
 #include "entry_frame.h"
+#include "trap_state_regs.h"
 #include "processor.h"
 
-class Trap_state_regs
+EXTENSION class Trap_state : public Trap_state_regs, public Return_frame
+{};
+
+EXTENSION struct Trex
 {
 public:
-  Mword pf_address;
-  union
-  {
-    Mword error_code;
-    Arm_esr esr;
-  };
-
-  Mword r[13];
-};
-
-class Trap_state : public Trap_state_regs, public Return_frame
-{
-public:
-  typedef int (*Handler)(Trap_state*, Cpu_number cpu);
-  bool exclude_logging() { return false; }
-};
-
-struct Trex
-{
-  Trap_state s;
   Mword tpidruro;
   Mword tpidrurw;
-  void set_ipc_upcall()
-  { s.esr.ec() = 0x3f; }
-
-  void dump() { s.dump(); }
 };
-
 
 //-----------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:
@@ -62,7 +40,18 @@ IMPLEMENTATION:
 
 #include <cstdio>
 
-PUBLIC inline
+IMPLEMENT inline
+void
+Trex::set_ipc_upcall()
+{ s.esr.ec() = 0x3f; }
+
+
+IMPLEMENT inline
+bool
+Trap_state::exclude_logging() const
+{ return false; }
+
+IMPLEMENT inline
 void
 Trap_state::set_pagefault(Mword pfa, Mword error)
 {
@@ -70,24 +59,39 @@ Trap_state::set_pagefault(Mword pfa, Mword error)
   error_code = error;
 }
 
-PUBLIC inline
-unsigned long
+IMPLEMENT inline
+Mword
 Trap_state::trapno() const
 { return esr.ec(); }
 
-PUBLIC inline
+IMPLEMENT inline
 Mword
 Trap_state::error() const
 { return error_code; }
+
+IMPLEMENT inline
+Mword
+Trap_state::ip() const
+{ return Return_frame::ip(); }
+
+IMPLEMENT inline
+void
+Trap_state::ip(Mword new_ip)
+{ Return_frame::ip(new_ip); }
+
+IMPLEMENT inline
+Mword
+Trap_state::sp() const
+{ return Return_frame::sp(); }
 
 PUBLIC inline
 bool
 Trap_state::exception_is_undef_insn() const
 { return esr.ec() == 0; }
 
-PUBLIC
+IMPLEMENT
 void
-Trap_state::dump()
+Trap_state::dump() const
 {
   static constinit char const *const excpts[] =
   {
