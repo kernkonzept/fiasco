@@ -92,6 +92,21 @@ GEN_LEAVE_BY_TRIGGER_EXCEPTION
 GEN_LEAVE_AND_KILL_MYSELF
 GEN_DEBUGGER_ENTRIES
 
+#ifdef CONFIG_PAGEFAULT_TRAMPOLINE
+/******************************************************************************
+ * return from PF trampoline handler and trigger exception (re-enter)
+ * \pre interrupts must be disabled
+ * \pre `r0` must point to the trap state
+ */
+.global resume_trigger_exception_after_pf_trampoline
+.type resume_trigger_exception_after_pf_trampoline, #function
+resume_trigger_exception_after_pf_trampoline:
+	mov	sp, r0
+	align_and_save_sp r0
+	adr	lr, exception_return
+	ldr	pc, .LCslowtrap_entry
+#endif
+
 .local hyp_irq_entry
 hyp_irq_entry:
 	switch_to_hyp_kernel
@@ -177,21 +192,6 @@ fast_ret_from_irq:
 	add	sp, sp, #13*4
 	return_from_exception
 1:	.word arm_esr_entry
-
-#ifdef CONFIG_PAGEFAULT_TRAMPOLINE
-/******************************************************************************
- * return from PF trampoline handler and trigger exception (re-enter)
- * \pre interrupts must be disabled
- * \pre `r0` must point to the trap state
- */
-.global resume_trigger_exception_after_pf_trampoline
-.type resume_trigger_exception_after_pf_trampoline, #function
-resume_trigger_exception_after_pf_trampoline:
-	mov	sp, r0
-	align_and_save_sp r0
-	adr	lr, exception_return
-	ldr	pc, .LCslowtrap_entry
-#endif
 
 # r0 = registers, r1 = temp stack
 .global	vcpu_resume
