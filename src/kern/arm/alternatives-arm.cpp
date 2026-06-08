@@ -26,11 +26,3 @@ Alternative_insn::enable() const
   auto *enabled_insn = static_cast<void const *>(this->enabled_insn());
   memcpy(insn, enabled_insn, len);
 }
-
-IMPLEMENT inline NEEDS["mem.h"]
-void
-Alternative_insn::patch_finish()
-{
-  // Mem::dsb() already included in Mem_unit::make_coherent_to_pou()
-  Mem::isb();
-}

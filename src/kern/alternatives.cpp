@@ -16,18 +16,9 @@ class Alternative_insn
 {
 public:
   enum { Debug = 0 };
-
-  /**
-   * Initialize the alternative instructions.
-   *
-   * Go through all blocks and replace "disabled instructions" by "enabled
-   * instructions" if the corresponding probe() function returns `true`.
-   */
-  static void init();
+  friend class Alternative_insn_init;
 
 private:
-  static void patch_finish();
-
   inline void *disabled_insn() const
   {
     return offset_cast<void *>(this, disabled);
@@ -192,41 +183,3 @@ template<typename BASE>
 struct Alternative_static_functor
 {
 };
-
-//----------------------------------------------------------------------------
-IMPLEMENTATION:
-
-#include "mem_unit.h"
-#include "static_init.h"
-
-PRIVATE inline NEEDS["mem_unit.h"]
-void
-Alternative_insn::make_coherent() const
-{
-  Mem_unit::make_coherent_to_pou(disabled_insn(), len);
-}
-
-IMPLEMENT
-void
-Alternative_insn::init()
-{
-  extern Alternative_insn const _alt_insns_begin[];
-  extern Alternative_insn const _alt_insns_end[];
-
-  auto const *begin = &_alt_insns_begin[0];
-  auto const *end = &_alt_insns_end[0];
-
-  if (begin != end)
-    {
-      for (auto *i = begin; i != end; ++i)
-        if (i->probe())
-          {
-            i->enable();
-            i->make_coherent();
-          }
-
-      Alternative_insn::patch_finish();
-    }
-}
-
-STATIC_INITIALIZE_P(Alternative_insn, ALT_INSN_INIT_PRIO);

@@ -17,7 +17,6 @@ public:
 IMPLEMENTATION:
 
 #include <cstring>
-#include "boot_info.h"
 
 PRIVATE
 void
@@ -91,11 +90,4 @@ Alternative_insn::enable() const
       auto *enabled_insn = static_cast<Unsigned8 const *>(this->enabled_insn());
       memcpy(insn, enabled_insn, len);
     }
-}
-
-IMPLEMENT inline NEEDS["boot_info.h"]
-void
-Alternative_insn::patch_finish()
-{
-  Boot_info::reset_checksum_ro();
 }
