@@ -92,9 +92,14 @@ IMPLEMENT_DEFAULT
 int
 Task::resume_vcpu(Context *ctxt, Vcpu_state *vcpu, bool user_mode)
 {
-  // BAD: use the top-of the context stack area for the vcpu_resume
-  // return, otherwise exceptions during return to user are very
-  // ugly to handle.
+  // We pass a Trap_state to vcpu_resume() that replaces the Entry_frame created
+  // upon entering the kernel via a syscall.
+  //
+  // Certain architectures gradually pop the Trap_state in vcpu_resume() from
+  // the stack before returning to userland. Therefore the Trap_state must be
+  // at the top of the stack.
+  static_assert(sizeof(Entry_frame) >= sizeof(Trap_state));
+
   Trap_state *ts = reinterpret_cast<Trap_state *>(ctxt->regs() + 1) - 1;
   ctxt->copy_and_sanitize_trap_state(ts, &vcpu->_regs.s);
 
