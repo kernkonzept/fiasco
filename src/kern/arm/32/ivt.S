@@ -588,6 +588,26 @@ slowtrap_from_pagefault:
 GEN_EXCEPTION_RETURN
 GEN_IRET
 
+#ifdef CONFIG_PAGEFAULT_TRAMPOLINE
+# ifdef CONFIG_MMU
+.section	.excp.text,"xa"
+# endif
+/******************************************************************************
+ * return from PF trampoline handler and trigger exception (re-enter)
+ * \pre interrupts must be disabled
+ * \pre `r0` must point to the trap state
+ */
+.global resume_trigger_exception_after_pf_trampoline
+.type resume_trigger_exception_after_pf_trampoline, #function
+resume_trigger_exception_after_pf_trampoline:
+	mov	sp, r0
+	add	lr, r0, #(15 * 4)
+	ldmia	lr, {sp, lr}^
+	align_and_save_sp r0
+	adr	lr, exception_return
+	ldr	pc, .LCslowtrap_entry
+#endif
+
 /***************************************************************************
  * Exception irq ()
  *
@@ -1168,24 +1188,4 @@ resume_normal_after_pf_trampoline:
 	ldmia	lr, {sp, lr}^			@ restore user sp and lr (now lazy)
 	add	lr, lr, #(RF_SIZE - 4)		@ return address
 	ldmdb	lr, {pc}^			@ go back to interrupted insn
-#endif
-
-#ifdef CONFIG_PAGEFAULT_TRAMPOLINE
-# ifdef CONFIG_MMU
-.section	.excp.text,"xa"
-# endif
-/******************************************************************************
- * return from PF trampoline handler and trigger exception (re-enter)
- * \pre interrupts must be disabled
- * \pre `r0` must point to the trap state
- */
-.global resume_trigger_exception_after_pf_trampoline
-.type resume_trigger_exception_after_pf_trampoline, #function
-resume_trigger_exception_after_pf_trampoline:
-	mov	sp, r0
-	add	lr, r0, #(15 * 4)
-	ldmia	lr, {sp, lr}^
-	align_and_save_sp r0
-	adr	lr, exception_return
-	ldr	pc, .LCslowtrap_entry
 #endif
