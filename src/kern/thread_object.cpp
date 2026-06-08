@@ -81,7 +81,20 @@ bool
 Thread_object::put() override
 { return dec_ref() == 0; }
 
+PUBLIC inline
+void *
+Thread_object::operator new(size_t, Ram_quota *q) noexcept
+{
+  static_assert(sizeof(Thread_object) <= Thread::Size);
 
+  void *t = Kmem_alloc::allocator()->q_alloc(q, Bytes(Thread::Size));
+  if (t)
+    memset(t, 0, sizeof(Thread_object));
+
+  // separate_lifetime() is required to convince the compiler that this new
+  // operator does more than allocating memory.
+  return separate_lifetime(t);
+}
 
 PUBLIC
 void

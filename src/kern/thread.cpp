@@ -292,19 +292,6 @@ JDB_DEFINE_TYPENAME(Thread,  "\033[32mThread\033[m");
 DEFINE_PER_CPU Per_cpu<unsigned long> Thread::nested_trap_recover;
 
 
-PUBLIC inline
-void *
-Thread::operator new(size_t, Ram_quota *q) noexcept
-{
-  void *t = Kmem_alloc::allocator()->q_alloc(q, Bytes(Thread::Size));
-  if (t)
-    memset(t, 0, sizeof(Thread));
-
-  // separate_lifetime() is required to convince the compiler that this new
-  // operator does more than allocating memory.
-  return separate_lifetime(t);
-}
-
 PUBLIC
 void
 Thread::kbind(Task *t)
