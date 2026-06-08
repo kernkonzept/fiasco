@@ -750,8 +750,6 @@ alien_or_vcpu_user_syscall: @ ---------------------------------------------
 
 GEN_VCPU_UPCALL OFS__THREAD__USER_VCPU
 
-missed_excpt_ret_label:      .string "ERROR in exception return"
-fiq_label:	             .string "FIQ entry"
 
 /**************************************************************************
  * MPU kernel entry and exit handling.
