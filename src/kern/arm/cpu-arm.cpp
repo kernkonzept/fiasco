@@ -1,7 +1,5 @@
 INTERFACE [arm]:
 
-#include "io.h"
-#include "mem_layout.h"
 #include "mem_unit.h"
 #include "types.h"
 #include "per_cpu_data.h"
@@ -524,6 +522,7 @@ public:
 IMPLEMENTATION [arm && (arm_mpcore || arm_cortex_a9)]:
 
 #include "kmem_mmio.h"
+#include "mem_layout.h"
 
 Static_object<Scu> Cpu::scu;
 
@@ -550,9 +549,7 @@ Cpu::early_init_platform()
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm_v7plus && !arm_cortex_a9]:
 
-#include "kmem.h"
-
-IMPLEMENT_OVERRIDE inline NEEDS["kmem.h"]
+IMPLEMENT_OVERRIDE inline
 void
 Cpu::early_init_platform()
 {
@@ -568,11 +565,8 @@ IMPLEMENTATION [arm]:
 
 #include "io.h"
 #include "paging.h"
-#include "kmem_space.h"
-#include "kmem_alloc.h"
 #include "mem_unit.h"
 #include "processor.h"
-#include "ram_quota.h"
 
 DEFINE_PER_CPU_P(0) Per_cpu<Cpu> Cpu::cpus(Per_cpu_data::Cpu_num);
 DEFINE_GLOBAL Global_data<Cpu *> Cpu::_boot_cpu;

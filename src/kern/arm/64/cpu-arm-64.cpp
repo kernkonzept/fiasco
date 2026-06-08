@@ -278,6 +278,8 @@ Cpu::init_hyp_mode_common(bool is_boot_cpu)
 //--------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt && mmu]:
 
+#include "paging.h"
+
 EXTENSION class Cpu
 {
 public:
@@ -287,7 +289,7 @@ public:
   };
 };
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["paging.h"]
 unsigned long
 Cpu::vtcr_bits()
 {
