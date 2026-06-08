@@ -1,53 +1,19 @@
-/*
- * Fiasco Kernel-Entry Frame-Layout Code for RISC-V
- */
-
 INTERFACE [riscv]:
 
 #include "cpu.h"
 #include "types.h"
 #include "warn.h"
 
-class Syscall_frame
+EXTENSION class Syscall_frame
 {
 private:
   Mword a0;
   Mword a1;
   Mword a2;
   Mword a3;
-
-public:
-  void from(Mword id)
-  { a3 = id; }
-
-  Mword from_spec() const
-  { return a3; }
-
-  L4_obj_ref ref() const
-  { return L4_obj_ref::from_raw(a1); }
-
-  void ref(L4_obj_ref const &ref)
-  { a1 = ref.raw(); }
-
-  L4_timeout_pair timeout() const
-  { return L4_timeout_pair(a2); }
-
-  void timeout(L4_timeout_pair const &to)
-  { a2 = to.raw(); }
-
-  Utcb *utcb() const
-  { return nullptr; }
-
-  L4_msg_tag tag() const
-  { return L4_msg_tag(a0); }
-
-  void tag(L4_msg_tag const &tag)
-  { a0 = tag.raw(); }
 };
 
-class Entry_frame;
-
-class Return_frame
+EXTENSION class Return_frame
 {
 public:
   Mword eret_work;
@@ -84,21 +50,6 @@ public:
   };
 
 public:
-  Mword ip() const
-  { return _pc; }
-
-  Mword ip_syscall_user() const
-  { return _pc; }
-
-  void ip(Mword pc)
-  { _pc = pc; }
-
-  Mword sp() const
-  { return _sp; }
-
-  void sp(Mword sp)
-  { _sp = sp; }
-
   Mword arg0() const
   { return a0; }
 
@@ -118,27 +69,11 @@ public:
 
   bool interrupts_enabled() const
   { return status & Cpu::Sstatus_spie; }
-
-  Syscall_frame *syscall_frame()
-  { return reinterpret_cast<Syscall_frame *>(&a0); }
-
-  Syscall_frame const *syscall_frame() const
-  { return reinterpret_cast<Syscall_frame const *>(&a0); }
-
-  void disable_continuation()
-  { eret_work = 0; }
 };
 
-class Entry_frame : public Return_frame
+EXTENSION class Entry_frame
 {
 public:
-  static Entry_frame *to_entry_frame(Syscall_frame *sf)
-  {
-    // assume Entry_frame == Return_frame
-    return reinterpret_cast<Entry_frame *>
-      (  reinterpret_cast<char *>(sf) - offsetof(Return_frame, a0));
-  }
-
   void dump(bool extended = true) const;
 };
 
@@ -185,6 +120,102 @@ IMPLEMENTATION [riscv]:
 
 #include "cpu.h"
 #include "mem.h"
+
+IMPLEMENT inline
+void
+Syscall_frame::from(Mword id)
+{ a3 = id; }
+
+IMPLEMENT inline
+Mword
+Syscall_frame::from_spec() const
+  { return a3; }
+
+IMPLEMENT inline
+L4_obj_ref
+Syscall_frame::ref() const
+{ return L4_obj_ref::from_raw(a1); }
+
+IMPLEMENT inline
+void
+Syscall_frame::ref(L4_obj_ref const &ref)
+{ a1 = ref.raw(); }
+
+IMPLEMENT inline
+L4_timeout_pair
+Syscall_frame::timeout() const
+{ return L4_timeout_pair(a2); }
+
+IMPLEMENT inline
+void
+Syscall_frame::timeout(L4_timeout_pair const &to)
+{ a2 = to.raw(); }
+
+IMPLEMENT inline
+Utcb *
+Syscall_frame::utcb() const
+{ return nullptr; }
+
+IMPLEMENT inline
+L4_msg_tag
+Syscall_frame::tag() const
+{ return L4_msg_tag(a0); }
+
+IMPLEMENT inline
+void
+Syscall_frame::tag(L4_msg_tag const &tag)
+{ a0 = tag.raw(); }
+
+
+IMPLEMENT inline
+Mword
+Return_frame::ip() const
+{ return _pc; }
+
+IMPLEMENT inline
+Mword
+Return_frame::ip_syscall_user() const
+{ return _pc; }
+
+IMPLEMENT inline
+void
+Return_frame::ip(Mword new_ip)
+{ _pc = new_ip; }
+
+IMPLEMENT inline
+Mword
+Return_frame::sp() const
+{ return _sp; }
+
+IMPLEMENT inline
+void
+Return_frame::sp(Mword new_sp)
+{ _sp = new_sp; }
+
+IMPLEMENT inline
+void
+Return_frame::disable_continuation()
+{ eret_work = 0; }
+
+
+IMPLEMENT static inline
+Entry_frame *
+Entry_frame::to_entry_frame(Syscall_frame *sf)
+{
+  // assume Entry_frame == Return_frame
+  return reinterpret_cast<Entry_frame *>
+      (reinterpret_cast<char *>(sf) - offsetof(Return_frame, a0));
+}
+
+IMPLEMENT inline
+Syscall_frame *
+Entry_frame::syscall_frame()
+{ return reinterpret_cast<Syscall_frame *>(&a0); }
+
+IMPLEMENT inline
+Syscall_frame const *
+Entry_frame::syscall_frame() const
+{ return reinterpret_cast<Syscall_frame const *>(&a0); }
 
 PUBLIC inline NEEDS["mem.h"]
 void

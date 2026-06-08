@@ -1,6 +1,3 @@
-/*
- * Fiasco Kernel-Entry Frame-Layout Code
- */
 INTERFACE[ia32]:
 
 #include "types.h"
@@ -25,16 +22,11 @@ private:
   Mword          _eflags;
   Mword             _esp;
   Unsigned16  _ss, __attribute__((unused)) __ssu;
-
-public:
-  enum { Pf_ax_offset = 0 };
 };
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION[ia32]:
 
-//---------------------------------------------------------------------------
-// basic Entry_frame methods for IA32
-//
 #include "mem_layout.h"
 
 IMPLEMENT inline
@@ -54,85 +46,8 @@ Return_frame::ip_syscall_user() const
 }
 
 IMPLEMENT inline
-Address
-Return_frame::sp() const
-{ return _esp; }
-
-IMPLEMENT inline
 void
-Return_frame::sp(Mword sp)
-{ _esp = sp; }
-
-PUBLIC inline
-Mword 
-Return_frame::flags() const
-{ return _eflags; }
-
-PUBLIC inline
-void
-Return_frame::flags(Mword flags)
-{ _eflags = flags; }
-
-PUBLIC inline
-Mword
-Return_frame::cs() const
-{ return _cs; }
-
-PUBLIC inline
-void
-Return_frame::cs(Mword cs)
-{ _cs = cs; }
-
-PUBLIC inline
-Mword
-Return_frame::ss() const
-{ return _ss; }
-
-PUBLIC inline
-void
-Return_frame::ss(Mword ss)
-{ _ss = ss; }
-
-//---------------------------------------------------------------------------
-// IPC frame methods for IA32
-//
-IMPLEMENT inline
-Mword Syscall_frame::from_spec() const
-{ return _esi; }
-
-IMPLEMENT inline
-void Syscall_frame::from(Mword f)
-{ _esi = f; }
-
-IMPLEMENT inline
-L4_obj_ref Syscall_frame::ref() const
-{ return L4_obj_ref::from_raw(_edx); }
-
-IMPLEMENT inline
-void Syscall_frame::ref(L4_obj_ref const &ref)
-{ _edx = ref.raw(); }
-
-IMPLEMENT inline
-L4_timeout_pair Syscall_frame::timeout() const
-{ return L4_timeout_pair(_ecx); }
-
-IMPLEMENT inline
-void Syscall_frame::timeout(L4_timeout_pair const &to)
-{ _ecx = to.raw(); }
-
-IMPLEMENT inline Utcb *Syscall_frame::utcb() const
-{ return reinterpret_cast<Utcb*>(_edi); }
-
-IMPLEMENT inline L4_msg_tag Syscall_frame::tag() const
-{ return L4_msg_tag(_eax); }
-
-IMPLEMENT inline
-void Syscall_frame::tag(L4_msg_tag const &tag)
-{ _eax = tag.raw(); }
-
-IMPLEMENT inline
-void
-Return_frame::ip(Mword ip)
+Return_frame::ip(Mword new_ip)
 {
   // We have to consider a special case where we have to leave the kernel
   // with iret instead of sysexit: If the target thread entered the kernel
@@ -164,5 +79,91 @@ Return_frame::ip(Mword ip)
       *ret_from_disp_syscall = changed_ret_from_disp_syscall;
     }
 
-  _eip = ip;
+  _eip = new_ip;
 }
+
+IMPLEMENT inline
+Address
+Return_frame::sp() const
+{ return _esp; }
+
+IMPLEMENT inline
+void
+Return_frame::sp(Mword new_sp)
+{ _esp = new_sp; }
+
+PUBLIC inline
+Mword
+Return_frame::flags() const
+{ return _eflags; }
+
+PUBLIC inline
+void
+Return_frame::flags(Mword flags)
+{ _eflags = flags; }
+
+PUBLIC inline
+Mword
+Return_frame::cs() const
+{ return _cs; }
+
+PUBLIC inline
+void
+Return_frame::cs(Mword cs)
+{ _cs = cs; }
+
+PUBLIC inline
+Mword
+Return_frame::ss() const
+{ return _ss; }
+
+PUBLIC inline
+void
+Return_frame::ss(Mword ss)
+{ _ss = ss; }
+
+
+IMPLEMENT inline
+Mword
+Syscall_frame::from_spec() const
+{ return _esi; }
+
+IMPLEMENT inline
+void
+Syscall_frame::from(Mword f)
+{ _esi = f; }
+
+IMPLEMENT inline
+L4_obj_ref
+Syscall_frame::ref() const
+{ return L4_obj_ref::from_raw(_edx); }
+
+IMPLEMENT inline
+void
+Syscall_frame::ref(L4_obj_ref const &ref)
+{ _edx = ref.raw(); }
+
+IMPLEMENT inline
+L4_timeout_pair
+Syscall_frame::timeout() const
+{ return L4_timeout_pair(_ecx); }
+
+IMPLEMENT inline
+void
+Syscall_frame::timeout(L4_timeout_pair const &to)
+{ _ecx = to.raw(); }
+
+IMPLEMENT inline
+Utcb *
+Syscall_frame::utcb() const
+{ return reinterpret_cast<Utcb*>(_edi); }
+
+IMPLEMENT inline
+L4_msg_tag
+Syscall_frame::tag() const
+{ return L4_msg_tag(_eax); }
+
+IMPLEMENT inline
+void
+Syscall_frame::tag(L4_msg_tag const &tag)
+{ _eax = tag.raw(); }

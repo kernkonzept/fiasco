@@ -1,7 +1,3 @@
-/*
- * Fiasco Kernel-Entry Frame-Layout Code for x86-64
- */
-
 INTERFACE[amd64]:
 
 #include "types.h"
@@ -33,6 +29,8 @@ protected:
 
 EXTENSION class Syscall_pre_frame
 {
+  // Corresponds to trap number and error in Trap_state and ensures that
+  // sizeof(Entry_frame) >= sizeof(Trap_state). See Task::resume_vcpu().
   Mword    _reserved_1[2];
 };
 
@@ -44,16 +42,11 @@ private:
   Mword _rflags;
   Mword    _rsp;
   Mword     _ss;
-
-public:
-  enum { Pf_ax_offset = 2 };
 };
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION[amd64]:
 
-//---------------------------------------------------------------------------
-// basic Entry_frame methods for IA32
-// 
 #include "mem_layout.h"
 
 IMPLEMENT inline
@@ -68,7 +61,7 @@ Return_frame::ip_syscall_user() const
 
 IMPLEMENT inline
 void
-Return_frame::ip(Mword ip)
+Return_frame::ip(Mword new_ip)
 {
   // We have to consider a special case where we have to leave the kernel
   // with iret instead of sysexit: If the target thread entered the kernel
@@ -90,7 +83,7 @@ Return_frame::ip(Mword ip)
       *ret_from_disp_syscall = &leave_from_syscall_by_iret;
     }
 
- _rip = ip;
+ _rip = new_ip;
 }
 
 IMPLEMENT inline
@@ -100,11 +93,11 @@ Return_frame::sp() const
 
 IMPLEMENT inline
 void
-Return_frame::sp(Mword sp)
-{ _rsp = sp; }
+Return_frame::sp(Mword new_sp)
+{ _rsp = new_sp; }
 
 PUBLIC inline
-Mword 
+Mword
 Return_frame::flags() const
 { return _rflags; }
 
@@ -133,40 +126,48 @@ void
 Return_frame::ss(Mword ss)
 { _ss = ss; }
 
-//---------------------------------------------------------------------------
-// IPC frame methods for IA32
-// 
+
 IMPLEMENT inline
-Mword Syscall_frame::from_spec() const
+Mword
+Syscall_frame::from_spec() const
 { return _rsi; }
 
 IMPLEMENT inline
-void Syscall_frame::from(Mword f)
+void
+Syscall_frame::from(Mword f)
 { _rsi = f; }
 
 IMPLEMENT inline
-L4_obj_ref Syscall_frame::ref() const
+L4_obj_ref
+Syscall_frame::ref() const
 { return L4_obj_ref::from_raw(_rdx); }
 
 IMPLEMENT inline
-void Syscall_frame::ref(L4_obj_ref const &r)
+void
+Syscall_frame::ref(L4_obj_ref const &r)
 { _rdx = r.raw(); }
 
 IMPLEMENT inline
-L4_timeout_pair Syscall_frame::timeout() const
+L4_timeout_pair
+Syscall_frame::timeout() const
 { return L4_timeout_pair(_rcx); }
 
-IMPLEMENT inline 
-void Syscall_frame::timeout(L4_timeout_pair const &to)
+IMPLEMENT inline
+void
+Syscall_frame::timeout(L4_timeout_pair const &to)
 { _rcx = to.raw(); }
 
-IMPLEMENT inline Utcb *Syscall_frame::utcb() const
+IMPLEMENT inline
+Utcb *
+Syscall_frame::utcb() const
 { return reinterpret_cast<Utcb*>(_rdi); }
 
-IMPLEMENT inline L4_msg_tag Syscall_frame::tag() const
+IMPLEMENT inline
+L4_msg_tag
+Syscall_frame::tag() const
 { return L4_msg_tag(_rax); }
 
 IMPLEMENT inline
-void Syscall_frame::tag(L4_msg_tag const &tag)
+void
+Syscall_frame::tag(L4_msg_tag const &tag)
 { _rax = tag.raw(); }
-

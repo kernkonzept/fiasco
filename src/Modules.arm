@@ -100,11 +100,7 @@ dmar_space_IMPL		:= dmar_space \
                            $(if $(CONFIG_IOMMU_ARM_SMMU_500),dmar_space-smmuv2) \
                            $(if $(CONFIG_IOMMU_ARM_SMMU_V3),dmar_space-smmuv3)
 dt_IMPL                 := dt dt-arm
-ifeq ($(CONFIG_BIT64),y)
-  entry_frame_IMPL	:= entry_frame-arm
-else
-  entry_frame_IMPL	:= entry_frame entry_frame-arm
-endif
+entry_frame_IMPL	:= entry_frame entry_frame-arm
 fpu_IMPL		:= fpu fpu-arm
 ifeq ($(CONFIG_ARM_SVE),y)
 fpu_alloc_IMPL		:= fpu_alloc fpu_alloc-arm

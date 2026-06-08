@@ -1,6 +1,3 @@
-/*
- * Fiasco Kernel-Entry Frame-Layout Code for ARM
- */
 INTERFACE [arm]:
 
 #include "types.h"
@@ -21,15 +18,11 @@ public:
   Mword km_lr;
   Mword pc;
   Mword psr;
-
-  void disable_continuation()
-  {}
 };
 
-//---------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
-#include <cstdio>
 #include "processor.h"
 
 PUBLIC inline NEEDS["processor.h"]
@@ -51,8 +44,8 @@ Return_frame::ip_syscall_user() const
 
 IMPLEMENT inline
 void
-Return_frame::ip(Mword _pc)
-{ Return_frame::pc = _pc; }
+Return_frame::ip(Mword new_ip)
+{ Return_frame::pc = new_ip; }
 
 IMPLEMENT inline
 Mword
@@ -61,10 +54,15 @@ Return_frame::sp() const
 
 IMPLEMENT inline
 void
-Return_frame::sp(Mword sp)
-{ Return_frame::usp = sp; }
+Return_frame::sp(Mword new_sp)
+{ Return_frame::usp = new_sp; }
 
-//---------------------------------------------------------------------------
+IMPLEMENT inline
+void
+Return_frame::disable_continuation()
+{}
+
+
 IMPLEMENT inline
 void Syscall_frame::from(Mword id)
 { r[4] = id; }
@@ -86,7 +84,7 @@ IMPLEMENT inline
 L4_timeout_pair Syscall_frame::timeout() const
 { return L4_timeout_pair(r[3]); }
 
-IMPLEMENT inline 
+IMPLEMENT inline
 void Syscall_frame::timeout(L4_timeout_pair const &to)
 { r[3] = to.raw(); }
 
@@ -100,7 +98,7 @@ IMPLEMENT inline
 void Syscall_frame::tag(L4_msg_tag const &tag)
 { r[0] = tag.raw(); }
 
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 IMPLEMENTATION [arm && !cpu_virt]:
 
 PUBLIC inline
@@ -108,7 +106,7 @@ bool
 Return_frame::check_valid_user_psr() const
 { return (psr & Proc::Status_mode_mask) == Proc::PSR_m_usr; }
 
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 IMPLEMENTATION [arm && cpu_virt]:
 
 PUBLIC inline

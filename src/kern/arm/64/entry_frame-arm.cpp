@@ -4,43 +4,13 @@ INTERFACE [arm && 64bit]:
 #include "types.h"
 #include "processor.h"
 
-class Syscall_frame
+EXTENSION class Syscall_frame
 {
 private:
   Mword r[5];
-
-public:
-  void from(Mword id)
-  { r[1] = id; }
-
-  Mword from_spec() const
-  { return r[1]; }
-
-   L4_obj_ref ref() const
-  { return L4_obj_ref::from_raw(r[2]); }
-
-  void ref(L4_obj_ref const &ref)
-  { r[2] = ref.raw(); }
-
-  L4_timeout_pair timeout() const
-  { return L4_timeout_pair(r[3]); }
-
-  void timeout(L4_timeout_pair const &to)
-  { r[3] = to.raw(); }
-
-  Utcb *utcb() const
-  { return reinterpret_cast<Utcb*>(r[4]); }
-
-  L4_msg_tag tag() const
-  { return L4_msg_tag(r[0]); }
-
-  void tag(L4_msg_tag const &tag)
-  { r[0] = tag.raw(); }
 };
 
-class Entry_frame;
-
-class Return_frame
+EXTENSION class Return_frame
 {
 public:
   Mword eret_work;
@@ -59,59 +29,129 @@ public:
     Mword pstate;
     Mword psr;
   };
-
-  Mword sp() const
-  { return usp; }
-
-  void sp(Mword sp)
-  { usp = sp; }
-
-  Mword ip() const
-  { return pc; }
-
-  void ip(Mword new_pc)
-  { pc = new_pc; }
-
-  Syscall_frame *syscall_frame()
-  { return reinterpret_cast<Syscall_frame *>(&r[0]); }
-
-  Syscall_frame const *syscall_frame() const
-  { return reinterpret_cast<Syscall_frame const *>(&r[0]); }
-
-  static Entry_frame *to_entry_frame(Syscall_frame *sf)
-  {
-    // assume Entry_frame == Return_frame
-    return reinterpret_cast<Entry_frame *>
-      (  reinterpret_cast<char *>(sf) - offsetof(Return_frame, r[0]));
-  }
-
-  void disable_continuation()
-  { eret_work = 0; }
 };
 
-class Entry_frame : public Return_frame {};
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit]:
 
-//------------------------------------------------------------------
+#include "processor.h"
+
+IMPLEMENT inline
+void
+Syscall_frame::from(Mword id)
+{ r[1] = id; }
+
+IMPLEMENT inline
+Mword
+Syscall_frame::from_spec() const
+{ return r[1]; }
+
+IMPLEMENT inline
+L4_obj_ref
+Syscall_frame::ref() const
+{ return L4_obj_ref::from_raw(r[2]); }
+
+IMPLEMENT inline
+void
+Syscall_frame::ref(L4_obj_ref const &ref)
+{ r[2] = ref.raw(); }
+
+IMPLEMENT inline
+L4_timeout_pair
+Syscall_frame::timeout() const
+{ return L4_timeout_pair(r[3]); }
+
+IMPLEMENT inline
+void
+Syscall_frame::timeout(L4_timeout_pair const &to)
+{ r[3] = to.raw(); }
+
+IMPLEMENT inline
+Utcb *
+Syscall_frame::utcb() const
+{ return reinterpret_cast<Utcb*>(r[4]); }
+
+IMPLEMENT inline
+L4_msg_tag
+Syscall_frame::tag() const
+{ return L4_msg_tag(r[0]); }
+
+IMPLEMENT inline
+void
+Syscall_frame::tag(L4_msg_tag const &tag)
+{ r[0] = tag.raw(); }
+
+
+IMPLEMENT inline
+Mword
+Return_frame::sp() const
+{ return usp; }
+
+IMPLEMENT inline
+void
+Return_frame::sp(Mword new_sp)
+{ usp = new_sp; }
+
+IMPLEMENT inline
+Mword
+Return_frame::ip() const
+{ return pc; }
+
+IMPLEMENT inline
+void
+Return_frame::ip(Mword new_ip)
+{ pc = new_ip; }
+
+IMPLEMENT inline NEEDS[Return_frame::check_valid_user_psr]
+Mword
+Return_frame::ip_syscall_user() const
+{
+  return check_valid_user_psr()
+    ? r[30] // Assuming user entered the kernel by __l4_sys_syscall().
+    : ip(); // Kernel IP.
+}
+
+IMPLEMENT inline
+void
+Return_frame::disable_continuation()
+{ eret_work = 0; }
+
+PUBLIC inline NEEDS["processor.h"]
+void
+Return_frame::psr_set_mode(unsigned char m)
+{ pstate = (pstate & ~Proc::Status_mode_mask) | m; }
+
+
+IMPLEMENT static inline
+Entry_frame *
+Entry_frame::to_entry_frame(Syscall_frame *sf)
+{
+  // assume Entry_frame == Return_frame
+  return reinterpret_cast<Entry_frame *>
+    (reinterpret_cast<char *>(sf) - offsetof(Return_frame, r[0]));
+}
+
+IMPLEMENT inline
+Syscall_frame *
+Entry_frame::syscall_frame()
+{ return reinterpret_cast<Syscall_frame *>(&r[0]); }
+
+IMPLEMENT inline
+Syscall_frame const *
+Entry_frame::syscall_frame() const
+{ return reinterpret_cast<Syscall_frame const *>(&r[0]); }
+
+//----------------------------------------------------------------------------
 IMPLEMENTATION [arm && 64bit && !cpu_virt]:
+
+#include "processor.h"
+#include "mem.h"
 
 PUBLIC inline
 bool
 Return_frame::check_valid_user_psr() const
 { return (pstate & Proc::Status_mode_mask) == 0x00; }
 
-//------------------------------------------------------------------
-IMPLEMENTATION [arm && 64bit && cpu_virt]:
-
-PUBLIC inline
-bool
-Return_frame::check_valid_user_psr() const
-{ return (pstate & 0x1c) != 0x08; }
-
-// ------------------------------------------------------
-IMPLEMENTATION [arm && 64bit && !cpu_virt]:
-
-#include "processor.h"
-#include "mem.h"
 
 PUBLIC inline NEEDS["processor.h", "mem.h"]
 void
@@ -126,24 +166,10 @@ Entry_frame::copy_and_sanitize(Entry_frame const *src)
   pstate |= Mword{Proc::Status_mode_user} | Mword{Proc::Status_always_mask};
 }
 
-// ------------------------------------------------------
-IMPLEMENTATION [arm && 64bit]:
+//----------------------------------------------------------------------------
+IMPLEMENTATION [arm && 64bit && cpu_virt]:
 
-#include <cstdio>
-#include "processor.h"
-
-PUBLIC inline NEEDS["processor.h"]
-void
-Return_frame::psr_set_mode(unsigned char m)
-{
-  pstate = (pstate & ~Proc::Status_mode_mask) | m;
-}
-
-PUBLIC inline NEEDS[Return_frame::check_valid_user_psr]
-Mword
-Return_frame::ip_syscall_user() const
-{
-  return check_valid_user_psr()
-    ? r[30] // Assuming user entered the kernel by __l4_sys_syscall().
-    : ip(); // Kernel IP.
-}
+PUBLIC inline
+bool
+Return_frame::check_valid_user_psr() const
+{ return (pstate & 0x1c) != 0x08; }

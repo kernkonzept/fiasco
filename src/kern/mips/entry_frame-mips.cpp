@@ -6,43 +6,13 @@ INTERFACE[mips]:
 #include "mem.h"
 #include <cxx/bitfield>
 
-class Syscall_frame
+EXTENSION class Syscall_frame
 {
 private:
   Mword r[5];
-
-public:
-  void from(Mword id)
-  { r[4] = id; }
-
-  Mword from_spec() const
-  { return r[4]; }
-
-  L4_obj_ref ref() const
-  { return L4_obj_ref::from_raw(r[1]); }
-
-  void ref(L4_obj_ref const &ref)
-  { r[1] = ref.raw(); }
-
-  L4_timeout_pair timeout() const
-  { return L4_timeout_pair(r[2]); }
-
-  void timeout(L4_timeout_pair const &to)
-  { r[2] = to.raw(); }
-
-  Utcb *utcb() const
-  { return reinterpret_cast<Utcb*>(r[0]); }
-
-  L4_msg_tag tag() const
-  { return L4_msg_tag(r[3]); }
-
-  void tag(L4_msg_tag const &tag)
-  { r[3] = tag.raw(); }
 };
 
-class Entry_frame;
-
-class Return_frame
+EXTENSION class Return_frame
 {
 public:
   Mword bad_instr_p;
@@ -99,18 +69,6 @@ public:
   void eret_work(Mword v)
   { r[0] = v; /* unused zero register */ }
 
-  Mword sp() const
-  { return r[R_sp]; }
-
-  void sp(Mword sp)
-  { r[R_sp] = sp; }
-
-  Mword ip() const
-  { return epc; }
-
-  void ip(Mword pc)
-  { epc = pc; }
-
   bool user_mode() const
   { return status & Cp0_status::ST_KSU_USER; }
 
@@ -126,34 +84,109 @@ public:
 
   void set_ipc_upcall()
   { cause = C_l4_ipc_upcall; }
-
-  Address ip_syscall_user() const
-  { return epc; }
-
-  Syscall_frame *syscall_frame()
-  { return reinterpret_cast<Syscall_frame *>(&r[R_s0]); }
-
-  Syscall_frame const *syscall_frame() const
-  { return reinterpret_cast<Syscall_frame const *>(&r[R_s0]); }
-
-  static Entry_frame *to_entry_frame(Syscall_frame *sf)
-  {
-    // assume Entry_frame == Return_frame
-    return reinterpret_cast<Entry_frame *>
-      ( reinterpret_cast<char *>(sf) - offsetof(Return_frame, r[R_s0]));
-  }
-
-  void disable_continuation()
-  { eret_work(0); }
 };
-
-class Entry_frame : public Return_frame {};
 
 //------------------------------------------------------------------------------
 IMPLEMENTATION [mips]:
 
 #include <cstdio>
 #include "cp0_status.h"
+
+IMPLEMENT inline
+void
+Syscall_frame::from(Mword id)
+{ r[4] = id; }
+
+IMPLEMENT inline
+Mword
+Syscall_frame::from_spec() const
+{ return r[4]; }
+
+IMPLEMENT inline
+L4_obj_ref
+Syscall_frame::ref() const
+{ return L4_obj_ref::from_raw(r[1]); }
+
+IMPLEMENT inline
+void
+Syscall_frame::ref(L4_obj_ref const &ref)
+{ r[1] = ref.raw(); }
+
+IMPLEMENT inline
+L4_timeout_pair
+Syscall_frame::timeout() const
+{ return L4_timeout_pair(r[2]); }
+
+IMPLEMENT inline
+void
+Syscall_frame::timeout(L4_timeout_pair const &to)
+{ r[2] = to.raw(); }
+
+IMPLEMENT inline
+Utcb *
+Syscall_frame::utcb() const
+{ return reinterpret_cast<Utcb*>(r[0]); }
+
+IMPLEMENT inline
+L4_msg_tag
+Syscall_frame::tag() const
+{ return L4_msg_tag(r[3]); }
+
+IMPLEMENT inline
+void
+Syscall_frame::tag(L4_msg_tag const &tag)
+{ r[3] = tag.raw(); }
+
+
+IMPLEMENT inline
+Mword
+Return_frame::sp() const
+{ return r[R_sp]; }
+
+IMPLEMENT inline
+void
+Return_frame::sp(Mword new_sp)
+{ r[R_sp] = new_sp; }
+
+IMPLEMENT inline
+Mword
+Return_frame::ip() const
+{ return epc; }
+
+IMPLEMENT inline
+void
+Return_frame::ip(Mword new_ip)
+{ epc = new_ip; }
+
+IMPLEMENT inline
+Address
+Return_frame::ip_syscall_user() const
+{ return epc; }
+
+IMPLEMENT inline
+void
+Return_frame::disable_continuation()
+{ eret_work(0); }
+
+
+IMPLEMENT static inline
+Entry_frame *
+Entry_frame::to_entry_frame(Syscall_frame *sf)
+{
+  // assume Entry_frame == Return_frame
+  return reinterpret_cast<Entry_frame *>
+    (reinterpret_cast<char *>(sf) - offsetof(Return_frame, r[R_s0]));
+}
+
+IMPLEMENT inline
+Syscall_frame *
+Entry_frame::syscall_frame()
+{ return reinterpret_cast<Syscall_frame *>(&r[R_s0]); }
+
+IMPLEMENT inline
+Syscall_frame const *
+Entry_frame::syscall_frame() const
+{ return reinterpret_cast<Syscall_frame const *>(&r[R_s0]); }
 
 PUBLIC
 void
@@ -177,4 +210,3 @@ Return_frame::dump() const
   printf("Status %0*lx Cause %0*lx EPC %0*lx\n", sz, status, sz, cause, sz, epc);
   //printf("Cause  %0*lx BadVaddr %0*lx\n", sz, cause, sz, badvaddr);
 }
-
