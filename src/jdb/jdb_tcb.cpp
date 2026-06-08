@@ -606,9 +606,6 @@ Jdb_module::Action_code
 Jdb_tcb::show(Thread *t, int level, bool dump_only)
 {
   bool redraw_screen = !dump_only;
-#if 0
-  Address bt_start   = 0;
-#endif
 
   if (!t)
     t = Jdb::get_thread(Jdb::triggered_on_cpu);
@@ -626,9 +623,6 @@ Jdb_tcb::show(Thread *t, int level, bool dump_only)
   Address ksp  = is_current(t) ? ef->ksp()
                                : reinterpret_cast<Address>(t->get_kernel_sp());
 
-#if 0
-  Address tcb  = (Address)context_of((void*)ksp);
-#endif
   _stack_view.init(ksp, ef, is_current(t));
   _stack_view.set_y(stack_y());
 
@@ -640,17 +634,17 @@ whole_screen:
       redraw_screen = false;
     }
 
-  String_buf<12> time_str;
-
   putstr("thread  : ");
   Jdb_kobject::print_uid(t, 3);
+
   print_thread_uid_raw(t);
-  printf("\tCPU: %u:%u ", cxx::int_value<Cpu_number>(t->home_cpu()),
-                          cxx::int_value<Cpu_number>(t->get_current_cpu()));
+  printf("     CPU: %u:%u ",
+         cxx::int_value<Cpu_number>(t->home_cpu()),
+         cxx::int_value<Cpu_number>(t->get_current_cpu()));
 
-  printf("\tprio: %02x\n", t->sched()->prio());
-
-  printf("state   : %03lx ", t->state(false));
+  printf("       prio: %02x\n"
+         "state   : %03lx ",
+         t->sched()->prio(), t->state(false));
   Jdb_thread::print_state_long(t);
 
   putstr("\nwait for: ");
@@ -659,10 +653,10 @@ whole_screen:
   else
     Jdb_thread::print_partner(t, 4);
 
-  putstr("\tpolling: ");
+  putstr(" polling: ");
   Jdb_thread::print_snd_partner(t, 3);
 
-  putstr("\trcv descr: ");
+  putstr("    rcv descr: ");
 
   if ((t->state(false) & Thread_ipc_mask) == Thread_receive_wait
       && t->rcv_regs())
@@ -670,7 +664,9 @@ whole_screen:
   else
     putstr("        ");
 
-  putstr("\ttimeout: ");
+  String_buf<12> time_str;
+
+  putstr("     timeout: ");
   if (t->_timeout && t->_timeout->is_set())
     {
       Signed64 diff = t->_timeout->get_timeout(Jdb::system_clock_on_enter());
@@ -683,25 +679,23 @@ whole_screen:
     }
 
   time_str.reset();
-  putstr("\ncpu time: ");
-  Jdb::write_ll_ns(&time_str, t->consumed_time()*1000, false);
-  printf("%-13s", time_str.c_str());
+  Jdb::write_ll_ns(&time_str, t->consumed_time() * 1000, false);
+  printf("\ncpu time: %-13s", time_str.c_str());
 
-  printf("\t\ttimeslice: %llu us\n"
-         "pager\t: ",
-         t->sched()->left());
+  printf("         timeslice: %llu us\n"
+         "pager   : ", t->sched()->left());
   print_kobject(t, t->_pager.raw());
 
-  putstr("\ttask     : ");
+  putstr("       task     : ");
   if (t->space() == Kernel_task::kernel_task())
-    putstr(" kernel        ");
+    putstr("kernel");
   else
     print_kobject(static_cast<Task*>(t->space()));
 
   putstr("\nexc-hndl: ");
   print_kobject(t, t->_exc_handler.raw());
 
-  printf("\tUTCB     : %08lx/%08lx",
+  printf("       UTCB     : %08lx/%08lx",
          reinterpret_cast<Mword>(t->utcb().kern()),
          reinterpret_cast<Mword>(t->utcb().usr().get()));
 
@@ -824,14 +818,14 @@ dump_stack:
                 }
               break;
             case KEY_TAB:
-              //bt_start = search_bt_start(tcb, (Mword*)ksp, is_current(t));
               redraw = true;
               break;
             case ' ':
               if (Jdb_disasm::avail() && _stack_view.current.valid())
                 {
                   printf("V %lx", _stack_view.current.value());
-                  Jdb_address insn_ptr(_stack_view.current.value(), _stack_view.current.space(t));
+                  Jdb_address insn_ptr(_stack_view.current.value(),
+                                       _stack_view.current.space(t));
                   if (!Jdb_disasm::show(insn_ptr, level + 1))
                     return NOTHING;
                   redraw_screen = true;
@@ -856,7 +850,8 @@ dump_stack:
                       return NOTHING;
                     }
 
-                  Jdb_address insn_ptr(_stack_view.current.value(), _stack_view.current.space(t));
+                  Jdb_address insn_ptr(_stack_view.current.value(),
+                                       _stack_view.current.space(t));
                   if (!Jdb_disasm::show(insn_ptr, level + 1))
                     return NOTHING;
                   redraw_screen = true;
