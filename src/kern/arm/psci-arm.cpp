@@ -348,7 +348,7 @@ Psci::init_psci_method()
 
   if (!is_detected())
     {
-      printf("PSCI: Could not find a PSCI call method");
+      printf("PSCI: Could not find a PSCI call method\n");
       return false;
     }
 
