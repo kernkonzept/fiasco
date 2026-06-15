@@ -4,6 +4,8 @@ INTERFACE [mips]:
 #include "trap_state.h"
 #include "tb_entry.h"
 
+class String_buffer;
+
 class Jdb_entry_frame : public Trap_state
 {
 public:
@@ -16,6 +18,7 @@ IMPLEMENTATION[mips]:
 
 #include <cstdio>
 #include "processor.h"
+#include "string_buffer.h"
 
 PUBLIC inline
 bool
@@ -73,6 +76,11 @@ PUBLIC inline
 unsigned
 Jdb_entry_frame::textlen() const
 { return r[Entry_frame::R_a1]; }
+
+PUBLIC
+void
+Jdb_entry_frame::print_error(String_buffer *sb)
+{ sb->printf("Cause=%08lx Status=%08lx", cause, status); }
 
 //---------------------------------------------------------------------------
 // the following register usage matches ABI in l4sys/include/ARCH-mips/kdebug.h

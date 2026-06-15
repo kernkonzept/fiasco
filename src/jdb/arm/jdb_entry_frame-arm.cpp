@@ -4,6 +4,8 @@ INTERFACE [arm]:
 #include "trap_state.h"
 #include "tb_entry.h"
 
+class String_buffer;
+
 class Jdb_entry_frame : public Trap_state
 {
 public:
@@ -17,6 +19,7 @@ IMPLEMENTATION[arm]:
 
 #include <cstdio>
 #include "processor.h"
+#include "string_buffer.h"
 
 #if 0
 PUBLIC
@@ -61,6 +64,11 @@ PUBLIC inline
 unsigned
 Jdb_entry_frame::textlen() const
 { return r[1]; }
+
+PUBLIC
+void
+Jdb_entry_frame::print_error(String_buffer *sb) const
+{ sb->printf("ESR=%08lx", esr.raw()); }
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && 32bit]:

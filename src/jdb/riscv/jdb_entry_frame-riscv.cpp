@@ -3,6 +3,8 @@ INTERFACE [riscv]:
 #include "cpu.h"
 #include "trap_state.h"
 
+class String_buffer;
+
 class Jdb_entry_frame : public Trap_state
 {
 public:
@@ -13,6 +15,8 @@ public:
 
 //----------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:
+
+#include "string_buffer.h"
 
 IMPLEMENT inline
 bool
@@ -68,3 +72,8 @@ PUBLIC inline
 bool
 Jdb_entry_frame::debug_ipi() const
 { return cause == Trap_state::Ec_l4_debug_ipi; }
+
+PUBLIC
+void
+Jdb_entry_frame::print_error(String_buffer *sb) const
+{ sb->printf("Cause=%08lx Status=%08lx", cause, status); }

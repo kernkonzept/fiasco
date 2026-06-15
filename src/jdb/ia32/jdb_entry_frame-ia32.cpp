@@ -5,11 +5,15 @@ INTERFACE:
 #include "trap_state.h"
 #include "tb_entry.h"
 
+class String_buffer;
+
 class Jdb_entry_frame : public Trap_state
 {};
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION[ia32,amd64]:
+
+#include "string_buffer.h"
 
 PUBLIC inline
 bool
@@ -65,6 +69,25 @@ PUBLIC inline NEEDS["cpu.h"]
 Mword
 Jdb_entry_frame::ss() const
 { return from_user() ? _ss : Cpu::get_ss(); }
+
+PUBLIC
+void
+Jdb_entry_frame::print_error(String_buffer *sb) const
+{
+  sb->printf("%s", Cpu::exception_string(_trapno));
+  switch (_trapno)
+    {
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+    case 14:
+    case 17:
+    case 21:
+      sb->printf(", ERR=" L4_MWORD_FMT, _err);
+      break;
+    }
+}
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION[ia32]:
