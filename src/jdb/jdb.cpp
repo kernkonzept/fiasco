@@ -119,11 +119,35 @@ private:
 
   static void enter_trap_handler(Cpu_number cpu);
   static void leave_trap_handler(Cpu_number cpu);
+  /**
+   * Handle breakpoints.
+   * \retval false  No breakpoint event or don't stop on this breakpoint.
+   * \retval true   Hit a breakpoint, enter JDB.
+   */
   static bool handle_conditional_breakpoint(Cpu_number cpu, Jdb_entry_frame *e);
+  /**
+   * Special handler for catching expected traps inside JDB, for example for
+   * reading/writing non-existing system registers.
+   * \retval false  No such trap.
+   * \retval true   Special trap detected, don't enter JDB.
+   */
   static bool handle_early_debug_traps(Jdb_entry_frame *e);
+  /** Architecture-specific method for handling a trap inside JDB. */
   static void handle_nested_trap(Jdb_entry_frame *e);
+  /**
+   * Handle JDB sequence.
+   * \retval false  Error executing the sequence, enter JDB.
+   * \retval true   Sequence was successfully handled, exit JDB immediately.
+   */
   static bool handle_user_ke_seq(Jdb_entry_frame const *e);
+  /**
+   * Handle architecture-specific traps first before testing for common traps
+   * like l4_kd_enter() etc.
+   * \retval false  Trap was not handled.
+   * \retval true   Trap was handled.
+   */
   static bool handle_debug_traps(Cpu_number cpu, bool &really_break);
+  /** Perform per-architecture actions if we really enter JDB. */
   static void prepare_really_break();
   static bool test_checksums();
 
