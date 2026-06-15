@@ -27,6 +27,24 @@ local_cas_unsafe(Mword *ptr, Mword oldval, Mword newval)
   return ret;
 }
 
+inline
+void
+local_atomic_and(Mword *mem, Mword value)
+{
+  Mword old;
+  do { old = *mem; }
+  while (!local_cas(mem, old, old & value));
+}
+
+inline
+void
+local_atomic_or(Mword *mem, Mword value)
+{
+  Mword old;
+  do { old = *mem; }
+  while (!local_cas(mem, old, old | value));
+}
+
 //---------------------------------------------------------------------------
 IMPLEMENTATION [arm && arm_v6plus]:
 

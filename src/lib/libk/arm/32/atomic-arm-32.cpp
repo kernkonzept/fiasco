@@ -347,3 +347,65 @@ cas_arch(Mword *m, Mword o, Mword n)
 
   return !res;
 }
+
+//---------------------------------------------------------------------------
+INTERFACE[arm && !arm_v6plus]:
+
+#include "processor.h"
+
+// preprocess off
+// Fall-back UP implementations for armv5
+#define ATOMIC_OP(name, op)                                                    \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 4) inline                                              \
+  void                                                                         \
+  atomic_##name(T *mem, V value)                                               \
+  {                                                                            \
+    T val = value;                                                             \
+    Proc::Status s = Proc::cli_save();                                         \
+    *mem op##= val;                                                            \
+    Proc::sti_restore(s);                                                      \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 4) inline                                              \
+  T                                                                            \
+  atomic_##name##_fetch(T *mem, V value)                                       \
+  {                                                                            \
+    T val = value;                                                             \
+    Proc::Status s = Proc::cli_save();                                         \
+    *mem op##= val;                                                            \
+    T res = *mem;                                                              \
+    Proc::sti_restore(s);                                                      \
+    return res;                                                                \
+  }                                                                            \
+                                                                               \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == 4) inline                                              \
+  T                                                                            \
+  atomic_fetch_##name(T *mem, V value)                                         \
+  {                                                                            \
+    Proc::Status s = Proc::cli_save();                                         \
+    T res = *mem;                                                              \
+    *mem op##= value;                                                          \
+    Proc::sti_restore(s);                                                      \
+    return res;                                                                \
+  }
+ATOMIC_OP(and, &)
+ATOMIC_OP(or, |)
+ATOMIC_OP(add, +)
+#undef ATOMIC_OP
+
+template<typename T, typename V>
+requires(sizeof(T) == 4) inline
+T
+atomic_exchange(T *mem, V value)
+{
+  T val = value;
+  Proc::Status s = Proc::cli_save();
+  T old = *mem;
+  *mem = val;
+  Proc::sti_restore(s);
+  return old;
+}
+// preprocess on
