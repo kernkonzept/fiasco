@@ -274,27 +274,17 @@ Jdb::handle_debug_traps(Cpu_number cpu)
   return true;
 }
 
-IMPLEMENT inline NEEDS [Jdb::kernel_uart_irq_disable, Jdb::kernel_uart_irq_enable]
+IMPLEMENT_OVERRIDE
 bool
-Jdb::handle_user_request(Cpu_number cpu)
+Jdb::handle_user_ke_seq(Jdb_entry_frame const *ef)
 {
-  Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
+  // Disable + re-enable the UART RX IRQ so that detecting escape sequences also
+  // works while executing non-interactive commands, in particular for "JS".
+  kernel_uart_irq_disable();
+  bool ret = execute_command_ni(ef->text(), ef->textlen());
+  kernel_uart_irq_enable();
 
-  if (ef->debug_ipi())
-    return cpu != Cpu_number::boot_cpu();
-
-  if (ef->debug_entry_kernel_sequence())
-    {
-      // Disable + re-enable the UART RX IRQ so that detecting escape sequences
-      // also works while executing non-interactive commands, in particular for
-      // "JS".
-      kernel_uart_irq_disable();
-      bool ret = execute_command_ni(ef->text(), ef->textlen());
-      kernel_uart_irq_enable();
-      return ret;
-    }
-
-  return false;
+  return ret;
 }
 
 IMPLEMENT inline

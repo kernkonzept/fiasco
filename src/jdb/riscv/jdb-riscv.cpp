@@ -66,21 +66,6 @@ Jdb::handle_debug_traps(Cpu_number cpu)
 
 IMPLEMENT inline
 bool
-Jdb::handle_user_request(Cpu_number cpu)
-{
-  Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
-
-  if (ef->debug_ipi())
-    return cpu != Cpu_number::boot_cpu();
-
-  if (ef->debug_entry_kernel_sequence())
-    return execute_command_ni(ef->text(), ef->textlen());
-
-  return false;
-}
-
-IMPLEMENT inline
-bool
 Jdb::test_checksums()
 { return true; }
 

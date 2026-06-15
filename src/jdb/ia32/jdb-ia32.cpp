@@ -674,25 +674,6 @@ Jdb::handle_trapX(Cpu_number cpu, Jdb_entry_frame *ef)
   return 1;
 }
 
-/** Int3 debugger interface. This function is called immediately
- * after entering the kernel debugger.
- * @return true if command was successfully interpreted
- */
-IMPLEMENT
-bool
-Jdb::handle_user_request(Cpu_number cpu)
-{
-  Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
-
-  if (ef->debug_ipi())
-    return cpu != Cpu_number::boot_cpu();
-
-  if (ef->debug_entry_kernel_sequence())
-    return execute_command_ni(ef->text(), ef->textlen());
-
-  return false;
-}
-
 IMPLEMENT
 void
 Jdb::enter_trap_handler(Cpu_number cpu)

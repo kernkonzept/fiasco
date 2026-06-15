@@ -122,7 +122,7 @@ private:
   static bool handle_conditional_breakpoint(Cpu_number cpu, Jdb_entry_frame *e);
   static bool handle_early_debug_traps(Jdb_entry_frame *e);
   static void handle_nested_trap(Jdb_entry_frame *e);
-  static bool handle_user_request(Cpu_number cpu);
+  static bool handle_user_ke_seq(Jdb_entry_frame const *e);
   static bool handle_debug_traps(Cpu_number cpu);
   static bool test_checksums();
 
@@ -236,6 +236,11 @@ Jdb::handle_early_debug_traps(Jdb_entry_frame *)
 {
   return false;
 }
+
+IMPLEMENT_DEFAULT static
+bool
+Jdb::handle_user_ke_seq(Jdb_entry_frame const *ef)
+{ return execute_command_ni(ef->text(), ef->textlen()); }
 
 PUBLIC static
 bool
@@ -1299,14 +1304,25 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
     triggered_on_cpu = Cpu_number::boot_cpu(); // should not happen
 
   // check for kdb_ke debugging interface; only used from kernel context
-  if (foreach_cpu(&handle_user_request, true))
+  auto execute_user_ke_seq = [](Cpu_number cpu)
+    {
+      Jdb_entry_frame const *ef = Jdb::entry_frame.cpu(cpu);
+      if (ef->debug_ipi())
+        return true;
+      if (ef->debug_entry_kernel_sequence() && handle_user_ke_seq(ef))
+        return true;
+
+      return false;
+    };
+
+  if (foreach_cpu(execute_user_ke_seq, true))
     {
       close_debug_console(cpu);
       leave_trap_handler(cpu);
       triggered_on_cpu = Cpu_number::nil();
       clear_system_clock_on_enter();
       return 0;
-    }
+    };
 
   hide_statline = false;
 
