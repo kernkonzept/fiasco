@@ -311,12 +311,12 @@ private:
     unsigned new_asid = _reserved.find_next();
     if (new_asid == Asid_bitmap::asid_num()) [[unlikely]]
       {
-        generation = atomic_add_fetch(&_gen, Asid::Generation_inc);
+        generation.a = atomic_add_fetch(&_gen.a, Asid::Generation_inc);
 
         if (generation.is_invalid_generation()) [[unlikely]]
           {
             // Skip problematic generation value
-            generation = atomic_add_fetch(&_gen, Asid::Generation_inc);
+            generation.a = atomic_add_fetch(&_gen.a, Asid::Generation_inc);
           }
 
         roll_over();
