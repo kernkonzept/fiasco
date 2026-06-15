@@ -22,9 +22,9 @@ protected:
    *
    * \param ts           Trap_state to be populated.
    * \param tramp_state  Pf_trampoline state.
-   * \param artificial   If false, reflect the PF to the exception handler. If
-   *                     true, trigger an artificial exception at the exception
-   *                     handler.
+   * \param artificial_exception  If false, reflect the PF to the exception
+   *                              handler. If true, trigger an artificial
+   *                              exception at the exception  handler.
    *
    * Either the original PF exception, as recorded in `tramp_state`, could not
    * be handled at the trampoline page fault handler and should be reflected to

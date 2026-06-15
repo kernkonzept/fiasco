@@ -80,7 +80,7 @@ public:
   static int getchar(void);
 
   /**
-   * Call this function every time a `\n' is written to the
+   * Call this function every time a `\n` is written to the
    *        console and it stops output when the screen is full.
    * @return 0 if user wants to abort the output (escape or 'q' pressed)
    */

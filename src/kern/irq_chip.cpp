@@ -190,7 +190,7 @@ public:
    * \param pin   The pin to attach the IRQ to.
    * \param init  By default, perform the pin allocation and the following
    *              initialization: Adjust the trigger mode of the IRQ to the pin
-   *              of the chip, mask/unmask the pin according to the IRQ`s masked
+   *              of the chip, mask/unmask the pin according to the IRQ´s masked
    *              state and set the target CPU of the pin.
    *              If this parameter is set to `false`, skip the initialization.
    */

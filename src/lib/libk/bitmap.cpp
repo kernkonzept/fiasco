@@ -51,7 +51,7 @@ public:
    *
    * \param nr_bits  Number of bits to represent.
    *
-   * \return Number of bitmap elements that hold \ref nr_bits bits.
+   * \return Number of bitmap elements that hold `nr_bits` bits.
    */
   static constexpr size_t
   nr_elems(size_t nr_bits)
@@ -64,7 +64,7 @@ public:
    *
    * \param nr_bits  Number of bits to represent.
    *
-   * \return Size (in bytes) of a bitmap that holds \ref nr_bits bits.
+   * \return Size (in bytes) of a bitmap that holds `nr_bits` bits.
    */
   static constexpr size_t
   size_in_bytes(size_t nr_bits)

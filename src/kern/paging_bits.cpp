@@ -17,7 +17,7 @@ public:
    *
    * \param value  Value to round.
    *
-   * \return Nearest higher page of \ref value.
+   * \return Nearest higher page of `value`.
    */
   template<typename TYPE>
   static constexpr
@@ -35,7 +35,7 @@ public:
    *
    * \param value  Value to round.
    *
-   * \return Nearest higher page of \ref value.
+   * \return Nearest higher page of `value`.
    */
   template<typename TYPE>
   static constexpr
@@ -50,7 +50,7 @@ public:
    *
    * \param value  Value to truncate.
    *
-   * \return Nearest lower page of \ref value.
+   * \return Nearest lower page of `value`.
    */
   template<typename TYPE>
   static constexpr
@@ -68,7 +68,7 @@ public:
    *
    * \param value  Value to truncate.
    *
-   * \return Nearest lower page of \ref value.
+   * \return Nearest lower page of `value`.
    */
   template<typename TYPE>
   static constexpr
@@ -83,7 +83,7 @@ public:
    *
    * \param value  Value to get page offset of.
    *
-   * \return Page offset of \ref value.
+   * \return Page offset of `value`.
    */
   template<typename TYPE>
   static constexpr
@@ -101,7 +101,7 @@ public:
    *
    * \param value  Value to get page offset of.
    *
-   * \return Page offset of \ref value.
+   * \return Page offset of `value`.
    */
   template<typename TYPE>
   static constexpr
@@ -116,8 +116,8 @@ public:
    *
    * \param value  Value to check.
    *
-   * \retval True if the \ref value is page-aligned.
-   * \retval False if the \ref value is not page-aligned.
+   * \retval True if the `value` is page-aligned.
+   * \retval False if the `value` is not page-aligned.
    */
   template<typename TYPE>
   static constexpr bool aligned(TYPE const &value)
@@ -128,11 +128,11 @@ public:
   /**
    * Get the truncated count of pages for the value.
    *
-   * If the \ref value is not page-aligned, then the remainder is ignored.
+   * If the `value` is not page-aligned, then the remainder is ignored.
    *
    * \param value  Address or size (in bytes).
    *
-   * \return Truncated count of pages corresponding to \ref value.
+   * \return Truncated count of pages corresponding to `value`.
    */
   template<typename TYPE>
   static constexpr TYPE count(TYPE const &value)
@@ -145,7 +145,7 @@ public:
    *
    * \param superpages  Count of pages.
    *
-   * \return Size of \ref pages in bytes.
+   * \return Size of `pages` in bytes.
    */
   template<typename TYPE>
   static constexpr TYPE size(TYPE const &pages)

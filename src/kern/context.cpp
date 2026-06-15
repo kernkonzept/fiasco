@@ -668,7 +668,6 @@ Context::is_invalid(bool check_cpu_local = false) const
 /**
  * Atomically add bits to state flags.
  * @param bits bits to be added to state flags
- * @return 1 if none of the bits that were added had been set before
  */
 PUBLIC inline NEEDS ["atomic.h"]
 void
@@ -695,7 +694,6 @@ Context::state_add_dirty(Mword bits, [[maybe_unused]] bool check = true)
 /**
  * Atomically delete bits from state flags.
  * @param bits bits to be removed from state flags
- * @return 1 if all of the bits that were removed had previously been set
  */
 PUBLIC inline NEEDS ["atomic.h"]
 void

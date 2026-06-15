@@ -57,7 +57,7 @@ Context::switch_cpu(Context *t)
 
 /** Thread context switchin.  Called on every re-activation of a
     thread (switch_exec()).  This method is public only because it is
-    called by an ``extern "C"'' function that is called
+    called by an `extern "C"` function that is called
     from assembly code (call_switchin_context).
  */
 IMPLEMENT
