@@ -318,7 +318,7 @@ switch_from_el2_to_el1()
 {
   Mword tmp, tmp2;
 
-  asm volatile ("tlbi alle1");
+  asm volatile ("tlbi alle1"); // Invalidate All, EL1
   asm volatile ("msr HCR_EL2, %0" : : "r"(Hcr_default_bits));
   Bootstrap::config_feature_traps(Bootstrap::read_pfr0(), false, true);
 
@@ -354,7 +354,7 @@ Bootstrap::enable_paging(Mword)
   unsigned long control = Cpu::Sctlr_generic;
 
   Mem::dsb();
-  asm volatile("tlbi vmalle1is");
+  asm volatile("tlbi vmalle1is"); // Invalidate by VMID, All at stage 1, EL1, IS
   Mem::dsb();
   asm volatile("msr SCTLR_EL1, %[control]" : : [control] "r" (control));
   Mem::isb();
@@ -379,7 +379,7 @@ switch_from_el3_to_el1()
   Bootstrap::config_feature_traps(pfr0, true, true);
 
   // flush all E1 TLBs
-  asm volatile ("tlbi alle1");
+  asm volatile ("tlbi alle1"); // Invalidate All, EL1
 
   // drain the data and instruction caches as we might switch from
   // secure to non-secure mode and only secure mode can clear
@@ -527,8 +527,8 @@ Bootstrap::enable_paging(Mword)
   unsigned long control = Cpu::Sctlr_generic;
 
   Mem::dsb();
-  asm volatile("tlbi alle2is");
-  asm volatile("tlbi alle1is");
+  asm volatile("tlbi alle2is"); // Invalidate All, EL2, IS
+  asm volatile("tlbi alle1is"); // Invalidate All, EL1, IS
   Mem::dsb();
   asm volatile("msr SCTLR_EL2, %[control]" : : [control] "r" (control));
   Mem::isb();
@@ -563,7 +563,7 @@ Bootstrap::switch_to_el2()
   Bootstrap::config_feature_traps(pfr0, true, false);
 
   // flush all E2 TLBs
-  asm volatile ("tlbi alle2is");
+  asm volatile ("tlbi alle2is"); // Invalidate All, EL2, IS
 
   // setup SCR (disable monitor completely)
   asm volatile ("msr scr_el3, %0"

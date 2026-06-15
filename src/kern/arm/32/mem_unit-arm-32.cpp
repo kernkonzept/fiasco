@@ -6,7 +6,7 @@ void
 Mem_unit::tlb_flush()
 {
   Mem::dsb();
-  asm volatile("mcr p15, 0, %0, c8, c7, 0" // TLBIALL
+  asm volatile("mcr p15, 0, %0, c8, c7, 0" // TLBIALL: Invalidate All
                : : "r" (0) : "memory");
   Mem::dsb();
 }
@@ -23,7 +23,7 @@ void
 Mem_unit::tlb_flush(void *va, unsigned long)
 {
   Mem::dsb();
-  asm volatile("mcr p15, 0, %0, c8, c7, 1" // TLBIMVA
+  asm volatile("mcr p15, 0, %0, c8, c7, 1" // TLBIMVA: Invalidate by MVA
                : : "r" (reinterpret_cast<Address>(va) & 0xfffff000) : "memory");
   Mem::dsb();
 }
@@ -51,7 +51,7 @@ Mem_unit::tlb_flush()
 {
   btc_flush();
   Mem::dsbst();
-  asm volatile("mcr p15, 0, %0, c8, c7, 0" // TLBIALL
+  asm volatile("mcr p15, 0, %0, c8, c7, 0" // TLBIALL: Invalidate All
                : : "r" (0) : "memory");
   Mem::dsb();
 }
@@ -62,7 +62,7 @@ Mem_unit::tlb_flush(unsigned long asid)
 {
   btc_flush();
   Mem::dsbst();
-  asm volatile("mcr p15, 0, %0, c8, c7, 2" // TLBIASID
+  asm volatile("mcr p15, 0, %0, c8, c7, 2" // TLBIASID: Invalidate by ASID
                : : "r" (asid) : "memory");
   Mem::dsb();
 }
@@ -75,7 +75,7 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
     return;
   btc_flush();
   Mem::dsbst();
-  asm volatile("mcr p15, 0, %0, c8, c7, 1" // TLBIMVA
+  asm volatile("mcr p15, 0, %0, c8, c7, 1" // TLBIMVA: Invalidate by MVA
                : : "r" ((reinterpret_cast<Address>(va) & 0xfffff000) | asid) : "memory");
   Mem::dsb();
 }
@@ -104,7 +104,7 @@ Mem_unit::tlb_flush()
 {
   btc_flush();
   Mem::dsbst();
-  asm volatile("mcr p15, 0, %0, c8, c3, 0" // TLBIALLIS
+  asm volatile("mcr p15, 0, %0, c8, c3, 0" // TLBIALLIS: Invalidate All, IS
                : : "r" (0) : "memory");
   Mem::dsb();
 }
@@ -115,7 +115,7 @@ Mem_unit::tlb_flush(unsigned long asid)
 {
   btc_flush();
   Mem::dsbst();
-  asm volatile("mcr p15, 0, %0, c8, c3, 2" // TLBIASIDIS
+  asm volatile("mcr p15, 0, %0, c8, c3, 2" // TLBIASIDIS: Invalidate by ASID, IS
                : : "r" (asid) : "memory");
   Mem::dsb();
 }
@@ -128,7 +128,7 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
     return;
   btc_flush();
   Mem::dsbst();
-  asm volatile("mcr p15, 0, %0, c8, c3, 1" // TLBIMVAIS
+  asm volatile("mcr p15, 0, %0, c8, c3, 1" // TLBIMVAIS: Invalidate by MVA, IS
                : : "r" ((reinterpret_cast<Address>(va) & 0xfffff000) | asid) : "memory");
   Mem::dsb();
 }
@@ -143,7 +143,8 @@ void
 Mem_unit::tlb_flush_kernel(Address va)
 {
   Mem::dsbst();
-  asm volatile("mcr p15, 0, %0, c8, c3, 3" // TLBIMVAAIS
+  asm volatile("mcr p15, 0, %0, c8, c3, 3" // TLBIMVAAIS:
+                                           // Invalidate by MVA, all ASIDs, IS
                : : "r" (va & 0xfffff000) : "memory");
   Mem::dsb();
 }
@@ -157,7 +158,9 @@ Mem_unit::tlb_flush()
 {
   btc_flush();
   Mem::dsbst();
-  asm volatile("mcr p15, 4, r0, c8, c3, 4" : : : "memory"); // TLBIALLNSNHIS
+  asm volatile("mcr p15, 4, r0, c8, c3, 4" // TLBIALLNSNHIS:
+                                           // Invalidate All, non-secure non-hyp IS
+               : : : "memory");
   Mem::dsb();
 }
 
@@ -172,7 +175,9 @@ Mem_unit::tlb_flush(unsigned long asid)
       "mcrr p15, 6, %[tmp1], %[asid], c2 \n" // write VMID to VTTBR
       "isb \n"
       "dsb ishst \n"
-      "mcr  p15, 0, %[tmp1], c8, c3, 0 \n" // TLBIALLIS
+      "mcr  p15, 0, %[tmp1], c8, c3, 0 \n"   // TLBIALLIS:
+                                             // Invalidate All, IS,
+                                             // current VMID only
       "dsb ish \n"
       "mcrr p15, 6, %[tmp1], %[tmp2], c2 \n" // restore VTTBR
       : [tmp1] "=&r" (t1), [tmp2] "=&r" (t2)
@@ -193,7 +198,9 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
       "mcrr p15, 6, %[tmp1], %[asid], c2 \n" // write VMID to VTTBR
       "isb \n"
       "dsb ishst \n"
-      "mcr  p15, 0, %[mva], c8, c3, 3 \n" // TLBIMVAAIS
+      "mcr  p15, 0, %[mva], c8, c3, 3 \n"    // TLBIMVAAIS:
+                                             // Invalidate by MVA, all ASIDs, IS,
+                                             // current VMID only
       "dsb ish \n"
       "mcrr p15, 6, %[tmp1], %[tmp2], c2 \n" // restore VTTBR
       : [tmp1] "=&r" (t1), [tmp2] "=&r" (t2)
@@ -207,7 +214,9 @@ void
 Mem_unit::tlb_flush_kernel()
 {
   Mem::dsbst();
-  asm volatile("mcr p15, 4, r0, c8, c3, 0" : : : "memory"); // TLBIALLHIS
+  asm volatile("mcr p15, 4, r0, c8, c3, 0" : : : "memory");
+                                           // TLBIALLHIS:
+                                           // Invalidate All, Hyp Mode, IS
   Mem::dsb();
 }
 
@@ -216,7 +225,8 @@ void
 Mem_unit::tlb_flush_kernel(Address va)
 {
   Mem::dsbst();
-  asm volatile("mcr p15, 4, %0, c8, c3, 1" // TLBIMVAHIS
+  asm volatile("mcr p15, 4, %0, c8, c3, 1" // TLBIMVAHIS:
+                                           // Invalidate by MVA, Hyp Mode, IS
                : : "r" (va & 0xfffff000) : "memory");
   Mem::dsb();
 }

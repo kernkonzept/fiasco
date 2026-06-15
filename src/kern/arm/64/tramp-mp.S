@@ -96,7 +96,7 @@ _tramp_mp_entry:
 	msr	S3_0_C4_C6_0, x4
 .Lno_gic:
 	// switch from EL3 to EL2...
-	tlbi	alle2is
+	tlbi	alle2is // TLB Invalidate All, EL2, IS
 	dsb	sy
 	movz	x18, #:abs_g0_nc:SCR_EL3_DEFAULT_BITS
 	movk	x18, #:abs_g1:SCR_EL3_DEFAULT_BITS
@@ -167,8 +167,8 @@ _tramp_mp_entry:
 #if defined(CONFIG_MMU)
 # ifdef CONFIG_CPU_VIRT
 	// TLB flush
-	tlbi	alle2
-	tlbi	alle1
+	tlbi	alle2 // TLB Invalidate All, EL2
+	tlbi	alle1 // TLB Invalidate All, EL1
 	dsb	sy
 
 	adrp	x0, _tramp_mp_startup_tcr
@@ -191,7 +191,7 @@ _tramp_mp_entry:
 	ldr	x0, [x0, :lo12:_tramp_mp_startup_sctlr]
 	msr	SCTLR_EL2, x0
 # else
-	tlbi	vmalle1
+	tlbi	vmalle1 // TLB Invalidate by VMID, All at stage 1, EL1
 	dsb	sy
 
 	msr	CONTEXTIDR_EL1, xzr

@@ -5,7 +5,8 @@ void
 Mem_unit::tlb_flush()
 {
   Mem::dsbst();
-  asm volatile("tlbi vmalle1is" : : : "memory");
+  asm volatile("tlbi vmalle1is" // Invalidate by VMID, stage 1, EL1, IS
+               : : : "memory");
   Mem::dsb();
 }
 
@@ -14,7 +15,7 @@ void
 Mem_unit::tlb_flush(unsigned long asid)
 {
   Mem::dsbst();
-  asm volatile("tlbi aside1is, %0"
+  asm volatile("tlbi aside1is, %0" // Invalidate by ASID, EL1, IS
                : : "r" (asid << 48) : "memory");
   Mem::dsb();
 }
@@ -27,7 +28,7 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
     return;
 
   Mem::dsbst();
-  asm volatile("tlbi vae1is, %0"
+  asm volatile("tlbi vae1is, %0" // Invalidate by VA, EL1, IS
                : : "r" ((reinterpret_cast<unsigned long>(va) >> 12)
                         | (asid << 48)) : "memory");
   Mem::dsb();
@@ -43,7 +44,7 @@ void
 Mem_unit::tlb_flush_kernel(Address va)
 {
   Mem::dsbst();
-  asm volatile("tlbi vaae1is, %0"
+  asm volatile("tlbi vaae1is, %0" // Invalidate by VA, all AISDs, EL1, IS
                : : "r" ((va >> 12) & 0x00000ffffffffffful)
                : "memory");
   Mem::dsb();
@@ -57,7 +58,8 @@ void
 Mem_unit::tlb_flush()
 {
   Mem::dsbst();
-  asm volatile("tlbi alle1is" : : : "memory");
+  asm volatile("tlbi alle1is" // Invalidate All, EL1, IS
+               : : : "memory");
   Mem::dsb();
 }
 
@@ -73,7 +75,7 @@ Mem_unit::tlb_flush(unsigned long asid)
       "msr vttbr_el2, %[asid] \n"
       "isb                    \n"
       "dsb ishst              \n"
-      "tlbi vmalls12e1is      \n"
+      "tlbi vmalls12e1is      \n" // Invalidate by VMID, All stage 1 & 2
       "dsb ish                \n"
       "msr vttbr_el2, %[vttbr]\n"
       :
@@ -99,9 +101,9 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
       "msr vttbr_el2, %[asid] \n"
       "isb                    \n"
       "dsb ishst              \n"
-      "tlbi ipas2e1is, %[ipa] \n"
+      "tlbi ipas2e1is, %[ipa] \n" // Invalidate by IPA, stage 2, EL1, IS
       "dsb ish                \n"
-      "tlbi vmalle1is         \n"
+      "tlbi vmalle1is         \n" // Invalidate by VMID, stage 1, EL1, IS
       "dsb ish                \n"
       "msr vttbr_el2, %[vttbr]\n"
       :
@@ -118,7 +120,8 @@ void
 Mem_unit::tlb_flush_kernel()
 {
   Mem::dsbst();
-  asm volatile("tlbi alle2is" : : : "memory");
+  asm volatile("tlbi alle2is" // Invalidate All, EL2, IS
+               : : : "memory");
   Mem::dsb();
 }
 
@@ -127,7 +130,7 @@ void
 Mem_unit::tlb_flush_kernel(Address va)
 {
   Mem::dsbst();
-  asm volatile("tlbi vae2is, %0"
+  asm volatile("tlbi vae2is, %0" // Invalidate by VA, EL2, IS
                : : "r" ((va >> 12) & 0x00000ffffffffffful)
                : "memory");
   Mem::dsb();
@@ -178,7 +181,8 @@ void
 Mem_unit::tlb_flush()
 {
   Mem::dsbst();
-  asm volatile("tlbi alle1is" : : : "memory");
+  asm volatile("tlbi alle1is" // Invalidate All, EL1, IS
+               : : : "memory");
   Mem::dsb();
 }
 
@@ -196,7 +200,7 @@ Mem_unit::tlb_flush(unsigned long asid)
       // Flush TLB for differnet task -> briefly switch VMID.
       "   msr S3_4_c2_c0_0, %[asid]   \n" // VSCTLR_EL2
       "   isb                         \n"
-      "   tlbi vmalls12e1is           \n"
+      "   tlbi vmalls12e1is           \n" // Invalidate by VMID, All stage 1 & 2
       "   dsb ish                     \n"
       "   msr S3_4_c2_c0_0, %[vsctlr] \n" // VSCTLR_EL2
       "   b 2f                        \n"
@@ -205,7 +209,7 @@ Mem_unit::tlb_flush(unsigned long asid)
       // switched by a previous tlb_flush(). Make sure potential VSCTLR_EL2
       // writes have retired.
       "1: isb                         \n"
-      "   tlbi vmalls12e1is           \n"
+      "   tlbi vmalls12e1is           \n" // Invalidate by VMID, All stage 1 & 2
       "   dsb ish                     \n"
 
       // done
@@ -235,9 +239,9 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
       // Flush TLB for differnet task -> briefly switch VMID.
       "   msr S3_4_c2_c0_0, %[asid]   \n" // VSCTLR_EL2
       "   isb                         \n"
-      "   tlbi ipas2e1is, %[ipa]      \n"
+      "   tlbi ipas2e1is, %[ipa]      \n" // Invalidate by IPA, stage 2, EL1, IS
       "   dsb ish                     \n"
-      "   tlbi vmalle1is              \n"
+      "   tlbi vmalle1is              \n" // Invalidate by VMID, stage 1, EL1, IS
       "   dsb ish                     \n"
       "   msr S3_4_c2_c0_0, %[vsctlr] \n" // VSCTLR_EL2
       "   b 2f                        \n"
@@ -246,9 +250,9 @@ Mem_unit::tlb_flush(void *va, unsigned long asid)
       // switched by a previous tlb_flush(). Make sure potential VSCTLR_EL2
       // writes have retired.
       "1: isb                         \n"
-      "   tlbi ipas2e1is, %[ipa]      \n"
+      "   tlbi ipas2e1is, %[ipa]      \n" // Invalidate by IPA, stage 2, EL1, IS
       "   dsb ish                     \n"
-      "   tlbi vmalle1is              \n"
+      "   tlbi vmalle1is              \n" // Invalidate by VMID, stage 1, EL1, IS
       "   dsb ish                     \n"
 
       // done
