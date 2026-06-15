@@ -65,7 +65,7 @@ Fpu::init(Cpu_number cpu, bool resume)
   f.finish_init();
 }
 
-PRIVATE static inline
+PRIVATE static inline NEEDS["asm_riscv.h"]
 void
 Fpu::save_fpu_regs(Fpu_regs *r)
 {
@@ -111,7 +111,7 @@ Fpu::save_fpu_regs(Fpu_regs *r)
   r->fcsr = fcsr;
 }
 
-PRIVATE static inline
+PRIVATE static inline NEEDS["asm_riscv.h"]
 void
 Fpu::restore_fpu_regs(Fpu_regs const *r)
 {
