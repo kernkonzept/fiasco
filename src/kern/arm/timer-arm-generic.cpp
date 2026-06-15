@@ -68,9 +68,10 @@ Timer::init(Cpu_number cpu)
     {
       _freq0 = frequency();
       _interval = interval(Config::Scheduler_granularity);
-      printf("ARM generic timer: %u Hz (%u.%u MHz) interval=%u cnt=%llu\n",
+      printf("ARM generic timer: %u Hz (%u.%u MHz) interval=%u cnt=%llu %s mode\n",
              _freq0.unwrap(), _freq0 / 1000000, (_freq0 % 1000000) / 100000,
-             _interval.unwrap(), Gtimer::counter());
+             _interval.unwrap(), Gtimer::counter(),
+             Config::Scheduler_one_shot ? "one-shot" : "periodic");
       assert(_freq0);
 
       _scaler_shift_ts_to_ns->init(_freq0, 1'000'000'000);

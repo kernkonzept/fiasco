@@ -17,7 +17,7 @@ unsigned Timer::irq() { return ~0U; }
 
 IMPLEMENT
 void
-Timer::init(Cpu_number)
+Timer::init(Cpu_number cpu)
 {
   Apic::timer_assign_irq_vector(Config::Apic_timer_vector);
 
@@ -35,10 +35,10 @@ Timer::init(Cpu_number)
   // make sure that PIT does pull its interrupt line
   Pit::done();
 
-  WARNX(Info,"Using the Local APIC timer on vector %x (%s Mode) for scheduling\n",
-             static_cast<unsigned>(Config::Apic_timer_vector),
-             cxx::const_ite<Config::Scheduler_one_shot>("One-Shot", "Periodic"));
-
+  if (cpu == Cpu_number::boot_cpu())
+    printf("Local APIC timer on vector %x in %s mode\n",
+           static_cast<unsigned>(Config::Apic_timer_vector),
+           Config::Scheduler_one_shot ? "one-shot" : "periodic");
 }
 
 PUBLIC static inline
