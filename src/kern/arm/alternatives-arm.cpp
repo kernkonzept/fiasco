@@ -1,17 +1,14 @@
 INTERFACE:
 
+#include "std_macros.h"
+
 EXTENSION struct Alternative_static_functor
 {
 public:
   inline ALWAYS_INLINE operator bool()
   {
-    asm inline goto (ALTERNATIVE_INSN(
-#ifdef __thumb__
-                                      "b.w %l[no]", "nop.w"
-#else
-                                      "b %l[no]", "nop"
-#endif
-                                      )
+    asm inline goto (ALTERNATIVE_INSN(INST32("b")" %l[no]",
+                                      INST32("nop"))
                      : : [alt_probe] "i"(BASE::probe) : : no);
     return true;
   no:

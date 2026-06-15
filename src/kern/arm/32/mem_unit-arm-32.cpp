@@ -109,11 +109,7 @@ Mem_unit::repeat_tlb_el1()
     {
       asm volatile (
         ALTERNATIVE_INSN(
-#ifdef __thumb__
-          "nop.w; nop.w                   \n",
-#else
-          "nop; nop                       \n",
-#endif
+          INST32("nop")";" INST32("nop")" \n",
           "mcr  p15, 0, %[mva], c8, c3, 3 \n" // TLBIMVAAIS
                                               // Invalidate at 0, all ASIDs, IS
           "dsb ish                        \n")
@@ -195,11 +191,7 @@ Mem_unit::repeat_tlb_el2()
     {
       asm volatile (
         ALTERNATIVE_INSN(
-#ifdef __thumb__
-          "nop.w; nop.w                   \n",
-#else
-          "nop; nop                       \n",
-#endif
+          INST32("nop")";" INST32("nop")" \n",
           "mcr  p15, 4, %[mva], c8, c3, 1 \n" // TLBIMVAHIS
                                               // Invalidate at 0
           "dsb ish                        \n")
