@@ -647,33 +647,6 @@ Jdb::handle_trap1(Cpu_number cpu, Jdb_entry_frame *ef)
   return 0;
 }
 
-// entered debugger due to software breakpoint
-static inline NOEXPORT bool
-Jdb::handle_trap3(Cpu_number cpu, Jdb_entry_frame *ef)
-{
-  error_buffer.cpu(cpu).clear();
-
-  if (ef->debug_entry_kernel_str())
-    error_buffer.cpu(cpu).printf("%s", ef->text());
-  else if (ef->debug_entry_user_str())
-    error_buffer.cpu(cpu).printf("user \"%.*s\"", ef->textlen(), ef->text());
-
-  return true;
-}
-
-// entered debugger due to other exception
-static inline NOEXPORT int
-Jdb::handle_trapX(Cpu_number cpu, Jdb_entry_frame *ef)
-{
-  error_buffer.cpu(cpu).clear();
-  error_buffer.cpu(cpu).printf("%s", Cpu::exception_string(ef->_trapno));
-  if (   ef->_trapno >= 10
-      && ef->_trapno <= 14)
-    error_buffer.cpu(cpu).printf(" (ERR=" L4_PTR_FMT ")", ef->_err);
-
-  return 1;
-}
-
 IMPLEMENT
 void
 Jdb::enter_trap_handler(Cpu_number cpu)
@@ -728,33 +701,33 @@ Jdb::handle_nested_trap(Jdb_entry_frame *e)
     }
 }
 
-IMPLEMENT
+IMPLEMENT_OVERRIDE
 bool
-Jdb::handle_debug_traps(Cpu_number cpu)
+Jdb::handle_debug_traps(Cpu_number cpu, bool &really_break)
 {
-  bool really_break = true;
   auto *ef = entry_frame.cpu(cpu);
 
   if (ef->_trapno == 1)
-    really_break = handle_trap1(cpu, ef);
-  else if (ef->_trapno == 3)
-    really_break = handle_trap3(cpu, ef);
-  else
-    really_break = handle_trapX(cpu, ef);
-
-  if (really_break)
     {
-      for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
-        {
-          if (!cpu_in_jdb(i))
-            continue;
-          // else S+ mode
-          if (!permanent_single_step.cpu(i))
-            entry_frame.cpu(i)->flags(entry_frame.cpu(i)->flags() & ~EFLAGS_TF);
-        }
+      really_break = handle_trap1(cpu, ef);
+      return true;
     }
 
-  return really_break;
+  return false;
+}
+
+IMPLEMENT_OVERRIDE
+void
+Jdb::prepare_really_break()
+{
+  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+    {
+      if (!cpu_in_jdb(i))
+        continue;
+      if (!permanent_single_step.cpu(i))
+        entry_frame.cpu(i)->flags(entry_frame.cpu(i)->flags() & ~EFLAGS_TF);
+      // else S+ mode
+    }
 }
 
 IMPLEMENT

@@ -47,25 +47,6 @@ Jdb::handle_nested_trap(Jdb_entry_frame *e)
          e->ip(), e->cause, e->status);
 }
 
-IMPLEMENT
-bool
-Jdb::handle_debug_traps(Cpu_number cpu)
-{
-  Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
-  error_buffer.cpu(cpu).clear();
-
-  if (ef->debug_ipi())
-    error_buffer.cpu(cpu).printf("IPI ENTRY");
-  else if (ef->debug_entry_kernel_str())
-    error_buffer.cpu(cpu).printf("%s", ef->text());
-  else if (ef->debug_entry_user_str())
-    error_buffer.cpu(cpu).printf("user: \"%.*s\"", ef->textlen(), ef->text());
-  else
-    error_buffer.cpu(cpu).printf("ENTRY");
-
-  return true;
-}
-
 IMPLEMENT inline
 bool
 Jdb::test_checksums()

@@ -251,27 +251,20 @@ Jdb::handle_early_debug_traps(Jdb_entry_frame *e)
   return false;
 }
 
-IMPLEMENT
+IMPLEMENT_OVERRIDE
 bool
-Jdb::handle_debug_traps(Cpu_number cpu)
+Jdb::handle_debug_traps(Cpu_number cpu, bool &really_break)
 {
   Jdb_entry_frame *ef = entry_frame.cpu(cpu);
   error_buffer.cpu(cpu).clear();
 
-  if (Thread::is_debug_exception(ef->esr)
-      && bp_test_break)
-    return bp_test_break(cpu, &error_buffer.cpu(cpu));
+  if (Thread::is_debug_exception(ef->esr) && bp_test_break)
+    {
+      really_break = bp_test_break(cpu, &error_buffer.cpu(cpu));
+      return true;
+    }
 
-  if (ef->debug_entry_kernel_str())
-    error_buffer.cpu(cpu).printf("%s", ef->text());
-  else if (ef->debug_entry_user_str())
-    error_buffer.cpu(cpu).printf("user \"%.*s\"", ef->textlen(), ef->text());
-  else if (ef->debug_ipi())
-    error_buffer.cpu(cpu).printf("IPI ENTRY");
-  else
-    error_buffer.cpu(cpu).printf("unexpected ENTRY (ESR=%08lx)", ef->esr.raw());
-
-  return true;
+  return false;
 }
 
 IMPLEMENT_OVERRIDE

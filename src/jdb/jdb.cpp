@@ -123,7 +123,8 @@ private:
   static bool handle_early_debug_traps(Jdb_entry_frame *e);
   static void handle_nested_trap(Jdb_entry_frame *e);
   static bool handle_user_ke_seq(Jdb_entry_frame const *e);
-  static bool handle_debug_traps(Cpu_number cpu);
+  static bool handle_debug_traps(Cpu_number cpu, bool &really_break);
+  static void prepare_really_break();
   static bool test_checksums();
 
 public:
@@ -241,6 +242,16 @@ IMPLEMENT_DEFAULT static
 bool
 Jdb::handle_user_ke_seq(Jdb_entry_frame const *ef)
 { return execute_command_ni(ef->text(), ef->textlen()); }
+
+IMPLEMENT_DEFAULT static inline
+bool
+Jdb::handle_debug_traps(Cpu_number, bool &)
+{ return false; }
+
+IMPLEMENT_DEFAULT static inline
+void
+Jdb::prepare_really_break()
+{}
 
 PUBLIC static
 bool
@@ -1314,7 +1325,6 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
 
       return false;
     };
-
   if (foreach_cpu(execute_user_ke_seq, true))
     {
       close_debug_console(cpu);
@@ -1328,7 +1338,35 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
 
   error_buffer.cpu(cpu).clear();
 
-  really_break = foreach_cpu(&handle_debug_traps, false);
+  auto do_handle_debug_traps = [](Cpu_number cpu)
+    {
+      auto &eb = error_buffer.cpu(cpu);
+      eb.clear();
+
+      Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
+
+      bool do_really_break = false;
+      if (handle_debug_traps(cpu, do_really_break))
+        return do_really_break;
+      else if (ef->debug_entry_kernel_str())
+        eb.printf("%s", ef->text());
+      else if (ef->debug_entry_user_str())
+        eb.printf("user \"%.*s\"", ef->textlen(), ef->text());
+      else if (ef->debug_entry_kernel_sequence())
+        eb.printf("invalid JDB sequence");
+      else
+        {
+          eb.printf("ENTRY (");
+          ef->print_error(&eb);
+          eb.printf(")");
+        }
+
+      return true;
+    };
+
+  really_break = foreach_cpu(do_handle_debug_traps, false);
+  if (really_break)
+    prepare_really_break();
 
   while (setjmp(recover_buf))
     {
