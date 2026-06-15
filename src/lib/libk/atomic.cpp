@@ -2,42 +2,6 @@ INTERFACE:
 
 #include "types.h"
 
-template<typename T, typename V> inline
-void
-atomic_and(T *mem, V value);
-
-template<typename T, typename V> inline
-void
-atomic_or(T *mem, V value);
-
-template<typename T, typename V> inline
-void
-atomic_add(T *mem, V value);
-
-template<typename T, typename V> inline
-T
-atomic_fetch_and(T *mem, V value);
-
-template<typename T, typename V> inline
-T
-atomic_fetch_or(T *mem, V value);
-
-template<typename T, typename V> inline
-T
-atomic_fetch_add(T *mem, V value);
-
-template<typename T, typename V> inline
-T
-atomic_and_fetch(T *mem, V value);
-
-template<typename T, typename V> inline
-T
-atomic_or_fetch(T *mem, V value);
-
-template<typename T, typename V> inline
-T
-atomic_add_fetch(T *mem, V value);
-
 void
 local_atomic_and(Mword *mem, Mword value);
 
