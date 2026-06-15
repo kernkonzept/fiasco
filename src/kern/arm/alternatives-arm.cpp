@@ -5,7 +5,13 @@ EXTENSION struct Alternative_static_functor
 public:
   inline ALWAYS_INLINE operator bool()
   {
-    asm inline goto (ALTERNATIVE_INSN("b %l[no]", "nop")
+    asm inline goto (ALTERNATIVE_INSN(
+#ifdef __thumb__
+                                      "b.w %l[no]", "nop.w"
+#else
+                                      "b %l[no]", "nop"
+#endif
+                                      )
                      : : [alt_probe] "i"(BASE::probe) : : no);
     return true;
   no:
