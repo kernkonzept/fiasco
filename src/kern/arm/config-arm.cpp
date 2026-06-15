@@ -24,17 +24,6 @@ public:
     Irq_shortcut = 1,
   };
 
-  enum
-  {
-#ifdef CONFIG_ONE_SHOT
-    Scheduler_granularity = 1UL,
-    Default_time_slice = CONFIG_SCHED_DEF_TIME_SLICE * CONFIG_SCHED_GRANULARITY,
-#else
-    Scheduler_granularity = CONFIG_SCHED_GRANULARITY,
-    Default_time_slice = CONFIG_SCHED_DEF_TIME_SLICE * Scheduler_granularity,
-#endif
-  };
-
   // the default uart to use for serial console
   static unsigned const default_console_uart	= 3;
   static unsigned const default_console_uart_baudrate = 115200;

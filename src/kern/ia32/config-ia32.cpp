@@ -28,22 +28,17 @@ public:
     SCHED_HPET,
 
 #if defined(CONFIG_SCHED_PIT)
-    Scheduler_mode        = SCHED_PIT,
+    Scheduler_mode = SCHED_PIT,
     Scheduler_granularity = 1000U,
-    Default_time_slice    = 10 * Scheduler_granularity,
+    Default_time_slice = 10 * Scheduler_granularity,
 #elif defined(CONFIG_SCHED_RTC)
     Scheduler_mode = SCHED_RTC,
     Scheduler_granularity = TAG_ENABLED(slow_rtc) ? 15625U : 976U,
     Default_time_slice = 10 * Scheduler_granularity,
 #elif defined(CONFIG_SCHED_APIC)
     Scheduler_mode = SCHED_APIC,
-# ifdef CONFIG_ONE_SHOT
-    Scheduler_granularity = 1U,
-    Default_time_slice = CONFIG_SCHED_DEF_TIME_SLICE * CONFIG_SCHED_GRANULARITY,
-# else
-    Scheduler_granularity = CONFIG_SCHED_GRANULARITY,
-    Default_time_slice = CONFIG_SCHED_DEF_TIME_SLICE * Scheduler_granularity,
-# endif
+    /* Scheduler_granularity in config.cpp */
+    /* Default_time_slice in config.cpp */
 #elif defined(CONFIG_SCHED_HPET)
     Scheduler_mode = SCHED_HPET,
     Scheduler_granularity = 1000U,

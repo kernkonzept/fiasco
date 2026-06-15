@@ -22,9 +22,7 @@ public:
 
   enum
   {
-    Scheduler_granularity	= CONFIG_SCHED_GRANULARITY,
-    Default_time_slice	        = CONFIG_SCHED_DEF_TIME_SLICE * Scheduler_granularity,
-    Cpu_frequency               = CONFIG_MIPS_CPU_FREQUENCY,
+    Cpu_frequency = CONFIG_MIPS_CPU_FREQUENCY,
   };
 
   enum

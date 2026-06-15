@@ -144,6 +144,23 @@ public:
 };
 
 //---------------------------------------------------------------------------
+INTERFACE [!(ia32 || amd64) || sched_apic]:
+
+#include <cxx/conditionals>
+
+EXTENSION class Config
+{
+public:
+  enum
+  {
+    Scheduler_granularity =
+      cxx::const_ite<Scheduler_one_shot>(1UL, CONFIG_SCHED_GRANULARITY),
+
+    Default_time_slice = CONFIG_SCHED_DEF_TIME_SLICE * CONFIG_SCHED_GRANULARITY,
+  };
+};
+
+//---------------------------------------------------------------------------
 INTERFACE [!arm]:
 
 EXTENSION class Config
