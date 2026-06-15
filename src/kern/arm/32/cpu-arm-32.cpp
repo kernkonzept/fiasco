@@ -39,11 +39,12 @@ IMPLEMENT_OVERRIDE inline
 bool
 Cpu::has_pmuv1() const
 {
+  using enum Cpudefs::Midr_part;
   unsigned pmuv = (_cpu_id._dfr0 >> 24) & 0xf;
-  enum { Cortex_a9 = 0x410FC090 };
   // ID_DFR0[24:27] = 0 is no indication if PMUv1 is supported or not.
   // ARM Cortex-A9 has PMUv1 but ID_DFR0 is 0x00010444.
-  return (pmuv >= 1 && pmuv != 0xf) || (midr() & 0xff0ffff0UL) == Cortex_a9;
+  return (pmuv >= 1 && pmuv != 0xf)
+         || (midr() & Cpudefs::Midr_mask) == Cpudefs::Midr_arm(Part_cortex_a9);
 }
 
 IMPLEMENT_OVERRIDE inline

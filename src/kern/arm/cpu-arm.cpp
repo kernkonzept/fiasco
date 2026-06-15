@@ -458,8 +458,7 @@ static void modify_cpuectlr(Unsigned8 mask, Unsigned8 value)
 
 struct Midr_match
 {
-  Unsigned32 mask;
-  Unsigned32 value;
+  Unsigned32 midr;
   Unsigned8 f_mask;
   Unsigned8 f_value;
   void (*func)(Unsigned8 mask, Unsigned8 value);
@@ -467,25 +466,25 @@ struct Midr_match
 
 static Midr_match constexpr _enable_smp[] =
 {
-  { 0xff0ffff0, 0x410fc050, 0x41, 0x41, &modify_actlr },   // Cortex-A5
-  { 0xff0ffff0, 0x410fc070, 0x40, 0x40, &modify_actlr },   // Cortex-A7
-  { 0xff0ffff0, 0x410fc090, 0x41, 0x41, &modify_actlr },   // Cortex-A9
-  { 0xff0ffff0, 0x410fc0d0, 0x41, 0x41, &modify_actlr },   // Cortex-A12
-  { 0xff0ffff0, 0x410fc0e0, 0x41, 0x41, &modify_actlr },   // Cortex-A17
-  { 0xff0ffff0, 0x410fc0f0, 0x41, 0x41, &modify_actlr },   // Cortex-A15
-  { 0xff0ffff0, 0x410fd040, 0x40, 0x40, &modify_cpuectlr }, // Cortex-A35
-  { 0xff0ffff0, 0x410fd030, 0x40, 0x40, &modify_cpuectlr }, // Cortex-A53
-  { 0xff0ffff0, 0x410fd070, 0x40, 0x40, &modify_cpuectlr }, // Cortex-A57
-  { 0xff0ffff0, 0x410fd080, 0x40, 0x40, &modify_cpuectlr }, // Cortex-A72
+  { Cpudefs::Midr_arm(Cpudefs::Part_cortex_a5),  0x41, 0x41, &modify_actlr    },
+  { Cpudefs::Midr_arm(Cpudefs::Part_cortex_a7),  0x40, 0x40, &modify_actlr    },
+  { Cpudefs::Midr_arm(Cpudefs::Part_cortex_a9),  0x41, 0x41, &modify_actlr    },
+  { Cpudefs::Midr_arm(Cpudefs::Part_cortex_a12), 0x41, 0x41, &modify_actlr    },
+  { Cpudefs::Midr_arm(Cpudefs::Part_cortex_a15), 0x41, 0x41, &modify_actlr    },
+  { Cpudefs::Midr_arm(Cpudefs::Part_cortex_a17), 0x41, 0x41, &modify_actlr    },
+  { Cpudefs::Midr_arm(Cpudefs::Part_cortex_a35), 0x40, 0x40, &modify_cpuectlr },
+  { Cpudefs::Midr_arm(Cpudefs::Part_cortex_a53), 0x40, 0x40, &modify_cpuectlr },
+  { Cpudefs::Midr_arm(Cpudefs::Part_cortex_a57), 0x40, 0x40, &modify_cpuectlr },
+  { Cpudefs::Midr_arm(Cpudefs::Part_cortex_a72), 0x40, 0x40, &modify_cpuectlr },
 };
 
 IMPLEMENT_OVERRIDE
 void
 Cpu::enable_smp()
 {
-  Unsigned32 m = midr();
+  Unsigned32 m = midr() & Cpudefs::Midr_mask;
   for (auto const &e : _enable_smp)
-    if ((e.mask & m) == e.value)
+    if (m == e.midr)
       {
         e.func(e.f_mask, e.f_value);
         break;
@@ -496,9 +495,9 @@ IMPLEMENT_OVERRIDE
 void
 Cpu::disable_smp()
 {
-  Unsigned32 m = midr();
+  Unsigned32 m = midr() & Cpudefs::Midr_mask;
   for (auto const &e : _enable_smp)
-    if ((e.mask & m) == e.value)
+    if (m == e.midr)
       {
         e.func(e.f_mask, ~e.f_value & e.f_mask);
         break;
@@ -687,64 +686,61 @@ PRIVATE static inline NEEDS[Cpu::midr]
 void
 Cpu::init_errata_workarounds()
 {
-  Mword mid = midr();
+  Mword midr = Cpudefs::midr();
+  Mword rev = ((midr & 0x00f00000) >> 16) | (midr & 0x0f);
 
-  if ((mid & 0xff000000) == 0x41000000) // ARM CPU
+  using enum Cpudefs::Midr_part;
+  switch (midr & Cpudefs::Midr_mask)
     {
-      Mword rev = ((mid & 0x00f00000) >> 16) | (mid & 0x0f);
-      Mword part = (mid & 0x0000fff0) >> 4;
+    case Cpudefs::Midr_arm(Part_cortex_a8):
+      // errata: 430973
+      if ((rev & 0xf0) == 0x10)
+        set_actrl(1 << 6); // IBE to 1
 
-      if (part == 0xc08) // Cortex A8
+      // errata: 458693
+      if (rev == 0x20)
+        set_actrl((1 << 5) | (1 << 9)); // L1NEON & PLDNOP
+
+      // errata: 460075
+      if (rev == 0x20)
         {
-          // errata: 430973
-          if ((rev & 0xf0) == 0x10)
-            set_actrl(1 << 6); // IBE to 1
-
-          // errata: 458693
-          if (rev == 0x20)
-            set_actrl((1 << 5) | (1 << 9)); // L1NEON & PLDNOP
-
-          // errata: 460075
-          if (rev == 0x20)
-            {
-              Mword t;
-              asm volatile ("mrc p15, 1, %0, c9, c0, 2 \n\t"
-                            "orr %0, %0, #1 << 22      \n\t" // Write alloc disable
-                            "mcr p15, 1, %0, c9, c0, 2 \n\t" : "=r"(t));
-            }
+          Mword t;
+          asm volatile ("mrc p15, 1, %0, c9, c0, 2 \n\t"
+                        "orr %0, %0, #1 << 22      \n\t" // Write alloc disable
+                        "mcr p15, 1, %0, c9, c0, 2 \n\t" : "=r"(t));
         }
+      break;
 
-      if (part == 0xc09) // Cortex A9
+    case Cpudefs::Midr_arm(Part_cortex_a9):
+      // errata: 742230 (DMB errata)
+      // make DMB a DSB to fix behavior
+      if (rev <= 0x22) // <= r2p2
+        set_c15_c0_1(1 << 4);
+
+      // errata: 742231
+      if (rev == 0x20 || rev == 0x21 || rev == 0x22)
+        set_c15_c0_1((1 << 12) | (1 << 22));
+
+      // errata: 743622
+      if ((rev & 0xf0) == 0x20)
+        set_c15_c0_1(1 << 6);
+
+      // errata: 751472
+      if (rev < 0x30)
+        set_c15_c0_1(1 << 11);
+
+      break;
+
+    case Cpudefs::Midr_arm(Part_cortex_r52):
+      if constexpr (Config::Fast_interrupts)
         {
-          // errata: 742230 (DMB errata)
-          // make DMB a DSB to fix behavior
-          if (rev <= 0x22) // <= r2p2
-            set_c15_c0_1(1 << 4);
-
-          // errata: 742231
-          if (rev == 0x20 || rev == 0x21 || rev == 0x22)
-            set_c15_c0_1((1 << 12) | (1 << 22));
-
-          // errata: 743622
-          if ((rev & 0xf0) == 0x20)
-            set_c15_c0_1(1 << 6);
-
-          // errata: 751472
-          if (rev < 0x30)
-            set_c15_c0_1(1 << 11);
+          // Erratum 2918152 (LDM data corruption if HSCTLR.FI set)
+          Unsigned64 v;
+          asm("mrrc p15, 0, %Q0, %R0, c15" : "=r"(v)); // CPUACTLR
+          v |= Unsigned64{1} << 45; // OOODIVDIS
+          asm volatile("mcrr p15, 0, %Q0, %R0, c15" : : "r"(v)); // CPUACTLR
         }
-
-      if (part == 0xd13)  // Cortex R52
-        {
-          if constexpr (Config::Fast_interrupts)
-            {
-              // Erratum 2918152 (LDM data corruption if HSCTLR.FI set)
-              Unsigned64 v;
-              asm("mrrc p15, 0, %Q0, %R0, c15" : "=r"(v)); // CPUACTLR
-              v |= Unsigned64{1} << 45; // OOODIVDIS
-              asm volatile("mcrr p15, 0, %Q0, %R0, c15" : : "r"(v)); // CPUACTLR
-            }
-        }
+      break;
     }
 }
 
