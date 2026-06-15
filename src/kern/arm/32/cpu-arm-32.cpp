@@ -12,15 +12,15 @@ public:
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm]:
 
+#include "cpudefs.h"
+
 DEFINE_GLOBAL Global_data<Unsigned32> Cpu::sctlr;
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["cpudefs.h"]
 Mword
 Cpu::midr()
 {
-  Mword m;
-  asm volatile ("mrc p15, 0, %0, c0, c0, 0" : "=r" (m));
-  return m;
+  return Cpudefs::midr();
 }
 
 PUBLIC static inline

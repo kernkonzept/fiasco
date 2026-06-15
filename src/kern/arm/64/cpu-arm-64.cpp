@@ -364,6 +364,7 @@ Cpu::init_sctlr()
 IMPLEMENTATION [arm]:
 
 #include "cpubits.h"
+#include "cpudefs.h"
 
 PUBLIC static inline
 bool
@@ -399,13 +400,11 @@ Cpu::has_pmuv3() const
   return pmuv >= 1 && pmuv != 0xf;
 }
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["cpudefs.h"]
 Mword
 Cpu::midr()
 {
-  Mword m;
-  asm volatile ("mrs %0, midr_el1" : "=r" (m));
-  return m;
+  return Cpudefs::midr();
 }
 
 PUBLIC static inline
