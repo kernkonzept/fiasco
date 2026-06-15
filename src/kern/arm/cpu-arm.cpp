@@ -432,9 +432,9 @@ Cpu::disable_smp()
 
 IMPLEMENTATION [arm && arm_v7plus && 32bit && mp]: //-------------------------
 
-static void modify_actl(Unsigned64 mask, Unsigned64 value)
+static void modify_actlr(Unsigned8 mask, Unsigned8 value)
 {
-  Mword actrl;
+  Unsigned32 actrl;
   asm volatile ("mrc p15, 0, %0, c1, c0, 1" : "=r" (actrl));
   if ((actrl & mask) != value)
     {
@@ -444,17 +444,15 @@ static void modify_actl(Unsigned64 mask, Unsigned64 value)
     }
 }
 
-static void modify_cpuectl(Unsigned64 mask, Unsigned64 value)
+static void modify_cpuectlr(Unsigned8 mask, Unsigned8 value)
 {
-  Mword ectlh, ectll;
-  asm volatile ("mrrc p15, 1, %0, %1, c15" : "=r"(ectll), "=r"(ectlh));
-  Unsigned64 ectl = (Unsigned64{ectlh} << 32) | ectll;
-  if ((ectl & mask) != value)
+  Unsigned64 cpu_ectlr;
+  asm volatile ("mrrc p15, 1, %Q0, %R0, c15" : "=r"(cpu_ectlr));
+  if ((cpu_ectlr & mask) != value)
     {
       Mem_unit::clean_dcache();
-      asm volatile ("mcrr p15, 1, %0, %1, c15" : :
-                    "r"((ectll & mask) | value),
-                    "r"((ectlh & (mask >> 32)) | (value >> 32)));
+      asm volatile ("mcrr p15, 1, %Q0, %R0, c15"
+                    : : "r"((cpu_ectlr & mask) | value));
     }
 }
 
@@ -462,23 +460,23 @@ struct Midr_match
 {
   Unsigned32 mask;
   Unsigned32 value;
-  Unsigned64 f_mask;
-  Unsigned64 f_value;
-  void (*func)(Unsigned64 mask, Unsigned64 value);
+  Unsigned8 f_mask;
+  Unsigned8 f_value;
+  void (*func)(Unsigned8 mask, Unsigned8 value);
 };
 
 static Midr_match constexpr _enable_smp[] =
 {
-  { 0xff0ffff0, 0x410fc050, 0x41, 0x41, &modify_actl },   // Cortex-A5
-  { 0xff0ffff0, 0x410fc070, 0x40, 0x40, &modify_actl },   // Cortex-A7
-  { 0xff0ffff0, 0x410fc090, 0x41, 0x41, &modify_actl },   // Cortex-A9
-  { 0xff0ffff0, 0x410fc0d0, 0x41, 0x41, &modify_actl },   // Cortex-A12
-  { 0xff0ffff0, 0x410fc0e0, 0x41, 0x41, &modify_actl },   // Cortex-A17
-  { 0xff0ffff0, 0x410fc0f0, 0x41, 0x41, &modify_actl },   // Cortex-A15
-  { 0xff0ffff0, 0x410fd040, 0x40, 0x40, &modify_cpuectl }, // Cortex-A35
-  { 0xff0ffff0, 0x410fd030, 0x40, 0x40, &modify_cpuectl }, // Cortex-A53
-  { 0xff0ffff0, 0x410fd070, 0x40, 0x40, &modify_cpuectl }, // Cortex-A57
-  { 0xff0ffff0, 0x410fd080, 0x40, 0x40, &modify_cpuectl }, // Cortex-A72
+  { 0xff0ffff0, 0x410fc050, 0x41, 0x41, &modify_actlr },   // Cortex-A5
+  { 0xff0ffff0, 0x410fc070, 0x40, 0x40, &modify_actlr },   // Cortex-A7
+  { 0xff0ffff0, 0x410fc090, 0x41, 0x41, &modify_actlr },   // Cortex-A9
+  { 0xff0ffff0, 0x410fc0d0, 0x41, 0x41, &modify_actlr },   // Cortex-A12
+  { 0xff0ffff0, 0x410fc0e0, 0x41, 0x41, &modify_actlr },   // Cortex-A17
+  { 0xff0ffff0, 0x410fc0f0, 0x41, 0x41, &modify_actlr },   // Cortex-A15
+  { 0xff0ffff0, 0x410fd040, 0x40, 0x40, &modify_cpuectlr }, // Cortex-A35
+  { 0xff0ffff0, 0x410fd030, 0x40, 0x40, &modify_cpuectlr }, // Cortex-A53
+  { 0xff0ffff0, 0x410fd070, 0x40, 0x40, &modify_cpuectlr }, // Cortex-A57
+  { 0xff0ffff0, 0x410fd080, 0x40, 0x40, &modify_cpuectlr }, // Cortex-A72
 };
 
 IMPLEMENT_OVERRIDE
