@@ -64,8 +64,8 @@ Sched_context::Sched_context()
 : _ready_link(0),
   _idle(0),
   _dl(0),
-  _left(Config::Default_time_slice),
-  _q(Config::Default_time_slice),
+  _left(Config::default_time_slice()),
+  _q(Config::default_time_slice()),
   _w(1),
   _qdw(_q / _w)
 {}

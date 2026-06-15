@@ -148,10 +148,8 @@ INTERFACE [!(ia32 || amd64) || sched_apic]:
 EXTENSION class Config
 {
 public:
-  enum
-  {
-    Default_time_slice = CONFIG_SCHED_DEF_TIME_SLICE * CONFIG_SCHED_GRANULARITY
-  };
+  static constexpr unsigned default_time_slice()
+  { return CONFIG_SCHED_DEF_TIME_SLICE * CONFIG_SCHED_GRANULARITY; }
 };
 
 //---------------------------------------------------------------------------

@@ -1212,7 +1212,7 @@ Utest::start_thread(F const &fn, Cpu_number cpu,
   // Fixed-priority scheduler only so far!
   L4_sched_param_fixed_prio sp;
   sp.sched_class = L4_sched_param_fixed_prio::Class;
-  sp.quantum = Config::Default_time_slice;
+  sp.quantum = Config::default_time_slice();
   sp.prio = prio;
 
   Thread::Migration info;

@@ -120,8 +120,8 @@ Sched_context::Sched_context()
 {
   _t = Fixed_prio;
   _sc.fp._p = Config::Default_prio;
-  _sc.fp._q = Config::Default_time_slice;
-  _sc.fp._left = Config::Default_time_slice;
+  _sc.fp._q = Config::default_time_slice();
+  _sc.fp._left = Config::default_time_slice();
   _sc.fp._ready_next = 0;
 }
 
@@ -217,7 +217,7 @@ Sched_context::set(L4_sched_param const *_p)
 
       _sc.fp._q = p->legacy_fixed_prio.quantum;
       if (p->legacy_fixed_prio.quantum == 0)
-        _sc.fp._q = Config::Default_time_slice;
+        _sc.fp._q = Config::default_time_slice();
       return;
     }
 
@@ -232,7 +232,7 @@ Sched_context::set(L4_sched_param const *_p)
 
       _sc.fp._q = p->fixed_prio.quantum;
       if (p->fixed_prio.quantum == 0)
-        _sc.fp._q = Config::Default_time_slice;
+        _sc.fp._q = Config::default_time_slice();
 
       break;
     case L4_sched_param_wfq::Class:

@@ -26,19 +26,14 @@ public:
     SCHED_RTC,
     SCHED_APIC,
     SCHED_HPET,
-
 #if defined(CONFIG_SCHED_PIT)
     Scheduler_mode = SCHED_PIT,
-    Default_time_slice = 10 * scheduler_granularity(),
 #elif defined(CONFIG_SCHED_RTC)
     Scheduler_mode = SCHED_RTC,
-    Default_time_slice = 10 * scheduler_granularity(),
 #elif defined(CONFIG_SCHED_APIC)
     Scheduler_mode = SCHED_APIC,
-    /* Default_time_slice in config.cpp */
 #elif defined(CONFIG_SCHED_HPET)
     Scheduler_mode = SCHED_HPET,
-    Default_time_slice = 10 * scheduler_granularity(),
 #endif
   };
 
@@ -60,6 +55,13 @@ public:
 #elif defined(CONFIG_SCHED_HPET)
   static constexpr unsigned scheduler_granularity()
   { return 1000U; }
+#endif
+
+#if defined(CONFIG_SCHED_APIC)
+  /* default_time_slice in config.cpp */
+#else
+  static constexpr unsigned default_time_slice()
+  { return 10 * scheduler_granularity(); }
 #endif
 
   static constexpr size_t stable_cache_alignment = 64U;

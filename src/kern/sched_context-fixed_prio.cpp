@@ -69,8 +69,8 @@ IMPLEMENTATION [sched_fixed_prio]:
 PUBLIC
 Sched_context::Sched_context()
 : _prio(Config::Default_prio),
-  _quantum(Config::Default_time_slice),
-  _left(Config::Default_time_slice)
+  _quantum(Config::default_time_slice()),
+  _left(Config::default_time_slice())
 {}
 
 
@@ -137,7 +137,7 @@ Sched_context::set(L4_sched_param const *_p)
 
       _quantum = p->legacy_fixed_prio.quantum;
       if (p->legacy_fixed_prio.quantum == 0)
-        _quantum = Config::Default_time_slice;
+        _quantum = Config::default_time_slice();
       return;
     }
 
@@ -150,7 +150,7 @@ Sched_context::set(L4_sched_param const *_p)
 
       _quantum = p->fixed_prio.quantum;
       if (p->fixed_prio.quantum == 0)
-        _quantum = Config::Default_time_slice;
+        _quantum = Config::default_time_slice();
       break;
 
     default:
