@@ -20,7 +20,7 @@ private:
     OWER  = 0x18,
     OIER  = 0x1c,
 
-    Timer_diff = (36864 * Config::Scheduler_granularity) / 10000, // 36864MHz*1ms
+    Timer_diff = (36864 * Config::scheduler_granularity()) / 10000, // 36864MHz*1ms
   };
 
   static Static_object<Timer> _timer;
@@ -67,7 +67,7 @@ PUBLIC inline NEEDS["config.h", Timer::timer_to_us]
 void
 Timer::ack()
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       Kip::k()->add_to_clock(timer_to_us(read<Unsigned32>(OSCR)));
       //puts("Reset timer");
@@ -93,10 +93,8 @@ IMPLEMENT_OVERRIDE inline NEEDS["config.h", "kip.h", Timer::timer_to_us]
 Unsigned64
 Timer::system_clock()
 {
-  if constexpr (Config::Scheduler_one_shot)
-    {
-      return Kip::k()->clock() + timer_to_us(_timer->read<Unsigned32>(OSCR));
-    }
+  if (Config::scheduler_one_shot())
+    return Kip::k()->clock() + timer_to_us(_timer->read<Unsigned32>(OSCR));
   else
     {
       static_assert(Config::Kip_clock_uses_timer == false);
@@ -109,7 +107,7 @@ IMPLEMENT_OVERRIDE inline NEEDS["config.h", "kip.h", Timer::timer_to_us,
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       Unsigned32 apic;
       Kip::k()->add_to_clock(timer_to_us(_timer->read<Unsigned32>(OSCR)));

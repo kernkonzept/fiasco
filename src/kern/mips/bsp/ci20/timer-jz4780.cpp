@@ -30,7 +30,7 @@ Timer::init(Cpu_number ncpu)
   _tcu->r[T::OSTCNTH] = 0;
   _tcu->r[T::OSTCNTL] = 0;
   _tcu->r[T::OSTCSR].set(4);     // set EXT_EN
-  _tcu->r[T::OSTDR]   = 48000000 / 16 / Config::Scheduler_granularity;
+  _tcu->r[T::OSTDR]   = 48000000 / 16 / Config::scheduler_granularity();
 }
 
 IMPLEMENT_OVERRIDE
@@ -78,7 +78,7 @@ void
 Timer::update_system_clock(Cpu_number cpu)
 {
   if (cpu == Cpu_number::boot_cpu())
-    Kip::k()->add_to_clock(Config::Scheduler_granularity);
+    Kip::k()->add_to_clock(Config::scheduler_granularity());
 }
 
 PUBLIC static inline

@@ -80,8 +80,8 @@ Timer::init(Cpu_number cpu)
       _scaler_shift_ts_to_us.init(freq, Microsec_per_sec);
       _scaler_shift_ts_to_ns.init(freq, Nanosec_per_sec);
 
-      if constexpr (!Config::Scheduler_one_shot)
-        _timer_period = us_to_ts(Config::Scheduler_granularity);
+      if (!Config::scheduler_one_shot())
+        _timer_period = us_to_ts(Config::scheduler_granularity());
     }
 
   // Allow user-mode  read access to counter registers.
@@ -122,7 +122,7 @@ void
 Timer::handle_interrupt()
 {
   auto cpu = current_cpu();
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       // Disable timer interrupts as the STIP flag is not cleared
       // until the next call to sbi_set_timer.
@@ -147,7 +147,7 @@ Timer::toggle(Cpu_number cpu, bool enable)
       return;
     }
 
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     _enabled.current() = enable;
   else /* periodic timer */
     if (enable)
@@ -164,7 +164,7 @@ IMPLEMENT_OVERRIDE inline NEEDS["config.h", Timer::set_timer]
 void
 Timer::update_timer(Unsigned64 wakeup_us)
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       if (wakeup_us == Infinite_timeout)
         set_timer(0xffff'ffff'ffff'ffffULL);

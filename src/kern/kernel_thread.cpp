@@ -309,13 +309,13 @@ Kernel_thread::idle_op()
     {
       ++_deep_idle_counter.cpu(cpu);
 
-      if constexpr (!Config::Scheduler_one_shot)
+      if (!Config::scheduler_one_shot())
         // Disable the timer tick while in tickless idle.
         Timer_tick::disable(cpu);
 
       arch_tickless_idle();
 
-      if constexpr (!Config::Scheduler_one_shot)
+      if (!Config::scheduler_one_shot())
         // Re-enable the timer tick when leaving tickless idle.
         Timer_tick::enable(cpu);
 
@@ -341,7 +341,7 @@ IMPLEMENT inline
 bool
 Kernel_thread::can_tickless_idle(Cpu_number cpu)
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       static_assert(TAG_ENABLED(sync_clock), "Clock must be synchronized.");
 

@@ -57,7 +57,7 @@ Timer::Timer_imx_timrot::Timer_imx_timrot()
   _reg[HW_TIMROT_TIMCTRL0_SET]
     = CTRL_SELECT_32KHZ | CTRL_RELOAD | CTRL_UPDATE | CTRL_IRQ_EN;
 
-  Unsigned32 v = 32000 / (1000000 / Config::Scheduler_granularity);
+  Unsigned32 v = 32000 / (1000000 / Config::scheduler_granularity());
   _reg[HW_TIMROT_FIXED_COUNT0] = v;
 }
 

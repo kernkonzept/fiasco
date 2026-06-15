@@ -45,7 +45,7 @@ Timer::Timer(void *base) : Mmio_register_block(base)
   write<Unsigned32>(0U, TIMER2_BASE + TIMER_CTRL);
 
   unsigned timer_ctrl = TIMER_CTRL_ENABLE | TIMER_CTRL_PERIODIC;
-  unsigned timer_reload = 1000000 / Config::Scheduler_granularity;
+  unsigned timer_reload = 1000000 / Config::scheduler_granularity();
 
   write<Unsigned32>(timer_reload, TIMER1_BASE + TIMER_LOAD);
   write<Unsigned32>(timer_reload, TIMER1_BASE + TIMER_VALUE);

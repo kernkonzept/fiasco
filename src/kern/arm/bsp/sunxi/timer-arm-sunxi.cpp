@@ -9,7 +9,7 @@ EXTENSION class Timer
 public:
   static unsigned irq() { return 54; }
 
-  enum { Interval = 24000000 / Config::Scheduler_granularity };
+  enum { Interval = 24000000 / Config::scheduler_granularity() };
 
 private:
   class Tmr : public Mmio_register_block

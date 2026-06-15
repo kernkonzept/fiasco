@@ -15,7 +15,7 @@ Timer::interval()
   Mword timer_start = 0UL;
   unsigned factor = 5;
   Mword sp_c = timer_start
-               + Mct_core_timer::Mct_freq / (1000000 / Config::Scheduler_granularity)
+               + Mct_core_timer::Mct_freq / (1000000 / Config::scheduler_granularity())
 	         * (1 << factor);
 
   mct.write<Mword>(0, Mct_timer::Reg::Cfg);
@@ -101,7 +101,7 @@ Timer::periodic_next_event(Cpu_number cpu, Unsigned64 next_wakeup)
 
   Unsigned64 d = next_wakeup - Kip::k()->clock();
 
-  d = (d / Config::Scheduler_granularity) * Config::Scheduler_granularity;
+  d = (d / Config::scheduler_granularity()) * Config::scheduler_granularity();
 
   timers.cpu(cpu)->set_interval(us_to_mct(d));
 }
@@ -117,7 +117,7 @@ IMPLEMENT_OVERRIDE inline NEEDS["config.h"]
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       Unsigned64 now = Kip::k()->clock();
       Mword interval_mct;
@@ -137,6 +137,6 @@ IMPLEMENT_OVERRIDE
 void
 Timer::next_interval()
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     timers.current()->set_interval(us_to_mct(100000));
 }

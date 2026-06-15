@@ -57,7 +57,6 @@ public:
 
     Warn_level = CONFIG_WARN_LEVEL,
 
-    Scheduler_one_shot = TAG_ENABLED(one_shot),
     One_shot_min_interval_us = 200,
 #ifdef CONFIG_SCHED_GRANULARITY
     Rcu_grace_period = CONFIG_SCHED_GRANULARITY,
@@ -146,18 +145,60 @@ public:
 //---------------------------------------------------------------------------
 INTERFACE [!(ia32 || amd64) || sched_apic]:
 
-#include <cxx/conditionals>
-
 EXTENSION class Config
 {
 public:
   enum
   {
-    Scheduler_granularity =
-      cxx::const_ite<Scheduler_one_shot>(1UL, CONFIG_SCHED_GRANULARITY),
-
-    Default_time_slice = CONFIG_SCHED_DEF_TIME_SLICE * CONFIG_SCHED_GRANULARITY,
+    Default_time_slice = CONFIG_SCHED_DEF_TIME_SLICE * CONFIG_SCHED_GRANULARITY
   };
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [!one_shot_param && (!(ia32 || amd64) || sched_apic)]:
+
+EXTENSION class Config
+{
+public:
+  static constexpr unsigned scheduler_granularity()
+  { return scheduler_one_shot() ? 1U : CONFIG_SCHED_GRANULARITY; }
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [!one_shot_param]:
+
+EXTENSION class Config
+{
+public:
+  static constexpr bool scheduler_one_shot()
+  { return TAG_ENABLED(one_shot); }
+
+  static constexpr unsigned scheduler_granularity_runtime()
+  { return scheduler_granularity(); }
+};
+
+//---------------------------------------------------------------------------
+INTERFACE [one_shot_param]:
+
+#include "alternatives.h"
+
+EXTENSION class Config
+{
+public:
+  struct scheduler_one_shot : public Alternative_static_functor<scheduler_one_shot>
+  {
+    static bool probe() { return one_shot_timer; }
+  };
+
+  static unsigned scheduler_granularity()
+  { return scheduler_one_shot() ? 1UL : CONFIG_SCHED_GRANULARITY; }
+
+  /* This function must not use runtime patching because it's used in bootstrap
+   * code (in init_global_kip()) which does not perform runtime patching. */
+  static unsigned scheduler_granularity_runtime()
+  { return one_shot_timer ? 1UL : CONFIG_SCHED_GRANULARITY; }
+
+  static Global_data<bool> one_shot_timer;
 };
 
 //---------------------------------------------------------------------------
@@ -282,6 +323,17 @@ constexpr unsigned Config::kmem_per_cent() { return 6; }
 
 IMPLEMENT_DEFAULT inline ALWAYS_INLINE
 constexpr unsigned long Config::kmem_max() { return 3328UL << 20; }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [one_shot_param]:
+
+DEFINE_GLOBAL_CONSTINIT
+Global_data<bool> Config::one_shot_timer(false);
+
+static void one_shot_init()
+{ Config::one_shot_timer = Koptions::o()->opt(Koptions::F_oneshot_timer); }
+
+STATIC_INITIALIZER_P(one_shot_init, BOOTSTRAP_INIT_PRIO);
 
 //---------------------------------------------------------------------------
 IMPLEMENTATION [fine_grained_cputime]:

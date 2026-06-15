@@ -29,20 +29,16 @@ public:
 
 #if defined(CONFIG_SCHED_PIT)
     Scheduler_mode = SCHED_PIT,
-    Scheduler_granularity = 1000U,
-    Default_time_slice = 10 * Scheduler_granularity,
+    Default_time_slice = 10 * scheduler_granularity(),
 #elif defined(CONFIG_SCHED_RTC)
     Scheduler_mode = SCHED_RTC,
-    Scheduler_granularity = TAG_ENABLED(slow_rtc) ? 15625U : 976U,
-    Default_time_slice = 10 * Scheduler_granularity,
+    Default_time_slice = 10 * scheduler_granularity(),
 #elif defined(CONFIG_SCHED_APIC)
     Scheduler_mode = SCHED_APIC,
-    /* Scheduler_granularity in config.cpp */
     /* Default_time_slice in config.cpp */
 #elif defined(CONFIG_SCHED_HPET)
     Scheduler_mode = SCHED_HPET,
-    Scheduler_granularity = 1000U,
-    Default_time_slice = 10 * Scheduler_granularity,
+    Default_time_slice = 10 * scheduler_granularity(),
 #endif
   };
 
@@ -52,6 +48,19 @@ public:
     Kip_clock_uses_rdtsc = TAG_ENABLED(sync_clock),
     Tsc_unified = TAG_ENABLED(tsc_unified),
   };
+
+#if defined(CONFIG_SCHED_PIT)
+  static constexpr unsigned scheduler_granularity()
+  { return 1000U; }
+#elif defined(CONFIG_SCHED_RTC)
+  static constexpr unsigned scheduler_granularity()
+  { return TAG_ENABLED(slow_rtc) ? 15625U : 976U; }
+#elif defined(CONFIG_SCHED_APIC)
+  /* scheduler_granularity() in config.cpp */
+#elif defined(CONFIG_SCHED_HPET)
+  static constexpr unsigned scheduler_granularity()
+  { return 1000U; }
+#endif
 
   static constexpr size_t stable_cache_alignment = 64U;
 

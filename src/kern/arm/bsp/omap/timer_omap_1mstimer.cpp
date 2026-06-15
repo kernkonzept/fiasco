@@ -42,7 +42,7 @@ Timer_omap_1mstimer::get_timer_values_32khz(unsigned &reload, int &tpir, int &tn
   tpir   = 232000;
   tnir   = -768000;
   reload = 0xffffffe0;
-  assert(Config::Scheduler_granularity == 1000); // need to adapt here
+  assert(Config::scheduler_granularity() == 1000); // need to adapt here
 }
 
 PUBLIC explicit
@@ -95,7 +95,7 @@ Timer_omap_1mstimer::get_timer_values(unsigned &reload, int &tpir, int &tnir,
     {
       tpir   = 100000;
       tnir   = 0;
-      reload = ~0 - 24 * Config::Scheduler_granularity + 1; // 24 MHz
+      reload = ~0 - 24 * Config::scheduler_granularity() + 1; // 24 MHz
     }
 }
 

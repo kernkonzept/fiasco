@@ -42,7 +42,7 @@ public:
   enum
   {
     Mct_freq = 24000000,
-    Interval = Mct_freq / (1000000 / Config::Scheduler_granularity) / 2,
+    Interval = Mct_freq / (1000000 / Config::scheduler_granularity()) / 2,
     Maxinterval_mct = (1U << 31) - 1,
     Maxinterval_us  = Maxinterval_mct / (Mct_freq / 1000000),
   };

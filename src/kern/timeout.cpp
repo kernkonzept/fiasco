@@ -128,7 +128,7 @@ Timeout_q::enqueue(Timeout *to)
 
   q.insert_before(to, tmp);
 
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       if (to->_wakeup < _current)
         program_timer(to->_wakeup);
@@ -279,7 +279,7 @@ PUBLIC inline NEEDS ["config.h", Timeout_q::program_timer]
 void
 Timeout_q::update_timer(Unsigned64 max_timeout, Timeout const *ignore = nullptr)
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     program_timer(next_timeout(max_timeout, ignore));
 }
 

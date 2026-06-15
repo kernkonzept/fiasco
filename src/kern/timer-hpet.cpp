@@ -38,7 +38,7 @@ Timer::init(Cpu_number)
   if (hpet_irq == 0 && Hpet::int_avail(2))
     hpet_irq = 2;
 
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       // tbd
     }
@@ -50,9 +50,8 @@ Timer::init(Cpu_number)
   Hpet::enable();
   Hpet::dump();
 
-  printf("Using HPET timer on IRQ %d (%s Mode) for scheduling\n",
-         hpet_irq,
-         Config::Scheduler_one_shot ? "One-Shot" : "Periodic");
+  printf("Using HPET timer on IRQ %d (%s mode) for scheduling\n",
+         hpet_irq, Config::scheduler_one_shot() ? "one-shot" : "periodic");
 }
 
 PUBLIC static inline

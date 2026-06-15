@@ -197,12 +197,12 @@ struct Utest
     cxx::unique_ptr<array_type, Utest::Deleter<array_type>> array;
   };
 
-  enum : Unsigned32
+  static Unsigned32 timer_period()
   {
-    Timer_period = Config::Scheduler_one_shot
-                   ? Unsigned32{Config::Rcu_grace_period}
-                   : Unsigned32{Config::Scheduler_granularity},
-  };
+    return Config::scheduler_one_shot()
+      ? Unsigned32{Config::Rcu_grace_period}
+      : Unsigned32{Config::scheduler_granularity()};
+  }
 
   /// Priority of the main test thread, unless the test makes use of
   /// init_unittest_exclusive.
@@ -1362,7 +1362,7 @@ IMPLEMENT static
 void
 Utest::Tick_disabler::wait_timer_periods(unsigned long periods)
 {
-  Unsigned64 period = static_cast<Unsigned64>(Utest::Timer_period);
+  Unsigned64 period = static_cast<Unsigned64>(Utest::timer_period());
   Unsigned64 count = static_cast<Unsigned64>(periods);
 
   wait_us(period * count);

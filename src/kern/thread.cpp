@@ -466,11 +466,13 @@ Thread::handle_timer_interrupt()
 
   Cpu_number const cpu = current_cpu();
 
-  static_assert(!(Config::Scheduler_one_shot && !Config::Fine_grained_cputime),
+  static_assert(!(TAG_ENABLED(one_shot || one_shot_param)
+                  && !Config::Fine_grained_cputime),
                 "One-shot timer mode requires fine-grained CPU time.");
+
   // This assumes periodic timers, i.e. does not work for one-shot mode.
   if constexpr (!Config::Fine_grained_cputime)
-    consume_time(Config::Scheduler_granularity);
+    consume_time(Config::scheduler_granularity());
 
   Reschedule resched = Rcu::do_pending_work(cpu);
 

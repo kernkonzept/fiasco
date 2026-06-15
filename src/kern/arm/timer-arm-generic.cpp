@@ -67,11 +67,11 @@ Timer::init(Cpu_number cpu)
   if (!(TAG_ENABLED(mp)) || cpu == Cpu_number::boot_cpu())
     {
       _freq0 = frequency();
-      _interval = interval(Config::Scheduler_granularity);
+      _interval = interval(Config::scheduler_granularity());
       printf("ARM generic timer: %u Hz (%u.%u MHz) interval=%u cnt=%llu %s mode\n",
              _freq0.unwrap(), _freq0 / 1000000, (_freq0 % 1000000) / 100000,
              _interval.unwrap(), Gtimer::counter(),
-             Config::Scheduler_one_shot ? "one-shot" : "periodic");
+             Config::scheduler_one_shot() ? "one-shot" : "periodic");
       assert(_freq0);
 
       _scaler_shift_ts_to_ns->init(_freq0, 1'000'000'000);
@@ -103,7 +103,7 @@ IMPLEMENT_OVERRIDE
 void
 Timer::enable()
 {
-  if constexpr (!Config::Scheduler_one_shot)
+  if (!Config::scheduler_one_shot())
     {
       Gtimer::compare(Gtimer::counter() + _interval);
       Gtimer::control(CTL_ENABLE);
@@ -121,7 +121,7 @@ PUBLIC static inline
 void
 Timer::acknowledge()
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     Gtimer::control(CTL_ENABLE | CTL_IMASK);
   else
     Gtimer::compare(Gtimer::compare() + _interval);
@@ -136,7 +136,7 @@ IMPLEMENT_OVERRIDE
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       if (wakeup == Infinite_timeout) [[unlikely]]
         disable();
@@ -162,10 +162,10 @@ IMPLEMENT_OVERRIDE
 void
 Timer::switch_freq_system()
 {
-  _interval = interval(Config::Scheduler_granularity);
+  _interval = interval(Config::scheduler_granularity());
 
   // Frequency is going up, do not wait until slower jdb timer did hit
-  if constexpr (!Config::Scheduler_one_shot)
+  if (!Config::scheduler_one_shot())
     Gtimer::compare(Gtimer::compare() + _interval);
 }
 
@@ -173,7 +173,7 @@ IMPLEMENT_OVERRIDE
 void
 Timer::next_interval()
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       Gtimer::compare(Gtimer::compare() + _interval);
       Gtimer::control(CTL_ENABLE);

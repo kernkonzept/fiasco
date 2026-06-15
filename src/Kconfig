@@ -240,8 +240,17 @@ config SYNC_CLOCK
 	  This allows for high-precision timestamps and is a prerequisite
 	  for running the scheduling timer in one-shot mode.
 
+choice
+	prompt "Scheduling timer mode"
+
+config PERIODIC
+	bool "Periodic mode"
+	help
+	  The scheduler is called periodically with a fixed period. This is the
+	  default mode which works on all architectures with all configurations.
+
 config ONE_SHOT
-	bool "Use scheduling timer in one-shot mode"
+	bool "One-shot mode"
 	depends on HAS_ONE_SHOT
 	select FINE_GRAINED_CPUTIME
 	imply TICKLESS_IDLE
@@ -254,6 +263,22 @@ config ONE_SHOT
 	  When enabling one-shot timer mode it is highly recommended to also
 	  enable "Tickless idle", unless the wakeup latency from idle is
 	  critical.
+
+config ONE_SHOT_PARAM
+	bool "Select via command line parameter"
+	depends on HAS_ONE_SHOT
+	depends on ARM || IA32 || AMD64
+	select FINE_GRAINED_CPUTIME
+	imply TICKLESS_IDLE
+	help
+	  Instead of defining the scheduling timer mode by configuration option
+	  to either periodic or one-shot, allow to activate the one-shot mode
+	  via command line parameter.
+
+	  Default is periodic mode. Passing '-oneshot-timer' as command line
+	  parameter enables the one-shot mode.
+
+endchoice
 
 config TICKLESS_IDLE
 	bool "Tickless idle"
@@ -274,7 +299,7 @@ config TICKLESS_IDLE
 
 config FINE_GRAINED_CPUTIME
 	bool "Fine-grained CPU time"
-	depends on !PERFORMANCE || ONE_SHOT
+	depends on !PERFORMANCE || ONE_SHOT || ONE_SHOT_PARAM
 	help
 	  Measure CPU time consumed by a thread from switching to the thread
 	  until switching to another thread. Induces an overhead during each

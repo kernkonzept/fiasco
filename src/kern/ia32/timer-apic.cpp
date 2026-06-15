@@ -21,7 +21,7 @@ Timer::init(Cpu_number cpu)
 {
   Apic::timer_assign_irq_vector(Config::Apic_timer_vector);
 
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       Apic::timer_set_one_shot();
       Apic::timer_reg_write(Apic::Timer_max);
@@ -29,7 +29,7 @@ Timer::init(Cpu_number cpu)
   else
     {
       Apic::timer_set_periodic();
-      Apic::timer_reg_write(Apic::us_to_apic(Config::Scheduler_granularity));
+      Apic::timer_reg_write(Apic::us_to_apic(Config::scheduler_granularity()));
     }
 
   // make sure that PIT does pull its interrupt line
@@ -38,7 +38,7 @@ Timer::init(Cpu_number cpu)
   if (cpu == Cpu_number::boot_cpu())
     printf("Local APIC timer on vector %x in %s mode\n",
            static_cast<unsigned>(Config::Apic_timer_vector),
-           Config::Scheduler_one_shot ? "one-shot" : "periodic");
+           Config::scheduler_one_shot() ? "one-shot" : "periodic");
 }
 
 PUBLIC static inline
@@ -50,7 +50,7 @@ IMPLEMENT_OVERRIDE
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       Unsigned32 apic;
       Unsigned64 now = system_clock();

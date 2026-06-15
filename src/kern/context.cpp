@@ -2378,7 +2378,7 @@ Context::enter_tickless_idle(Cpu_number cpu = current_cpu())
   Mem_space::disable_tlb(cpu);
   Tlb::flush_all_cpu(cpu);
 
-  if constexpr (Config::Scheduler_one_shot)
+  if (Config::scheduler_one_shot())
     {
       // Reprogram the one-shot timer ignoring the idle thread's timeslice
       // timeout and without the Rcu_grace_period limit.
@@ -2402,7 +2402,7 @@ Context::leave_tickless_idle(Cpu_number cpu = current_cpu())
 {
   if (Rcu::suspended_from_rcu(cpu))
     {
-      if constexpr (Config::Scheduler_one_shot)
+      if (Config::scheduler_one_shot())
         {
           // Reprogram the one-shot timer with the Rcu_grace_period limit.
           Unsigned64 next_rcu = Timer::system_clock() + Config::Rcu_grace_period;

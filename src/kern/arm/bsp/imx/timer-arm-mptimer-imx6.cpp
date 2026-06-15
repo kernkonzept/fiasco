@@ -25,7 +25,7 @@ PRIVATE static Mword Timer::interval()
 
     Timer_freq = 32768,
     Ticks = 50,
-    Gpt_ticks = (Timer_freq * Ticks) / Config::Scheduler_granularity,
+    Gpt_ticks = (Timer_freq * Ticks) / Config::scheduler_granularity(),
   };
 
   Mmio_register_block t(Kmem_mmio::map(Mem_layout::Gpt_phys_base, 0x100));

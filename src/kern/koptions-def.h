@@ -33,6 +33,8 @@ namespace L4_kernel_options
 
     F_jdb_cmd           = 1 << 23,
     F_serial_input      = 1 << 24,
+
+    F_oneshot_timer     = 1 << 25,
   };
 
   enum
