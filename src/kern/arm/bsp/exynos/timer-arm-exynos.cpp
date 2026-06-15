@@ -52,6 +52,7 @@ public:
 
 IMPLEMENTATION [arm && exynos_mct]: // ------------------------------------
 
+#include "config.h"
 #include "cpu.h"
 #include "io.h"
 #include <cstdio>
@@ -112,21 +113,21 @@ Timer::periodic_default_freq(Cpu_number cpu)
   timers.cpu(cpu)->set_interval(Interval);
 }
 
-//----------------------------------------------------------------------------
-IMPLEMENTATION [arm && exynos_mct && one_shot]:
-
-IMPLEMENT inline
+IMPLEMENT_OVERRIDE inline NEEDS["config.h"]
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  Unsigned64 now = Kip::k()->clock();
-  Mword interval_mct;
-  if (wakeup <= now) [[unlikely]]
-    interval_mct = 1;
-  else
-    interval_mct = us_to_mct(wakeup - now);
+  if constexpr (Config::Scheduler_one_shot)
+    {
+      Unsigned64 now = Kip::k()->clock();
+      Mword interval_mct;
+      if (wakeup <= now) [[unlikely]]
+        interval_mct = 1;
+      else
+        interval_mct = us_to_mct(wakeup - now);
 
-  timers.current()->set_interval(interval_mct);
+      timers.current()->set_interval(interval_mct);
+    }
 }
 
 // ------------------------------------------------------------------------

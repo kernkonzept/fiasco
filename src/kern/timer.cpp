@@ -149,14 +149,12 @@ Timer::system_clock()
   return Kip::k()->clock();
 }
 
-//----------------------------------------------------------------------------
-IMPLEMENTATION[!one_shot]:
-
-IMPLEMENT inline
+IMPLEMENT_DEFAULT inline
 void
 Timer::update_timer(Unsigned64)
 {
   // does nothing in periodic timer mode
+  static_assert(TAG_ENABLED(!one_shot));
 }
 
 //----------------------------------------------------------------------------

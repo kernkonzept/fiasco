@@ -46,25 +46,25 @@ void
 Timer::acknowledge()
 {}
 
-//----------------------------------------------------------------------------
-IMPLEMENTATION[apic_timer && one_shot]:
-
-IMPLEMENT
+IMPLEMENT_OVERRIDE
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  Unsigned32 apic;
-  Unsigned64 now = system_clock();
-  if (wakeup == Infinite_timeout) [[unlikely]]
-    apic = 0; // Stop timer for infinite timeout.
-  else if (wakeup <= now) [[unlikely]]
-    apic = Apic::Timer_min;
-  else
+  if constexpr (Config::Scheduler_one_shot)
     {
-      apic = Apic::us_to_apic(wakeup - now);
-      if (apic < Apic::Timer_min) [[unlikely]]
+      Unsigned32 apic;
+      Unsigned64 now = system_clock();
+      if (wakeup == Infinite_timeout) [[unlikely]]
+        apic = 0; // Stop timer for infinite timeout.
+      else if (wakeup <= now) [[unlikely]]
         apic = Apic::Timer_min;
-    }
+      else
+        {
+          apic = Apic::us_to_apic(wakeup - now);
+          if (apic < Apic::Timer_min) [[unlikely]]
+            apic = Apic::Timer_min;
+        }
 
-  Apic::timer_reg_write(apic);
+      Apic::timer_reg_write(apic);
+    }
 }

@@ -50,6 +50,7 @@ private:
 //----------------------------------------------------------------------------
 IMPLEMENTATION [riscv]:
 
+#include "config.h"
 #include "kip.h"
 #include "panic.h"
 #include "sbi.h"
@@ -159,10 +160,7 @@ Timer::toggle(Cpu_number cpu, bool enable)
   Cpu::enable_timer_interrupt(enable);
 }
 
-// ------------------------------------------------------------------------
-IMPLEMENTATION [riscv && one_shot]:
-
-IMPLEMENT inline NEEDS[Timer::set_timer]
+IMPLEMENT_OVERRIDE inline NEEDS["config.h", Timer::set_timer]
 void
 Timer::update_timer(Unsigned64 wakeup_us)
 {

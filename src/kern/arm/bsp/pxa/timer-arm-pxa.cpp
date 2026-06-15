@@ -104,35 +104,33 @@ Timer::system_clock()
     }
 }
 
-// -------------------------------------------------------------
-IMPLEMENTATION [arm && pf_xscale && one_shot]:
-
-IMPLEMENT inline NEEDS["config.h", "kip.h", Timer::timer_to_us,
-                       Timer::us_to_timer]
+IMPLEMENT_OVERRIDE inline NEEDS["config.h", "kip.h", Timer::timer_to_us,
+                                Timer::us_to_timer]
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  Unsigned32 apic;
-  Kip::k()->add_to_clock(timer_to_us(_timer->read<Unsigned32>(OSCR)));
-  _timer->write<Unsigned32>(0, OSCR);
-  static_assert(Config::Kip_clock_uses_timer == false);
-  Unsigned64 now = Kip::k()->clock();
-
-  if (wakeup <= now) [[unlikely]]
-    // already expired
-    apic = 1;
-  else
+  if constexpr (Config::Scheduler_one_shot)
     {
-      apic = us_to_timer(wakeup - now);
-      if (apic > 0x0ffffffff) [[unlikely]]
-        apic = 0x0ffffffff;
-      if (apic < 1) [[unlikely]]
-        // timeout too small
+      Unsigned32 apic;
+      Kip::k()->add_to_clock(timer_to_us(_timer->read<Unsigned32>(OSCR)));
+      _timer->write<Unsigned32>(0, OSCR);
+      static_assert(Config::Kip_clock_uses_timer == false);
+      Unsigned64 now = Kip::k()->clock();
+
+      if (wakeup <= now) [[unlikely]]
+        // already expired
         apic = 1;
+      else
+        {
+          apic = us_to_timer(wakeup - now);
+          if (apic > 0x0ffffffff) [[unlikely]]
+            apic = 0x0ffffffff;
+          if (apic < 1) [[unlikely]]
+            // timeout too small
+            apic = 1;
+        }
+
+      _timer->write<Unsigned32>(apic, OSMR0);
+      _timer->write<Unsigned32>(1, OSSR); // clear all status bits
     }
-
-  //printf("%15lld: Set Timer to %lld [%08x]\n", now, wakeup, apic);
-
-  _timer->write<Unsigned32>(apic, OSMR0);
-  _timer->write<Unsigned32>(1, OSSR); // clear all status bits
 }

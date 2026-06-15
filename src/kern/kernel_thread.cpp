@@ -337,42 +337,35 @@ Kernel_thread::idle_op()
     arch_idle();
 }
 
-// ------------------------------------------------------------------------
-IMPLEMENTATION [tickless_idle && !one_shot]:
-
 IMPLEMENT inline
 bool
 Kernel_thread::can_tickless_idle(Cpu_number cpu)
 {
-  if constexpr (!TAG_ENABLED(sync_clock))
+  if constexpr (Config::Scheduler_one_shot)
     {
-      // Boot CPU is responsible for advancing the KIP clock and can therefore
-      // never enter tickless idle.
-      if (cpu == Cpu_number::boot_cpu())
-        return false;
+      static_assert(TAG_ENABLED(sync_clock), "Clock must be synchronized.");
+
+      // OPTIMIZE: Check when the next timeout is and compare against threshold,
+      // yet to be quantified, to avoid tickless idle from which we immediately
+      // wake up again. Unfortunately we cannot simply use Timeout_q::_current
+      // for that, because it is limited by the max(..., Rcu_grace_period). So
+      // we must either scan all timeouts, or somehow/somewhere store the actual
+      // next timeout without the Rcu_grace_period limit.
+      return true;
     }
+  else
+    {
+      if constexpr (!TAG_ENABLED(sync_clock))
+        {
+          // Boot CPU is responsible for advancing the KIP clock and can
+          // therefore never enter tickless idle.
+          if (cpu == Cpu_number::boot_cpu())
+            return false;
+        }
 
-  // We cannot freely program the periodic timer to a specific next timeout,
-  // therefore entering tickless idle is only possible when there are no
-  // timeouts enqueued, as otherwise we would miss them.
-  return !Timeout_q::timeout_queue.cpu(cpu).have_timeouts(
-    timeslice_timeout.cpu(cpu));
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [tickless_idle && one_shot]:
-
-static_assert(TAG_ENABLED(sync_clock), "Clock must be synchronized.");
-
-IMPLEMENT inline
-bool
-Kernel_thread::can_tickless_idle(Cpu_number)
-{
-  // OPTIMIZE: Check when the next timeout is and compare against threshold, yet
-  // to be quantified, to avoid tickless idle from which we immediately wake up
-  // again. Unfortunately we cannot simply use Timeout_q::_current for that,
-  // because it is limited by the max(..., Rcu_grace_period). So we must either
-  // scan all timeouts, or somehow/somewhere store the actual next timeout
-  // without the Rcu_grace_period limit.
-  return true;
+      // We cannot freely program the periodic timer to a specific next timeout,
+      // therefore entering tickless idle is only possible when there are no
+      // timeouts enqueued, as otherwise we would miss them.
+      return !Timeout_q::timeout_queue.cpu(cpu).have_timeouts(
+        timeslice_timeout.cpu(cpu));
 }

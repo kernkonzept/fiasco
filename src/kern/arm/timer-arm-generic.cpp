@@ -131,21 +131,19 @@ Unsigned64
 Timer::time_stamp()
 { return Gtimer::counter(); }
 
-// --------------------------------------------------------------------------
-IMPLEMENTATION [arm && arm_generic_timer && one_shot]:
-
-IMPLEMENT
+IMPLEMENT_OVERRIDE
 void
 Timer::update_timer(Unsigned64 wakeup)
 {
-  if (wakeup == Infinite_timeout) [[unlikely]]
+  if constexpr (Config::Scheduler_one_shot)
     {
-      disable();
-    }
-  else
-    {
-      Gtimer::compare(us_to_ts(wakeup));
-      Gtimer::control(CTL_ENABLE);
+      if (wakeup == Infinite_timeout) [[unlikely]]
+        disable();
+      else
+        {
+          Gtimer::compare(us_to_ts(wakeup));
+          Gtimer::control(CTL_ENABLE);
+        }
     }
 }
 
@@ -170,13 +168,13 @@ Timer::switch_freq_system()
     Gtimer::compare(Gtimer::compare() + _interval);
 }
 
-// --------------------------------------------------------------
-IMPLEMENTATION [arm && arm_generic_timer && jdb && one_shot]:
-
 IMPLEMENT_OVERRIDE
 void
 Timer::next_interval()
 {
-  Gtimer::compare(Gtimer::compare() + _interval);
-  Gtimer::control(CTL_ENABLE);
+  if constexpr (Config::Scheduler_one_shot)
+    {
+      Gtimer::compare(Gtimer::compare() + _interval);
+      Gtimer::control(CTL_ENABLE);
+    }
 }
