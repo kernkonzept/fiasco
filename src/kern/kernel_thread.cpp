@@ -368,4 +368,5 @@ Kernel_thread::can_tickless_idle(Cpu_number cpu)
       // timeouts enqueued, as otherwise we would miss them.
       return !Timeout_q::timeout_queue.cpu(cpu).have_timeouts(
         timeslice_timeout.cpu(cpu));
+    }
 }
