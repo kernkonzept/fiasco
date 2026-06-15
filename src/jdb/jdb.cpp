@@ -242,7 +242,11 @@ bool
 Jdb::cpu_in_jdb(Cpu_number cpu)
 { return Cpu::online(cpu) && in_jdb.cpu(cpu); }
 
-
+/**
+ * Call `f()` on the boot CPU for all CPUs that have entered JDB.
+ *
+ * \note Any return value of `f()` is ignored.
+ */
 PUBLIC static
 template< typename Func >
 void
@@ -253,6 +257,17 @@ Jdb::foreach_cpu(Func const &f)
       f(i);
 }
 
+/**
+ * Call `f()` on the boot CPU for all CPUs that have entered JDB.
+ *
+ * \param positive  Specifies how the return value of `f()` is combined across
+ *                  all CPUs: False: Logical OR. True: Logical AND.
+ *
+ * \retval false  On `positive=false`, `f()` never returned true for any CPU.
+ *                On `positive=true`, `f()` returned false for at least one CPU.
+ * \retval true   On `positive=false`, `f()` returned true for at least one CPU.
+ *                On `positive=true`, `f()` returned true for all CPUs.
+ */
 PUBLIC static
 template< typename Func >
 bool
