@@ -343,7 +343,8 @@ Kernel_thread::can_tickless_idle(Cpu_number cpu)
 {
   if (Config::scheduler_one_shot())
     {
-      static_assert(TAG_ENABLED(sync_clock), "Clock must be synchronized.");
+      static_assert(TAG_ENABLED(periodic) || TAG_ENABLED(sync_clock),
+                    "Clock must be synchronized for one-shot timers.");
 
       // OPTIMIZE: Check when the next timeout is and compare against threshold,
       // yet to be quantified, to avoid tickless idle from which we immediately
