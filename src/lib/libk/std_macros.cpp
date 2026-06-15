@@ -49,5 +49,12 @@ INTERFACE:
 #define FIASCO_ARM_THUMB2_NO_FRAME_PTR
 #endif
 
+// Macro to force 32-bit instructions, even on Thumb builds.
+#ifdef __thumb__
+#define INST32(inst)  inst ".w"
+#else
+#define INST32(inst)  inst
+#endif
+
 IMPLEMENTATION:
 //-
