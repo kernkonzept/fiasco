@@ -463,7 +463,14 @@ Mem_space::v_insert([[maybe_unused]] Phys_addr phys,
   bool const writeback = _current.current() == this && mpu_state_in_sync();
 
   auto touched = _dir->add(start, end, attr);
-  if (!touched) [[unlikely]]
+  if (touched) [[likely]]
+    {
+      // Usually, at least one region is updated. If not, save us the IPI to
+      // other CPUs.
+      if (!touched.value().is_empty()) [[likely]]
+        mpu_state_mark_dirty();
+    }
+  else
     {
       if (touched.error() == Mpu_regions_update::Error_no_mem)
         {
