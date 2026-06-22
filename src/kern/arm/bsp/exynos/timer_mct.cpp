@@ -42,7 +42,6 @@ public:
   enum
   {
     Mct_freq = 24000000,
-    Interval = Mct_freq / (1000000 / Config::scheduler_granularity()) / 2,
     Maxinterval_mct = (1U << 31) - 1,
     Maxinterval_us  = Maxinterval_mct / (Mct_freq / 1000000),
   };
@@ -84,7 +83,7 @@ Mct_core_timer::configure()
 {
   write<Mword>(1, Reg::L_TCNTB);
   wstat_poll(1);
-  set_interval(Interval);
+  set_interval(Mct_freq / (1000000 / Config::scheduler_granularity()) / 2);
 
   // run timer
   write<Mword>(1, Reg::L_TCON);
