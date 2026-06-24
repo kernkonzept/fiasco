@@ -109,7 +109,7 @@ config FPU
 	  Enable this if your platform has hardware floating point support.
 
 config LAZY_FPU
-	bool "Enable lazy FPU switching" if HAS_LAZY_FPU && FPU
+	bool "Enable lazy FPU switching" if HAS_LAZY_FPU && FPU && !PERFORMANCE
 	depends on FPU && HAS_LAZY_FPU
 	default y if !AMD64
 	help
@@ -273,7 +273,7 @@ config TICKLESS_IDLE
 	  On x86, tickless idle adds a small overhead to each interrupt entry.
 
 config FINE_GRAINED_CPUTIME
-	bool "Fine-grained CPU time"
+	bool "Fine-grained CPU time" if !ONE_SHOT
 	depends on !PERFORMANCE || ONE_SHOT
 	help
 	  Measure CPU time consumed by a thread from switching to the thread
@@ -408,7 +408,7 @@ config PAGEFAULT_TRAMPOLINE
 	  If unsure, say Y.
 
 config KERNEL_ISOLATION
-	bool "Enable Kernel Address-Space Isolation" if AMD64
+	bool "Enable Kernel Address-Space Isolation"
 	depends on AMD64
 	select NO_LDT
 	select NO_IO_PAGEFAULT
@@ -486,9 +486,9 @@ config CPU_LOCAL_MAP
 	  If unsure say N.
 
 config NO_IO_PAGEFAULT
-	bool "Disable IO-Port fault IPC" if (IA32 || AMD64) && !KERNEL_ISOLATION
+	bool "Disable IO-Port fault IPC" if !KERNEL_ISOLATION
 	depends on IA32 || AMD64
-	default y if IA32 || AMD64
+	default y
 	help
 	  Disable page-fault IPC for IO-Port accesses. If this option is
 	  enabled, the kernel does not generate page-fault IPC for failed
@@ -599,7 +599,7 @@ config PERF_CNT_USER
 	  Do ONLY enable this when debugging, experimenting or evaluating!
 
 config INLINE
-	bool "Generate inline code"
+	bool "Generate inline code" if !PERFORMANCE
 	default y
 	help
 	  Inlining specifies that it is desirable for the compiler to
@@ -608,13 +608,13 @@ config INLINE
 	  kernel you should say 'Y' here.
 
 config NDEBUG
-	bool "Do not compile assertions"
+	bool "Do not compile assertions" if !PERFORMANCE
 	help
 	  Don't insert assertions into the code. Should be enabled for
 	  kernels which are used for measurements.
 
 config NO_FRAME_PTR
-	bool "Compile without frame pointer"
+	bool "Compile without frame pointer" if !PERFORMANCE
 	default y
 	help
 	  Enabling this option optimizes for speed but makes debugging more
@@ -651,8 +651,8 @@ config IRQ_SPINNER
 	  Display IRQ activity on VGA screen.
 
 config WATCHDOG
-	bool "Enable Watchdog support" if HAS_WATCHDOG_OPTION
-	default y if HAS_WATCHDOG_OPTION
+	bool "Enable Watchdog support"
+	default y
 	depends on HAS_WATCHDOG_OPTION
 	help
 	  Enable support for watchdog using the builtin Local APIC and a
@@ -660,9 +660,9 @@ config WATCHDOG
 	  -watchdog command line option.
 
 config SERIAL
-	bool "Support for debugging over serial line" if HAS_SERIAL_OPTION
+	bool "Support for debugging over serial line"
 	depends on HAS_SERIAL_OPTION
-	default y if HAS_SERIAL_OPTION
+	default y
 	select OUTPUT
 	help
 	  This option enables support for input/output over serial interface.
@@ -674,7 +674,7 @@ config UNIT_TEST
 	  Compile fiasco unit tests.
 
 config TEST_SUPPORT_CODE
-	bool "Compile test support code"
+	bool "Compile test support code" if !UNIT_TEST
 	help
 	  Include test support code when compiling Fiasco.
 
@@ -720,8 +720,8 @@ config OUTPUT
 menuconfig JDB
 	bool "JDB kernel debugger"
 	default y
-	select RT_DBG
-	select INPUT
+	depends on RT_DBG
+	depends on INPUT
 	depends on !AMP
 	depends on OUTPUT
 	help
