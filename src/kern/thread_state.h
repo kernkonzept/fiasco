@@ -62,6 +62,7 @@ enum Thread_state_
 
   /// Waiting to send a message.
   Thread_send_wait           = 0x4,
+  Thread_send_in_progress    = 0x20,
   /// Waiting for a message.
   Thread_receive_wait        = 0x8,
   /// Actively receiving a message. A thread is carrying this flag while
@@ -71,7 +72,7 @@ enum Thread_state_
 
   Thread_ipc_receive_mask    = Thread_receive_wait | Thread_receive_in_progress,
   Thread_ipc_mask            = Thread_send_wait | Thread_receive_wait
-                             | Thread_receive_in_progress,
+                             | Thread_receive_in_progress | Thread_send_in_progress,
 
   /// The IPC operation is canceled by the receiver.
   Thread_transfer_failed      = 0x40,

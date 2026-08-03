@@ -216,7 +216,7 @@ protected:
   Thread_ptr _exc_handler{Thread_ptr::Invalid};
 
 public:
-  void ipc_send_msg(Context *receiver, bool open_wait) override;
+  void ipc_send_msg(Context *receiver, Sender *set_closed_wait) override;
   void modify_label(Mword const *todo, int cnt) override;
   static bool transfer_msg_items(L4_msg_tag tag, Thread* snd, Utcb *snd_utcb,
                                  Thread *rcv, Utcb *rcv_utcb,
@@ -231,8 +231,10 @@ public:
     _ipc_send_rights = rights;
   }
 
+  void set_snd_msg_tag(L4_msg_tag tag) { _snd_msg_tag = tag; }
+
   void do_ipc(L4_msg_tag tag, Thread *partner,
-              bool have_receive, Sender *sender, L4_timeout_pair t,
+              Ipc_flags flags, Sender *sender, L4_timeout_pair t,
               Syscall_frame *regs);
 
   void do_ipc_recv(L4_msg_tag tag, Sender *sender, L4_timeout_pair t,
@@ -279,7 +281,7 @@ public:
 private:
 
   void _do_ipc(L4_msg_tag tag, Thread *partner,
-               bool have_receive, Sender *sender, L4_timeout_pair t,
+               Ipc_flags flags, Sender *sender, L4_timeout_pair t,
                Syscall_frame *regs);
 
   bool exception(Kobject_iface *handler, Trap_state *ts, L4_fpage::Rights rights);
@@ -383,7 +385,7 @@ private:
       return copy_utcb_to_utcb(tag, _this(), receiver, rights);
   }
 
-  bool transfer_msg(L4_msg_tag tag, Thread *receiver, bool open_wait)
+  bool transfer_msg(L4_msg_tag tag, Thread *receiver)
   {
     Syscall_frame* dst_regs = receiver->rcv_regs();
 
@@ -394,7 +396,7 @@ private:
     dst_regs->from(_from_spec);
 
     // setup the reply capability in case of a call
-    if (success && open_wait && _this()->is_partner(receiver))
+    if (success && _this()->is_partner(receiver))
       receiver->set_reply_cap(_this(), rights);
 
     return success;
@@ -541,7 +543,7 @@ private:
         _this()->state.del(Thread_timeout);
         //_this()->state.change_dirty(~(Thread_ipc_mask | Thread_timeout), Thread_receive_in_progress);
         _this()->vcpu_update_state();
-        next->ipc_send_msg(_this(), !closed_sender);
+        next->ipc_send_msg(_this());
         _this()->state.del(Thread_ipc_mask);
         return true;
       }
@@ -583,8 +585,7 @@ private:
         return true;
       }
 
-    while (partner->in_ipc(this)
-           && _this()->state.change_safely(~(Thread_send_wait | Thread_ready), Thread_send_wait))
+    while (_this()->state.change_if([](Mword s) { return s & Thread_send_in_progress; }, ~Thread_ready, 0))
       {
         // FIXME: should tell the partner/receiver to stop actively receiving
         _this()->schedule();
@@ -697,26 +698,40 @@ private:
 
   inline bool
   _ipc_send(L4_msg_tag tag, Thread *partner,
-            bool have_receive, L4_timeout_pair t,
+            Ipc_flags flags, L4_timeout_pair t,
             Syscall_frame *regs,
             Cpu_number current_cpu);
 };
 
 /**
- * Receiver-ready callback. Receivers call this function in the context of a
- * waiting sender when they get ready to receive a message from that sender
- * (in this case a thread).
+ * Receiver-ready callback for a Thread sender.
+ *
+ * Called in the receiver's context. Transfers the message and transitions the
+ * sender to ready (or receive-wait if a reply phase follows).
+ *
+ * If `set_closed_wait` is non-null and the sender has a receive phase with a
+ * currently-set Poi (indicating a pending closed wait), the Poi is redirected
+ * to `set_closed_wait`. This allows the WQ dispatch path to bind the sender's
+ * reply wait to the specific receiver thread that served the request, ensuring
+ * only that receiver's reply cap satisfies the closed wait.
+ *
+ * `Thread_send_in_progress` is set before `transfer_msg` so that
+ * `abort_send` can detect the active-transfer window and spin rather than
+ * dequeue the sender prematurely.
  */
 template<typename THREAD>
 void
-Thread_ipc<THREAD>::ipc_send_msg(Context *receiver, bool open_wait)
+Thread_ipc<THREAD>::ipc_send_msg(Context *receiver, Sender *set_closed_wait)
 {
   if (EXPECT_FALSE(_this()->home_cpu() != receiver->home_cpu()
         && _snd_msg_tag.transfer_fpu()))
     clear_fpu_before_receive(nonull_static_cast<Thread*>(receiver));
 
-  bool success = transfer_msg(_snd_msg_tag, nonull_static_cast<Thread*>(receiver),
-                              open_wait);
+  if (EXPECT_FALSE(set_closed_wait != nullptr && _this()->sender_list()->current_poi()))
+    _this()->set_partner(set_closed_wait);
+
+  _this()->state.add(Thread_send_in_progress);
+  bool success = transfer_msg(_snd_msg_tag, nonull_static_cast<Thread*>(receiver));
 
   Mword state_del;
   Mword state_add;
@@ -909,7 +924,7 @@ Thread_ipc<THREAD>::transfer_msg_items(L4_msg_tag tag,
 template<typename T>
 inline bool
 Thread_ipc<T>::_ipc_send(L4_msg_tag tag, Thread *partner,
-                         bool have_receive, L4_timeout_pair t,
+                         Ipc_flags flags, L4_timeout_pair t,
                          Syscall_frame *regs,
                          Cpu_number current_cpu)
 {
@@ -944,14 +959,14 @@ Thread_ipc<T>::_ipc_send(L4_msg_tag tag, Thread *partner,
         partner->reset_timeout();
 
       // --- transfer is possibly blocking... RCU references need protection.
-      ok = transfer_msg(tag, partner, result.is_open_wait());
+      ok = transfer_msg(tag, partner);
       partner->state.del(Thread_receive_in_progress);
       // --- from here partner is valid until the next preemption point
       // FIXME: sender might be gone already
 
       // switch to receiving state
       Mword state_to_add = 0;
-      if (ok && have_receive)
+      if (ok && flags.have_receive())
         state_to_add = Thread_receive_wait;
 
       _this()->state.change(~Thread_ipc_mask, state_to_add);
@@ -964,7 +979,7 @@ Thread_ipc<T>::_ipc_send(L4_msg_tag tag, Thread *partner,
       // Send failed. Skip the receive phase (Thread_receive_wait was not
       // set) but still activate the partner (may include a switch to it)
       // to inform the partner about the failed IPC.
-      regs->tag(L4_msg_tag(0, 0, L4_msg_tag::Error, 0));
+      regs->tag(L4_msg_tag::error());
     }
 
   return activate_partner;
@@ -998,7 +1013,7 @@ Thread_ipc<T>::_ipc_send(L4_msg_tag tag, Thread *partner,
 template<typename T>
 inline void
 Thread_ipc<T>::_do_ipc(L4_msg_tag tag, Thread *partner,
-                       bool have_receive, Sender *sender, L4_timeout_pair t,
+                       Ipc_flags flags, Sender *sender, L4_timeout_pair t,
                        Syscall_frame *regs)
 {
   assert (cpu_lock.test());
@@ -1008,7 +1023,7 @@ Thread_ipc<T>::_do_ipc(L4_msg_tag tag, Thread *partner,
 
   assert (!_this()->state.has(Thread_ipc_mask));
 
-  _this()->prepare_receive(sender, have_receive ? regs : nullptr);
+  _this()->prepare_receive(flags, sender, regs);
   bool activate_partner = false;
 
   if (partner)
@@ -1020,11 +1035,11 @@ Thread_ipc<T>::_do_ipc(L4_msg_tag tag, Thread *partner,
 
       assert(!in_sender_list());
       do_switch = tag.do_switch();
-      activate_partner = _ipc_send(tag, partner, have_receive, t, regs, ::current_cpu());
+      activate_partner = _ipc_send(tag, partner, flags, t, regs, ::current_cpu());
     }
   else
     {
-      assert (have_receive);
+      assert (flags.have_receive());
       _this()->state.add(Thread_receive_wait);
     }
 
@@ -1039,7 +1054,7 @@ Thread_ipc<T>::_do_ipc(L4_msg_tag tag, Thread *partner,
 
     bool rcv_in_progress = _this()->state() & Thread_ipc_receive_mask;
 
-    if (have_receive && rcv_in_progress)
+    if (flags.have_receive() && rcv_in_progress)
       {
         assert (!in_sender_list());
         assert (!_this()->state.has(Thread_send_wait));
@@ -1075,7 +1090,7 @@ Thread_ipc<T>::_do_ipc(L4_msg_tag tag, Thread *partner,
         // --- partner no longer valid from this point ...
       }
 
-    if (have_receive && rcv_in_progress)
+    if (flags.have_receive() && rcv_in_progress)
       do_receive(next, sender, t.rcv, rcv_timeout);
   }
 
@@ -1086,7 +1101,7 @@ Thread_ipc<T>::_do_ipc(L4_msg_tag tag, Thread *partner,
 
   if (state & Thread_ipc_mask)
     {
-      if (have_receive && sender && sender == partner)
+      if (flags.have_receive() && sender && sender == partner)
         _this()->reset_partner_reply_cap();
 
       Utcb *utcb = _this()->utcb().access(true);
@@ -1112,17 +1127,17 @@ void
 Thread_ipc<T>::do_ipc_recv(L4_msg_tag tag, Sender *sender, L4_timeout_pair t,
                            Syscall_frame *regs)
 {
-  _do_ipc(tag, nullptr, true, sender, t, regs);
+  _do_ipc(tag, nullptr, Ipc_flags(true, !sender), sender, t, regs);
 }
 
 template<typename T>
 FIASCO_FLATTEN
 void
 Thread_ipc<T>::do_ipc(L4_msg_tag tag, Thread *partner,
-                      bool have_receive, Sender *sender, L4_timeout_pair t,
+                      Ipc_flags flags, Sender *sender, L4_timeout_pair t,
                       Syscall_frame *regs)
 {
-  _do_ipc(tag, partner, have_receive, sender, t, regs);
+  _do_ipc(tag, partner, flags, sender, t, regs);
 }
 
 #endif
@@ -1133,7 +1148,7 @@ void
 Thread_ipc<T>::do_ipc_open_wait(L4_msg_tag tag, L4_timeout_pair t,
                                 Syscall_frame *regs)
 {
-  _do_ipc(tag, nullptr, true, nullptr, t, regs);
+  _do_ipc(tag, nullptr, Ipc_flags(true, true), nullptr, t, regs);
 }
 
 /** Page fault handler.

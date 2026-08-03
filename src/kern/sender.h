@@ -18,13 +18,44 @@ class Sender : private Prio_list_elem
   // allow Prio_list to deal with Sender gracefully
   friend class Prio_list;
 public:
+  /**
+   * IPC operation flags encoding the receive phase and reply capability intent.
+   *
+   * Bit 0 (have_receive): a receive phase follows the send.
+   * Bit 1 (want_reply_cap): the receiver should establish a reply cap for the
+   *   sender on delivery, enabling the sender to enter a closed wait for the
+   *   reply. Only meaningful when have_receive is set.
+   *
+   * Typical usage:
+   *   Ipc_flags(true, true)   - call: send + closed wait for reply
+   *   Ipc_flags(true, false)  - send + open/WQ wait, no reply cap
+   *   Ipc_flags(false, false) - send only, no receive
+   */
+  struct Ipc_flags
+  {
+    unsigned char v = 0;
+    Ipc_flags() = default;
+    constexpr explicit Ipc_flags(unsigned char flags) : v(flags) {}
+    constexpr bool have_receive() const { return v != 0; }
+    constexpr bool want_reply_cap() const { return v & 2; }
+    constexpr explicit Ipc_flags(bool have_recv, bool want_reply_cap)
+    : v((have_recv ? 1 : 0) | ((have_recv && want_reply_cap) ? 2 : 0))
+    {}
+  };
 
   using Prio_list_elem::wait_queue;
 
-  /** Receiver-ready callback. Receivers call this function on waiting senders
-      when they get ready to receive a message from that sender. Senders need
-      to implement this interface. */
-  virtual void ipc_send_msg(Context *, bool open_wait) = 0;
+  /**
+   * Receiver-ready callback. Called in the receiver's context when the
+   * receiver is ready to accept the sender's message.
+   *
+   * \param receiver      The receiving context.
+   * \param set_closed_wait  If non-null, the sender's receive phase (if any)
+   *   becomes a closed wait for this Sender as the reply partner, instead of
+   *   accepting the first queued sender. Used by the WQ dispatch path to bind
+   *   the reply to the specific receiver that dequeued the sender.
+   */
+  virtual void ipc_send_msg(Context *, Sender *set_closed_wait = nullptr) = 0;
   virtual void ipc_receiver_aborted() = 0;
   virtual void modify_label(Mword const *todo, int cnt) = 0;
 

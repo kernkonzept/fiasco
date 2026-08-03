@@ -79,7 +79,7 @@ public:
    * waiting sender when they get ready to receive a message from that sender (in
    * this case an Ipc_sender aka Irq_sender).
    */
-  void ipc_send_msg(Context *receiver, bool) override
+  void ipc_send_msg(Context *receiver, Sender *) override
   {
     derived()->transfer_msg(receiver);
     if (derived()->requeue_sender())

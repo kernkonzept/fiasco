@@ -579,8 +579,8 @@ Thread_object::invoke(L4_obj_ref self, L4_fpage::Rights rights,
         }
 
       ct->set_ipc_from_spec(f->from_spec(), rights, partner);
-      ct->do_ipc(f->tag(), partner, have_rcv, sender,
-                 f->timeout(), f);
+      ct->do_ipc(f->tag(), partner, Ipc_flags(have_rcv, !sender),
+                 sender, f->timeout(), f);
       return;
     }
 

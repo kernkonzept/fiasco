@@ -158,6 +158,9 @@ public:
 
   void set_reply_cap(Receiver *caller, L4_fpage::Rights rights)
   {
+    if (!_want_reply_cap)
+      return;
+
     if (EXPECT_FALSE(_reply_cap.load(cxx::memory_order_relaxed).valid()))
       reset_caller();
 
@@ -273,22 +276,33 @@ public:
     return sender_list()->current_poi() == sender;
   }
 
-protected:
-  Receiver() = default;
-
-  void set_rcv_regs(Syscall_frame* regs)
+  /**
+   * Set up the receive frame and reply-cap intent.
+   * If `flags.have_receive()` is false, clears the receive frame so that
+   * `rcv_prepared()` returns false and no reply cap is established.
+   */
+  void set_rcv_regs(Sender::Ipc_flags flags, Syscall_frame* regs)
   {
-    _rcv_regs = regs;
+    _rcv_regs = flags.have_receive() ? regs : nullptr;
+    _want_reply_cap = flags.want_reply_cap();
   }
 
-  void prepare_receive(Sender *partner, Syscall_frame *regs)
+  /**
+   * Prepare this receiver for an incoming message.
+   * Sets the receive frame via `set_rcv_regs`, and installs `partner` as the
+   * closed-wait Poi (or clears it for an open wait when `partner` is null).
+   */
+  void prepare_receive(Sender::Ipc_flags flags, Sender *partner, Syscall_frame *regs)
   {
-    set_rcv_regs(regs);  // message should be poked in here
+    set_rcv_regs(flags, regs);  // message should be poked in here
     if (partner)
       set_partner(partner);
     else
       reset_partner();
   }
+
+protected:
+  Receiver() = default;
 
   bool try_vcpu_irq_receive(unsigned ipc_state)
   {
@@ -310,7 +324,7 @@ protected:
       _this()->vcpu_set_irq_pending();
 
     vcpu_async_ipc(s, vcpu, Thread_receive_in_progress);
-    s->ipc_send_msg(_this(), false);
+    s->ipc_send_msg(_this());
     _this()->state.del(Thread_ipc_mask);
     return true;
   }
@@ -320,6 +334,9 @@ private:
 
   cxx::atomic<Atomic_reply_cap *> _partner_reply_cap{nullptr};
   Syscall_frame *_rcv_regs = nullptr; // registers used for receive
+  // Set during prepare_receive: whether to establish a reply cap on delivery.
+  // False for WQ receivers and open-wait servers that should not bind replies.
+  bool _want_reply_cap;
   Atomic_reply_cap _reply_cap;
   Iterable_prio_list _sender_list;
 
@@ -342,7 +359,7 @@ private:
         l->space = ~0; //vcpu_user_space() ? static_cast<Task*>(vcpu_user_space())->dbg_id() : ~0;
         );
 
-    self->_rcv_regs = &vcpu->_ipc_regs;
+    self->set_rcv_regs(Sender::Ipc_flags(true, true), &vcpu->_ipc_regs);
     vcpu->_regs.set_ipc_upcall();
     self->set_partner(const_cast<Sender*>(sender));
     self->state.add_dirty(receive_state);

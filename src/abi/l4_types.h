@@ -438,6 +438,12 @@ public:
   : _tag((words & 0x3f) | ((items & 0x3f) << 6) | flags | (proto << 16))
   {}
 
+  /// convenience for getting a msg tag with error flag set.
+  static constexpr L4_msg_tag error()
+  {
+    return L4_msg_tag(0, 0, L4_msg_tag::Error, 0);
+  }
+
   /**
    * Create an uninitialized message tag.
    * \note the value of the tag is unpredictable.

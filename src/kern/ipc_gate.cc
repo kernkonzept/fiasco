@@ -10,6 +10,7 @@
 JDB_DEFINE_TYPENAME(Ipc_gate_obj, "\033[35mGate\033[m");
 static Kmem_slab_t<Ipc_gate_obj> _ipc_gate_allocator("Ipc_gate");
 
+using Ipc_flags = Thread::Ipc_flags;
 
 Kobject_iface *
 Ipc_gate_obj::downgrade(unsigned long attr)
@@ -313,7 +314,7 @@ Ipc_gate::invoke(L4_obj_ref, L4_fpage::Rights rights,
     {
       ct->set_ipc_from_spec(Ipc_gate_obj::from_poly(this)->_id.load()
                             | cxx::int_value<L4_fpage::Rights>(rights), rights, partner);
-      ct->do_ipc(f->tag(), partner, have_rcv, sender, f->timeout(), f);
+      ct->do_ipc(f->tag(), partner, Ipc_flags(have_rcv, !sender), sender, f->timeout(), f);
     }
 }
 
