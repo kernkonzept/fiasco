@@ -243,6 +243,13 @@ public:
   void do_ipc_open_wait(L4_msg_tag tag, L4_timeout_pair t,
                         Syscall_frame *regs);
 
+  void do_send_ipc(Thread *ct, L4_obj_ref self, Syscall_frame *f, Utcb *)
+  {
+    bool open_wait = self.op() & L4_obj_ref::Ipc_open_wait;
+    ct->do_ipc(f->tag(), _this(), Ipc_flags(self.have_recv(), open_wait), open_wait ? nullptr : _this(),
+               f->timeout(), f);
+  }
+
   bool handle_page_fault_pager(Address pfa, Mword error_code,
                                L4_msg_tag::Protocol protocol);
 

@@ -422,7 +422,8 @@ public:
     Label_iommu = -22L,        ///< Protocol ID for IOMMUs
     Label_debugger = -23L,     ///< Protocol ID for the debugger
     Label_smc = -24L,          ///< Protocol ID for ARM SMC calls.
-    Max_factory_label = Label_iommu,
+    Label_wait_queue = -25L,   ///< Protocol/Factory ID for wait queue objects.
+    Max_factory_label = Label_wait_queue,
   };
 
   /**

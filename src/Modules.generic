@@ -70,6 +70,7 @@ CXXSRC_KERNEL += \
 	scheduler.cc \
 	scheduler_iface.cc \
 	semaphore.cc \
+	wait_queue.cc \
 	slab_cache.cc \
 	space.cc \
 	syscalls.cc \

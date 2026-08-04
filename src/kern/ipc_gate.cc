@@ -5,12 +5,15 @@
 #include "kmem_slab.h"
 #include "kobject_rpc.h"
 #include "static_init.h"
+#include "wait_queue.h"
 #include <system_clock.h>
 
 JDB_DEFINE_TYPENAME(Ipc_gate, "\033[35mGate\033[m");
 static Kmem_slab_t<Ipc_gate> _ipc_gate_allocator("Ipc_gate");
 
 using Ipc_flags = Thread::Ipc_flags;
+
+
 
 class Ipc_gate_helper : public Ipc_gate_if
 {
@@ -36,83 +39,112 @@ public:
   bool can_retype() const override
   { return false; }
 
+  static bool invoke_helper(Thread *ct, unsigned flags, Syscall_frame *f)
+  {
+    if (EXPECT_FALSE(flags == 0))
+      return false;
+
+    if (flags & L4_obj_ref::Ipc_send)
+      return true;
+
+    if (flags & L4_obj_ref::Ipc_recv)
+      {
+        Thread *receiver = (flags & L4_obj_ref::Ipc_open_wait) ? nullptr : ct;
+        ct->do_ipc_recv(f->tag(), receiver, f->timeout(), f);
+      }
+    return false;
+  }
+
+  template<typename TARGET>
+  FIASCO_FLATTEN
+  void invoke_generic(L4_obj_ref self, L4_fpage::Rights rights,
+                      Syscall_frame *f, Utcb *utcb)
+  {
+    Thread *ct = current_thread();
+    if (EXPECT_FALSE(!invoke_helper(ct, self.op(), f)))
+      return;
+
+    auto *t = _this()->target<TARGET>();
+    if (EXPECT_FALSE(!t))
+      {
+        f->tag(commit_error(utcb, L4_error::Not_existent));
+        return;
+      }
+
+    Mword label = _this()->_id.load() | cxx::int_value<L4_fpage::Rights>(rights);
+
+    LOG_TRACE("IPC Gate invoke", "gate", current(), Ipc_gate::Log_ipc_gate_invoke,
+        l->gate_dbg_id = Ipc_gate::from_gate(this)->dbg_id();
+        l->thread_dbg_id = t->dbg_id();
+        l->label = label;
+    );
+
+    ct->set_ipc_from_spec(label, rights);
+    t->do_send_ipc(ct, self, f, utcb);
+  }
+
 #if defined (CONFIG_JDB)
   Kobject_dbg* dbg_info() const override final
   { return Ipc_gate::from_gate(this)->dbg_info(); }
 #endif // CONFIG_JDB
 };
 
-class Ipc_gate_bound final
-: public cxx::Dyn_castable<Ipc_gate_bound, Ipc_gate_helper>
+template<typename TARGET>
+class Ipc_gate_impl
+: public cxx::Dyn_castable<Ipc_gate_impl<TARGET>, Ipc_gate_helper>
 {
 public:
-  Ipc_gate_bound() = default;
-  Ipc_gate_bound(Thread *t, Mword id)
+  Ipc_gate_impl() = default;
+  Ipc_gate_impl(TARGET *t, Mword id)
   {
     t->inc_ref();
-    _this()->_id.store(id, cxx::memory_order_relaxed);
-    _this()->_tgt.store(t, cxx::memory_order_release);
+    this->_this()->_id.store(id, cxx::memory_order_relaxed);
+    this->_this()->_tgt.store(t, cxx::memory_order_release);
   }
 
-  void invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
-              Syscall_frame *f, Utcb *utcb) override;
-
-  bool is_local(Space *s) const override
+  FIASCO_FLATTEN
+  void invoke(L4_obj_ref self, L4_fpage::Rights rights,
+              Syscall_frame *f, Utcb *utcb) override final
   {
-    auto *t = _this()->_tgt.load();
-    return t && t->space() == s;
+    return this->template invoke_generic<TARGET>(self, rights, f, utcb);
   }
 
   void del(Kobject_iface *o) override
   {
-    auto t = nonull_static_cast<Thread *>(o);
+    auto t = nonull_static_cast<TARGET *>(o);
     if (t->dec_ref() == 0)
       delete t;
+  }
+};
+
+class Ipc_gate_bound final : public Ipc_gate_impl<Thread>
+{
+public:
+  using Ipc_gate_impl<Thread>::Ipc_gate_impl;
+
+  bool is_local(Space *s) const override
+  {
+    auto *t = _this()->target<Thread>();
+    return t && t->space() == s;
   }
 
   void del_notify() override
   {
-    _this()->target()->ipc_gate_deleted(_this()->_id.load(cxx::memory_order_acquire));
+    _this()->target<Thread>()->ipc_gate_deleted(_this()->_id.load(cxx::memory_order_acquire));
   }
 };
 
-FIASCO_FLATTEN
-void
-Ipc_gate_bound::invoke(L4_obj_ref, L4_fpage::Rights rights,
-                 Syscall_frame *f, Utcb *utcb)
+class Ipc_gate_dispatch final : public Ipc_gate_impl<Wait_queue>
 {
-  //LOG_MSG_3VAL(current(), "gIPC", Mword(_thread), _id, f->obj_2_flags());
-  //printf("Invoke: Ipc_gate_bound(%lx->%p)...\n", _id, _thread);
-  Thread *ct = current_thread();
-  Thread *sender = nullptr;
-  Thread *partner = nullptr;
-  bool have_rcv = false;
+public:
+  using Ipc_gate_impl<Wait_queue>::Ipc_gate_impl;
 
-  Thread *t = _this()->target();
-  if (EXPECT_FALSE(!t))
-    {
-      f->tag(commit_error(utcb, L4_error::Not_existent));
-      return;
-    }
-
-  bool ipc = t->check_sys_ipc(f->ref().op(), &partner, &sender, &have_rcv);
-
-  LOG_TRACE("IPC Gate invoke", "gate", current(), Ipc_gate::Log_ipc_gate_invoke,
-      l->gate_dbg_id = Ipc_gate::from_gate(this)->dbg_id();
-      l->thread_dbg_id = t->dbg_id();
-      l->label = _this()->_id.load(cxx::memory_order_relaxed) | cxx::int_value<L4_fpage::Rights>(rights);
-  );
-
-  if (EXPECT_FALSE(!ipc))
-    f->tag(commit_error(utcb, L4_error::Not_existent));
-  else
-    {
-      ct->set_ipc_from_spec(_this()->_id.load(cxx::memory_order_acquire)
-                            | cxx::int_value<L4_fpage::Rights>(rights), rights, partner);
-      ct->do_ipc(f->tag(), partner, Ipc_flags(have_rcv, !sender), sender, f->timeout(), f);
-    }
-}
-
+  bool is_local(Space *s) const override
+  {
+    auto *wq = _this()->target<Wait_queue>();
+    return wq && wq->space() == s;
+  }
+};
 
 class Ipc_gate_unbound final
 : public cxx::Dyn_castable<Ipc_gate_unbound, Ipc_gate_helper>
@@ -208,10 +240,45 @@ Ipc_gate::downgrade(unsigned long attr)
     return this;
 }
 
+template<typename GATE, typename TGT>
+inline
+bool
+Ipc_gate::set_target(TGT *t, Mword id)
+{
+  if (gate()->can_retype())
+    {
+      auto g = lock_guard(_wait_q.qlock());
+      if (gate()->can_retype())
+        {
+          t->inc_ref();
+          _id.store(id);
+          _tgt.store(t);
+          construct_gate<GATE>();
+          g.reset(); // release the lock here ...
+
+          unblock_all();
+          current()->rcu_wait();
+          unblock_all();
+          return true;
+        }
+    }
+
+  if (cxx::Typeid<Ipc_gate_impl<TGT>>::get() != cxx::dyn_typeid(gate()))
+    return false;
+
+  t->inc_ref();
+
+  _id.store(id);
+  if (auto *old = _tgt.exchange(t))
+    gate()->del(old);
+
+  return true;
+}
+
 inline
 L4_msg_tag
 Ipc_gate::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
-                          Syscall_frame *f, Utcb const *in, Utcb *)
+                      Syscall_frame *f, Utcb const *in, Utcb *)
 {
   if (EXPECT_FALSE(!(rights & L4_fpage::Rights::CS())))
     return commit_result(-L4_err::EPerm);
@@ -221,38 +288,27 @@ Ipc_gate::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
   if (tag.words() < 2)
     return commit_result(-L4_err::EMsgtooshort);
 
-  auto *t = Ko::first_cap(&tag, in, L4_fpage::Rights::CS()).deref<Thread>(&tag);
-  if (!t)
+  auto *ko = Ko::first_cap(&tag, in, L4_fpage::Rights::CS()).deref(&tag);
+  if (!ko)
     return tag;
 
-  if (gate()->can_retype())
+  if (auto *wq = cxx::dyn_cast<Wait_queue *>(ko))
     {
-      auto g = lock_guard(_wait_q.qlock());
-      if (gate()->can_retype())
-        {
-          t->inc_ref();
-          _id.store(in->values[1]);
-          _tgt.store(t);
-          construct_gate<Ipc_gate_bound>();
-          g.reset(); // release the lock here ...
-
-          unblock_all();
-          current()->rcu_wait();
-          unblock_all();
-          return commit_result(0);
-        }
+      if (set_target<Ipc_gate_dispatch>(wq, in->values[1]))
+        return commit_result(0);
+      else
+        return commit_result(-L4_err::EInval);
     }
 
-  if (cxx::Typeid<Ipc_gate_bound>::get() != cxx::dyn_typeid(gate()))
-    return commit_result(-L4_err::EInval);
+  if (auto *t = cxx::dyn_cast<Thread *>(ko))
+    {
+      if (set_target<Ipc_gate_bound>(t, in->values[1]))
+        return commit_result(0);
+      else
+        return commit_result(-L4_err::EInval);
+    }
 
-  t->inc_ref();
-
-  _id.store(in->values[1]);
-  if (auto *old = _tgt.exchange(t))
-    gate()->del(old);
-
-  return commit_result(0);
+  return commit_result(-L4_err::EInval);
 }
 
 inline

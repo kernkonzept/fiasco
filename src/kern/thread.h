@@ -229,7 +229,7 @@ public:
 
   long control(Thread_ptr const &pager, Thread_ptr const &exc_handler);
 
-  bool check_sys_ipc(unsigned flags, Thread **partner, Thread **sender,
+  bool check_sys_ipc(Thread *ct, unsigned flags, Thread **partner, Thread **sender,
                      bool *have_recv) const
   {
     if (flags & L4_obj_ref::Ipc_recv)
@@ -240,8 +240,17 @@ public:
         *have_recv = true;
       }
 
-    if (flags & L4_obj_ref::Ipc_send)
-      *partner = const_cast<Thread*>(this);
+    switch (flags & (L4_obj_ref::Ipc_send | L4_obj_ref::Ipc_reply))
+      {
+      case L4_obj_ref::Ipc_send | L4_obj_ref::Ipc_reply:
+        if (!(*partner = static_cast<Thread *>(ct->reply_cap().receiver())))
+          return false;
+        break;
+
+      case L4_obj_ref::Ipc_send:
+        *partner = const_cast<Thread*>(this);
+        break;
+      }
 
     return *have_recv || ((flags & L4_obj_ref::Ipc_send) && *partner);
   }

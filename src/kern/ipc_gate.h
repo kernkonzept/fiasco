@@ -36,7 +36,7 @@ struct Inner_gate
 {
   Mword _gate_storage[(sizeof(Ipc_gate_if) + sizeof(Mword) - 1) / sizeof(Mword)];
 
-  cxx::atomic<Thread *> _tgt;
+  cxx::atomic<Kobject_iface *> _tgt;
   cxx::atomic<Mword> _id;
   Locked_prio_list _wait_q;
 
@@ -60,7 +60,8 @@ struct Inner_gate
   Ipc_gate_if const *gate() const
   { return reinterpret_cast<Ipc_gate_if const *>(&_gate_storage); }
 
-  Thread *target() const { return _tgt.load(cxx::memory_order_acquire); }
+  template<typename T = Kobject_iface>
+  T *target() const { return static_cast<T *>(_tgt.load(cxx::memory_order_acquire)); }
 };
 
 
@@ -105,18 +106,18 @@ private:
   L4_msg_tag get_infos(L4_obj_ref, L4_fpage::Rights,
                        Syscall_frame *, Utcb const *, Utcb *out);
 
+  template<typename GATE, typename TGT>
+  inline bool set_target(TGT *t, Mword id);
+
   Ram_quota *_quota;
 
 public:
   Ipc_gate(Ram_quota *q, Thread *t, Mword id);
 
-  Thread *target() const { return _tgt.load(cxx::memory_order_relaxed); }
+  Kobject_iface *target() const { return _tgt.load(cxx::memory_order_relaxed); }
   Mword id() const { return _id.load(cxx::memory_order_relaxed); }
   Mword obj_id() const override { return id(); }
   bool is_local(Space *s) const override { return gate()->is_local(s); }
-
-  //::Kobject_mappable *map_root() override
-  //{ return Kobject::map_root(); }
 
   void unblock_all(bool abort = false);
   void destroy(Kobject ***r) override;

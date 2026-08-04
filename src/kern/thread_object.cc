@@ -572,7 +572,7 @@ Thread_object::invoke(L4_obj_ref self, L4_fpage::Rights rights,
       Thread *partner = nullptr;
       bool have_rcv = false;
 
-      if (EXPECT_FALSE(!check_sys_ipc(op, &partner, &sender, &have_rcv)))
+      if (EXPECT_FALSE(!check_sys_ipc(ct, op, &partner, &sender, &have_rcv)))
         {
           f->tag(commit_error(utcb, L4_error::Not_existent));
           return;
