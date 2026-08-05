@@ -14,126 +14,65 @@
 
 #include <cstddef>
 
-template<typename T, typename ...M>
-struct type_in_list : cxx::false_type {};
-
-template<typename T, typename ...M>
-struct type_in_list<T, T, M...> : cxx::true_type {};
-
-template<typename T, typename X, typename ...M>
-struct type_in_list<T, X, M...> : type_in_list<T, M...> {};
-
 class Ram_quota;
-class Ipc_gate_obj;
+struct Inner_gate;
 
 class Ipc_gate_if : public Kobject_iface
 {
+protected:
+  Inner_gate *_this()
+  { return reinterpret_cast<Inner_gate *>(this); }
+
+  Inner_gate const *_this() const
+  { return reinterpret_cast<Inner_gate const *>(this); }
+
 public:
   virtual void del(Kobject_iface *) = 0;
   virtual void del_notify() = 0;
 };
 
-class Ipc_gate final : public Ipc_gate_if
+struct Inner_gate
 {
-  friend class Ipc_gate_ctl;
-  friend class Jdb_sender_list;
+  Mword _gate_storage[(sizeof(Ipc_gate_if) + sizeof(Mword) - 1) / sizeof(Mword)];
 
-public:
-  static Ipc_gate_obj *create(Ram_quota *q, Thread *t, Mword id);
+  cxx::atomic<Thread *> _tgt;
+  cxx::atomic<Mword> _id;
+  Locked_prio_list _wait_q;
 
-  Ipc_gate() = default;
-  Ipc_gate(Thread *t, Mword id);
-
-  void invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
-              Syscall_frame *f, Utcb *utcb) override;
-
-  bool is_local(Space *s) const override;
-  Mword obj_id() const override;
-  void initiate_deletion(Kobject***) override;
-  Kobject_mappable* map_root() override;
-  Kobject_iface* downgrade(long unsigned int) override;
-  void del(Kobject_iface *) override;
-  void del_notify() override;
-#if defined (CONFIG_JDB)
-  Kobject_dbg* dbg_info() const override;
-#endif // CONFIG_JDB
-};
-
-class Ipc_gate_unbound final : public Ipc_gate_if
-{
-  friend class Ipc_gate_ctl;
-  friend class Jdb_sender_list;
-
-public:
-  static Ipc_gate_obj *create(Ram_quota *q, Thread *t, Mword id);
-
-  Ipc_gate_unbound() = default;
-
-  void invoke(L4_obj_ref /*self*/, L4_fpage::Rights rights,
-              Syscall_frame *f, Utcb *utcb) override;
-
-  bool is_local(Space*) const override { return false; }
-  Mword obj_id() const override { return 0; }
-  void initiate_deletion(Kobject***) override;
-  Kobject_mappable* map_root() override;
-  Kobject_iface* downgrade(long unsigned int) override { return this; }
-  void del(Kobject_iface *) override {}
-  void del_notify() override {}
-#if defined (CONFIG_JDB)
-  Kobject_dbg* dbg_info() const override;
-#endif // CONFIG_JDB
-
-private:
-  L4_error block(Thread *ct, L4_timeout const &to, Utcb *u);
-};
-
-template<typename A0>
-constexpr A0 xmax(A0 a0)
-{ return a0; }
-
-template<typename A0, typename A1, typename ...A>
-constexpr A0 xmax(A0 a0, A1 a1, A ... a)
-{ A0 m = xmax(a1, a...); return m > a0 ? m : a0; }
-
-template<typename If, typename M1, typename ...M>
-struct alignas(xmax(alignof(M1), alignof(M)...)) Poly_type
-{
-  char _s[xmax(sizeof(M1), sizeof(M)...)];
-  operator If * () { return reinterpret_cast<If *>(_s); }
-  operator If const * () const { return reinterpret_cast<If const *>(_s); }
-  If * operator -> () { return reinterpret_cast<If *>(_s); }
-  If const * operator -> () const { return reinterpret_cast<If const *>(_s); }
-  If & operator * () { return *reinterpret_cast<If *>(_s); }
-  If const & operator * () const { return *reinterpret_cast<If const *>(_s); }
-  If *get() { return reinterpret_cast<If *>(_s); }
-  If const *get() const { return reinterpret_cast<If const *>(_s); }
-
-  template<typename T, typename = cxx::enable_if_t<type_in_list<T, M1, M...>::value>,
-           typename ... Args>
-  void construct(Args &&...args)
+  template<typename T, typename ...ARGS>
+  T *construct_gate(ARGS &&...args)
   {
-    new (_s) T(cxx::forward<Args>(args)...);
+    static_assert(sizeof(T) <= sizeof(_gate_storage));
+    static_assert(alignof(T) <= alignof(_gate_storage));
+    return new (&_gate_storage) T(cxx::forward<ARGS>(args)...);
   }
 
-  template<typename T, typename = cxx::enable_if_t<type_in_list<T, M1, M...>::value>>
-  static Poly_type<If, M1, M...> *as_poly(T *t)
-  { return reinterpret_cast<Poly_type<If, M1, M...> *>(t); }
+  static Inner_gate *from_gate(Ipc_gate_if *i)
+  { return reinterpret_cast<Inner_gate *>(i); }
 
-  template<typename T, typename = cxx::enable_if_t<type_in_list<T, M1, M...>::value>>
-  static Poly_type<If, M1, M...> const *as_poly(T const *t)
-  { return reinterpret_cast<Poly_type<If, M1, M...> const *>(t); }
+  static Inner_gate const *from_gate(Ipc_gate_if const *i)
+  { return reinterpret_cast<Inner_gate const *>(i); }
 
-  Poly_type() { construct<M1>(); }
+  Ipc_gate_if *gate()
+  { return reinterpret_cast<Ipc_gate_if *>(&_gate_storage); }
+
+  Ipc_gate_if const *gate() const
+  { return reinterpret_cast<Ipc_gate_if const *>(&_gate_storage); }
+
+  Thread *target() const { return _tgt.load(cxx::memory_order_acquire); }
 };
 
-using Poly_ipc_gate = Poly_type<Ipc_gate_if, Ipc_gate_unbound, Ipc_gate>;
 
-class Ipc_gate_obj final :
-  public cxx::Dyn_castable<Ipc_gate_obj, Kobject_h<Ipc_gate_obj, Kobject>>,
-  private Poly_ipc_gate
+class Ipc_gate final :
+  public cxx::Dyn_castable<Ipc_gate, Kobject_h<Ipc_gate, Kobject>>,
+  private Inner_gate
 {
 public:
-   Kobject_iface *downgrade(unsigned long attr) override;
+  typedef Slab_cache Self_alloc;
+  static Self_alloc *allocator();
+  static Ipc_gate *create(Ram_quota *q, Thread *t, Mword id);
+
+  Kobject_iface *downgrade(unsigned long attr) override;
 
   void invoke(L4_obj_ref self, L4_fpage::Rights rights,
               Syscall_frame *f, Utcb *utcb) override;
@@ -141,31 +80,17 @@ public:
   L4_msg_tag kinvoke(L4_obj_ref self, L4_fpage::Rights rights,
                      Syscall_frame *f, Utcb const *in, Utcb *out);
 
+  static Ipc_gate *from_gate(Ipc_gate_if *i)
+  { return static_cast<Ipc_gate *>(Inner_gate::from_gate(i)); }
+
+  static Ipc_gate const *from_gate(Ipc_gate_if const *i)
+  { return static_cast<Ipc_gate const *>(Inner_gate::from_gate(i)); }
+
 private:
-  friend class Ipc_gate;
-  friend class Ipc_gate_unbound;
   friend class Jdb_sender_list;
 
-  friend Ipc_gate_obj *ipc_gate_obj(void *g);
-  friend Ipc_gate_obj const *ipc_gate_obj(void const *g);
-
-  Poly_ipc_gate &poly() noexcept { return *this; }
-  Poly_ipc_gate const &poly() const noexcept { return *this; }
-
-  template<typename T>
-  static Ipc_gate_obj const *from_poly(T const *p)
-  { return static_cast<Ipc_gate_obj const *>(as_poly(p)); }
-
-  template<typename T>
-  static Ipc_gate_obj *from_poly(T *p)
-  { return static_cast<Ipc_gate_obj *>(as_poly(p)); }
-
-  template<typename T>
-  static Thread *target_thread(T const *p)
-  {
-    return static_cast<Thread *>(from_poly(p)->_tgt.load(cxx::memory_order_acquire));
-  }
-
+  friend Ipc_gate *ipc_gate_obj(void *g);
+  friend Ipc_gate const *ipc_gate_obj(void const *g);
 
   enum Operation
   {
@@ -179,31 +104,15 @@ private:
   L4_msg_tag get_infos(L4_obj_ref, L4_fpage::Rights,
                        Syscall_frame *, Utcb const *, Utcb *out);
 
-
-  typedef Slab_cache Self_alloc;
-
-  static Self_alloc *allocator();
-
-  cxx::atomic<Thread *> _tgt;
-  cxx::atomic<Mword> _id;
-
   Ram_quota *_quota;
-  Locked_prio_list _wait_q;
 
 public:
-  Ipc_gate_obj(Ram_quota *q, Thread *t, Mword id)
-  : _quota(q)
-  {
-    if (t)
-      poly().construct<Ipc_gate>(t, id);
-  }
+  Ipc_gate(Ram_quota *q, Thread *t, Mword id);
 
-  //bool put() override { return Ipc_gate_ctl::put(); }
-
-  Thread *thread() const { return _tgt.load(cxx::memory_order_relaxed); }
+  Thread *target() const { return _tgt.load(cxx::memory_order_relaxed); }
   Mword id() const { return _id.load(cxx::memory_order_relaxed); }
   Mword obj_id() const override { return id(); }
-  bool is_local(Space *s) const override { return poly()->is_local(s); }
+  bool is_local(Space *s) const override { return gate()->is_local(s); }
 
   //::Kobject_mappable *map_root() override
   //{ return Kobject::map_root(); }
@@ -211,7 +120,7 @@ public:
   void unblock_all(bool abort = false);
   void destroy(Kobject ***r) override;
 
-  ~Ipc_gate_obj() noexcept
+  ~Ipc_gate() noexcept
   {
     unblock_all(true);
   }

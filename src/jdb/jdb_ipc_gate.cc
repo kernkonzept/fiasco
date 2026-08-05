@@ -19,8 +19,12 @@ public:
 
   Kobject_common *follow_link(Kobject_common *o) override
   {
-    Ipc_gate_obj *g = cxx::dyn_cast<Ipc_gate_obj *>(Kobject::from_dbg(o->dbg_info()));
-    return g->thread() ? Kobject::from_dbg(g->thread()->dbg_info()) : o;
+    if (Ipc_gate *g = cxx::dyn_cast<Ipc_gate *>(Kobject::from_dbg(o->dbg_info())))
+      if (auto ptr = g->target())
+        if (auto tgt = Kobject_dbg::pointer_to_obj(ptr); tgt != Kobject_dbg::end())
+          return Kobject::from_dbg(*tgt);
+
+    return o;
   }
 
   bool show_kobject(Kobject_common *, int) override
@@ -28,18 +32,25 @@ public:
 
   void show_kobject_short(String_buffer *buf, Kobject_common *o, bool) override
   {
-    Ipc_gate_obj *g = cxx::dyn_cast<Ipc_gate_obj*>(Kobject::from_dbg(o->dbg_info()));
+    Ipc_gate *g = cxx::dyn_cast<Ipc_gate*>(Kobject::from_dbg(o->dbg_info()));
     if (!g)
       return;
 
+    Kobject_iface *t = nullptr;
+    if (auto ptr = g->target())
+      {
+        if (auto tgt = Kobject_dbg::pointer_to_obj(ptr); tgt != Kobject_dbg::end())
+          t = Kobject::from_dbg(*tgt);
+      }
+
     buf->printf(" L=%s%08lx\033[0m D=%lx",
                 (g->id() & 3) ? JDB_ANSI_COLOR(lightcyan) : "",
-                g->id(), g->thread() ? g->thread()->dbg_info()->dbg_id() : 0);
+                g->id(), t ? t->dbg_info()->dbg_id() : 0);
   }
 };
 
 Jdb_ipc_gate::Jdb_ipc_gate()
-  : Jdb_kobject_handler(static_cast<Ipc_gate_obj *>(nullptr))
+  : Jdb_kobject_handler(static_cast<Ipc_gate *>(nullptr))
 {
   Jdb_kobject::module()->register_handler(this);
 }
