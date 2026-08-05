@@ -33,13 +33,17 @@ public:
   void del_notify() override
   {}
 
+  bool can_retype() const override
+  { return false; }
+
 #if defined (CONFIG_JDB)
   Kobject_dbg* dbg_info() const override final
   { return Ipc_gate::from_gate(this)->dbg_info(); }
 #endif // CONFIG_JDB
 };
 
-class Ipc_gate_bound final : public Ipc_gate_helper
+class Ipc_gate_bound final
+: public cxx::Dyn_castable<Ipc_gate_bound, Ipc_gate_helper>
 {
 public:
   Ipc_gate_bound() = default;
@@ -110,7 +114,8 @@ Ipc_gate_bound::invoke(L4_obj_ref, L4_fpage::Rights rights,
 }
 
 
-class Ipc_gate_unbound final : public Ipc_gate_helper
+class Ipc_gate_unbound final
+: public cxx::Dyn_castable<Ipc_gate_unbound, Ipc_gate_helper>
 {
 public:
   Ipc_gate_unbound() = default;
@@ -119,6 +124,9 @@ public:
               Syscall_frame *f, Utcb *utcb) override;
 
   bool is_local(Space*) const override { return false; }
+
+  bool can_retype() const override
+  { return true; }
 
 private:
   L4_error block(Thread *ct, L4_timeout const &to, Utcb *u)
@@ -178,6 +186,18 @@ Ipc_gate_unbound::invoke(L4_obj_ref, L4_fpage::Rights,
   Entry::reenter_syscall(ct);
 }
 
+class Ipc_gate_destruct final
+: public cxx::Dyn_castable<Ipc_gate_destruct, Kobject_h<Ipc_gate_destruct, Ipc_gate_helper>>
+{
+public:
+  L4_msg_tag kinvoke(L4_obj_ref, L4_fpage::Rights,
+                     Syscall_frame *, Utcb const *, Utcb *)
+  {
+    return commit_result(-L4_err::EInval);
+  }
+
+  bool is_local(Space*) const override { return false; }
+};
 
 Kobject_iface *
 Ipc_gate::downgrade(unsigned long attr)
@@ -205,21 +225,31 @@ Ipc_gate::bind_thread(L4_obj_ref, L4_fpage::Rights rights,
   if (!t)
     return tag;
 
+  if (gate()->can_retype())
+    {
+      auto g = lock_guard(_wait_q.qlock());
+      if (gate()->can_retype())
+        {
+          t->inc_ref();
+          _id.store(in->values[1]);
+          _tgt.store(t);
+          construct_gate<Ipc_gate_bound>();
+          g.reset(); // release the lock here ...
+
+          unblock_all();
+          current()->rcu_wait();
+          unblock_all();
+          return commit_result(0);
+        }
+    }
+
+  if (cxx::Typeid<Ipc_gate_bound>::get() != cxx::dyn_typeid(gate()))
+    return commit_result(-L4_err::EInval);
+
   t->inc_ref();
 
   _id.store(in->values[1]);
-  auto *old = _tgt.load(cxx::memory_order_relaxed);
-  while (!_tgt.compare_exchange_strong(old, t))
-    ;
-
-  if (!old)
-    construct_gate<Ipc_gate_bound>();
-
-  unblock_all();
-  current()->rcu_wait();
-  unblock_all();
-
-  if (old)
+  if (auto *old = _tgt.exchange(t))
     gate()->del(old);
 
   return commit_result(0);
@@ -264,10 +294,15 @@ Ipc_gate::destroy(Kobject ***r)
   if (tmp)
     {
       _tgt.store(nullptr, cxx::memory_order_release);
-      unblock_all(true);
       gate()->del(tmp);
-      construct_gate<Ipc_gate_unbound>();
     }
+
+    {
+      auto g = lock_guard(_wait_q.qlock());
+      construct_gate<Ipc_gate_destruct>();
+    }
+
+  unblock_all(true);
 }
 
 Ipc_gate::Self_alloc *

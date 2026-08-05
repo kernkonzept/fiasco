@@ -29,6 +29,7 @@ protected:
 public:
   virtual void del(Kobject_iface *) = 0;
   virtual void del_notify() = 0;
+  virtual bool can_retype() const = 0;
 };
 
 struct Inner_gate
