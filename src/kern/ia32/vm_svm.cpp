@@ -634,6 +634,9 @@ Vm_svm::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu, Vmcb *vmcb_s)
 
   cpu.setup_sysenter();
 
+  // Reset msr_kernel_gs_base to avoid possible inter-vm channel
+  Cpu::wrmsr(0UL, Msr::Ia32_kernel_gs_base);
+
   Cpu::set_ldt(ldtr);
   restore_segments(ctxt, fs, gs);
 
