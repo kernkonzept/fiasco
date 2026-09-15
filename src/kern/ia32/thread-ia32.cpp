@@ -99,7 +99,7 @@ Thread::user_flags() const
 PRIVATE static inline
 Mword
 Thread::sanitize_user_flags(Mword flags)
-{ return (flags & ~(EFLAGS_IOPL | EFLAGS_NT)) | EFLAGS_IF; }
+{ return (flags & ~(EFLAGS_IOPL | EFLAGS_NT | EFLAGS_VM)) | EFLAGS_IF; }
 
 extern "C" FIASCO_FASTCALL
 void
