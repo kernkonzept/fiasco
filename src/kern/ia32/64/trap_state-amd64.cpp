@@ -103,7 +103,9 @@ Trap_state::sanitize_user_state()
   if ((_cs != (Gdt::gdt_code_user | Gdt::Selector_user))
       && (_cs != (Gdt::gdt_code_user32 | Gdt::Selector_user))) [[unlikely]]
     _cs = Gdt::gdt_code_user | Gdt::Selector_user;
-  _flags = (_flags & ~(EFLAGS_IOPL | EFLAGS_NT)) | EFLAGS_IF;
+  // EFLAGS_VM only for consistency with Thread::sanitize_user_flags because
+  // setting EFLAGS_VM is not possible when returning from long mode.
+  _flags = (_flags & ~(EFLAGS_IOPL | EFLAGS_NT | EFLAGS_VM)) | EFLAGS_IF;
 }
 
 PUBLIC inline NEEDS[Trap_state::sanitize_user_state, "mem.h"]
