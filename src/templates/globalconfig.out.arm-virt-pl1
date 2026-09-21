@@ -1,3 +1,2 @@
 CONFIG_ARM=y
 # CONFIG_CPU_VIRT is not set
-CONFIG_ARM_LPAE=y
