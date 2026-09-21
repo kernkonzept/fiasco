@@ -1,6 +1,6 @@
 # sample configurations
 
-SAMPLE_CONFIGS := $(subst globalconfig.out.,,$(wildcard globalconfig.out.*))
+SAMPLE_CONFIGS ?= $(subst globalconfig.out.,,$(wildcard globalconfig.out.*))
 
 srcdir = $(CURDIR)/../
 
