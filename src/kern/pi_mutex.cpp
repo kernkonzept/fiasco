@@ -810,6 +810,10 @@ Pi_mutex::wait_on_pi_mutex(Thread *self, Pi_mutex_waiter &self_waiter,
     }
 }
 
+/*
+ * L4-IFACE: kernel-pi_mutex.pi_mutex-lock
+ * PROTOCOL: L4_PROTO_PI_MUTEX
+ */
 PRIVATE inline
 L4_msg_tag
 Pi_mutex::sys_lock(L4_fpage::Rights, Syscall_frame *f, Utcb const *utcb)
@@ -997,6 +1001,10 @@ Pi_mutex::sys_lock(L4_fpage::Rights, Syscall_frame *f, Utcb const *utcb)
   return commit_result(0);
 }
 
+/*
+ * L4-IFACE: kernel-pi_mutex.pi_mutex-unlock
+ * PROTOCOL: L4_PROTO_PI_MUTEX
+ */
 PRIVATE inline
 L4_msg_tag
 Pi_mutex::sys_unlock(L4_fpage::Rights, Syscall_frame *f, Utcb const *)
