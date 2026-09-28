@@ -131,14 +131,14 @@ struct imoddiv_t
 struct imoddiv_t imoddiv(int div, int s);
 struct imoddiv_t imoddiv(int div, int s)
 {
-  bool neg_div = false;
-  bool neg_mod = false;
+  int neg_div = 0;
+  int neg_mod = 0;
   if ((div < 0 && s > 0) || (div > 0 && s < 0))
-    neg_div = true;
+    neg_div = 1;
   if (div < 0)
     {
       div = -div;
-      neg_mod = true;
+      neg_mod = 1;
     }
   if (s < 0)
     s = -s;
