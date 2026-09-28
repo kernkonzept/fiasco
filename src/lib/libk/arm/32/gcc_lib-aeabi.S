@@ -40,11 +40,32 @@ __aeabi_uidivmod:
         mov   r2, r1
         mov   r1, r0
         mov   r0, sp
-        // parameters for moddiv:
+        // parameters for umoddiv:
         //   r0: &result => sp[0]:quotient,sp[4]:remainder
         //   r1: div
         //   r2: s
         bl    umoddiv
+        ldr   r0, [sp]
+        ldr   r1, [sp, #4]
+        add   sp, sp, #12
+        pop   {pc}
+
+// 32-bit signed division + modulo operation on 32-bit hosts lacking the
+// `sdiv` instruction.
+        .p2align 2
+        .global __aeabi_idivmod
+        .type __aeabi_idivmod, #function
+__aeabi_idivmod:
+        push  {lr}
+        sub   sp, sp, #12
+        mov   r2, r1
+        mov   r1, r0
+        mov   r0, sp
+        // parameters for imoddiv:
+        //   r0: &result => sp[0]:quotient,sp[4]:remainder
+        //   r1: div
+        //   r2: s
+        bl    imoddiv
         ldr   r0, [sp]
         ldr   r1, [sp, #4]
         add   sp, sp, #12
@@ -61,7 +82,7 @@ __aeabi_uidiv:
         mov   r2, r1
         mov   r1, r0
         mov   r0, sp
-        // parameters for moddiv:
+        // parameters for uoddiv:
         //   r0: &result => sp[0]:quotient,sp[4]:remainder
         //   r1: div
         //   r2: s

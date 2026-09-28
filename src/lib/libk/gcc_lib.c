@@ -112,6 +112,43 @@ struct umoddiv_t umoddiv(unsigned div, unsigned s)
   return (struct umoddiv_t){.div = i, .mod = div};
 }
 
+struct imoddiv_t
+{
+  int div;
+  int mod;
+};
+
+/**
+ * 32-bit signed integer division + modulo for 32-bit machines lacking the
+ * 'udiv' Assembler instruction.
+ * Used by the wrapper function __aeabi_idivmod().
+ *
+ * \param div  Dividend.
+ * \param s    Divisor.
+ * \returns imoddiv_t structure containing the divisor and modulo result from
+ *          the 32-bit signed division.
+ */
+struct imoddiv_t imoddiv(int div, int s);
+struct imoddiv_t imoddiv(int div, int s)
+{
+  bool neg_div = false;
+  bool neg_mod = false;
+  if ((div < 0 && s > 0) || (div > 0 && s < 0))
+    neg_div = true;
+  if (div < 0)
+    {
+      div = -div;
+      neg_mod = true;
+    }
+  if (s < 0)
+    s = -s;
+
+  struct umoddiv_t res = umoddiv(div, s);
+
+  return (struct imoddiv_t){.div = neg_div ? -res.div : res.div,
+                            .mod = neg_mod ? -res.mod : res.mod};
+}
+
 /**
  * 64-bit unsigned modulo for 32-bit machines.
  *
