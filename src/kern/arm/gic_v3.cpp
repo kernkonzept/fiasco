@@ -18,6 +18,8 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
     Mmio_register_block get_redist_mmio(Unsigned64 mpid) override
     { return scan_range(_redist_base, ~0u, mpid); }
 
+    bool is_non_coherent() const override { return false; }
+
   private:
     void *_redist_base;
   };
@@ -126,7 +128,7 @@ IMPLEMENTATION [have_arm_gic_msi && !arm_gic_msi]:
 
 PUBLIC
 bool
-Gic_v3::add_its(void *its_base)
+Gic_v3::add_its(void *its_base, bool = false)
 {
   if (_dist.hw_nr_lpis() > 0)
     Gic_its::disable(its_base);
@@ -286,7 +288,7 @@ Gic_v3::init_lpi()
     {
       unsigned num_lpis = min<unsigned>(hw_num_lpis, Max_num_lpis);
 
-      Gic_redist::init_lpi(num_lpis);
+      Gic_redist::init_lpi(num_lpis, _redist_get->is_non_coherent());
       _its_vec = Its_vec(Boot_alloced::allocate<Gic_its *>(Max_num_its),
                          Max_num_its);
       auto lookup_its = [this](unsigned its_num) {
@@ -306,7 +308,7 @@ Gic_v3::cpu_local_init_lpi(Cpu_number cpu)
 {
   if (_has_lpis)
     {
-      _redist.cpu(cpu).cpu_init_lpi();
+      _redist.cpu(cpu).cpu_init_lpi(_redist_get->is_non_coherent());
       for (unsigned i = 0; i < _num_its; i++)
         _its_vec[i]->cpu_init(cpu, _redist.cpu(cpu));
     }
@@ -322,7 +324,7 @@ Gic_v3::migrate_lpis(Cpu_number from, Cpu_number to)
 
 PUBLIC
 bool
-Gic_v3::add_its(void *its_base)
+Gic_v3::add_its(void *its_base, bool non_coherent = false)
 {
   if (!_has_lpis)
     return false;
@@ -333,7 +335,8 @@ Gic_v3::add_its(void *its_base)
       return false;
     }
 
-  Gic_its *its = new Boot_object<Gic_its>(&_cpu, its_base, _msi->nr_pins());
+  Gic_its *its = new Boot_object<Gic_its>(&_cpu, its_base, _msi->nr_pins(),
+                                          non_coherent);
   its->cpu_init(Cpu_number::boot_cpu(), _redist.cpu(Cpu_number::boot_cpu()));
   _its_vec[_num_its++] = its;
   return true;

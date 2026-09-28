@@ -152,7 +152,8 @@ class Gic_redist_find_dt : public Gic_redist_find
 {
 public:
   Gic_redist_find_dt(Dt::Node gic_node)
-  : _gic_node(gic_node)
+  : _gic_node(gic_node),
+    _non_coherent(gic_node.has_prop("dma-noncoherent"))
   {
     if (!_gic_node.get_prop_u32("#redistributor-regions", &_num_redists))
       _num_redists = 1;
@@ -188,9 +189,13 @@ public:
     return regblock;
   }
 
+  bool is_non_coherent() const override
+  { return _non_coherent; }
+
 private:
   Dt::Node _gic_node;
   unsigned _num_redists;
+  bool _non_coherent;
 };
 
 PRIVATE static FIASCO_INIT
@@ -218,7 +223,8 @@ Pic::init_dt_gicv3()
                               {
                                 uint64_t base, sz;
                                 if (n.get_reg(0, &base, &sz))
-                                  g->add_its(Kmem_mmio::map(base, sz));
+                                  g->add_its(Kmem_mmio::map(base, sz),
+                                             n.has_prop("dma-noncoherent"));
                               }
                           });
 
@@ -273,7 +279,7 @@ class Gic_redist_find_acpi : public Gic_redist_find
 {
 public:
   Gic_redist_find_acpi(const Acpi_madt *madt)
-  : _madt(madt)
+  : _madt(madt), _non_coherent(redists_non_coherent(madt))
   {}
 
   Mmio_register_block get_redist_mmio(Unsigned64 mpid) override
@@ -319,8 +325,41 @@ public:
     return Mmio_register_block();
   }
 
+  bool is_non_coherent() const override
+  { return _non_coherent; }
+
 private:
+  /**
+   * Check whether the MADT marks a redistributor as not coherent. The flags
+   * of the CPU interface entries are only relevant if there is no
+   * redistributor entry (see get_redist_mmio()).
+   */
+  static bool redists_non_coherent(const Acpi_madt *madt)
+  {
+    if (madt->rev < Acpi_madt::Rev_gic_non_coherent)
+      return false;
+
+    bool region = false;
+    for (auto const *redist : madt->iterate<Acpi_madt::Gic_redistributor_if>())
+      {
+        region = true;
+        if (redist->flags & Acpi_madt::Gic_redistributor_if::Non_coherent)
+          return true;
+      }
+
+    if (region)
+      return false;
+
+    for (auto const *gicc : madt->iterate<Acpi_madt::Gic_cpu_if>())
+      if ((gicc->flags & Acpi_madt::Gic_cpu_if::Enabled)
+          && (gicc->flags & Acpi_madt::Gic_cpu_if::Gicr_non_coherent))
+        return true;
+
+    return false;
+  }
+
   const Acpi_madt *_madt;
+  bool _non_coherent;
 };
 
 PRIVATE static FIASCO_INIT
@@ -349,7 +388,11 @@ Pic::init_acpi()
   Address constexpr Gic_its_size = 0x20000; // No size is given in ACPI
   int i = 0;
   while (auto *its = madt->find<Acpi_madt::Gic_its_if>(i++))
-    g->add_its(Kmem_mmio::map(its->base, Gic_its_size));
+    {
+      bool non_coherent = madt->rev >= Acpi_madt::Rev_gic_non_coherent
+                          && (its->flags & Acpi_madt::Gic_its_if::Non_coherent);
+      g->add_its(Kmem_mmio::map(its->base, Gic_its_size), non_coherent);
+    }
 
   gic = g;
   Irq_mgr::mgr = new Boot_object<M>(g, g->msi_chip());

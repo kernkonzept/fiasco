@@ -60,6 +60,9 @@ public:
   };
   static_assert(ITS == 15);
 
+  /// First MADT revision with the non-coherent flags of GICC, GICR and ITS.
+  enum { Rev_gic_non_coherent = 7 };
+
   struct Apic_head
   {
     Unsigned8 type;
@@ -95,7 +98,11 @@ public:
   struct Gic_cpu_if : public Apic_head
   {
     enum { ID = GICC };
-    enum { Enabled = 0x1, Perf_irq_edge = 0x2, Vgic_irq_edge = 0x4 };
+    enum
+    {
+      Enabled = 0x1, Perf_irq_edge = 0x2, Vgic_irq_edge = 0x4,
+      Gicr_non_coherent = 0x10,
+    };
     Unsigned8 reserved[2];
     Unsigned32 cpu_if_num;
     Unsigned32 uid;
@@ -128,7 +135,9 @@ public:
   struct Gic_redistributor_if : public Apic_head
   {
     enum { ID = GICR };
-    Unsigned8   reserved[2];
+    enum { Non_coherent = 0x1 };
+    Unsigned8   flags;
+    Unsigned8   reserved;
     Unsigned64  base;
     Unsigned32  length;
   } __attribute__((packed));
@@ -136,7 +145,9 @@ public:
   struct Gic_its_if : public Apic_head
   {
     enum { ID = ITS };
-    Unsigned8   reserved[2];
+    enum { Non_coherent = 0x1 };
+    Unsigned8   flags;
+    Unsigned8   reserved;
     Unsigned32  id;
     Unsigned64  base;
   } __attribute__((packed));

@@ -62,6 +62,18 @@ public:
     _share = mem._share;
     _cache = mem._cache;
   }
+
+  /**
+   * Use non-shareable and non-cacheable memory attributes. Required for a GIC
+   * that is not coherent with the CPUs although it accepts the shareable and
+   * cacheable attributes. The firmware marks such a GIC as "dma-noncoherent"
+   * in the device tree.
+   */
+  inline void set_non_coherent()
+  {
+    _share = Shareability_non_shareable;
+    _cache = Cacheability_non_cacheable;
+  }
 };
 
 // ------------------------------------------------------------------------

@@ -195,7 +195,7 @@ public:
 
     Gic_mem const &mem() const && = delete;
 
-    void alloc(Reg r, Typer typer);
+    void alloc(Reg r, Typer typer, bool non_coherent);
     bool ensure_id_present(unsigned id);
 
     inline Baser::Type type() const
@@ -462,6 +462,8 @@ private:
   Table _tables[GITS_baser_num];
   Table *_device_table;
 
+  bool _non_coherent;
+
   Gic_mem _cmd_queue;
   unsigned _cmd_queue_write_off;
   Spin_lock<> _cmd_queue_lock;
@@ -492,7 +494,7 @@ Gic_its::Device_alloc Gic_its::device_alloc;
 
 IMPLEMENT
 void
-Gic_its::Table::alloc(Reg r, Typer typer)
+Gic_its::Table::alloc(Reg r, Typer typer, bool non_coherent)
 {
   Baser baser(r.read_non_atomic());
 
@@ -565,6 +567,8 @@ Gic_its::Table::alloc(Reg r, Typer typer)
   if (!_mem.is_valid())
     panic("ITS: Failed to allocate table of type=%u and size=0x%llx.\n",
           _type, size);
+  if (non_coherent)
+    _mem.set_non_coherent();
 
   unsigned num_pages = size / _page_size;
   assert(num_pages <= Baser::Size_max);
@@ -621,8 +625,9 @@ Gic_its::Table::ensure_id_present(unsigned id)
 }
 
 PUBLIC
-Gic_its::Gic_its(Gic_cpu_v3 *gic_cpu, void *base, unsigned num_lpis)
-  : _its(base)
+Gic_its::Gic_its(Gic_cpu_v3 *gic_cpu, void *base, unsigned num_lpis,
+                 bool non_coherent)
+  : _its(base), _non_coherent(non_coherent)
 {
   unsigned arch_rev = (_its.read<Unsigned32>(GITS_PIDR2) >> 4) & 0xf;
   if (arch_rev != 0x3 && arch_rev != 0x4)
@@ -673,7 +678,7 @@ Gic_its::init_tables(Typer typer)
   for (unsigned i = 0; i < GITS_baser_num; i++)
     {
       unsigned off = GITS_BASER + (i * 8);
-      _tables[i].alloc(_its.r<Unsigned64>(off), typer);
+      _tables[i].alloc(_its.r<Unsigned64>(off), typer, _non_coherent);
 
       if (_tables[i].type() == Baser::Type_device)
         _device_table = &_tables[i];
@@ -690,6 +695,8 @@ Gic_its::init_cmd_queue()
   _cmd_queue =  Gic_mem::alloc_zmem(GITS_cmd_queue_size, GITS_cmd_queue_align);
   if (!_cmd_queue.is_valid())
     panic("ITS: Failed to allocate command queue.\n");
+  if (_non_coherent)
+    _cmd_queue.set_non_coherent();
 
   Cbaser cbaser;
   cbaser.size() = (GITS_cmd_queue_size / GITS_cmd_queue_page_size) - 1;

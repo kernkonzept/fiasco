@@ -17,6 +17,12 @@ class Gic_redist_find
 public:
   virtual Mmio_register_block get_redist_mmio(Unsigned64) = 0;
 
+  /**
+   * \return True if the redistributors are not coherent with the CPUs and
+   *         the LPI tables must use non-shareable and non-cacheable memory.
+   */
+  virtual bool is_non_coherent() const = 0;
+
   static bool cmp_affinity(Unsigned32 x, Unsigned32 y);
 
   static Mmio_register_block scan_range(void *base, unsigned size, Unsigned64 mpidr)
@@ -245,7 +251,7 @@ Gic_mem Gic_redist::lpi_config_table;
 
 PUBLIC
 static void
-Gic_redist::init_lpi(unsigned num_lpis)
+Gic_redist::init_lpi(unsigned num_lpis, bool non_coherent)
 {
   num_lpi_intid_bits = cxx::log2u(Gic_dist::Lpi_intid_base + num_lpis - 1) + 1;
   num_lpis = (1U << num_lpi_intid_bits) - Gic_dist::Lpi_intid_base;
@@ -253,13 +259,15 @@ Gic_redist::init_lpi(unsigned num_lpis)
   lpi_config_table = Gic_mem::alloc_mem(num_lpis, GICR_config_table_align);
   if (!lpi_config_table.is_valid())
     panic("GIC: Failed to allocate redistributor LPI configuration table.\n");
+  if (non_coherent)
+    lpi_config_table.set_non_coherent();
   // Initialize all LPIs with default priority and disabled.
   memset(lpi_config_table.virt_ptr(), GICR_lpi_default_prio, num_lpis);
 }
 
 PUBLIC
 void
-Gic_redist::cpu_init_lpi()
+Gic_redist::cpu_init_lpi(bool non_coherent)
 {
   Typer gicr_typer(_redist.read_non_atomic<Unsigned64>(GICR_TYPER));
   if (!gicr_typer.plpis())
@@ -296,6 +304,8 @@ Gic_redist::cpu_init_lpi()
                                            GICR_pending_table_align);
   if (!_lpi_pending_table.is_valid())
     panic("GIC: Failed to allocate redistributor LPI pending table.\n");
+  if (non_coherent)
+    _lpi_pending_table.set_non_coherent();
 
   Pendbaser pendbaser;
   pendbaser.pa() = _lpi_pending_table.phys_addr();
