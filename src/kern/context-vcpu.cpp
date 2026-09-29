@@ -315,6 +315,10 @@ Context::Vcpu_log::print(String_buffer *buf) const
       buf->printf("pf  pc=%lx pfa=%lx err=%lx state=%lx task=D:%lx",
                   ip, sp, err, state, space);
       break;
+    case 5:
+      buf->printf("ipc after pf/exc pc=%lx sp=%lx state=%lx task=D:%lx",
+                  ip, sp, state, space);
+      break;
     default:
       buf->printf("vcpu: unknown");
       break;

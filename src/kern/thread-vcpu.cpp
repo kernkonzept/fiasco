@@ -100,4 +100,48 @@ Thread::vcpu_pagefault(Address pfa, Mword err, Mword ip)
   return false;
 }
 
+/**
+ * Check for pending IPCs/IRQs after handling a page fault or exception IPC,
+ * as they disable asynchronous vCPU IPC reception temporarily.
+ *
+ * \pre cpu_lock.test() == true
+ */
+PUBLIC inline NEEDS["vcpu.h", "lock_guard.h", "cpu_lock.h",
+                    Thread::exception_triggered]
+void
+Thread::vcpu_upcall_pending_ipc()
+{
+  // See Thread_object::sys_vcpu_resume()
+  if (!(state() & Thread_vcpu_enabled)) [[likely]]
+    return;
 
+  assert(cpu_lock.test());
+
+  Vcpu_state *vcpu = vcpu_state().access();
+  if (!(vcpu->state & Vcpu_state::F_irqs) || sender_list()->empty())
+    return;
+
+  if (exception_triggered())
+    return;
+
+  spill_user_state();
+  if (vcpu_enter_kernel_mode(vcpu))
+    vcpu = vcpu_state().access();
+
+  do_ipc(L4_msg_tag(), 0, nullptr, true, nullptr,
+         L4_timeout_pair(L4_timeout::Zero, L4_timeout::Zero),
+         &vcpu->_ipc_regs, L4_fpage::Rights::FULL());
+
+  vcpu = vcpu_state().access(true);
+
+  LOG_TRACE("VCPU events", "vcpu", this, Vcpu_log,
+      l->type = 5;
+      l->state = vcpu->_saved_state;
+      l->ip = regs()->ip();
+      l->sp = regs()->sp();
+      l->space = vcpu_user_space() ? static_cast<Task*>(vcpu_user_space())->dbg_id() : ~0;
+      );
+
+  vcpu->_regs.set_ipc_upcall();
+  vcpu_save_state_and_upcall();
+}

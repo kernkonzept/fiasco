@@ -327,6 +327,10 @@ Thread::handle_page_fault_pager(Thread_ptr const &_pager,
   saved_utcb_fields.restore(utcb);
   Mem::barrier();
   vcpu_restore_irqs(vcpu_irqs);
+
+  if (success) [[likely]]
+    vcpu_upcall_pending_ipc();
+
   return success;
 }
 
@@ -971,7 +975,8 @@ Thread::exception(Kobject_iface *handler, Trap_state *ts, L4_fpage::Rights right
  * L4-IFACE: kernel-thread.exception
  */
 PUBLIC inline NEEDS["task.h", "trap_state.h",
-                    Thread::vcpu_return_to_kernel]
+                    Thread::vcpu_return_to_kernel,
+                    Thread::vcpu_upcall_pending_ipc]
 bool
 Thread::send_exception(Trap_state *ts)
 {
@@ -1030,7 +1035,12 @@ Thread::send_exception(Trap_state *ts)
 
   state_change_dirty(~Thread_cancel, Thread_in_exception);
 
-  return exception(handler, ts, rights);
+  bool handled = exception(handler, ts, rights);
+
+  if (handled) [[likely]]
+    vcpu_upcall_pending_ipc();
+
+  return handled;
 }
 
 PRIVATE static
