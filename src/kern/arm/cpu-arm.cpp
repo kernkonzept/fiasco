@@ -79,6 +79,9 @@ public:
     Hcr_tlor   = 1ULL << 35, ///< LOR: Trap FEAT_LOR registers, not def for HCR2
     Hcr_terr   = 1ULL << 36, ///< RAS: Trap FEAT_RAS registers
     Hcr_tea    = 1ULL << 37, ///< RAS: Route Ext Abort EL0/EL1 exceptions to EL2
+
+    // HCR bits a vCPU may select
+    Hcr_user_mask = ((1ULL << 34) - 1) | Hcr_tlor | Hcr_terr | Hcr_tea,
   };
 
   enum : bool

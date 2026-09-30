@@ -188,7 +188,8 @@ Context::arch_load_vcpu_kern_state(Vcpu_state *vcpu, bool do_load)
     }
 
   _tpidruro = vcpu->host.tpidruro;
-  _hyp.hcr = access_once(&v->host_regs.hcr) | Cpu::Hcr_must_set_bits;
+  _hyp.hcr = (access_once(&v->host_regs.hcr) & Cpu::Hcr_user_mask)
+             | Cpu::Hcr_must_set_bits;
   if (do_load)
     arm_ext_vcpu_load_host_regs(vcpu, v, _hyp.hcr);
 }
@@ -209,7 +210,8 @@ Context::arch_load_vcpu_user_state(Vcpu_state *vcpu)
     }
 
   Vm_state *v = vm_state(vcpu);
-  _hyp.hcr = access_once(&v->guest_regs.hcr) | Cpu::Hcr_must_set_bits;
+  _hyp.hcr = (access_once(&v->guest_regs.hcr) & Cpu::Hcr_user_mask)
+             | Cpu::Hcr_must_set_bits;
   bool const all_priv_vm = !(_hyp.hcr & Cpu::Hcr_tge);
 
   if (all_priv_vm)
