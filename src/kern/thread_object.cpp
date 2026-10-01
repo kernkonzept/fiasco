@@ -313,6 +313,8 @@ Thread_object::sys_vcpu_resume(L4_msg_tag const &tag, Utcb const *utcb, Utcb *)
       && (vcpu->sticky_flags & Vcpu_state::Sf_irq_pending))
     {
       assert(cpu_lock.test());
+      // The object reference of the IPC registers is set up in
+      // sys_vcpu_control().
       do_ipc(L4_msg_tag(), 0, nullptr, true, nullptr,
              L4_timeout_pair(L4_timeout::Zero, L4_timeout::Zero),
              &vcpu->_ipc_regs, L4_fpage::Rights::FULL());
@@ -587,6 +589,13 @@ Thread_object::sys_vcpu_control(L4_fpage::Rights, L4_msg_tag const &tag,
       Vcpu_state *s = _vcpu_state.access();
       arch_init_vcpu_state(s, add_state & Thread_ext_vcpu_enabled);
       arch_update_vcpu_state(s);
+      /*
+       * Prepare the IPC registers for receiving pending IPC in
+       * sys_vcpu_resume() and vcpu_upcall_pending_ipc(): use the implicit
+       * reply cap slot by default.
+       */
+      s->_ipc_regs.ref(L4_obj_ref(L4_obj_ref::Special_bit,
+                                  L4_obj_ref::Ipc_wait));
     }
   else
     return commit_result(-L4_err::EInval);
