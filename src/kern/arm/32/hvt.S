@@ -18,7 +18,7 @@
 .macro mpu_kernel_enter check
 #ifdef CONFIG_MPU
 .if \check != 0
-	mrs	lr, spsr
+	mrs	r0, spsr
 	and	r0, r0, #0x1f		@ Mask all but mode bits
 	cmp	r0, #0x1a		@ Check if we're coming from hyp-mode
 	beq	111f			@ Kernel re-entry
