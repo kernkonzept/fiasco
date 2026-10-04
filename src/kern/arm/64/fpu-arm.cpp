@@ -511,7 +511,6 @@ void
 Fpu::init_sve_from_simd(Fpu_state *fpu_state)
 {
   assert(fpu_state->type() == Fpu::State_type::Sve);
-  enable_sve();
   nonull_static_cast<Fpu_state_sve *>(fpu_state)->init_from_simd();
 }
 
@@ -712,12 +711,28 @@ PUBLIC inline
 void
 Fpu_state_sve::init_from_simd()
 {
-  auto zcr = Cpu::zcr();
-  // Drop ZCR temporarily to the size of FP/SIMD registers (128-bit)
-  Cpu::zcr(Cpu::Zcr_vl_128);
-  save_regs();
-  // Restore previous ZCR
-  Cpu::zcr(zcr);
+  Mword stride = Z::size(Fpu::max_vl()) / Num_z_regs;
+  Mword fpcr;
+  Mword fpsr;
+  Unsigned64 *z = access<Z>();
+  asm volatile(".arch_extension fp             \n"
+               ".irp n, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "
+                       "16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, "
+                       "29, 30, 31\n"
+               "str     q\\n, [%[z]]           \n"
+               "add     %[z], %[z], %[stride]  \n"
+               ".endr                          \n"
+               "mrs     %[fpcr], fpcr          \n"
+               "mrs     %[fpsr], fpsr          \n"
+               ".arch_extension nofp           \n"
+               : [fpcr] "=r" (fpcr),
+                 [fpsr] "=r" (fpsr),
+                 [z] "+r" (z)
+               : [stride] "r" (stride)
+               : "memory");
+
+  *access<Fpcr>() = fpcr;
+  *access<Fpsr>() = fpsr;
 }
 
 PUBLIC inline NEEDS[<cstring>]
