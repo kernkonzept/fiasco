@@ -703,8 +703,8 @@ Fpu_state_sve::restore_regs() const
                : : [z] "r" (get<Z>()),
                    [p] "r" (get<P>()),
                    [ffr] "r" (get<Ffr>()),
-                   [fpcr] "r" (get<Fpcr>()),
-                   [fpsr] "r" (get<Fpsr>()));
+                   [fpcr] "r" (Mword{*get<Fpcr>()}),
+                   [fpsr] "r" (Mword{*get<Fpsr>()}));
 }
 
 PUBLIC inline
