@@ -48,9 +48,22 @@ public:
   Iommu_type type() const
   { return _type; }
 
-  static constexpr bool Coherent = TAG_ENABLED(arm_iommu_coherent);
+  /**
+   * Whether the IOMMUs access their translation tables and queues cache
+   * coherently. It starts with the default of the platform
+   * (CONFIG_ARM_IOMMU_COHERENT), a driver clears it before it sets up an IOMMU
+   * that the firmware does not describe as coherent.
+   */
+  static bool coherent()
+  { return _coherent; }
+
+protected:
+  static void set_non_coherent()
+  { _coherent = false; }
 
 private:
+  static bool _coherent;
+
   static Iommu *_iommus[Max_iommus];
   static unsigned _num_iommus;
 
@@ -121,6 +134,7 @@ IMPLEMENTATION [iommu]:
 
 constinit Iommu *Iommu::_iommus[Iommu::Max_iommus];
 constinit unsigned Iommu::_num_iommus;
+constinit bool Iommu::_coherent = TAG_ENABLED(arm_iommu_coherent);
 
 IMPLEMENT
 Iommu::Iommu()

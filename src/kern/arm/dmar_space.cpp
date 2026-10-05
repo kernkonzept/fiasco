@@ -31,21 +31,21 @@ protected:
 template<typename CLASS>
 struct Dmar_pte_iommu
 {
-  static constexpr bool need_cache_write_back()
-  { return !Iommu::Coherent; }
+  static bool need_cache_write_back()
+  { return !Iommu::coherent(); }
 
   void write_back_if(bool)
   { write_back(); }
 
   void write_back()
   {
-    if constexpr (need_cache_write_back())
+    if (need_cache_write_back())
       Mem_unit::clean_dcache(static_cast<CLASS const *>(this)->pte);
   }
 
   static void write_back(void *start, void *end)
   {
-    if constexpr (need_cache_write_back())
+    if (need_cache_write_back())
       Mem_unit::clean_dcache(start, end);
   }
 };

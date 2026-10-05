@@ -584,7 +584,8 @@ public:
    * The mask allows to remove common unrelated parts when comparing the stream
    * id's. This can be for example the encoded TBU's (Translation Buffer Units).
    */
-  void setup(Version version, void *base_addr, unsigned mask = ~0U);
+  void setup(Version version, void *base_addr, unsigned mask = ~0U,
+             bool coherent = true);
 
   /**
    * Allocates and configures fault reporting interrupts for the IOMMU.
@@ -683,7 +684,7 @@ Iommu_smmu_v2::Context_bank::set(Address pt_phys, Space_id *space_id)
   // Configure shareability and cacheability for memory associated with
   // the IOMMU page tables, according to the IOMMU's support for coherent
   // page table walks.
-  if constexpr (Iommu::Coherent)
+  if (Iommu::coherent())
     {
       tcr.sh0() = TCR_SH_IS;
       tcr.irgn0() = TCR_RGN_WBWA;
@@ -798,8 +799,13 @@ Iommu_smmu_v2::remove(Address pt_phys)
 
 IMPLEMENT
 void
-Iommu_smmu_v2::setup(Version version, void *base_addr, unsigned mask)
+Iommu_smmu_v2::setup(Version version, void *base_addr, unsigned mask,
+                     bool coherent)
 {
+  // Decided before the first access to the context banks.
+  if (!coherent)
+    set_non_coherent();
+
   _type = Iommu_type::Smmu_v2;
   _version = version;
   _gr0 = Mmio_register_block(base_addr);
@@ -812,10 +818,9 @@ Iommu_smmu_v2::setup(Version version, void *base_addr, unsigned mask)
   if (!idr0.s2ts())
     panic("IOMMU: SMMU does not support stage 2 translation.");
 
-  if (idr0.cttw() != Iommu::Coherent)
-    WARN("IOMMU: Configured as %sdma-coherent, "
-         "but SMMU reports that coherent page table walks are %ssupported.\n",
-         Iommu::Coherent ? "" : "non-", idr0.cttw() ? "" : "un");
+  if (Iommu::coherent() && !idr0.cttw())
+    WARN("IOMMU: Configured as dma-coherent, "
+         "but SMMU reports that coherent page table walks are unsupported.\n");
 
   _ias = address_size(idr2.ias());
   if (_ias < Virt_addr_size)
@@ -902,7 +907,7 @@ Iommu_smmu_v2::sync_pte()
   // supports coherent page table walks, otherwise changed PTE entries are
   // already cleaned from the dcache in Dmar_space immediately after they are
   // written.
-  if constexpr (Iommu::Coherent)
+  if (Iommu::coherent())
     Mem::wmb();
 }
 
@@ -1205,7 +1210,8 @@ Iommu_smmu_v2::init_platform_dt()
           return;
 
         auto *smmu = new Boot_object<Iommu_smmu_v2>();
-        smmu->setup(compats[c].version, Kmem_mmio::map(base, size));
+        smmu->setup(compats[c].version, Kmem_mmio::map(base, size), ~0U,
+                    n.has_prop("dma-coherent"));
         setup_smmu_v2_irqs_dt(smmu, n);
         ++i;
       });

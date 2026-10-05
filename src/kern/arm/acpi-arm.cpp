@@ -59,6 +59,11 @@ struct Acpi_iort : public Acpi_table_head
 
   struct Smmu_v3 : public Node
   {
+    enum Flags : Unsigned32
+    {
+      Cohacc_override = 1 << 0, ///< SMMU accesses memory cache coherently
+    };
+
     Unsigned64 base_addr;
     Unsigned32 flags;
     Unsigned32 _res0;

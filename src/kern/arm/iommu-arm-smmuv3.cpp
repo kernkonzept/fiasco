@@ -1070,7 +1070,8 @@ public:
    * \param eventq_irq  Event queue interrupt. (optional, 0 = disabled)
    * \param gerror_irq  Global error interrupt. (optional, 0 = disabled)
    */
-  void setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq);
+  void setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq,
+             bool coherent = true);
 
   static bool stage2()
   {
@@ -1689,7 +1690,7 @@ PRIVATE template<typename T> static inline
 void
 Iommu_smmu_v3::make_observable(T *start, T *end = nullptr)
 {
-  if constexpr (Iommu::Coherent)
+  if (Iommu::coherent())
     Mem::wmb(); // dmbist
   else
     Mem_unit::flush_dcache(start, end != nullptr ? end : start + 1);
@@ -1709,7 +1710,7 @@ Iommu_smmu_v3::make_observable_before_cmd(T *start, T *end = nullptr)
   // Putting the command into the command queue already includes a memory
   // barrier in case the SMMU is cache coherent, so we only have to act in the
   // non-coherent case.
-  if constexpr (!Iommu::Coherent)
+  if (!Iommu::coherent())
     make_observable(start, end);
 }
 
@@ -1939,8 +1940,13 @@ Iommu_smmu_v3::setup_strtab_2level()
 
 IMPLEMENT
 void
-Iommu_smmu_v3::setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq)
+Iommu_smmu_v3::setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq,
+                     bool coherent)
 {
+  // Decided before the first access to the queues and tables.
+  if (!coherent)
+    set_non_coherent();
+
   _type = Iommu_type::Smmu_v3;
   _rp0 = Mmio_register_block(base_addr);
   _rp1 = Mmio_register_block(offset_cast<void *>(base_addr, 0x10000));
@@ -1950,10 +1956,9 @@ Iommu_smmu_v3::setup(void *base_addr, unsigned eventq_irq, unsigned gerror_irq)
   Idr1 idr1 = read_reg<Idr1>();
   Idr5 idr5 = read_reg<Idr5>();
 
-  if (idr0.cohacc() != Iommu::Coherent)
-    WARN("IOMMU: Configured as %sdma-coherent, "
-         "but SMMU reports that coherent page table walks are %ssupported.\n",
-         Iommu::Coherent ? "" : "non-", idr0.cohacc() ? "" : "un");
+  if (Iommu::coherent() && !idr0.cohacc())
+    WARN("IOMMU: Configured as dma-coherent, "
+         "but SMMU reports that coherent page table walks are unsupported.\n");
 
   if (idr0.ttf() != Idr0::Ttf_aarch64 && idr0.ttf() != Idr0::Ttf_aarch32_aarch64)
     panic("IOMMU: AArch64 page table format not supported.");
@@ -2713,7 +2718,8 @@ Iommu_smmu_v3::init_platform_dt()
       if (n.get_reg(0, &base, &size))
         {
           auto *smmu = new Boot_object<Iommu_smmu_v3>();
-          smmu->setup(Kmem_mmio::map(base, size), eventq_irq, gerror_irq);
+          smmu->setup(Kmem_mmio::map(base, size), eventq_irq, gerror_irq,
+                      n.has_prop("dma-coherent"));
           ++i;
         }
     });
@@ -2754,8 +2760,9 @@ Iommu_smmu_v3::init_platform_acpi()
 
       auto const *smmu = static_cast<Acpi_iort::Smmu_v3 const *>(node);
       void *v = Kmem_mmio::map(smmu->base_addr, 0x100000);
-      (new Boot_object<Iommu_smmu_v3>())->setup(v, smmu->gsiv_event,
-                                                smmu->gsiv_gerr);
+      (new Boot_object<Iommu_smmu_v3>())->setup(
+        v, smmu->gsiv_event, smmu->gsiv_gerr,
+        smmu->flags & Acpi_iort::Smmu_v3::Cohacc_override);
       ++i;
     }
 
