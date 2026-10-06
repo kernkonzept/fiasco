@@ -154,6 +154,7 @@ SECTIONS {
   .text_kernel : AT (ADDR(.text_kernel) - phys_offset) {
     crt0.o(.text)
     *(.init)
+    *(.text.excp .text.ivt)
     *(.text .text.* .gnu.linkonce.t.*)
     *(.glue_7t) *(.glue_7)
     *(.got .got.*)
