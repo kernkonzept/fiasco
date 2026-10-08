@@ -479,8 +479,26 @@ Fpu::detect_sve(Cpu_number cpu)
   if (cpu == Cpu_number::boot_cpu())
     {
       if (has_sve)
-        printf("CPU implements SVE with a vector length of up to %u bits.\n",
-               max_vl * 128);
+        {
+          Mword zfr0;
+          asm volatile (".arch_extension sve      \n"
+                        "mrs %0, ID_AA64ZFR0_EL1  \n"
+                        ".arch_extension nosve    \n"
+                        : "=r" (zfr0));
+          char const *sve_ver_str;
+          switch (zfr0 & 0xf)
+            {
+            case 0: sve_ver_str = "1"; break;
+            case 1: sve_ver_str = "2"; break;    // mandatory since ARMv9
+            case 2: sve_ver_str = "2.1"; break;  // mandatory since ARMv9.4
+            case 3: sve_ver_str = "2.2"; break;  // mandatory since ARMv9.6
+            case 4: sve_ver_str = "2.3"; break;  // mandatory since ARMv9.7
+            default: sve_ver_str = "2.3+"; break;
+            }
+
+          printf("CPU: SVE version %s with a vector length of up to %u bits.\n",
+                 sve_ver_str, max_vl * 128);
+        }
 
       _has_sve = has_sve;
       _max_vl = max_vl;
