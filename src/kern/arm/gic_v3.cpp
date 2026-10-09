@@ -38,6 +38,8 @@ class Gic_v3 : public Gic_mixin<Gic_v3, Gic_cpu_v3>
 public:
   using Version = Gic_dist::V3;
 
+  static Address constexpr Default_gic_its_size = 0x20000;
+
   explicit Gic_v3(void *dist_base, void *redist_base, bool dist_init = true)
   : Gic(dist_base, -1, dist_init), _redist_array(redist_base),
     _redist_get(&_redist_array)

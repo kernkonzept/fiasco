@@ -223,8 +223,13 @@ Pic::init_dt_gicv3()
                               {
                                 uint64_t base, sz;
                                 if (n.get_reg(0, &base, &sz))
-                                  g->add_its(Kmem_mmio::map(base, sz),
-                                             n.has_prop("dma-noncoherent"));
+                                  {
+                                    if (!sz)
+                                      sz = Gic_v3::Default_gic_its_size;
+
+                                    g->add_its(Kmem_mmio::map(base, sz),
+                                               n.has_prop("dma-noncoherent"));
+                                  }
                               }
                           });
 
@@ -385,13 +390,13 @@ Pic::init_acpi()
     new Boot_object<Gic_v3>(Kmem_mmio::map(dist->base, Gic_dist::Size),
                             redist_find);
 
-  Address constexpr Gic_its_size = 0x20000; // No size is given in ACPI
   int i = 0;
   while (auto *its = madt->find<Acpi_madt::Gic_its_if>(i++))
     {
       bool non_coherent = madt->rev >= Acpi_madt::Rev_gic_non_coherent
                           && (its->flags & Acpi_madt::Gic_its_if::Non_coherent);
-      g->add_its(Kmem_mmio::map(its->base, Gic_its_size), non_coherent);
+      g->add_its(Kmem_mmio::map(its->base, Gic_v3::Default_gic_its_size),
+                 non_coherent);
     }
 
   gic = g;
