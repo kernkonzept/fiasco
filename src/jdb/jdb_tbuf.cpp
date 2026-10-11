@@ -260,7 +260,7 @@ Tb_entry *
 Jdb_tbuf::lookup(size_t pos)
 {
   Tb_sequence seq = _status->tail;
-  size_t bound = seq > _capacity ? seq - _capacity : 0;
+  size_t const bound = _status->tail - entries_majorant();
   size_t cnt = pos;
 
   while (seq > bound)
@@ -352,7 +352,7 @@ size_t
 Jdb_tbuf::pos(Tb_entry const *event)
 {
   Tb_sequence seq = _status->tail;
-  size_t bound = seq > _capacity ? seq - _capacity : 0;
+  size_t const bound = _status->tail - entries_majorant();
   size_t pos = 0;
 
   while (seq > bound)
