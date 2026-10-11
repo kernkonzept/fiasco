@@ -544,9 +544,6 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
   for (size_t pos = ((direction == Direction::Newer) ? start - 1 : start + 1);;
        (direction == Direction::Newer) ? --pos : ++pos)
     {
-      static String_buf<256> buffer;
-      buffer.reset();
-
       // don't cycle through entries more than once
       // (should not happen due to the following check)
       if (pos == start)
@@ -560,6 +557,8 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
           return found;
         }
 
+      static String_buf<256> buffer;
+      buffer.reset();
       Jdb_tbuf_output::print_entry(&buffer, pos);
 
       // progress bar
