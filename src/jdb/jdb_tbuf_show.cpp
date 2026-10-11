@@ -567,17 +567,11 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
         break;
 
       // don't wrap around
-      if (pos >= majorant)
+      Tb_entry *e = Jdb_tbuf::lookup_next(direction, lookup_state);
+      if (!e || pos >= majorant)
         {
           error(direction == Direction::Newer ? "Begin of tracebuffer reached"
                                               : "End of tracebuffer reached");
-          return found;
-        }
-
-      Tb_entry *e = Jdb_tbuf::lookup_next(direction, lookup_state);
-      if (!e)
-        {
-          error("Not found");
           return found;
         }
 
