@@ -269,25 +269,20 @@ Jdb_tbuf::lookup(size_t pos)
   size_t const bound = _status->tail - entries_majorant();
   size_t cnt = pos;
 
-  for (Tb_sequence seq = _status->tail; seq > bound; )
+  for (Tb_sequence seq = _status->tail; seq > bound; --seq)
     {
       Tb_entry *entry = entry_valid(seq);
 
       // Skip invalid entries and entries that are filtered out by the
       // predicate.
-      if (!entry || !predicate(*entry))
+      if (entry && predicate(*entry))
         {
-          --seq;
-          continue;
+          // Found the entry with the desired position.
+          if (cnt == 0)
+            return entry;
+
+          --cnt;
         }
-
-      // Found the entry with the desired position.
-      if (cnt == 0)
-        return entry;
-
-      // Entry found, but not on the desired position.
-      --seq;
-      --cnt;
     }
 
   // No more entries.
@@ -360,25 +355,20 @@ Jdb_tbuf::pos(Tb_entry const *event)
   size_t const bound = _status->tail - entries_majorant();
   size_t pos = 0;
 
-  for (Tb_sequence seq = _status->tail; seq > bound; )
+  for (Tb_sequence seq = _status->tail; seq > bound; --seq)
     {
       Tb_entry *cur = entry_valid(seq);
 
       // Skip invalid entries and entries that are filtered out by the
       // predicate.
-      if (!cur || !predicate(*cur))
+      if (cur && predicate(*cur))
         {
-          --seq;
-          continue;
+          // Found the desired entry.
+          if (cur == event)
+            return pos;
+
+          ++pos;
         }
-
-      // Found the desired entry.
-      if (cur == event)
-        return pos;
-
-      // Entry found, but not the desired one.
-      --seq;
-      ++pos;
     }
 
   // No more entries.
