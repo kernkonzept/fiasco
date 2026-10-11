@@ -57,6 +57,16 @@ public:
     Tracebuffer_version = 0
   };
 
+  /**
+   * State returned by lookup() to be used as starting state for lookup_next()
+   * to decrease the runtime for lookup up adjacent tracebuffer entries.
+   */
+  struct Lookup_state
+  {
+    Tb_sequence seq;
+    size_t bound;
+  };
+
   static void (*direct_log_entry)(Tb_entry *, const char *);
 
 protected:
@@ -252,9 +262,11 @@ Jdb_tbuf::entry_valid(Tb_sequence seq)
  *
  * \tparam predicate  Filtering predicate (e.g. #filter_hidden).
  *
- * \param pos  Position of the event in the tracebuffer. 0 represents the last
- *             event, 1 represents the penultimate event, etc. The filtering
- *             predicate is taken into account.
+ * \param pos         Position of the event in the tracebuffer. 0 represents the
+ *                    last event, 1 represents the penultimate event, etc. The
+ *                    filtering predicate is taken into account.
+ * \param[out] state  If not nullptr, save the search state for later usage in
+ *                    lookup_next().
  *
  * \return Pointer to the tracebuffer event with the given position (with
  *         the filtering predicate taken into account).
@@ -264,7 +276,7 @@ Jdb_tbuf::entry_valid(Tb_sequence seq)
 PUBLIC static
 template<Jdb_tbuf::Predicate predicate>
 Tb_entry *
-Jdb_tbuf::lookup(size_t pos)
+Jdb_tbuf::lookup(size_t pos, Lookup_state *state = nullptr)
 {
   size_t const bound = _status->tail - entries_majorant();
   size_t cnt = pos;
@@ -277,7 +289,14 @@ Jdb_tbuf::lookup(size_t pos)
         {
           // Found the entry with the desired position.
           if (cnt == 0)
-            return e;
+            {
+              if (state)
+                {
+                  state->seq = seq;
+                  state->bound = bound;
+                }
+              return e;
+            }
 
           --cnt;
         }
@@ -285,6 +304,47 @@ Jdb_tbuf::lookup(size_t pos)
 
   // No more entries.
   return nullptr;
+}
+
+/**
+ * Get pointer to the next tracebuffer event starting from 'state'.
+ *
+ * \tparam predicate  Filtering predicate (e.g. #filter_hidden).
+ *
+ * \param direction      Search direction.
+ * \param[in,out] state  Starting point to search for the next event.
+ *
+ * \return Pointer to the next tracebuffer event (with the filtering predicate
+ *         taken into account).
+ * \retval nullptr  No tracebuffer event with the given position (with
+ *                  the filtering predicate taken into account) found.
+ */
+PUBLIC static
+template<Jdb_tbuf::Predicate predicate>
+Tb_entry *
+Jdb_tbuf::lookup_next(Direction direction, Lookup_state &state)
+{
+  if (direction == Direction::Older)
+    assert(state.seq > state.bound);
+  else
+    assert(state.seq != _status->tail);
+
+  for (;;)
+    {
+      if (direction == Direction::Older)
+        {
+          if (--state.seq == state.bound)
+            return nullptr;
+        }
+      else
+        {
+          if (++state.seq == _status->tail)
+            return nullptr;
+        }
+
+      if (Tb_entry *e = entry_valid(state.seq); e && predicate(*e))
+        return e;
+    }
 }
 
 /**
@@ -312,9 +372,11 @@ Jdb_tbuf::slot(size_t index)
 /**
  * Get pointer to a tracebuffer event (possibly with filtering).
  *
- * \param pos  Position of the event in the tracebuffer. 0 represents the last
- *             event, 1 represents the penultimate event, etc. The current
- *             filtering setting is taken into account.
+ * \param pos         Position of the event in the tracebuffer. 0 represents the
+ *                    last event, 1 represents the penultimate event, etc. The
+ *                    current filtering setting is taken into account.
+ * \param[out] state  If not nullptr, save the search state for later usage in
+ *                    lookup_next().
  *
  * \return Pointer to the tracebuffer event with the given position (with
  *         the current filtering setting taken into account).
@@ -323,12 +385,33 @@ Jdb_tbuf::slot(size_t index)
  */
 PUBLIC static
 Tb_entry *
-Jdb_tbuf::lookup(size_t pos)
+Jdb_tbuf::lookup(size_t pos, Lookup_state *state = nullptr)
 {
   if (_filter_hidden)
-    return lookup<filter_hidden>(pos);
+    return lookup<filter_hidden>(pos, state);
 
-  return lookup<all>(pos);
+  return lookup<all>(pos, state);
+}
+
+/**
+ * Get pointer to next tracebuffer event (possibly with filtering).
+ *
+ * \param direction      Search direction.
+ * \param[in,out] state  Starting point to search for the next event.
+ *
+ * \return Pointer to the tracebuffer event with the given position (with
+ *         the current filtering setting taken into account).
+ * \retval nullptr  No tracebuffer event with the given position (with
+ *                  the current filtering setting taken into account) found.
+ */
+PUBLIC static
+Tb_entry *
+Jdb_tbuf::lookup_next(Direction direction, Lookup_state &state)
+{
+  if (_filter_hidden)
+    return lookup_next<filter_hidden>(direction, state);
+
+  return lookup_next<all>(direction, state);
 }
 
 /**

@@ -541,9 +541,16 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
 
   size_t majorant = Jdb_tbuf::entries_majorant();
   size_t found = Jdb_tbuf::Not_found;
-  for (size_t pos = ((direction == Direction::Newer) ? start - 1 : start + 1);;
-       (direction == Direction::Newer) ? --pos : ++pos)
+
+  Jdb_tbuf::Lookup_state lookup_state;
+  Jdb_tbuf::lookup(start, &lookup_state);
+  for (size_t pos = start;;)
     {
+      if (direction == Direction::Newer)
+        --pos;
+      else
+        ++pos;
+
       // don't cycle through entries more than once
       // (should not happen due to the following check)
       if (pos == start)
@@ -557,9 +564,16 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
           return found;
         }
 
+      Tb_entry *e = Jdb_tbuf::lookup_next(direction, lookup_state);
+      if (!e)
+        {
+          error("Not found");
+          return found;
+        }
+
       static String_buf<256> buffer;
       buffer.reset();
-      Jdb_tbuf_output::print_entry(&buffer, pos);
+      Jdb_tbuf_output::print_entry(&buffer, e);
 
       // progress bar
       if ((pos & 0x7ff) == 0)
