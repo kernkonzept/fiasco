@@ -562,7 +562,7 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
       Jdb_tbuf_output::print_entry(&buffer, pos);
 
       // progress bar
-      if ((pos & 0x7f) == 0)
+      if ((pos & 0x7ff) == 0)
         {
           static int progress;
           Jdb::cursor(Jdb_screen::height(), Jdb_screen::width());
