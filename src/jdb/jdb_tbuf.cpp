@@ -271,15 +271,13 @@ Jdb_tbuf::lookup(size_t pos)
 
   for (Tb_sequence seq = _status->tail; seq > bound; --seq)
     {
-      Tb_entry *entry = entry_valid(seq);
-
       // Skip invalid entries and entries that are filtered out by the
       // predicate.
-      if (entry && predicate(*entry))
+      if (Tb_entry *e = entry_valid(seq); e && predicate(*e))
         {
           // Found the entry with the desired position.
           if (cnt == 0)
-            return entry;
+            return e;
 
           --cnt;
         }
@@ -357,14 +355,12 @@ Jdb_tbuf::pos(Tb_entry const *event)
 
   for (Tb_sequence seq = _status->tail; seq > bound; --seq)
     {
-      Tb_entry *cur = entry_valid(seq);
-
       // Skip invalid entries and entries that are filtered out by the
       // predicate.
-      if (cur && predicate(*cur))
+      if (Tb_entry *e = entry_valid(seq); e && predicate(*e))
         {
           // Found the desired entry.
-          if (cur == event)
+          if (e == event)
             return pos;
 
           ++pos;
