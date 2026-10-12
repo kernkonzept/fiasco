@@ -444,13 +444,14 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
               break;
             case Tsc_delta_mode:
               if (!Jdb_tbuf::diff_tsc(pos, &dtsc))
-                dtsc = 0;
-              switch (time_mode)
-                {
-                case 0: Jdb::write_ll_hex(&s, dtsc, false); break;
-                case 1: Jdb::write_tsc   (&s, dtsc, false); break;
-                case 2: Jdb::write_ll_dec(&s, dtsc, false); break;
-                }
+                s.printf("n/a");
+              else
+                switch (time_mode)
+                  {
+                  case 0: Jdb::write_ll_hex(&s, dtsc, false); break;
+                  case 1: Jdb::write_tsc   (&s, dtsc, false); break;
+                  case 2: Jdb::write_ll_dec(&s, dtsc, false); break;
+                  }
               break;
             case Tsc_ref_mode:
               dtsc = (pos == ref) ? 0 : utsc - ref_tsc;
