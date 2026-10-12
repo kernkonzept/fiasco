@@ -569,9 +569,9 @@ Jdb_tbuf::event(Tb_entry *entry, Tb_sequence *number, Unsigned32 *kclock,
  * Get the difference of CPU cycles of the given event and the previous event
  * on the same CPU (possibly with filtering).
  *
- * \param      pos    Position of the even in the tracebuffer. 0 represents
- *                    the last event, 1 represents the penultimate event, etc.
- *                    The current filtering setting is taken into account.
+ * \param      entry  Tracebuffer event.
+ * \param[out] state  If not nullptr, save the search state for later usage in
+ *                    lookup_next().
  * \param[out] delta  Difference in CPU cycles.
  *
  * \retval false  Something went wrong.
@@ -579,17 +579,15 @@ Jdb_tbuf::event(Tb_entry *entry, Tb_sequence *number, Unsigned32 *kclock,
  */
 PUBLIC static
 bool
-Jdb_tbuf::diff_tsc(size_t pos, Signed64 *delta)
+Jdb_tbuf::diff_tsc(Tb_entry *entry, Lookup_state state, Signed64 *delta)
 {
-  Tb_entry *entry = lookup(pos);
   if (!entry)
     return false;
 
   Tb_entry *prev;
-
   do
     {
-      prev = lookup(++pos);
+      prev = lookup_next(Direction::Older, state);
       if (!prev)
         return false;
     }
@@ -603,9 +601,9 @@ Jdb_tbuf::diff_tsc(size_t pos, Signed64 *delta)
  * Get the difference of performance counter cycles of the given event and the
  * previous event (possibly with filtering).
  *
- * \param      pos    Position of the even in the tracebuffer. 0 represents
- *                    the last event, 1 represents the penultimate event, etc.
- *                    The current filtering setting is taken into account.
+ * \param      entry  Tracebuffer event.
+ * \param[out] state  If not nullptr, save the search state for later usage in
+ *                    lookup_next().
  * \param      index  Performance counter index. 0 represents the first
  *                    counter, 1 represents the second counter.
  * \param[out] delta  Difference in performance counter cycles.
@@ -615,15 +613,20 @@ Jdb_tbuf::diff_tsc(size_t pos, Signed64 *delta)
  */
 PUBLIC static
 bool
-Jdb_tbuf::diff_pmc(size_t pos, unsigned index, Signed32 *delta)
+Jdb_tbuf::diff_pmc(Tb_entry *entry, Lookup_state state, unsigned index,
+                   Signed32 *delta)
 {
-  Tb_entry *entry = lookup(pos);
   if (!entry)
     return false;
 
-  Tb_entry *prev = lookup(pos + 1);
-  if (!prev)
-    return false;
+  Tb_entry *prev;
+  do
+    {
+      prev = lookup_next(Direction::Older, state);
+      if (!prev)
+        return false;
+    }
+  while (entry->cpu() != prev->cpu());
 
   switch (index)
     {

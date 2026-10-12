@@ -415,7 +415,7 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
           char s[3] = "  ";
           Jdb_tbuf_output::print_entry(&_buffer_str, e);
 
-          if (!Jdb_tbuf::diff_tsc(pos, &dtsc))
+          if (!Jdb_tbuf::diff_tsc(e, lookup_state, &dtsc))
             dtsc = 0;
 
           for (unsigned i = 0; i < 10; ++i)
@@ -452,7 +452,7 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
               s.printf("%12lu", seq);
               break;
             case Tsc_delta_mode:
-              if (!Jdb_tbuf::diff_tsc(pos, &dtsc))
+              if (!Jdb_tbuf::diff_tsc(e, lookup_state, &dtsc))
                 s.printf("n/a");
               else
                 switch (time_mode)
@@ -498,7 +498,7 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
               break;
             case Pmc1_delta_mode:
             case Pmc2_delta_mode:
-              if (!Jdb_tbuf::diff_pmc(pos, mode - Pmc1_delta_mode, &dpmc))
+              if (!Jdb_tbuf::diff_pmc(e, lookup_state, mode - Pmc1_delta_mode, &dpmc))
                 dpmc = 0;
               Jdb::write_ll_dec(&s, dpmc, false);
               break;
