@@ -108,6 +108,8 @@ private:
   {
     No_mask = ~Mword{0U}
   };
+
+  using Direction = enum Jdb_tbuf::Direction;
 };
 
 char Jdb_tbuf_show::_search_str[40];
@@ -525,7 +527,7 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
 // search in tracebuffer
 static size_t
 Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
-                      Unsigned8 direction)
+                      Direction direction)
 {
   if (!entries)
     return Jdb_tbuf::Not_found;
@@ -539,8 +541,8 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
 
   size_t majorant = Jdb_tbuf::entries_majorant();
   size_t found = Jdb_tbuf::Not_found;
-  for (size_t pos = ((direction == 1) ? start - 1 : start + 1);;
-       (direction == 1) ? --pos : ++pos)
+  for (size_t pos = ((direction == Direction::Newer) ? start - 1 : start + 1);;
+       (direction == Direction::Newer) ? --pos : ++pos)
     {
       static String_buf<256> buffer;
       buffer.reset();
@@ -553,8 +555,8 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
       // don't wrap around
       if (pos >= majorant)
         {
-          error(direction ? "Begin of tracebuffer reached"
-                          : "End of tracebuffer reached");
+          error(direction == Direction::Newer ? "Begin of tracebuffer reached"
+                                              : "End of tracebuffer reached");
           return found;
         }
 
@@ -649,7 +651,7 @@ Jdb_tbuf_show::show()
 {
   static Unsigned8 mode = Index_mode;
   static Unsigned8 time_mode = 1;
-  static Unsigned8 direction = 0;
+  static Direction direction = Direction::Older;
 
   size_t entries;
   Jdb_tbuf_output::set_filter(_filter_str, &entries);
@@ -772,9 +774,6 @@ restart:
     status_line:
       for (bool redraw = false; !redraw;)
         {
-          Smword c;
-          Unsigned8 d = 0; // default search direction is forward
-
           if (_status_type == Status_redraw)
             {
               Jdb::printf_statline("tbuf", "/?nN=search sj=mark c=clear r=ref "
@@ -831,7 +830,7 @@ restart:
           Jdb::cursor(addy + Tbuf_start_line, 1);
 
           // WAIT for key.....
-          c = Jdb_core::getchar();
+          Smword c = Jdb_core::getchar();
 
           show_events(_absy + addy, refy, 1, mode, time_mode, false);
           for (unsigned i = 0; i < group.size(); ++i)
@@ -1069,10 +1068,8 @@ restart:
 
               goto jump_index;
             case '?': // search backward
-              d = 1;
-              [[fallthrough]];
             case '/': // search forward
-              direction = d;
+              direction = c == '?' ? Direction::Newer : Direction::Older;
               // search in tracebuffer events
               Jdb::printf_statline("tbuf", nullptr, "%s=%s",
                                    Jdb_regex::avail() ? "Regexp" : "Search",
@@ -1086,7 +1083,10 @@ restart:
             case 'n': // search next
             case 'N': // search next reverse
               pos = search(_absy + addy, entries, _search_str,
-                           c == 'N' ? !direction : direction);
+                           c == 'N'
+                             ? (direction == Direction::Older ? Direction::Newer
+                                                              : Direction::Older)
+                             : direction);
               if (pos != Jdb_tbuf::Not_found)
                 {
                   // found

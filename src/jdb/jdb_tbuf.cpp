@@ -34,6 +34,13 @@ public:
     Result = 2
   };
 
+  /// Tracebuffer search direction.
+  enum class Direction
+  {
+    Older = 0, ///< Default: Search towards older tracebuffer entries.
+    Newer = 1, ///< Search towards newer tracebuffer entries.
+  };
+
   enum : Tb_sequence
   {
     Nil = 0U
