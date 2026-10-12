@@ -961,28 +961,28 @@ restart:
               break;
             case KEY_RETURN: // disassemble eip of current entry
             case KEY_RETURN_2:
-                {
-                  Thread const *t = nullptr;
-                  Mword eip;
-                  if (Jdb_tbuf_output::thread_ip(_absy + addy, &t, &eip))
-                    {
-                      if (Jdb_disasm::avail())
-                        {
-                          if (!Jdb_disasm::show(Jdb_address(eip, t->space()), 1))
-                            goto exit;
-                        }
-                      else
-                        { // hacky, we should get disasm working for arm too
-                          // (at least without the disassembly itself)
-                          printf("\n==========================\n"
-                                 "   ip=%lx                 \n"
-                                 "==========================\n", eip);
-                          Jdb_core::getchar();
-                        }
-                      redraw = true;
-                    }
-                }
-              break;
+              {
+                Thread const *t = nullptr;
+                Mword eip;
+                if (Jdb_tbuf_output::thread_ip(_absy + addy, &t, &eip))
+                  {
+                    if (Jdb_disasm::avail())
+                      {
+                        if (!Jdb_disasm::show(t ? Jdb_address(eip, t->space())
+                                                : Jdb_address::kmem_addr(eip), 1))
+                          goto exit;
+                      }
+                    else
+                      {
+                        printf("\n==========================\n"
+                               "   ip=%lx                 \n"
+                               "==========================\n", eip);
+                        Jdb_core::getchar();
+                      }
+                    redraw = true;
+                  }
+                break;
+              }
             case KEY_TAB:
               Jdb_tbuf_output::toggle_names();
               redraw = true;
