@@ -381,12 +381,14 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
     return;
 
     {
+      Tb_entry *e = Jdb_tbuf::lookup(ref);
       Mword dummy;
-      if (!Jdb_tbuf::event(ref, &dummy, &ref_kclock, &ref_tsc,
+      if (!Jdb_tbuf::event(e, &dummy, &ref_kclock, &ref_tsc,
                            &ref_pmc1, &ref_pmc2)) [[unlikely]]
         return;
     }
 
+  Jdb_tbuf::Lookup_state lookup_state;
   for (unsigned i = 0; i < count; ++i)
     {
       Tb_sequence seq;  // event number
@@ -400,13 +402,18 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
       Kconsole::console()->getchar_chance();
       _buffer_str.reset();
 
-      if (!Jdb_tbuf::event(pos, &seq, &kclock, &utsc, &upmc1, &upmc2))
+      Tb_entry *e;
+      if (i == 0)
+        e = Jdb_tbuf::lookup(pos, &lookup_state);
+      else
+        e = Jdb_tbuf::lookup_next(Direction::Older, lookup_state);
+      if (!Jdb_tbuf::event(e, &seq, &kclock, &utsc, &upmc1, &upmc2))
         break;
 
       if (long_output)
         {
           char s[3] = "  ";
-          Jdb_tbuf_output::print_entry(&_buffer_str, pos);
+          Jdb_tbuf_output::print_entry(&_buffer_str, e);
 
           if (!Jdb_tbuf::diff_tsc(pos, &dtsc))
             dtsc = 0;
@@ -438,7 +445,7 @@ Jdb_tbuf_show::show_events(size_t pos, size_t ref, unsigned count, Unsigned8 mod
       else
         {
           String_buf<13> s;
-          Jdb_tbuf_output::print_entry(&_buffer_str, pos);
+          Jdb_tbuf_output::print_entry(&_buffer_str, e);
           switch (mode)
             {
             case Index_mode:

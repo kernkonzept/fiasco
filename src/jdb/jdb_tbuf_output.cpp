@@ -160,15 +160,6 @@ formatter_default(String_buffer *buf, Tb_entry *tb, const char *tidstr, int tidl
 
 PUBLIC static
 void
-Jdb_tbuf_output::print_entry(String_buffer *buf, size_t pos)
-{
-  auto tb = Jdb_tbuf::lookup(pos);
-  if (tb)
-    print_entry(buf, tb);
-}
-
-PUBLIC static
-void
 Jdb_tbuf_output::print_entry(String_buffer *buf, Tb_entry *tb)
 {
   assert(tb->type() < Tbuf_max);

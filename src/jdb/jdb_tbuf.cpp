@@ -542,10 +542,9 @@ Jdb_tbuf::search_to_pos(Tb_sequence seq)
  */
 PUBLIC static
 bool
-Jdb_tbuf::event(size_t pos, Tb_sequence *number, Unsigned32 *kclock,
+Jdb_tbuf::event(Tb_entry *entry, Tb_sequence *number, Unsigned32 *kclock,
                 Unsigned64 *tsc, Unsigned32 *pmc1, Unsigned32 *pmc2)
 {
-  Tb_entry *entry = lookup(pos);
   if (!entry)
     return false;
 
