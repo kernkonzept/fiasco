@@ -802,27 +802,6 @@ Fpu::disable_sve()
 //-------------------------------------------------------------------------
 IMPLEMENTATION [arm && fpu && cpu_virt && arm_sve]:
 
-PRIVATE static template<typename CB> inline
-void
-Fpu_state_sve::with_adjusted_vl(Mword sel_zcr, CB &&cb)
-{
-  // Vector length selected by user mode
-  unsigned sel_zcr_vl = (sel_zcr & Cpu::Zcr_vl_mask);
-  // Maximum vector length supported by the CPU and Fiasco
-  unsigned max_zcr_vl = Fpu::max_vl() - 1;
-  // Avoid operating on unused bytes in the SVE registers if user mode uses a
-  // smaller vector length than the maximum supported by Fiasco!
-  bool drop_vl = sel_zcr_vl < max_zcr_vl;
-  if (drop_vl)
-    Cpu::zcr(sel_zcr_vl);
-
-  cb();
-
-  // Restore maximum vector length
-  if (drop_vl)
-    Cpu::zcr(max_zcr_vl);
-}
-
 PUBLIC
 void
 Fpu_state_sve::save() override
@@ -831,18 +810,23 @@ Fpu_state_sve::save() override
   Mword zcr_el1 = Cpu::zcr_el1();
   *access<Zcr>() = zcr_el1;
 
-  with_adjusted_vl(zcr_el1, [this]() { save_regs(); });
+  // We always save (and restore) with the maximum vector length, to prevent
+  // leakage of values from other threads in case user mode later increases VL
+  // (see IFMWZZ and IBRMMV in ARM DDI 0487).
+  save_regs();
 }
 
 PUBLIC
 void
 Fpu_state_sve::restore() const override
 {
-  Mword zcr_el1 = *get<Zcr>();
-
-  with_adjusted_vl(zcr_el1, [this]() { restore_regs(); });
+  // We always restore (and save) with the maximum vector length, to prevent
+  // leakage of values from other threads in case user mode later increases VL
+  // (see IFMWZZ and IBRMMV in ARM DDI 0487).
+  restore_regs();
 
   // Restore vector length selected by user mode
+  Mword zcr_el1 = *get<Zcr>();
   Cpu::zcr_el1(zcr_el1);
 }
 
