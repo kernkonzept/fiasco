@@ -609,56 +609,50 @@ Jdb_tbuf_show::search(size_t start, size_t entries, const char *str,
 
 
 static void
-Jdb_tbuf_show::find_group(Entry_group *g, Tb_entry const *e, bool older, unsigned lines,
-                          unsigned depth)
+Jdb_tbuf_show::find_group(Entry_group *g, Tb_entry const *e,
+                          Jdb_tbuf::Lookup_state state, Direction direction,
+                          unsigned lines, unsigned depth)
 {
   typedef Entry_group::Group_order Group_order;
 
   Tb_entry_formatter const *fmt = Tb_entry_formatter::get_fmt(e);
-  size_t pos = Jdb_tbuf::pos<Jdb_tbuf::all>(e);
-  int dir = older ? 1 : -1;
-  while (pos > 0 && !g->full())
+  for (;;)
     {
-      pos += dir;
-      Tb_entry *e1 = Jdb_tbuf::lookup<Jdb_tbuf::all>(pos);
+      Tb_entry *e1 = Jdb_tbuf::lookup_next(direction, state);
       if (!e1)
         return;
 
-      size_t py;
       Group_order t = fmt->is_pair(e, e1);
       if (t.grouped())
         {
-          py = Jdb_tbuf::pos(e1);
+          size_t py = Jdb_tbuf::pos(e1);
           if (py < _absy || py >= _absy + lines)
             return;
 
-          if (older && t.depth() >= depth)
+          if (direction == Direction::Older && t.depth() >= depth)
             return;
-          if (!older && t.depth() <= depth)
+          if (direction == Direction::Newer && t.depth() <= depth)
             return;
 
           g->push_back(e1, py, t);
 
-          if (older && t.is_first())
+          if (direction == Direction::Older && t.is_first())
             return;
-          if (!older && t.is_last())
+          if (direction == Direction::Newer && t.is_last())
             return;
-
-          continue;
         }
-
-      if (!t.is_direct())
-        continue;
-
-      Tb_entry_formatter const *fmt2 = Tb_entry_formatter::get_fmt(e1);
-      if (fmt2 && fmt2->partner(e1) == e->number())
+      else if (t.is_direct())
         {
-          py = Jdb_tbuf::pos(e1);
-          if (py < _absy || py >= _absy + lines)
-            return;
-          g->push_back(e1, py, older ? Group_order::first() : Group_order::last());
-          // HM: is one direct enry enough
-          return;
+          Tb_entry_formatter const *fmt2 = Tb_entry_formatter::get_fmt(e1);
+          if (fmt2 && fmt2->partner(e1) == e->number())
+            {
+              size_t py = Jdb_tbuf::pos(e1);
+              if (py >= _absy && py < _absy + lines)
+                g->push_back(e1, py,
+                             direction == Direction::Older ? Group_order::first()
+                                                           : Group_order::last());
+              return;
+            }
         }
     }
 }
@@ -804,24 +798,24 @@ restart:
 
           if (!_filter_str[0])
             {
-              typedef Tb_entry::Group_order Group_order;
-
-              Group_order pt;
-              Tb_entry const *ce = Jdb_tbuf::lookup(_absy + addy);
-
+              Jdb_tbuf::Lookup_state lookup_state;
+              Tb_entry const *ce = Jdb_tbuf::lookup(_absy + addy, &lookup_state);
               if (ce)
                 {
                   Tb_entry_formatter const *fmt = Tb_entry_formatter::get_fmt(ce);
 
+                  Tb_entry::Group_order pt;
                   if (fmt)
                     pt = fmt->has_partner(ce);
 
                   if (!pt.not_grouped())
                     {
                       if (!pt.is_first())
-                        find_group(&group, ce, true, lines, pt.depth());
+                        find_group(&group, ce, lookup_state, Direction::Older,
+                                   lines, pt.depth());
                       if (!pt.is_last())
-                        find_group(&group, ce, false, lines, pt.depth());
+                        find_group(&group, ce, lookup_state, Direction::Newer,
+                                   lines, pt.depth());
                     }
 
                   for (unsigned i = 0; i < group.size(); ++i)
