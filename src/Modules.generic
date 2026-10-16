@@ -102,8 +102,10 @@ endif
 
 ifeq ($(CONFIG_JDB),y)
 INTERFACES_KERNEL += \
-	jdb_tbuf jdb_tbuf_init tb_entry jdb_trace string_buffer
+	jdb_tbuf jdb_tbuf_init tb_entry jdb_trace
 endif
+
+INTERFACES_KERNEL += $(if $(CONFIG_JDB)$(CONFIG_TEST_SUPPORT_CODE),string_buffer)
 
 #
 # ABI Subsystem
