@@ -86,7 +86,8 @@ read_again\@:
 #define KIP_OFFS(v)      kip_time_fn_read_us + OFFS__ ##v - OFFS__KIP_FN_READ_US
 kip_time_fn_read_us:
 #ifdef CONFIG_SYNC_CLOCK
-        read_time_and_convert KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US), KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_US)
+        read_time_and_convert KIP_VAL(KIP_SCALER_TIME_STAMP_TO_US),\
+                              KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_US)
 #else
 #  if __riscv_xlen == 32
 1:      lw      a1, KIP_VAL_HI(KIP_CLOCK)
@@ -123,7 +124,8 @@ kip_time_fn_read_us_end:
 #define KIP_OFFS(v)      kip_time_fn_read_ns + OFFS__ ##v - OFFS__KIP_FN_READ_NS
 kip_time_fn_read_ns:
 #ifdef CONFIG_SYNC_CLOCK
-        read_time_and_convert KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS), KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_NS)
+        read_time_and_convert KIP_VAL(KIP_SCALER_TIME_STAMP_TO_NS),\
+                              KIP_VAL(KIP_SHIFT_TIME_STAMP_TO_NS)
 #else
 #  if __riscv_xlen == 32
 1:      lw      a1, KIP_VAL_HI(KIP_CLOCK)
