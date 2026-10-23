@@ -82,6 +82,10 @@ Timer::init(Cpu_number cpu)
 
       if (!Config::scheduler_one_shot())
         _timer_period = us_to_ts(Config::scheduler_granularity());
+
+      printf("RISC-V timer: %u Hz (%u.%u MHz) %s mode\n",
+             freq, freq / 1000000, (freq % 1000000) / 100000,
+             Config::scheduler_one_shot() ? "one-shot" : "periodic");
     }
 
   // Allow user-mode  read access to counter registers.
