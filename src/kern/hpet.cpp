@@ -165,7 +165,7 @@ Hpet::init()
 
   if (!_acpi_hpet)
     {
-      printf("Could not find HPET in RSDT nor XSDT, skipping init\n");
+      printf("Could not find HPET in RSDT nor XSDT, skipping initialization\n");
       return false;
     }
 

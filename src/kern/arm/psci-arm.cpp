@@ -301,7 +301,8 @@ static
 Psci::Call_method
 Psci::probe_method_acpi()
 {
-  auto *fadt = Acpi::find<Acpi_fadt const *>("FACP");
+  constexpr bool warn_no_acpi = !TAG_ENABLED(dt);
+  auto *fadt = Acpi::find<Acpi_fadt const *>("FACP", warn_no_acpi);
   if (!fadt)
     return Call_method::Unknown;
 

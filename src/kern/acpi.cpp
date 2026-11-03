@@ -495,7 +495,7 @@ Acpi_sdt::map_entry(unsigned idx, T phys)
 
 PRIVATE static
 void
-Acpi::init_virt()
+Acpi::init_virt(bool warn_no_acpi)
 {
   enum { Print_info = 0 };
 
@@ -509,7 +509,8 @@ Acpi::init_virt()
   Acpi_rsdp const *rsdp = Acpi_rsdp::locate();
   if (!rsdp)
     {
-      WARN("ACPI: Could not find RSDP, skip init\n");
+      if (warn_no_acpi)
+        WARN("ACPI: Could not find RSDP, skipping initialization!\n");
       return;
     }
 
@@ -534,8 +535,7 @@ Acpi::init_virt()
                   x->print_info();
                   _sdt.print_summary();
 
-                  Acpi_srat const *srat = Acpi::find<Acpi_srat const *>("SRAT");
-                  if (srat)
+                  if (auto *srat = Acpi::find<Acpi_srat const *>("SRAT", false))
                     srat->show();
                 }
               return;
@@ -562,8 +562,7 @@ Acpi::init_virt()
                   r->print_info();
                   _sdt.print_summary();
 
-                  Acpi_srat const *srat = Acpi::find<Acpi_srat const *>("SRAT");
-                  if (srat)
+                  if (auto *srat = Acpi::find<Acpi_srat const *>("SRAT", false))
                     srat->show();
                 }
               return;
@@ -575,9 +574,9 @@ Acpi::init_virt()
 PUBLIC static
 template< typename T >
 T
-Acpi::find(const char *s)
+Acpi::find(const char *s, bool warn_no_acpi = true)
 {
-  init_virt();
+  init_virt(warn_no_acpi);
   return static_cast<T>(sdt()->find(s));
 }
 
