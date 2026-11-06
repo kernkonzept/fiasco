@@ -1286,7 +1286,7 @@ static_assert(sizeof(Vmx_vm_state) + Config::Ext_vcpu_state_offset == 4096,
 
 /**
  * Representation of the bitfields of the VM-entry interruption information
- * VMCS field.
+ * VMCS field, also called ``injected-event identification field''.
  */
 struct Vmx_vm_entry_interrupt_info
 {
@@ -1294,15 +1294,54 @@ struct Vmx_vm_entry_interrupt_info
 
   CXX_BITFIELD_MEMBER(0, 7, vector, value);
   CXX_BITFIELD_MEMBER(8, 10, type, value);
+  enum
+  {
+    External_interrupt = 0,
+    Nmi = 2,
+    Hardware_exception = 3,            // e.g. #PF
+    Software_interrupt = 4,            // INT n
+    Privileged_software_exception = 5, // INT1
+    Software_exception = 6,            // INT3 or INTO
+    Other_event = 7,
+  };
 
   CXX_BITFIELD_MEMBER(10, 10, deliver_insn_length, value);
   CXX_BITFIELD_MEMBER(11, 11, deliver_error_code, value);
+  CXX_BITFIELD_MEMBER(13, 13, nested_exception, value);
 
   /**
    * This is a Fiasco-specific flag within the reserved bitfield
    * that must be never written to the hardware VMCS field.
    */
   CXX_BITFIELD_MEMBER(30, 30, immediate_exit, value);
+
+  CXX_BITFIELD_MEMBER(31, 31, valid, value);
+};
+
+/**
+ * Representation of the bitfields of the VM-exit interruption information
+ * VMCS field, also called ``exiting-event identification field'' or
+ * ``original-event identification field''.
+ */
+struct Vmx_vm_exit_interrupt_info
+{
+  Unsigned32 value;
+
+  CXX_BITFIELD_MEMBER(0, 7, vector, value);
+  CXX_BITFIELD_MEMBER(8, 10, type, value);
+  enum
+  {
+    External_interrupt = 0,
+    Nmi = 2,
+    Hardware_exception = 3,
+    Software_interrupt = 4, // only original event
+    Privileged_software_exception = 5,
+    Software_exception = 6,
+  };
+
+  CXX_BITFIELD_MEMBER(11, 11, error_code_valid, value);
+  CXX_BITFIELD_MEMBER(12, 12, nmi_unblocked_iret, value); // only exiting event
+  CXX_BITFIELD_MEMBER(13, 13, nested_exception, value); // FRED
 
   CXX_BITFIELD_MEMBER(31, 31, valid, value);
 };

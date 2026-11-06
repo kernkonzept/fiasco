@@ -89,6 +89,7 @@ int acpi_save_cpu_and_suspend(Unsigned32 sleep_type,
 
 IMPLEMENTATION [mp]:
 
+#include "apic.h"
 #include "cpu.h"
 #include "cpu_call.h"
 #include "processor.h"
@@ -156,15 +157,22 @@ take_boot_cpu_online()
 }
 
 static Cpu_mask _cpus_to_shutdown;
+static Cpu_mask _cpus_to_start_shutdown;
 static Mword _shutdown_cpus_pending;
 DEFINE_PER_CPU static Per_cpu<Cpu_call> _shutdown_call;
 
 /**
  * Run the shutdown hooks on the current CPU and halt it.
+ *
+ * Returns without doing anything if the hooks of this CPU were already started
+ * or if this CPU is not supposed to shut down.
  */
-[[noreturn]] static Reschedule
+static void
 shutdown_cpu(Cpu_number cpu)
 {
+  if (!_cpus_to_start_shutdown.atomic_get_and_clear(cpu))
+    return;
+
   Proc::cli();
   Cpu_pm_callbacks::run_on_shutdown_hooks(cpu);
   _cpus_to_shutdown.atomic_clear(cpu);
@@ -172,10 +180,32 @@ shutdown_cpu(Cpu_number cpu)
     Proc::halt();
 }
 
+static Reschedule
+shutdown_other_cpu(Cpu_number cpu)
+{
+  shutdown_cpu(cpu);
+  return Reschedule::No;
+}
+
+/**
+ * Wait at most `ns` nanoseconds until all CPUs finished their shutdown hooks.
+ */
+static void
+wait_for_shutdown_other_cpus(Unsigned64 ns)
+{
+  Unsigned64 timeout = Cpu::rdtsc() + Cpu::ns_to_tsc(ns);
+  while (!_cpus_to_shutdown.empty() && Cpu::rdtsc() < timeout)
+    {
+      Proc::pause();
+      asm volatile ("" : "=m" (_cpus_to_shutdown));
+    }
+}
+
 /**
  * Run the shutdown hooks on all other online CPUs and halt these CPUs.
  *
- * Waits at most 100ms for the other CPUs to finish their shutdown hooks.
+ * The CPUs are notified by an IPI. CPUs not responding within 100ms are
+ * notified by an NMI. Waits at most another 100ms for these CPUs.
  *
  * \param current_cpu  Current CPU number.
  *
@@ -191,6 +221,7 @@ shutdown_all_other_cpus(Cpu_number current_cpu)
 
   _cpus_to_shutdown = Cpu::online_mask();
   _cpus_to_shutdown.clear(current_cpu);
+  _cpus_to_start_shutdown = _cpus_to_shutdown;
   Mem::mp_mb();
 
   for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
@@ -199,17 +230,49 @@ shutdown_all_other_cpus(Cpu_number current_cpu)
         continue;
 
       Cpu_call &c = _shutdown_call.cpu(n);
-      c.set(&shutdown_cpu, true);
+      c.set(&shutdown_other_cpu, true);
       if (!c.remote_call(n, current_cpu))
         _cpus_to_shutdown.atomic_clear(n);
     }
 
-  Unsigned64 timeout = Cpu::rdtsc() + Cpu::ns_to_tsc(100000000ULL);
-  while (!_cpus_to_shutdown.empty() && Cpu::rdtsc() < timeout)
-    {
-      Proc::pause();
-      asm volatile ("" : "=m" (_cpus_to_shutdown));
-    }
+  wait_for_shutdown_other_cpus(100'000'000ULL); // 100ms
+  if (_cpus_to_shutdown.empty())
+    return;
+
+  for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
+    if (_cpus_to_shutdown.get(n))
+      Apic::mp_send_ipi(Apic::Ipi_dest_shrt::Noshrt,
+                        Apic::apic.cpu(n)->apic_id(),
+                        Apic::Ipi_delivery_mode::Nmi, 0);
+
+  wait_for_shutdown_other_cpus(100'000'000ULL); // 100ms
+}
+
+/**
+ * Handle an NMI during system reboot.
+ *
+ * During system reboot, the current CPU runs its shutdown hooks and halts
+ * unless this was already done or the current CPU performs the reboot.
+ *
+ * The CPU is determined from the APIC ID because the NMI might interrupt code
+ * which does not run on a thread stack, for example the kernel debugger.
+ *
+ * \retval true   NMI handled.
+ * \retval false  No system reboot in progress or unknown CPU, NMI not handled.
+ */
+PUBLIC static
+bool
+Platform_control::handle_shutdown_nmi()
+{
+  if (!access_once(&_shutdown_cpus_pending))
+    return false;
+
+  Cpu_number cpu = Apic::find_cpu(Apic::get_id());
+  if (cpu == Cpu_number::nil())
+    return false;
+
+  shutdown_cpu(cpu);
+  return true;
 }
 
 IMPLEMENTATION [!mp]:
@@ -217,6 +280,11 @@ IMPLEMENTATION [!mp]:
 static void suspend_ap_cpus() {}
 static void take_boot_cpu_online() {}
 static void shutdown_all_other_cpus(Cpu_number) {}
+
+PUBLIC static inline
+bool
+Platform_control::handle_shutdown_nmi()
+{ return false; }
 
 IMPLEMENTATION:
 

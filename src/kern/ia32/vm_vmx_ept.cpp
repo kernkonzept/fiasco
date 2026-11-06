@@ -81,6 +81,7 @@ private:
 
   enum
   {
+    Exit_exception_nmi = 0U,
     Exit_irq           = 1U,
     Exit_ept_violation = 48U,
   };
@@ -226,6 +227,7 @@ IMPLEMENTATION [vmx]:
 
 #include "context.h"
 #include "ipi.h"
+#include "platform_control.h"
 #include "thread.h"
 
 static Kmem_slab_t<Vm_vmx_ept> _ept_allocator("Vm_vmx_ept");
@@ -606,7 +608,7 @@ Vm_vmx_ept::vm_entry(Trex *regs, Vmx_vm_state_t<HOST_STATE> *vm_state,
   return ret;
 }
 
-PRIVATE inline NEEDS[Vm_vmx_ept::vm_entry, "thread.h"]
+PRIVATE inline NEEDS[Vm_vmx_ept::vm_entry, "platform_control.h", "thread.h"]
 int
 Vm_vmx_ept::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
                            Vmx_vm_state *vm_state)
@@ -662,6 +664,15 @@ Vm_vmx_ept::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
   Unsigned32 basic_reason = reason & 0xffffU;
   switch (basic_reason)
     {
+    case Exit_exception_nmi:
+      {
+        Vmx_vm_exit_interrupt_info int_info;
+        int_info.value = Vmx::vmcs_read<Vmx::Vmcs_vm_exit_interrupt_info>();
+        if (int_info.valid()
+            && int_info.type() == Vmx_vm_exit_interrupt_info::Nmi)
+          Platform_control::handle_shutdown_nmi();
+        break;
+      }
     case Exit_irq:
       return 1;
     case Exit_ept_violation:
