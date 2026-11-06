@@ -1557,7 +1557,7 @@ Jdb::wait_for_app_cpus(Cpu_mask const &online_cpus_to_stop)
 
       Mem::barrier(); // other CPUs might have changed state
 
-      for (Cpu_number c = Cpu_number::second(); c < Config::max_num_cpus(); ++c)
+      for (Cpu_number c : Config::cpu_numbers_except_boot_cpu())
         if (Cpu::online(c))
           {
             if (in_jdb.cpu(c))
@@ -1596,7 +1596,7 @@ Jdb::force_app_cpus_into_jdb(bool try_nmi)
   for (;;)
     {
       bool did_notify = false;
-      for (Cpu_number c = Cpu_number::second(); c < Config::max_num_cpus(); ++c)
+      for (Cpu_number c : Config::cpu_numbers_except_boot_cpu())
         {
           if (!Cpu::online(c) || in_jdb.cpu(c))
             continue;
