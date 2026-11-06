@@ -86,7 +86,7 @@ int acpi_save_cpu_and_suspend(Unsigned32 sleep_type,
                               Unsigned32 pm1_cntl,
                               Unsigned32 pm1_sts);
 
-
+//----------------------------------------------------------------------------
 IMPLEMENTATION [mp]:
 
 #include "apic.h"
@@ -275,6 +275,7 @@ Platform_control::handle_shutdown_nmi()
   return true;
 }
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION [!mp]:
 
 static void suspend_ap_cpus() {}
@@ -286,6 +287,7 @@ bool
 Platform_control::handle_shutdown_nmi()
 { return false; }
 
+//----------------------------------------------------------------------------
 IMPLEMENTATION:
 
 #include "io.h"
