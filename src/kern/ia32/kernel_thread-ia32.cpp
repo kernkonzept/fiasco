@@ -113,7 +113,7 @@ IMPLEMENT
 Cpu_number
 Kernel_thread::find_cpu_num_by_apic_id(Apic_id apic_id)
 {
-  for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
+  for (Cpu_number n : Config::cpu_numbers())
     if (_cpu_num_to_apic_id[n] == apic_id)
       return n;
 

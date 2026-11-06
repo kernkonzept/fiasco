@@ -719,7 +719,7 @@ IMPLEMENT_OVERRIDE
 void
 Jdb::prepare_really_break()
 {
-  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  for (Cpu_number i : Config::cpu_numbers())
     {
       if (!cpu_in_jdb(i))
         continue;

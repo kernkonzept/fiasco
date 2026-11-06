@@ -97,7 +97,7 @@ public:
   template<typename TEST>
   Cpu_number find_cpu(TEST const &test) const
   {
-    for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+    for (Cpu_number i : Config::cpu_numbers())
       if (valid(i) && test(cpu(i)))
         return i;
 

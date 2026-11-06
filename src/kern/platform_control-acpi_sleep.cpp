@@ -224,11 +224,8 @@ shutdown_all_other_cpus(Cpu_number current_cpu)
   _cpus_to_start_shutdown = _cpus_to_shutdown;
   Mem::mp_mb();
 
-  for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
+  for (Cpu_number n : _cpus_to_shutdown)
     {
-      if (!_cpus_to_shutdown.get(n))
-        continue;
-
       Cpu_call &c = _shutdown_call.cpu(n);
       c.set(&shutdown_other_cpu, true);
       if (!c.remote_call(n, current_cpu))
@@ -239,11 +236,10 @@ shutdown_all_other_cpus(Cpu_number current_cpu)
   if (_cpus_to_shutdown.empty())
     return;
 
-  for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
-    if (_cpus_to_shutdown.get(n))
-      Apic::mp_send_ipi(Apic::Ipi_dest_shrt::Noshrt,
-                        Apic::apic.cpu(n)->apic_id(),
-                        Apic::Ipi_delivery_mode::Nmi, 0);
+  for (Cpu_number n : _cpus_to_shutdown)
+    Apic::mp_send_ipi(Apic::Ipi_dest_shrt::Noshrt,
+                      Apic::apic.cpu(n)->apic_id(),
+                      Apic::Ipi_delivery_mode::Nmi, 0);
 
   wait_for_shutdown_other_cpus(100'000'000ULL); // 100ms
 }

@@ -24,16 +24,11 @@ Jdb_module::Action_code
 Jdb_idle_stats::action(int, void *&, char const *&, int &) override
 {
   printf("\nIDLE STATISTICS --------------------------\n");
-  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
-    {
-      if (!Cpu::online(i))
-        continue;
+  for (Cpu_number i : Cpu::online_mask())
+    printf("CPU[%2u]: %lu times idle, %lu times deep sleep\n",
+           cxx::int_value<Cpu_number>(i), Kernel_thread::_idle_counter.cpu(i),
+           Kernel_thread::_deep_idle_counter.cpu(i));
 
-      printf("CPU[%2u]: %lu times idle, %lu times deep sleep\n",
-             cxx::int_value<Cpu_number>(i),
-             Kernel_thread::_idle_counter.cpu(i),
-             Kernel_thread::_deep_idle_counter.cpu(i));
-    }
   return NOTHING;
 }
 

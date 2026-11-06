@@ -133,40 +133,38 @@ Jdb_kern_info_bench::do_mp_benchmark()
       return;
     }
   printf("IPI round-trips:\n");
-  for (Cpu_number u = Cpu_number::first(); u < Config::max_num_cpus(); ++u)
-    if (Cpu::online(u))
-      {
-        printf("l%2u: ", cxx::int_value<Cpu_number>(u));
+  for (Cpu_number u : Cpu::online_mask())
+    {
+      printf("l%2u: ", cxx::int_value<Cpu_number>(u));
 
-	for (Cpu_number v = Cpu_number::first(); v < Config::max_num_cpus(); ++v)
-	  if (Cpu::online(v))
-	    {
-	      if (u == v)
-		printf(" %2u:%8s", cxx::int_value<Cpu_number>(u), "X");
-	      else
-		{
-		  ipi_bench_spin_done = 0;
+      for (Cpu_number v : Cpu::online_mask())
+        {
+          if (u == v)
+            printf(" %2u:%8s", cxx::int_value<Cpu_number>(u), "X");
+          else
+            {
+              ipi_bench_spin_done = 0;
 
-		  // v is waiting for IPIs
-		  if (v != Cpu_number::boot_cpu())
-		    Jdb::remote_work(v, &wait_for_ipi, false);
+              // v is waiting for IPIs
+              if (v != Cpu_number::boot_cpu())
+                Jdb::remote_work(v, &wait_for_ipi, false);
 
-		  // u is doing benchmark
-		  if (u == Cpu_number::boot_cpu())
-		    do_ipi_bench(Cpu_number::boot_cpu(), v);
-		  else
-                    Jdb::remote_work(u, [v](Cpu_number cpu){ do_ipi_bench(cpu, v); }, false);
+              // u is doing benchmark
+              if (u == Cpu_number::boot_cpu())
+                do_ipi_bench(Cpu_number::boot_cpu(), v);
+              else
+                Jdb::remote_work(u, [v](Cpu_number cpu){ do_ipi_bench(cpu, v); }, false);
 
-		  // v is waiting for IPIs
-		  if (v == Cpu_number::boot_cpu())
-		    wait_for_ipi(Cpu_number::boot_cpu());
+              // v is waiting for IPIs
+              if (v == Cpu_number::boot_cpu())
+                wait_for_ipi(Cpu_number::boot_cpu());
 
-		  Mem::barrier();
+              Mem::barrier();
 
-		  while (!ipi_bench_spin_done)
-		    Proc::pause();
-		}
-	    }
-	printf("\n");
-      }
+              while (!ipi_bench_spin_done)
+                Proc::pause();
+            }
+        }
+      printf("\n");
+    }
 }

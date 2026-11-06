@@ -152,7 +152,7 @@ Scheduler::op_sched_info(L4_cpu_set_descr const &s, Mword *m, Mword *max_cpus,
   if (max > offset + (Cpu_number(MWORD_BITS) << granularity))
     max = offset + (Cpu_number(MWORD_BITS) << granularity);
 
-  for (Cpu_number i = Cpu_number::first(); i < max - offset; ++i)
+  for (Cpu_number i : cxx::int_range(Cpu_number::first(), max - offset))
     if (Cpu::present_mask().get(i + offset))
       rm |= 1ul << cxx::int_value<Cpu_number>(i >> granularity);
 

@@ -198,7 +198,7 @@ static
 int
 Jdb_list_timeouts::get_type(Timeout *t)
 {
-  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  for (Cpu_number i : Config::cpu_numbers())
     if (Per_cpu_data::valid(i) && (t == timeslice_timeout.cpu(i)))
       return Timeout_timeslice;
 

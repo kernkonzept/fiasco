@@ -401,16 +401,12 @@ Idt_vectors::find_cpu()
   unsigned free = 0;
   Cpu_number cpu = Cpu_number::nil();
 
-  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  for (Cpu_number i : Cpu::online_mask())
     {
       // Ignore all CPUs above Nr_cpus.
       unsigned nr = cxx::int_value<Cpu_number>(i);
       if (nr >= Nr_cpus)
         break;
-
-      // Ignore an offline CPU.
-      if (!Cpu::online(i))
-        continue;
 
       // Find the CPU with the most available vectors.
       unsigned i_free = cpus[nr].free;

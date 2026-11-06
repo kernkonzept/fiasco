@@ -138,9 +138,9 @@ Hyp_ext_state::process_remote_fence()
 
   // Translate cpu mask into hart mask
   Hart_mask hart_mask;
-  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  for (Cpu_number i : Cpu::online_mask())
     {
-      if ((cpu_mask & (1UL << Cpu_number::val(i))) && Cpu::online(i))
+      if (cpu_mask & (1UL << Cpu_number::val(i)))
         hart_mask.set(Cpu::cpus.cpu(i).phys_id());
     }
 

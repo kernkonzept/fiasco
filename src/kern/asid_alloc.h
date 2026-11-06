@@ -225,15 +225,10 @@ private:
   {
     bool res = false;
 
-    for (Cpu_number cpu = Cpu_number::first(); cpu < Config::max_num_cpus();
-         ++cpu)
-      {
-        if (!Cpu::online(cpu))
-          continue;
+    for (Cpu_number cpu : Cpu::online_mask())
+      if (_asids.cpu(cpu).check_and_update_reserved(asid, update))
+        res = true;
 
-        if (_asids.cpu(cpu).check_and_update_reserved(asid, update))
-          res = true;
-      }
     return res;
   }
 
@@ -256,12 +251,8 @@ private:
     _reserved.reset();
 
     // update reserved ASIDs
-    for (Cpu_number cpu = Cpu_number::first(); cpu < Config::max_num_cpus();
-         ++cpu)
+    for (Cpu_number cpu : Cpu::online_mask())
       {
-        if (!Cpu::online(cpu))
-          continue;
-
         auto &a = _asids.cpu(cpu);
         Asid asid = atomic_exchange(&a.active, Asid::Invalid);
 

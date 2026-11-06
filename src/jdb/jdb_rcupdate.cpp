@@ -53,7 +53,7 @@ Jdb_rcupdate::action(int cmd, void *&, char const *&, int &) override
       Jdb::cpu_mask_print(Rcu::_rcu->_active_cpus);
       puts("");
 
-      for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+      for (Cpu_number i : Config::cpu_numbers())
 	{
           if (!Per_cpu_data::valid(i))
 	    continue;

@@ -72,11 +72,8 @@ void
 Ipi::bcast(Message m, Cpu_number /* from_cpu */)
 {
   Hart_mask hart_mask;
-  for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
+  for (Cpu_number n : Cpu::online_mask())
     {
-      if (!Cpu::online(n))
-        continue;
-
       auto &ipi = _ipi.cpu(n);
       if (ipi.atomic_set(m))
         hart_mask.set(ipi._phys_id);

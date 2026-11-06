@@ -941,8 +941,8 @@ PRIVATE
 bool
 Cpu::cpu_infos_shown_with_same_ids(Cpu_number &cpu_with_same_ids) const
 {
-  for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
-    if (_infos_shown->get(n) && cpus.cpu(n)._cpu_id == _cpu_id)
+  for (Cpu_number n : _infos_shown)
+    if (cpus.cpu(n)._cpu_id == _cpu_id)
       {
         cpu_with_same_ids = n;
         return true;

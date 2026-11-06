@@ -172,11 +172,8 @@ public:
 
   explicit Hart_mask(Cpu_mask cpu_mask)
   {
-    for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
-    {
-      if (cpu_mask.get(n))
-        set(Cpu::cpus.cpu(n).phys_id());
-    }
+    for (Cpu_number n : cpu_mask)
+      set(Cpu::cpus.cpu(n).phys_id());
   }
 
   bool empty()

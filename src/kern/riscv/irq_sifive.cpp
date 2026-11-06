@@ -217,7 +217,7 @@ Irq_chip_sifive::set_cpu(Mword pin, Cpu_number cpu) override
 {
   auto guard = lock_guard(_lock);
 
-  for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
+  for (Cpu_number n : Config::cpu_numbers())
     {
       if (!Per_cpu_data::valid(n))
         continue;

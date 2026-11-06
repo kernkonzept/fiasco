@@ -610,7 +610,7 @@ PRIVATE inline
 void
 Mem_space::reset_asid()
 {
-  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  for (Cpu_number i : Config::cpu_numbers())
     _asid_alloc.cpu(i).free(this, i);
 }
 

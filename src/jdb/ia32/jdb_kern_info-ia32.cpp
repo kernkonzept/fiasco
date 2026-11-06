@@ -292,25 +292,24 @@ Jdb_kern_info_cpu::show_feature_ia32_tsc_adjust()
   if (Cpu::cpuid_eax(0) >= 7 && (Cpu::cpuid_ebx(7) & 2))
     {
       printf("\nIA32_TSC_ADJUST values:\n");
-      for (Cpu_number u = Cpu_number::first(); u < Config::max_num_cpus(); ++u)
-        if (Cpu::online(u))
-          {
-            printf("     CPU[%2u]: ", cxx::int_value<Cpu_number>(u));
+      for (Cpu_number u : Cpu::online_mask())
+        {
+          printf("     CPU[%2u]: ", cxx::int_value<Cpu_number>(u));
 
-            auto get_tsc_adj = [](Cpu_number)
-              {
-                Unsigned64 v = ~0ULL;
-                Jdb::rdmsr(Msr::Ia32_tsc_adjust, &v);
-                printf("%lld\n", v);
-              };
+          auto get_tsc_adj = [](Cpu_number)
+            {
+              Unsigned64 v = ~0ULL;
+              Jdb::rdmsr(Msr::Ia32_tsc_adjust, &v);
+              printf("%lld\n", v);
+            };
 
-            if (u == Cpu_number::boot_cpu())
-              get_tsc_adj(u);
-            else
-              Jdb::remote_work(u, get_tsc_adj, true);
+          if (u == Cpu_number::boot_cpu())
+            get_tsc_adj(u);
+          else
+            Jdb::remote_work(u, get_tsc_adj, true);
 
-            Mem::barrier();
-          }
+          Mem::barrier();
+        }
     }
 }
 

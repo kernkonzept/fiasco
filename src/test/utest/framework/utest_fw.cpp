@@ -1151,10 +1151,9 @@ Utest::wait_for_events(Bool_cpu_array const &done, unsigned long timeout)
 {
   bool occurred = true;
 
-  for (auto i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  for (Cpu_number i : Cpu::online_mask())
     {
-      // Skip the current and offline CPUs.
-      if (i == current_cpu() || !Cpu::online(i))
+      if (i == current_cpu())
         continue;
 
       if (!wait_for_event(&done[i], timeout))
@@ -1492,10 +1491,9 @@ Utest::Tick_disabler::wait_for_events(Bool_cpu_array const &done,
 {
   bool occurred = true;
 
-  for (auto i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  for (Cpu_number i : Cpu::online_mask())
     {
-      // Skip the current and offline CPUs.
-      if (i == current_cpu() || !Cpu::online(i))
+      if (i == current_cpu())
         continue;
 
       if (!Tick_disabler::wait_for_event(&done[i], timeout))

@@ -44,8 +44,8 @@ PUBLIC static
 void
 Ipi::bcast(Message m, Cpu_number from_cpu)
 {
-  for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
-    if (Cpu::online(n) && n != from_cpu)
+  for (Cpu_number n : Cpu::online_mask())
+    if (n != from_cpu)
       send(m, from_cpu, n);
 }
 

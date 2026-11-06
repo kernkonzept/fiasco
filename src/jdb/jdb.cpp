@@ -292,7 +292,7 @@ template< typename Func >
 void
 Jdb::foreach_cpu(Func const &f)
 {
-  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  for (Cpu_number i : Config::cpu_numbers())
     if (cpu_in_jdb(i))
       f(i);
 }
@@ -314,7 +314,7 @@ bool
 Jdb::foreach_cpu(Func const &f, bool positive)
 {
   bool r = positive;
-  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  for (Cpu_number i : Config::cpu_numbers())
     if (cpu_in_jdb(i))
       {
         bool res = f(i);
@@ -979,7 +979,7 @@ Jdb::cpu_mask_print(Cpu_mask &m)
 {
   Cpu_number start = Cpu_number::nil();
   bool first = true;
-  for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
+  for (Cpu_number i : Config::cpu_numbers())
     {
       if (m.get(i) && start == Cpu_number::nil())
         start = i;
@@ -1419,23 +1419,21 @@ Jdb::enter_jdb(Trap_state *ts, Cpu_number cpu)
 
               Cpu_mask cpus_in_jdb;
               int cpu_cnt = 0;
-	      for (Cpu_number i = Cpu_number::first(); i < Config::max_num_cpus(); ++i)
-		if (Cpu::online(i))
-		  {
-		    if (in_jdb.cpu(i))
-                      {
-                        ++cpu_cnt;
-                        cpus_in_jdb.set(i);
-                        if (!entry_frame.cpu(i)->debug_ipi())
-                          printf("    CPU%2u [" L4_PTR_FMT "]: %s\n",
-                                 cxx::int_value<Cpu_number>(i),
-                                 entry_frame.cpu(i)->ip(),
-                                 error_buffer.cpu(i).c_str());
-                      }
-		    else
-		      printf("    CPU%2u: is not in JDB (not responding)\n",
-                             cxx::int_value<Cpu_number>(i));
-		  }
+	      for (Cpu_number i : Cpu::online_mask())
+                if (in_jdb.cpu(i))
+                  {
+                    ++cpu_cnt;
+                    cpus_in_jdb.set(i);
+                    if (!entry_frame.cpu(i)->debug_ipi())
+                      printf("    CPU%2u [" L4_PTR_FMT "]: %s\n",
+                             cxx::int_value<Cpu_number>(i),
+                             entry_frame.cpu(i)->ip(),
+                             error_buffer.cpu(i).c_str());
+                  }
+                else
+                  printf("    CPU%2u: is not in JDB (not responding)\n",
+                         cxx::int_value<Cpu_number>(i));
+
               if (!cpus_in_jdb.empty() && cpu_cnt > 1)
                 {
                   printf("    CPU(s) ");
@@ -1715,16 +1713,14 @@ Jdb::leave_wait_for_others()
   for (;;)
     {
       bool all_there = true;
-      for (Cpu_number c = Cpu_number::first(); c < Config::max_num_cpus(); ++c)
-	{
-	  if (cpu_in_jdb(c))
-	    {
-	      // notify other CPU
-              wakeup_other_cpus_from_jdb(c);
-              Jdb::remote_func.cpu(c).reset_mp_safe();
-	      all_there = false;
-	    }
-	}
+      for (Cpu_number c : Config::cpu_numbers())
+        if (cpu_in_jdb(c))
+          {
+            // notify other CPU
+            wakeup_other_cpus_from_jdb(c);
+            Jdb::remote_func.cpu(c).reset_mp_safe();
+            all_there = false;
+          }
 
       if (!all_there)
 	{
