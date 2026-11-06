@@ -81,7 +81,45 @@ public:
   void atomic_or(Cpu_mask_t const &v)
   { _b.atomic_or(v._b); }
 
+  /**
+   * Iterator over the CPUs set in the mask.
+   *
+   * Bits changed concurrently are observed when the iterator reaches them.
+   */
+  class Iterator
+  {
+  public:
+    Iterator(Cpu_mask_t const *m, unsigned cpu) : _m(m), _cpu(m->next(cpu)) {}
+    Cpu_number operator * () const { return Cpu_number(_cpu); }
+    Iterator &operator ++ () { _cpu = _m->next(_cpu + 1); return *this; }
+    friend bool operator == (Iterator const &l, Iterator const &r)
+    { return l._cpu == r._cpu; }
+
+  private:
+    Cpu_mask_t const *_m;
+    unsigned _cpu;
+  };
+
+  Iterator begin() const { return Iterator(this, 0); }
+  Iterator end() const { return Iterator(this, Nr_iter_cpus); }
+
 private:
+  // We must not iterate over the invalid CPU number that is part of the
+  // Cpu::Online_cpu_mask; therefore we must not use MAX_NUM_CPUS.
+  static constexpr unsigned Nr_iter_cpus =
+    MAX_NUM_CPUS < Config::Max_num_cpus ? MAX_NUM_CPUS : Config::Max_num_cpus;
+
+  /// Get the first CPU set in the mask starting at `cpu`, or Nr_iter_cpus if
+  /// none.
+  unsigned next(unsigned cpu) const
+  {
+    if (cpu >= Nr_iter_cpus)
+      return Nr_iter_cpus;
+
+    size_t r = _b.ffs(cpu);
+    return (r == 0 || r > Nr_iter_cpus) ? Nr_iter_cpus : r - 1;
+  }
+
   template<unsigned B> friend class Cpu_mask_t;
   Bitmap<Max_num_cpus> _b;
 };
