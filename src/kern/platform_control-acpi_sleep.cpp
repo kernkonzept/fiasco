@@ -89,7 +89,9 @@ int acpi_save_cpu_and_suspend(Unsigned32 sleep_type,
 
 IMPLEMENTATION [mp]:
 
+#include "cpu.h"
 #include "cpu_call.h"
+#include "processor.h"
 
 static Cpu_mask _cpus_to_suspend;
 
@@ -153,10 +155,68 @@ take_boot_cpu_online()
   Context::take_cpu_online();
 }
 
+static Cpu_mask _cpus_to_shutdown;
+static Mword _shutdown_cpus_pending;
+DEFINE_PER_CPU static Per_cpu<Cpu_call> _shutdown_call;
+
+/**
+ * Run the shutdown hooks on the current CPU and halt it.
+ */
+[[noreturn]] static Reschedule
+shutdown_cpu(Cpu_number cpu)
+{
+  Proc::cli();
+  Cpu_pm_callbacks::run_on_shutdown_hooks(cpu);
+  _cpus_to_shutdown.atomic_clear(cpu);
+  for (;;)
+    Proc::halt();
+}
+
+/**
+ * Run the shutdown hooks on all other online CPUs and halt these CPUs.
+ *
+ * Waits at most 100ms for the other CPUs to finish their shutdown hooks.
+ *
+ * \param current_cpu  Current CPU number.
+ *
+ * \pre CPU lock must be held.
+ */
+static void
+shutdown_all_other_cpus(Cpu_number current_cpu)
+{
+  assert(cpu_lock.test());
+
+  if (!cas(&_shutdown_cpus_pending, Mword{false}, Mword{true}))
+    return;
+
+  _cpus_to_shutdown = Cpu::online_mask();
+  _cpus_to_shutdown.clear(current_cpu);
+  Mem::mp_mb();
+
+  for (Cpu_number n = Cpu_number::first(); n < Config::max_num_cpus(); ++n)
+    {
+      if (!_cpus_to_shutdown.get(n))
+        continue;
+
+      Cpu_call &c = _shutdown_call.cpu(n);
+      c.set(&shutdown_cpu, true);
+      if (!c.remote_call(n, current_cpu))
+        _cpus_to_shutdown.atomic_clear(n);
+    }
+
+  Unsigned64 timeout = Cpu::rdtsc() + Cpu::ns_to_tsc(100000000ULL);
+  while (!_cpus_to_shutdown.empty() && Cpu::rdtsc() < timeout)
+    {
+      Proc::pause();
+      asm volatile ("" : "=m" (_cpus_to_shutdown));
+    }
+}
+
 IMPLEMENTATION [!mp]:
 
 static void suspend_ap_cpus() {}
 static void take_boot_cpu_online() {}
+static void shutdown_all_other_cpus(Cpu_number) {}
 
 IMPLEMENTATION:
 
@@ -268,9 +328,10 @@ IMPLEMENT_OVERRIDE [[noreturn]]
 static void
 Platform_control::system_reboot_from(Cpu_number current_cpu)
 {
-  Cpu_pm_callbacks::run_on_shutdown_hooks(current_cpu);
-
   auto guard = lock_guard(cpu_lock);
+
+  shutdown_all_other_cpus(current_cpu);
+  Cpu_pm_callbacks::run_on_shutdown_hooks(current_cpu);
 
   // The _fadt_reset_value and _fadt_reset_regs_addr values are only set
   // when the initialization of the ACPI subsystem has been successfully
