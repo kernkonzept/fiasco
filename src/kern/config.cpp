@@ -85,6 +85,10 @@ public:
 
   static Cpu_number max_num_cpus() { return Cpu_number(Max_num_cpus); }
 
+  /// Range of all possible CPU numbers.
+  static cxx::int_range<Cpu_number> cpu_numbers()
+  { return cxx::int_range<Cpu_number>(Cpu_number::first(), max_num_cpus()); }
+
   static Global_data<bool> kmem_descs;
 
   static Global_data<bool> esc_hack;

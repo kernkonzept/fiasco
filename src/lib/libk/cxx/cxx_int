@@ -672,5 +672,47 @@ private:
   VALUE _d[SIZE];
 };
 
+/**
+ * Half-open range [begin, end) of type-safe integers for range-based for
+ * loops.
+ *
+ * \tparam TYPE  Type-safe integer type, must implement int_diff_ops.
+ */
+template< typename TYPE >
+class int_range
+{
+public:
+  class iterator
+  {
+  public:
+    constexpr explicit iterator(TYPE v) : _v(v) {}
+    constexpr TYPE operator * () const { return _v; }
+    iterator &operator ++ () { ++_v; return *this; }
+    friend constexpr bool operator == (iterator const &, iterator const &)
+      = default;
+
+  private:
+    TYPE _v;
+  };
+
+/**
+ * Create a half-open range [begin, end) of type-safe integers for range-based
+ * loops.
+ *
+ * \param begin  Element the iteration starts with.
+ * \param end    Element the iteration ends with.
+ *
+ * \pre `begin <= end`.
+ */
+  constexpr int_range(TYPE begin, TYPE end) : _begin(begin), _end(end) {}
+
+  constexpr iterator begin() const { return iterator(_begin); }
+  constexpr iterator end() const { return iterator(_end); }
+
+private:
+  TYPE _begin;
+  TYPE _end;
+};
+
 } // namespace cxx
 
