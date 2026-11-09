@@ -19,24 +19,24 @@ resume_vm_vmx:
 	push	%rdi               // store pointer to register struct
 	mov	$0x6c14, %eax      // save RSP in Host RSP field (0x6c14)
 	vmwrite	%rsp, %rax
-	mov	(%rsp), %rsp
+	mov	%rdi, %rax
 
-	// load guest GP registers
-	mov	  0(%rsp), %r15
-	mov	  8(%rsp), %r14
-	mov	 16(%rsp), %r13
-	mov	 24(%rsp), %r12
-	mov	 32(%rsp), %r11
-	mov	 40(%rsp), %r10
-	mov	 48(%rsp), %r9
-	mov	 56(%rsp), %r8
-	mov	 64(%rsp), %rdi
-	mov	 72(%rsp), %rsi
-	mov	 80(%rsp), %rbp
-	mov	 96(%rsp), %rbx
-	mov	104(%rsp), %rdx
-	mov	112(%rsp), %rcx
-	mov	120(%rsp), %rax
+	// load guest GP registers, RSP keeps pointing to the kernel stack
+	mov	  0(%rax), %r15
+	mov	  8(%rax), %r14
+	mov	 16(%rax), %r13
+	mov	 24(%rax), %r12
+	mov	 32(%rax), %r11
+	mov	 40(%rax), %r10
+	mov	 48(%rax), %r9
+	mov	 56(%rax), %r8
+	mov	 64(%rax), %rdi
+	mov	 72(%rax), %rsi
+	mov	 80(%rax), %rbp
+	mov	 96(%rax), %rbx
+	mov	104(%rax), %rdx
+	mov	112(%rax), %rcx
+	mov	120(%rax), %rax
 
 	vmresume
 	jnz	1f
@@ -48,11 +48,11 @@ resume_vm_vmx:
 	cmpl	$5, %ebx
 	jne	1f
 
-	mov	 96(%rsp), %rbx
+	mov	(%rsp), %rbx
+	mov	 96(%rbx), %rbx
 	vmlaunch
+
 1:	// error path
-	mov	$0x6c14, %rbx
-	vmread	%rbx, %rsp
 	mov	$1, %eax
 	add	$8, %rsp        // pushed regs pointer
 	pop	%rbp

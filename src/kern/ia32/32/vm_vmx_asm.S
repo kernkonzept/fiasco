@@ -19,16 +19,16 @@ resume_vm_vmx:
 	push	%eax	        // store pointer to register struct
 	mov	$0x6c14, %eax	// save ESP in Host RSP field (0x6c14)
 	vmwrite	%esp, %eax
-	mov	(%esp), %esp
+	mov	(%esp), %eax
 
-	// load guest GPs
-	mov	 16(%esp), %edi
-	mov	 20(%esp), %esi
-	mov	 24(%esp), %ebp
-	mov	 32(%esp), %ebx
-	mov	 36(%esp), %edx
-	mov	 40(%esp), %ecx
-	mov	 44(%esp), %eax
+	// load guest GPs, ESP keeps pointing to the kernel stack
+	mov	 16(%eax), %edi
+	mov	 20(%eax), %esi
+	mov	 24(%eax), %ebp
+	mov	 32(%eax), %ebx
+	mov	 36(%eax), %edx
+	mov	 40(%eax), %ecx
+	mov	 44(%eax), %eax
 
 	vmresume
 	jnz	1f
@@ -40,11 +40,10 @@ resume_vm_vmx:
 	cmpl	$5, %ebx
 	jne	1f
 
-	mov	 32(%esp), %ebx
+	mov	(%esp), %ebx
+	mov	 32(%ebx), %ebx
 	vmlaunch
 1: // error path
-	mov	$0x6c14, %ebx  // restore stack pointer
-	vmread	%ebx, %esp
 	mov	$1, %eax       // flag error condition for the caller
 	add	$20, %esp      // pushed regs pointer and gs+fs+ds+es
 	pop	%ebp
