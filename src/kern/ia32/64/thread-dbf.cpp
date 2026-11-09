@@ -16,8 +16,8 @@ IMPLEMENTATION[amd64]:
 #include <cstdio>
 #include "cpu.h"
 #include "kernel_console.h"
+#include "platform_control.h"
 #include "processor.h"
-#include "reset.h"
 #include "trap_state.h"
 #include "tss.h"
 #include "watchdog.h"
@@ -73,7 +73,7 @@ Thread::handle_double_fault(Trap_state *ts, Cpu_number cpu)
     }
 
   puts ("\033[1mRebooting...\033[0m");
-  platform_reset();
+  Platform_control::system_reboot_from(cpu);
 }
 
 
