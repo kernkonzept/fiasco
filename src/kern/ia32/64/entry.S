@@ -72,8 +72,7 @@ EXCEPTION	0x00, vec00_zero_div
  * entry_sys_fast_ipc (see ia32/entry-ia32.S).
  */
 GATE_ENTRY	0x01, entry_vec01_debug, (ACC_PL_K | ACC_INTR_GATE)
-/* XXX IA32 has to handle NMI occurred exactly at entry_sys_fast_ipc */
-EXCEPTION	0x02, vec02_nmi
+# 0x02 defined below
 EXCEP_USR	0x03, vec03_breakpoint
 EXCEPTION	0x04, vec04_into
 EXCEPTION	0x05, vec05_bounds
@@ -248,17 +247,233 @@ real_fpu_exception:
 	save_all_regs
 	jmp	_slowtraps
 
+/*
+ * NMI and machine check exceptions enter on their own IST stack. The top of
+ * each IST stack holds a pointer to the kernel stack pointer of the CPU.
+ *
+ * The entry code moves the trap frame to the stack the handler runs on:
+ * - (1) entry from user mode: the kernel stack of the current thread,
+ * - (2) entry from code in the __unsafe_rsp_table or running on the
+ *       Kentry_cpu_page: below the top of the kernel stack, which leaves
+ *       room for a trap frame the interrupted code is building there,
+ * - (3) otherwise: the interrupted kernel stack.
+ *
+ * The error code slot of the moved frame is non-zero if the interrupted kernel
+ * code ran on the user page table. It then contains the top of the IST stack.
+ */
+.macro IST_ENTER n
+	pushq	$0			/* err */
+	pushq	$(\n)
+	push	%rax
+	push	%rcx
+	push	%rdx
+
+	/* Current frame layout: */
+	.set .L_ist_frame_offs_RDX,		 0
+	.set .L_ist_frame_offs_RCX,		 8
+	.set .L_ist_frame_offs_RAX,		16
+	.set .L_ist_frame_offs_TRAPNO,		24
+	.set .L_ist_frame_offs_ERR,		32
+	.set .L_ist_frame_offs_RIP,		40
+	.set .L_ist_frame_offs_CS,		48
+	.set .L_ist_frame_offs_RFLAGS,		56
+	.set .L_ist_frame_offs_RSP,		64
+	.set .L_ist_frame_offs_SS,		72
+	/* The following data were already on the stack when the interrupt
+	 * occurred. See Kmem::init_ist::Ist_stack_info. */
+	.set .L_ist_frame_offs_INFO_PTR_KSP,	80
+
+#ifdef CONFIG_KERNEL_ISOLATION
+	/*
+	 * Switch to the kernel page table if the interrupted code ran on the
+	 * user page table. Store the top of the IST stack in the error code
+	 * slot for ist_exit in that case.
+	 */
+	mov	$VAL__MEM_LAYOUT__KENTRY_CPU_PAGE, %rdx
+	mov	CPUE_CR3(%rdx), %rcx
+	mov	%cr3, %rax
+	xor	%rcx, %rax
+	shl	$1, %rax		/* ignore bit 63 (TLB no flush) */
+	shr	$13, %rax		/* ignore bits 0-11 PCID */
+	/* Note: Revise once we implement Linear-Address Masking (LAM). */
+	jz	.List_enter_kernel_cr3_\@  /* already on kernel page table */
+	mov	%rcx, %cr3
+	lea	.L_ist_frame_offs_INFO_PTR_KSP(%rsp), %rax
+	mov	%rax, .L_ist_frame_offs_ERR(%rsp)
+.List_enter_kernel_cr3_\@:
+#endif
+	testb	$3, .L_ist_frame_offs_CS(%rsp)  /* Gdt::Selector_user */
+	jnz	.List_enter_from_user_\@
+
+	/* (2) RIP in the __unsafe_rsp_table: RSP is not a kernel stack. */
+	mov	.L_ist_frame_offs_RIP(%rsp), %rax
+	lea	__unsafe_rsp_table_start(%rip), %rcx
+	lea	__unsafe_rsp_table_end(%rip), %rdx
+1:	cmp	%rdx, %rcx
+	jae	.List_enter_no_unsafe_stack_\@
+	cmp	(%rcx), %rax
+	jb	2f
+	cmp	8(%rcx), %rax
+	jb	.List_enter_unsafe_stack_\@
+2:	add	$16, %rcx
+	jmp	1b
+
+.List_enter_no_unsafe_stack_\@:
+#ifdef CONFIG_KERNEL_ISOLATION
+	/* (2) RSP in the Kentry_cpu_page: RSP is not a kernel stack. */
+	mov	.L_ist_frame_offs_RSP(%rsp), %rax
+	shr	$12, %rax
+	mov	$(VAL__MEM_LAYOUT__KENTRY_CPU_PAGE >> 12), %rcx
+	cmp	%rcx, %rax
+	je	.List_enter_unsafe_stack_\@
+#endif
+	/* (3) Kernel stack: continue below the interrupted RSP. */
+	mov	.L_ist_frame_offs_RSP(%rsp), %rax
+	and	$~15, %rax
+	jmp	.List_enter_copy_stack_\@
+
+	/* (2) Leave room for a frame the interrupted code builds at the top. */
+.List_enter_unsafe_stack_\@:
+	mov	.L_ist_frame_offs_INFO_PTR_KSP(%rsp), %rax
+	mov	(%rax), %rax
+	sub	$64, %rax
+	jmp	.List_enter_copy_stack_\@
+
+	/* (1) Entry from user mode: use the top of the kernel stack. */
+.List_enter_from_user_\@:
+	mov	.L_ist_frame_offs_INFO_PTR_KSP(%rsp), %rax
+	mov	(%rax), %rax
+
+	/* Copy trapno, err and the hardware frame to the target stack in RAX. */
+.List_enter_copy_stack_\@:
+	sub	$56, %rax
+	.macro COPY reg
+	mov	.L_ist_frame_offs_\reg(%rsp), %rcx
+	mov	%rcx, .L_ist_frame_offs_\reg - .L_ist_frame_offs_TRAPNO(%rax)
+	.endm
+	COPY TRAPNO
+	COPY ERR
+	COPY RIP
+	COPY CS
+	COPY RFLAGS
+	COPY RSP
+	COPY SS
+	.purgem COPY
+	/* Switch to the target stack and restore the scratch registers. */
+	mov	%rsp, %rdx
+	mov	%rax, %rsp
+	mov	.L_ist_frame_offs_RAX(%rdx), %rax
+	mov	.L_ist_frame_offs_RCX(%rdx), %rcx
+	mov	.L_ist_frame_offs_RDX(%rdx), %rdx
+.endm
+
+GATE_ENTRY	0x02, entry_vec02_nmi, (ACC_PL_K | ACC_INTR_GATE)
+.p2align 4
+.type	entry_vec02_nmi, @function
+entry_vec02_nmi:
+	IST_ENTER 0x02
+	save_all_regs
+	IA32_IBRS
+	mov	%rsp, %rdi              /* ARG1: address of trap_state */
+	mov	$0, %esi                /* ARG2: default CPU = 0 */
+	cld
+	mov	BASE_TRAP_HANDLER, %rax
+	or	%rax, %rax
+	jz	.Lunexpected_trap
+#ifdef CONFIG_INTEL_ITS_MITIGATION
+	call	__x86_indirect_thunk_rax
+#else
+	call	*%rax
+#endif
+	or	%rax, %rax
+	jnz	.Lunexpected_trap
+	restore_all_regs
+	jmp	ist_exit
+
 GATE_ENTRY	0x12, entry_vec12_machine_check, (ACC_PL_K | ACC_INTR_GATE)
 .p2align 4
 .type	entry_vec12_machine_check, @function
 entry_vec12_machine_check:
+	IST_ENTER 0x12
 	cld
-	SWITCH_TO_KERNEL_CR3 0
 	SAVE_SCRATCH
-	lea	SCRATCH_REGISTER_SIZE(%rsp), %rdi
+	lea	(SCRATCH_REGISTER_SIZE + 16)(%rsp), %rdi
 	call	thread_handle_machine_check
 	RESTORE_SCRATCH
+	jmp	ist_exit
+
+/* Return from a trap frame moved by IST_ENTER. */
+.p2align 4
+ist_exit:
+	/* Current frame layout: */
+	.set .L_ist_frame_offs_TRAPNO,	 0
+	.set .L_ist_frame_offs_ERR,	 8
+	.set .L_ist_frame_offs_RIP,	16
+	.set .L_ist_frame_offs_CS,	24
+	.set .L_ist_frame_offs_RFLAGS,	32
+	.set .L_ist_frame_offs_RSP,	40
+	.set .L_ist_frame_offs_SS,	48
+
+#ifdef CONFIG_KERNEL_ISOLATION
+	/* Return to kernel code which ran on the user page table? */
+	testb	$3, .L_ist_frame_offs_CS(%rsp)	/* Gdt::Selector_user */
+	jnz	.List_exit_iret
+	cmpq	$0, .L_ist_frame_offs_ERR(%rsp)
+	jnz	.List_exit_on_ist_stack
+.List_exit_iret:
+#endif
+	add	$0x10, %rsp             /* Pop trap number and error code */
 	SAFE_IRET
+
+#ifdef CONFIG_KERNEL_ISOLATION
+.List_exit_on_ist_stack:
+	/*
+	 * Return on the IST stack because it is mapped in the user page table.
+	 * Copy RCX, RAX and the hardware frame below the IST top stored in err.
+	 */
+	push	%rax
+	push	%rcx
+
+	/* Current frame layout: */
+	.set .L_ist_frame_offs_RCX,	 0
+	.set .L_ist_frame_offs_RAX,	 8
+	.set .L_ist_frame_offs_TRAPNO,	16
+	.set .L_ist_frame_offs_ERR,	24
+	.set .L_ist_frame_offs_RIP,	32
+	.set .L_ist_frame_offs_CS,	40
+	.set .L_ist_frame_offs_RFLAGS,	48
+	.set .L_ist_frame_offs_RSP,	56
+	.set .L_ist_frame_offs_SS,	64
+
+	mov	.L_ist_frame_offs_ERR(%rsp), %rax	/* err: IST top */
+	sub	$56, %rax
+	/* Each COPY stores to the next slot of the target frame. */
+	.set .L_ist_target_offs, 0
+	.macro COPY reg
+	mov	.L_ist_frame_offs_\reg(%rsp), %rcx
+	mov	%rcx, .L_ist_target_offs(%rax)
+	.set .L_ist_target_offs, .L_ist_target_offs + 8
+	.endm
+	COPY RCX
+	COPY RAX
+	COPY RIP
+	COPY CS
+	COPY RFLAGS
+	COPY RSP
+	COPY SS
+	.purgem COPY
+	/* Switch to the IST stack and back to the user page table. */
+	mov	%rax, %rsp
+	mov	$VAL__MEM_LAYOUT__KENTRY_CPU_PAGE, %rax
+	mov	CPUE_CR3U(%rax), %rax
+	mov	%rax, %cr3
+# ifdef CONFIG_INTEL_MDS_MITIGATION
+	verw	verw_gdt_data_kernel
+# endif
+	pop	%rcx
+	pop	%rax
+	iretq			/* return to kernel mode: no SAFE_IRET */
+#endif
 
 /* Timer interrupt */
 
@@ -466,6 +681,8 @@ syscall_entry_text:
 	mov %rsp, USER_SP(%rip)
 	mov KERN_SP(%rip), %rsp
 	mov (%rsp), %rsp
+1:
+	UNSAFE_RSP 0b, 1b
 	pushq $GDT_DATA_USER | 3
 	pushq USER_SP(%rip)
 	jmp entry_sys_fast_ipc_c

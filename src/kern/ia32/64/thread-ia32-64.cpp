@@ -1,9 +1,11 @@
 //----------------------------------------------------------------------------
 IMPLEMENTATION [amd64 && !kernel_isolation]:
 
+#include "asm.h"
+
 #define FIASCO_ASM_IRET "iretq \n\t"
 
-PUBLIC template<typename T> [[noreturn]] inline
+PUBLIC template<typename T> [[noreturn]] inline NEEDS["asm.h"]
 void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
@@ -14,6 +16,7 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
   // but are 1 byte shorter (at least when using the 'eXX' registers).
   asm volatile
     ("  mov %[sp], %%rsp    \n"
+     "1:                    \n"
      "  mov %[flags], %%r11 \n"
      "  xor %%eax, %%eax    \n"
      "  xor %%ebx, %%ebx    \n"
@@ -31,6 +34,8 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
      "  xor %%r14d, %%r14d  \n"
      "  xor %%r15d, %%r15d  \n"
      "  sysretq             \n"
+     "2:                    \n"
+     ASM_UNSAFE_RSP(1b, 2b)
      :
      : [flags]"i"(EFLAGS_IF), "c"(ip), [sp]"r"(sp), "D"(arg)
      : "memory"
@@ -86,10 +91,13 @@ Thread::handle_mds_mitigations(Address *)
 //----------------------------------------------------------------------------
 IMPLEMENTATION [amd64 && kernel_isolation]:
 
+#include "asm.h"
+
 #define FIASCO_ASM_IRET "jmp safe_iret \n\t"
 
 PUBLIC template<typename T> inline NEEDS[Thread::handle_ia32_branch_barriers,
-                                         Thread::handle_mds_mitigations]
+                                         Thread::handle_mds_mitigations,
+                                         "asm.h"]
 [[noreturn]] void
 Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 {
@@ -108,8 +116,11 @@ Thread::vcpu_return_to_kernel(Mword ip, Mword sp, T arg)
 
   asm volatile
     ("  mov %[sp], %%rsp    \n"
+     "1:                    \n"
      "  mov %[flags], %%r11 \n"
      "  jmp safe_sysret     \n"
+     "2:                    \n"
+     ASM_UNSAFE_RSP(1b, 2b)
      :
      : "a"(p[3]), [flags]"i"(EFLAGS_IF), "c"(ip), [sp]"r"(sp), "D"(arg)
      : "memory"

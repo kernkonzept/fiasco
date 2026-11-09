@@ -232,6 +232,19 @@ Cpu::set_gs_base(Mword *base)
 
 extern "C" Address dbf_stack_top;
 
+/**
+ * Set the stack pointer of an interrupt stack table entry.
+ *
+ * \param ist  Interrupt stack table index (1..7).
+ * \param sp   Stack pointer.
+ */
+PUBLIC inline NEEDS["tss.h"]
+void
+Cpu::set_ist(unsigned ist, Address sp)
+{
+  (&_tss->_hw.ctx.ist1)[ist - 1] = sp;
+}
+
 PUBLIC FIASCO_INIT_CPU
 void
 Cpu::init_tss(Tss *tss)

@@ -80,7 +80,7 @@ Idt::init_table(Idt_init_entry *src, Idt_entry *idt)
         {
           // Interrupt/trap gate
           idt[src->vector] = Idt_entry(src->entry, Gdt::gdt_code_kernel, type,
-                                       dpl, src->vector == 8 /*DF*/ ? 1 : 0);
+                                       dpl, ist(src->vector));
         }
 
       src++;
@@ -253,3 +253,32 @@ Idt::set_vectors_run()
 
   set_entry(Config::scheduler_irq_vector, func, false);
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [amd64]:
+
+#include "tss.h"
+
+/**
+ * Return the interrupt stack table index for an exception vector.
+ */
+PRIVATE static inline
+Unsigned8
+Idt::ist(unsigned vector)
+{
+  switch (vector)
+    {
+    case 2: return Tss::Ist_nmi;
+    case 8: return Tss::Ist_double_fault;
+    case 0x12: return Tss::Ist_machine_check;
+    default: return 0;
+    }
+}
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION [ia32]:
+
+PRIVATE static inline
+Unsigned8
+Idt::ist(unsigned)
+{ return 0; }

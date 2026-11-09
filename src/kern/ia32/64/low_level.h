@@ -77,6 +77,17 @@
 .endm
 #endif
 
+/*
+ * Record the code range [start, end) as executing in kernel mode with a stack
+ * pointer which does not point to a kernel stack.
+ */
+.macro UNSAFE_RSP start:req, end:req
+	.pushsection "__unsafe_rsp_table", "a?"
+	.align 8
+	.quad	\start, \end
+	.popsection
+.endm
+
 .macro SAFE_SYSRET
 	/* make RIP canonical, workaround for Intel IA32e flaw */
 	shl     $16, %rcx
@@ -104,12 +115,15 @@
 #endif
 	mov	32(%rsp), %r11				/* load user rflags */
 	mov	40(%rsp), %rsp				/* load user rsp */
+7771:
 #ifdef CONFIG_KERNEL_ISOLATION
 	mov	%r15, %cr3
         /* hide user page table physical address */
 	xor	%r15d, %r15d
 #endif
 	sysretq
+7772:
+	UNSAFE_RSP 7771b, 7772b
 .endm
 
 .macro SAFE_IRET

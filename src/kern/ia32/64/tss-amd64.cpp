@@ -6,6 +6,14 @@ INTERFACE[amd64]:
 class alignas(Config::PAGE_SIZE) Tss
 {
 public:
+  /// Interrupt stack table indexes.
+  enum : Unsigned8
+  {
+    Ist_double_fault  = 1,
+    Ist_nmi           = 2,
+    Ist_machine_check = 3,
+  };
+
   /**
    * Hardware-defined portion of the TSS.
    *

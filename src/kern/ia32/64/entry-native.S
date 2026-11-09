@@ -253,6 +253,9 @@ syscall_entry_code:
 	mov	(CPUE_OFFSET + CPUE_CR3_OFS)(%rip), %rsp
 	mov	%rsp, %cr3
 	mov	(CPUE_OFFSET + CPUE_KSP_OFS)(%rip), %rsp
+1:
+	UNSAFE_RSP (VAL__MEM_LAYOUT__KENTRY_CPU_PAGE + (syscall_entry_code - CPUE_OFFSET)), \
+		   (VAL__MEM_LAYOUT__KENTRY_CPU_PAGE + (1b - CPUE_OFFSET))
 	pushq	$(GDT_DATA_USER | 3)
 	pushq	(CPUE_OFFSET + CPUE_SCRATCH_OFS)(%rip)
 	push	%r11				/* save user rflags */
@@ -303,6 +306,8 @@ safe_sysret:
 	xor	%r14d, %r14d
 	xor	%r15d, %r15d
 	sysretq
+1:
+	UNSAFE_RSP safe_sysret, 1b
 
 	.section ".entry.text.safe_iret"
 	.global safe_iret

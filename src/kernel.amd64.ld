@@ -101,6 +101,11 @@ SECTIONS {
     KEEP(*(__exc_table __exc_table.*))
     PROVIDE(__exc_table_end = .);
 
+    . = ALIGN(8);
+    PROVIDE(__unsafe_rsp_table_start = .);
+    KEEP(*(__unsafe_rsp_table __unsafe_rsp_table.*))
+    PROVIDE(__unsafe_rsp_table_end = .);
+
     . = ALIGN(16);
     PROVIDE (ia32_intel_microcode_start = .);
     KEEP(*(.intel_microcode))

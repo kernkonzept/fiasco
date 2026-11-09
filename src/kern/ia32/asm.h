@@ -99,6 +99,14 @@
 	"\t" ASM_PTR_VAL(0)                   "\n" \
 	"\t.previous                           \n"
 
+/* Record the code range [start, end) for the __unsafe_rsp_table. */
+#define ASM_UNSAFE_RSP(start, end) \
+	"\t.section __unsafe_rsp_table.%=, \"a?\" \n" \
+	"\t.align " ASM_PTR_ALIGN             "\n" \
+	"\t" ASM_PTR_VAL(start)               "\n" \
+	"\t" ASM_PTR_VAL(end)                 "\n" \
+	"\t.previous                           \n"
+
 #endif
 
 #endif // ASM_SANITY_CHECK_H
