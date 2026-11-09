@@ -104,9 +104,14 @@ public:
   /**
    * Shutdown callback, to be defined by the inheriting class.
    *
-   * \note The callback is executed for the current CPU.
+   * \note The callback might be called from a non-thread context and the
+   *       implementation should be prepared for that. For example, the
+   *       #current_cpu() function cannot be safely called and the provided
+   *       argument should be used instead.
+   *
+   * \param current_cpu  Current CPU number.
    */
-  virtual void pm_on_shutdown() = 0;
+  virtual void pm_on_shutdown(Cpu_number current_cpu) = 0;
 
   virtual ~Cpu_pm_callbacks() = 0;
 
@@ -165,14 +170,19 @@ public:
    * Run power management reboot/shutdown callbacks registered for the current
    * CPU.
    *
-   * \note The callbacks are executed exclusively for the current CPU.
+   * \note The CPU number of the current CPU must be explicitly supplied by
+   *       the caller. There is no generic way the method can check that the
+   *       supplied CPU number is the current CPU since this method might be
+   *       called from a non-thread context.
+   *
+   * \param current_cpu  Current CPU number.
    */
-  static void run_on_shutdown_hooks()
+  static void run_on_shutdown_hooks(Cpu_number current_cpu)
   {
-    List &list = _list.cpu(current_cpu());
+    List &list = _list.cpu(current_cpu);
 
     for (auto const &&i: list)
-      i->pm_on_shutdown();
+      i->pm_on_shutdown(current_cpu);
   }
 
 private:

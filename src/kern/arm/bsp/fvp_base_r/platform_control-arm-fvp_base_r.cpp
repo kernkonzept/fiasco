@@ -16,7 +16,7 @@ IMPLEMENT_OVERRIDE
 void
 Platform_control::system_off()
 {
-  Cpu_pm_callbacks::run_on_shutdown_hooks();
+  Cpu_pm_callbacks::run_on_shutdown_hooks(current_cpu());
   platform_shutdown();
 }
 

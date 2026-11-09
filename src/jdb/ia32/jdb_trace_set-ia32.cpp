@@ -129,7 +129,7 @@ struct Jdb_ipc_log_pm : Cpu_pm_callbacks
   }
 
   void pm_on_suspend(Cpu_number) override {}
-  void pm_on_shutdown() override {}
+  void pm_on_shutdown(Cpu_number) override {}
 };
 
 DEFINE_PER_CPU static Per_cpu<Jdb_ipc_log_pm> _pm(Per_cpu_data::Cpu_num);

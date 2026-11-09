@@ -268,7 +268,7 @@ IMPLEMENT_OVERRIDE [[noreturn]]
 static void
 Platform_control::system_reboot()
 {
-  Cpu_pm_callbacks::run_on_shutdown_hooks();
+  Cpu_pm_callbacks::run_on_shutdown_hooks(current_cpu());
 
   auto guard = lock_guard(cpu_lock);
 

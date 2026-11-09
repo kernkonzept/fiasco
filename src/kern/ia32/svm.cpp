@@ -94,7 +94,7 @@ Svm::pm_on_resume(Cpu_number) override
 
 PUBLIC
 void
-Svm::pm_on_shutdown() override
+Svm::pm_on_shutdown(Cpu_number) override
 {
   asm volatile ("clgi");
 

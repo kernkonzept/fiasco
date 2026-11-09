@@ -104,6 +104,6 @@ IMPLEMENT_DEFAULT [[noreturn]] inline NEEDS["pm.h", "reset.h"]
 void
 Platform_control::system_reboot()
 {
-  Cpu_pm_callbacks::run_on_shutdown_hooks();
+  Cpu_pm_callbacks::run_on_shutdown_hooks(current_cpu());
   platform_reset();
 }

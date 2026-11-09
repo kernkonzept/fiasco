@@ -154,7 +154,7 @@ Io_apic_mgr::pm_on_resume([[maybe_unused]] Cpu_number current_cpu) override
 
 PUBLIC
 void
-Io_apic_mgr::pm_on_shutdown() override
+Io_apic_mgr::pm_on_shutdown(Cpu_number) override
 {}
 
 

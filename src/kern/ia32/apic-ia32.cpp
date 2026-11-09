@@ -154,7 +154,7 @@ Apic::pm_on_suspend(Cpu_number) override
 }
 
 PUBLIC void
-Apic::pm_on_shutdown() override
+Apic::pm_on_shutdown(Cpu_number) override
 {
   Apic::timer_disable_irq();
 }

@@ -440,7 +440,7 @@ public:
 
   void pm_on_resume(Cpu_number) override;
   void pm_on_suspend(Cpu_number) override {}
-  void pm_on_shutdown() override {}
+  void pm_on_shutdown(Cpu_number) override {}
 
   /**
    * Detect and handle error conditions of the invalidation queue.
