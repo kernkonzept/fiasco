@@ -662,7 +662,7 @@ Vm_vmx_ept::handle_nmi_exit(Vmx_vm_state *vm_state)
 }
 
 PRIVATE inline NEEDS[Vm_vmx_ept::vm_entry, Vm_vmx_ept::handle_nmi_exit,
-                     "thread.h"]
+                     Vm_vmx_ept::reinject_vectored_event, "thread.h"]
 int
 Vm_vmx_ept::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
                            Vmx_vm_state *vm_state)
@@ -723,6 +723,7 @@ Vm_vmx_ept::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
         return 1;
       break;
     case Exit_irq:
+      reinject_vectored_event(vm_state);
       return 1;
     case Exit_ept_violation:
       vm_state->store_guest_physical_address();
