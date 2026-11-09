@@ -227,7 +227,6 @@ IMPLEMENTATION [vmx]:
 
 #include "context.h"
 #include "ipi.h"
-#include "platform_control.h"
 #include "thread.h"
 
 static Kmem_slab_t<Vm_vmx_ept> _ept_allocator("Vm_vmx_ept");
@@ -608,7 +607,62 @@ Vm_vmx_ept::vm_entry(Trex *regs, Vmx_vm_state_t<HOST_STATE> *vm_state,
   return ret;
 }
 
-PRIVATE inline NEEDS[Vm_vmx_ept::vm_entry, "platform_control.h", "thread.h"]
+/**
+ * Prepare the injection of an event whose delivery was interrupted by the
+ * VM exit.
+ *
+ * \retval true   An event was interrupted and is injected on the next entry.
+ * \retval false  No event was interrupted.
+ */
+PRIVATE static inline
+bool
+Vm_vmx_ept::reinject_vectored_event(Vmx_vm_state *vm_state)
+{
+  Vmx_vm_exit_interrupt_info vect_exit;
+  vect_exit.value = Vmx::vmcs_read<Vmx::Vmcs_idt_vectoring_info>();
+  if (!vect_exit.valid())
+    return false;
+
+  Vmx_vm_entry_interrupt_info vect_entry;
+  vect_entry.value = vect_exit.value & 0x80000fffU;
+  vm_state->write<Vmx::Vmcs_vm_entry_interrupt_info>(vect_entry.value);
+  if (vect_entry.deliver_error_code())
+    vm_state->write<Vmx::Vmcs_vm_entry_exception_error>
+                     (Vmx::vmcs_read<Vmx::Vmcs_idt_vectoring_error>());
+  if (vect_entry.deliver_insn_length())
+    vm_state->write<Vmx::Vmcs_vm_entry_insn_len>
+                     (Vmx::vmcs_read<Vmx::Vmcs_vm_exit_insn_length>());
+  return true;
+}
+
+/**
+ * Handle a VM exit caused by a host NMI.
+ *
+ * Delivers the NMI to the host NMI handler and prepares the injection of an
+ * event whose delivery was interrupted by the NMI.
+ *
+ * \retval true   VM exit caused by an NMI, handled.
+ * \retval false  VM exit caused by an exception.
+ */
+PRIVATE static inline NEEDS[Vm_vmx_ept::reinject_vectored_event]
+bool
+Vm_vmx_ept::handle_nmi_exit(Vmx_vm_state *vm_state)
+{
+  Vmx_vm_exit_interrupt_info int_info;
+  int_info.value = Vmx::vmcs_read<Vmx::Vmcs_vm_exit_interrupt_info>();
+  if (!int_info.valid() || int_info.type() != Vmx_vm_exit_interrupt_info::Nmi)
+    return false;
+
+  reinject_vectored_event(vm_state);
+
+  // The IRET of the host NMI handler unblocks NMIs.
+  asm volatile ("int $2" : : : "memory");
+
+  return true;
+}
+
+PRIVATE inline NEEDS[Vm_vmx_ept::vm_entry, Vm_vmx_ept::handle_nmi_exit,
+                     "thread.h"]
 int
 Vm_vmx_ept::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
                            Vmx_vm_state *vm_state)
@@ -665,14 +719,9 @@ Vm_vmx_ept::do_resume_vcpu(Context *ctxt, Vcpu_state *vcpu,
   switch (basic_reason)
     {
     case Exit_exception_nmi:
-      {
-        Vmx_vm_exit_interrupt_info int_info;
-        int_info.value = Vmx::vmcs_read<Vmx::Vmcs_vm_exit_interrupt_info>();
-        if (int_info.valid()
-            && int_info.type() == Vmx_vm_exit_interrupt_info::Nmi)
-          Platform_control::handle_shutdown_nmi();
-        break;
-      }
+      if (handle_nmi_exit(vm_state))
+        return 1;
+      break;
     case Exit_irq:
       return 1;
     case Exit_ept_violation:
