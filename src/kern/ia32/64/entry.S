@@ -79,7 +79,6 @@ EXCEPTION	0x04, vec04_into
 EXCEPTION	0x05, vec05_bounds
 EXCEPTION	0x06, vec06_invop
 # 0x07 defined below
-/* XXX we can't use a task gate, instead we must use IST */
 GATE_ENTRY	0x08, entry_vec08_dbf, (ACC_PL_K | ACC_INTR_GATE)
 EXCEPTION	0x09, vec09_fpu_ovfl
 # 0x0a defined below
