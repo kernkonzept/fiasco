@@ -88,6 +88,8 @@ entry_vec08_dbf:
 	.set .L_ist_frame_offs_INFO_CPU,	64
 	mov	%rsp, %rax
 	lea	dbf_stack_top(%rip), %rsp
+4:
+	UNSAFE_RSP entry_vec08_dbf, 4b
 	push	.L_ist_frame_offs_INFO_CPU(%rax)
 	push	.L_ist_frame_offs_SS(%rax)
 	push	.L_ist_frame_offs_RSP(%rax)
@@ -259,6 +261,8 @@ leave_from_syscall_by_iret:
 
 	.bss
 	.p2align 4
+	.global	dbf_stack
+dbf_stack:
 	.space	4096
 	.global	dbf_stack_top
 dbf_stack_top:

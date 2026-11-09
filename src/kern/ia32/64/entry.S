@@ -255,8 +255,9 @@ real_fpu_exception:
  * The entry code moves the trap frame to the stack the handler runs on:
  * - (1) entry from user mode: the kernel stack of the current thread,
  * - (2) entry from code in the __unsafe_rsp_table or running on the
- *       Kentry_cpu_page: below the top of the kernel stack, which leaves
- *       room for a trap frame the interrupted code is building there,
+ *       Kentry_cpu_page or the double fault stack: below the top of the
+ *       kernel stack, which leaves room for a trap frame the interrupted
+ *       code is building there (#DF: that handler doesn't return),
  * - (3) otherwise: the interrupted kernel stack.
  *
  * The error code slot of the moved frame is non-zero if the interrupted kernel
@@ -320,6 +321,15 @@ real_fpu_exception:
 	jmp	1b
 
 .List_enter_no_unsafe_stack_\@:
+	/* (2) RSP in the double fault stack: RSP is not a kernel stack. */
+	mov	.L_ist_frame_offs_RSP(%rsp), %rax
+	lea	dbf_stack(%rip), %rcx
+	cmp	%rcx, %rax
+	jb	.List_enter_no_dbf_stack_\@
+	lea	dbf_stack_top(%rip), %rcx
+	cmp	%rcx, %rax
+	jbe	.List_enter_unsafe_stack_\@
+.List_enter_no_dbf_stack_\@:
 #ifdef CONFIG_KERNEL_ISOLATION
 	/* (2) RSP in the Kentry_cpu_page: RSP is not a kernel stack. */
 	mov	.L_ist_frame_offs_RSP(%rsp), %rax
