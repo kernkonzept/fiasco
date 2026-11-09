@@ -83,7 +83,6 @@ void
 Ipi::bcast(Message m, Cpu_number /* from_cpu */)
 {
   Cpu_mask ipis;
-  Cpu_number max = Cpu_number::first();
   for (Cpu_number n : Cpu::online_mask())
     {
       auto &ipi = _ipi.cpu(n);
@@ -92,16 +91,12 @@ Ipi::bcast(Message m, Cpu_number /* from_cpu */)
 
       write_now(&ipi._rq[m], true);
       ipis.set(n);
-      max = n;
     }
 
   asm volatile ("sync" : : : "memory");
 
-  for (Cpu_number n = Cpu_number::first(); n < max; ++n)
+  for (Cpu_number n : ipis)
     {
-      if (!ipis.get(n))
-        continue;
-
       auto &ipi = _ipi.cpu(n);
       if (access_once(&ipi._rq[m]))
         hw->send_ipi(n, &ipi);
