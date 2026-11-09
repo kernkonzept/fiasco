@@ -3,6 +3,7 @@ IMPLEMENTATION [ia32 || amd64]:
 #include "config.h"
 #include "irq_mgr.h"
 #include "idt.h"
+#include "nmi.h"
 
 // On IA-32 and AMD64 we do not use an IRQ object but a special vector.
 IMPLEMENT bool
@@ -46,6 +47,7 @@ thread_timer_interrupt(Address ip)
 {
   //putchar('T');
   (void)ip;
+  Nmi::report();
   Timer_tick::handler_all(Timer_tick::_glbl_timer, 0);
 }
 

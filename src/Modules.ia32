@@ -17,6 +17,7 @@ PREPROCESS_PARTS-$(CONFIG_SCHED_PIT)         += pit_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_RTC)         += rtc_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_APIC)        += apic_timer
 PREPROCESS_PARTS-$(CONFIG_SCHED_HPET)        += hpet_timer
+PREPROCESS_PARTS-$(CONFIG_NMI_REBOOT)        += nmi_reboot
 PREPROCESS_PARTS-$(CONFIG_CPU_VIRT)          += svm vmx virtual_space_iface
 PREPROCESS_PARTS-$(CONFIG_IOMMU)             += virtual_space_iface
 PREPROCESS_PARTS-$(CONFIG_TICKLESS_IDLE)     += tickless_idle_leave_deferred
@@ -61,7 +62,7 @@ INTERFACES_KERNEL	+= __main acpi acpi_fadt acpi_dmar i8259 \
 			   io_apic intel_iommu io_apic_remapped \
 			   boot_console \
 			   irq_msi io_space apic pit boot_info checksum \
-			   x86desc gdt idt tss timer_irq dirq allocator \
+			   x86desc gdt idt tss timer_irq dirq allocator nmi \
 			   alternatives alternatives_init cpu_ucode_mods
 
 INTERFACES_KERNEL-$(CONFIG_IOMMU)    += intel_dmar dmar_space

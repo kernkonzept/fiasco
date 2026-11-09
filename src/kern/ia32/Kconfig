@@ -118,6 +118,25 @@ config NO_LDT
 	  table (LDT).  This reduces some overhead. However, this
 	  also makes the use of the LDT in L4Linux impossible.
 
+choice
+	prompt "Reaction to unexpected NMIs"
+	depends on !JDB
+	default NMI_LOG
+
+config NMI_LOG
+	bool "Log and continue"
+	help
+	  Record NMIs with their source and print them from the next timer
+	  interrupt. Execution continues. A CPU receiving more than 1000 NMIs
+	  per second reboots the system.
+
+config NMI_REBOOT
+	bool "Reboot"
+	help
+	  Reboot the system on an NMI.
+
+endchoice
+
 config TSC_UNIFIED
 	bool "Depend on unified TSC across CPU cores"
 	depends on MP

@@ -3,6 +3,7 @@ IMPLEMENTATION [ia32 || amd64]:
 #include "apic.h"
 #include "config.h"
 #include "idt.h"
+#include "nmi.h"
 
 IMPLEMENT
 void
@@ -59,6 +60,7 @@ void
 thread_timer_interrupt(Address ip)
 {
   (void)ip;
+  Nmi::report();
   Timer_tick::ack();
   Timer_tick::handler_all_noack();
 }

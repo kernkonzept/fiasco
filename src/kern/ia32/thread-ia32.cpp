@@ -45,6 +45,7 @@ IMPLEMENTATION [ia32 || amd64]:
 #include "ipi.h"
 #include "mem_layout.h"
 #include "logdefs.h"
+#include "nmi.h"
 #include "paging.h"
 #include "processor.h"		// for cli/sti
 #include "platform_control.h"
@@ -174,6 +175,13 @@ Thread::handle_slow_trap(Trap_state *ts)
     {
       if (Platform_control::handle_shutdown_nmi())
         return 0;
+
+      if (!nested_trap_handler)
+        {
+          Nmi::handle(current_cpu(), ts->ip());
+          return 0;
+        }
+
       goto generic_debug;
     }
 
