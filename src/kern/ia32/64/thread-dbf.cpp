@@ -3,7 +3,8 @@ INTERFACE[amd64]:
 EXTENSION class Thread
 {
 private:
-  static void handle_double_fault (Trap_state *) asm ("thread_handle_double_fault");
+  static void handle_double_fault(Trap_state *ts, Cpu_number cpu)
+    asm ("thread_handle_double_fault");
 
 public:
   static bool may_enter_jdb;
@@ -26,7 +27,7 @@ bool Thread::may_enter_jdb = false;
 
 IMPLEMENT
 void
-Thread::handle_double_fault (Trap_state *ts)
+Thread::handle_double_fault(Trap_state *ts, Cpu_number cpu)
 {
   int c;
 
@@ -52,7 +53,7 @@ Thread::handle_double_fault (Trap_state *ts)
 	     ts->_r14, ts->_r15,
 	     ts->ip(), ts->flags(),
 	     ts->cs() & 0xffff, ts->ss() & 0xffff,
-	     cxx::int_value<Cpu_number>(current_cpu()));
+	     cxx::int_value<Cpu_number>(cpu));
 
   if (may_enter_jdb)
     {
@@ -62,9 +63,7 @@ Thread::handle_double_fault (Trap_state *ts)
 	Proc::pause();
 
       if (c == 'k' || c == 'K')
-	{
-	     nested_trap_handler(ts,Cpu_number(0)); // XXX: 0 is possibly the wrong CPU
-	}
+        nested_trap_handler(ts, cpu);
     }
   else
     {

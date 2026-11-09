@@ -60,14 +60,51 @@ entry_vec01_debug:
 	.p2align 4
 	.globl	entry_vec08_dbf
 entry_vec08_dbf:
-	SWITCH_TO_KERNEL_CR3 0
-	push	$(0)
-	push	$(8)
+#ifdef CONFIG_KERNEL_ISOLATION
+	push	%rax
+	mov	$VAL__MEM_LAYOUT__KENTRY_CPU_PAGE, %rax
+	mov	CPUE_CR3(%rax), %rax
+	mov	%rax, %cr3
+	pop	%rax
+#endif
+	/* The handler does not return: the first CPU owns the shared stack. */
+1:	lock btsl $0, dbf_stack_lock(%rip)
+	jnc	.Ldbf_lock_acquired
+	pause
+	jmp	1b
+
+	/* Copy the CPU number, the hardware frame and err to the shared stack. */
+.Ldbf_lock_acquired:
+	push	%rax
+	/* Current frame layout: */
+	.set .L_ist_frame_offs_RAX,		 0
+	.set .L_ist_frame_offs_ERR,		 8
+	.set .L_ist_frame_offs_RIP,		16
+	.set .L_ist_frame_offs_CS,		24
+	.set .L_ist_frame_offs_RFLAGS,		32
+	.set .L_ist_frame_offs_RSP,		40
+	.set .L_ist_frame_offs_SS,		48
+	.set .L_ist_frame_offs_INFO_PTR_KSP,	56
+	.set .L_ist_frame_offs_INFO_CPU,	64
+	mov	%rsp, %rax
+	lea	dbf_stack_top(%rip), %rsp
+	push	.L_ist_frame_offs_INFO_CPU(%rax)
+	push	.L_ist_frame_offs_SS(%rax)
+	push	.L_ist_frame_offs_RSP(%rax)
+	push	.L_ist_frame_offs_RFLAGS(%rax)
+	push	.L_ist_frame_offs_CS(%rax)
+	push	.L_ist_frame_offs_RIP(%rax)
+	push	.L_ist_frame_offs_ERR(%rax)
+	push	$8
+	mov	.L_ist_frame_offs_RAX(%rax), %rax
 	save_all_regs
 	IA32_IBRS_CLOBBER
-	mov	%rsp,%rdi		// 1st arg: trap state
+	mov	%rsp, %rdi		/* ARG1: trap state */
+	mov	(dbf_stack_top - 8)(%rip), %esi	/* ARG2: CPU number */
 	call	thread_handle_double_fault
-	jmp	entry_vec08_dbf
+2:	cli
+	hlt
+	jmp	2b
 
 
 	.section ".entry.text.tss", "ax", @progbits
@@ -221,9 +258,12 @@ leave_from_syscall_by_iret:
 	SAFE_IRET
 
 	.bss
+	.p2align 4
 	.space	4096
 	.global	dbf_stack_top
 dbf_stack_top:
+dbf_stack_lock:
+	.long	0
 
 #ifdef CONFIG_KERNEL_ISOLATION
 

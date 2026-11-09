@@ -249,7 +249,8 @@ real_fpu_exception:
 
 /*
  * NMI and machine check exceptions enter on their own IST stack. The top of
- * each IST stack holds a pointer to the kernel stack pointer of the CPU.
+ * each IST stack holds a pointer to the kernel stack pointer of the CPU and
+ * the CPU number.
  *
  * The entry code moves the trap frame to the stack the handler runs on:
  * - (1) entry from user mode: the kernel stack of the current thread,

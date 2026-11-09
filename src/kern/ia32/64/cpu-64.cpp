@@ -230,8 +230,6 @@ Cpu::set_gs_base(Mword *base)
   set_fs_gs_base(base, Msr::Ia32_gs_base);
 }
 
-extern "C" Address dbf_stack_top;
-
 /**
  * Set the stack pointer of an interrupt stack table entry.
  *
@@ -254,8 +252,6 @@ Cpu::init_tss(Tss *tss)
   gdt->set_entry_tss(Gdt::gdt_tss / 8, reinterpret_cast<Address>(_tss),
                      Tss::Segment_limit);
 
-  // XXX setup pointer for clean double fault stack
-  _tss->_hw.ctx.ist1 = reinterpret_cast<Address>(&dbf_stack_top);
   _tss->_hw.io.bitmap_delimiter = 0xffU;
 
   reset_io_bitmap();
