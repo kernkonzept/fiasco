@@ -76,7 +76,9 @@ public:
 // ------------------------------------------------------------------------
 IMPLEMENTATION:
 
+#include "cpu_lock.h"
 #include "l4_types.h"
+#include "lock_guard.h"
 #include "pm.h"
 #include "reset.h"
 
@@ -107,17 +109,21 @@ Platform_control::system_off()
   // As there is actually no shutdown, do NOT execute the shutdown hooks!
 }
 
-IMPLEMENT [[noreturn]] inline
+IMPLEMENT [[noreturn]] inline NEEDS["cpu_lock.h", "lock_guard.h"]
 void
 Platform_control::system_reboot()
 {
+  auto guard = lock_guard(cpu_lock);
   system_reboot_from(current_cpu());
 }
 
-IMPLEMENT_DEFAULT [[noreturn]] inline NEEDS["pm.h", "reset.h"]
+IMPLEMENT_DEFAULT [[noreturn]] inline
+NEEDS["cpu_lock.h", "lock_guard.h", "pm.h", "reset.h"]
 void
 Platform_control::system_reboot_from(Cpu_number current_cpu)
 {
+  auto guard = lock_guard(cpu_lock);
+
   Cpu_pm_callbacks::run_on_shutdown_hooks(current_cpu);
   platform_reset();
 }
