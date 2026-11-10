@@ -64,6 +64,13 @@ public:
    *      current_cpu() must be functional.
    */
   [[noreturn]] static void system_reboot();
+
+  /**
+   * Reboot the system from a context where current_cpu() is not functional.
+   *
+   * \param current_cpu  Current CPU number.
+   */
+  [[noreturn]] static void system_reboot_from(Cpu_number current_cpu);
 };
 
 // ------------------------------------------------------------------------
@@ -100,10 +107,17 @@ Platform_control::system_off()
   // As there is actually no shutdown, do NOT execute the shutdown hooks!
 }
 
-IMPLEMENT_DEFAULT [[noreturn]] inline NEEDS["pm.h", "reset.h"]
+IMPLEMENT [[noreturn]] inline
 void
 Platform_control::system_reboot()
 {
-  Cpu_pm_callbacks::run_on_shutdown_hooks(current_cpu());
+  system_reboot_from(current_cpu());
+}
+
+IMPLEMENT_DEFAULT [[noreturn]] inline NEEDS["pm.h", "reset.h"]
+void
+Platform_control::system_reboot_from(Cpu_number current_cpu)
+{
+  Cpu_pm_callbacks::run_on_shutdown_hooks(current_cpu);
   platform_reset();
 }

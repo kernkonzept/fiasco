@@ -266,9 +266,9 @@ Platform_control::system_suspend(Mword extra)
 
 IMPLEMENT_OVERRIDE [[noreturn]]
 static void
-Platform_control::system_reboot()
+Platform_control::system_reboot_from(Cpu_number current_cpu)
 {
-  Cpu_pm_callbacks::run_on_shutdown_hooks(current_cpu());
+  Cpu_pm_callbacks::run_on_shutdown_hooks(current_cpu);
 
   auto guard = lock_guard(cpu_lock);
 
