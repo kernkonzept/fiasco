@@ -43,7 +43,6 @@ Jdb_exit_module::action (int cmd, void *&, char const *&, int &) override
   Jdb::screen_scroll(1, 127);
   Jdb::blink_cursor(Jdb_screen::height(), 1);
   Jdb::cursor(127, 1);
-  vmx_off();
   // The interactive JDB always runs on the boot CPU.
   cxx::check_noreturn<terminate_from>(1, Cpu_number::boot_cpu());
 }
@@ -69,31 +68,3 @@ IMPLEMENT
 Jdb_exit_module::Jdb_exit_module()
   : Jdb_module("GENERAL")
 {}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [vmx]:
-
-// VT might need some special treatment, switching VT off seems to be
-// necessary to do a (keyboard) reset
-
-#include "cpu.h"
-#include "vmx.h"
-
-PRIVATE
-void
-Jdb_exit_module::vmx_off() const
-{
-  if (Cpu::boot_cpu()->vmx())
-    Jdb::on_each_cpu([](Cpu_number cpu)
-    {
-      if (Vmx::cpus.cpu(cpu).vmx_enabled())
-        asm volatile("vmxoff" ::: "cc");
-    });
-}
-
-// ------------------------------------------------------------------------
-IMPLEMENTATION [!vmx]:
-
-PRIVATE
-void
-Jdb_exit_module::vmx_off() const {}
