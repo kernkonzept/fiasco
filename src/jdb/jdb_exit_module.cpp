@@ -44,7 +44,8 @@ Jdb_exit_module::action (int cmd, void *&, char const *&, int &) override
   Jdb::blink_cursor(Jdb_screen::height(), 1);
   Jdb::cursor(127, 1);
   vmx_off();
-  cxx::check_noreturn<terminate>(1);
+  // The interactive JDB always runs on the boot CPU.
+  cxx::check_noreturn<terminate_from>(1, Cpu_number::boot_cpu());
 }
 
 PUBLIC

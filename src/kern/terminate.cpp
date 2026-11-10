@@ -1,6 +1,7 @@
 INTERFACE:
 
 #include "std_macros.h"
+#include "types.h"
 
 struct Exit_question
 {};
@@ -9,6 +10,7 @@ IMPLEMENTATION:
 
 #include <cstdio>
 #include <cstdlib>
+#include "context_base.h"
 #include "global_data.h"
 #include "helping_lock.h"
 #include "kernel_console.h"
@@ -21,7 +23,7 @@ IMPLEMENTATION:
  */
 static
 void
-raw_exit()
+raw_exit(Cpu_number)
 {
   // make sure that we don't acknowledge the exit question automatically
   Kconsole::console()->change_state(Console::PUSH, 0,
@@ -39,26 +41,44 @@ raw_exit()
 
 
 static DEFINE_GLOBAL_PRIO(CONSTINIT_INIT_PRIO)
-Global_data<void (*)(void)> exit_question(&raw_exit);
+Global_data<void (*)(Cpu_number)> exit_question(&raw_exit);
 
 PUBLIC static
 void
-Exit_question::set(void (*eq)(void))
+Exit_question::set(void (*eq)(Cpu_number))
 {
   exit_question = eq;
 }
 
 extern "C" void cov_print() __attribute__((weak));
 
+/**
+ * Terminate the kernel.
+ *
+ * \pre Must only be called from within a valid thread context, because
+ *      current_cpu() must be functional.
+ */
 [[noreturn]]
 void
-terminate(int)
+terminate(int code)
+{
+  terminate_from(code, current_cpu());
+}
+
+/**
+ * Terminate the kernel from a context where current_cpu() is not functional.
+ *
+ * \param current_cpu  Current CPU number.
+ */
+[[noreturn]]
+void
+terminate_from(int, Cpu_number current_cpu)
 {
   Helping_lock::threading_system_active = false;
 
   // We only ask the exit question if we do not want to print coverage
   if (exit_question && !cov_print)
-    exit_question();
+    exit_question(current_cpu);
 
   puts("\nShutting down...");
 
@@ -82,7 +102,7 @@ IMPLEMENTATION [output && input]:
 
 PUBLIC static [[noreturn]]
 void
-Exit_question::ask()
+Exit_question::ask(Cpu_number current_cpu)
 {
   // We need to disable the UART receive interrupt to prevent the interrupt
   // handler from "stealing" the input. But actually disable all interrupts,
@@ -105,7 +125,7 @@ Exit_question::ask()
           // unresolved static destructor dependency problems. So just do the
           // reset at this point.
           puts("\033[1mRebooting...\033[0m");
-          cxx::check_noreturn<Platform_control::system_reboot>();
+          cxx::check_noreturn<Platform_control::system_reboot_from>(current_cpu);
         }
     }
 }
@@ -119,7 +139,7 @@ IMPLEMENTATION [!output || !input]:
 
 PUBLIC static [[noreturn]]
 void
-Exit_question::ask()
+Exit_question::ask(Cpu_number current_cpu)
 {
-  cxx::check_noreturn<Platform_control::system_reboot>();
+  cxx::check_noreturn<Platform_control::system_reboot_from>(current_cpu);
 }

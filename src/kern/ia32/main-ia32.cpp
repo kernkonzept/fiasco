@@ -24,7 +24,7 @@ IMPLEMENTATION[ia32 || amd64]:
 
 static
 void
-exit_question()
+exit_question(Cpu_number current_cpu)
 {
   Proc::cli();
 
@@ -51,7 +51,7 @@ exit_question()
           // unresolved static destructor dependency problems. So just do the
           // reset at this point.
           puts("\033[1mRebooting.\033[m");
-          Platform_control::system_reboot();
+          Platform_control::system_reboot_from(current_cpu);
         }
     }
 }
