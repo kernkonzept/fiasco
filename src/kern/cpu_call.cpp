@@ -81,7 +81,7 @@ public:
     return false;
   }
 
-  bool remote_call(Cpu_number cpu);
+  bool remote_call(Cpu_number cpu, Cpu_number from_cpu = current_cpu());
 };
 
 template<unsigned MAX>
@@ -268,7 +268,8 @@ DEFINE_PER_CPU Per_cpu<Cpu_call_queue> Cpu_call::_glbl_q;
 /**
  * Execute this Cpu_call on another CPU.
  *
- * \param cpu    CPU where to execute this Cpu_call.
+ * \param cpu       CPU where to execute this Cpu_call.
+ * \param from_cpu  Current CPU. Defaults to current_cpu().
  *
  * \retval false Cpu_call handled, no need to wait.
  * \retval true  Cpu_call not yet executed, need to call Cpu_call::is_done()
@@ -282,10 +283,10 @@ DEFINE_PER_CPU Per_cpu<Cpu_call_queue> Cpu_call::_glbl_q;
  */
 IMPLEMENT inline NEEDS["cpu.h", "ipi.h"]
 bool
-Cpu_call::remote_call(Cpu_number cpu)
+Cpu_call::remote_call(Cpu_number cpu, Cpu_number from_cpu)
 {
   auto guard = lock_guard(cpu_lock);
-  if (current_cpu() == cpu)
+  if (from_cpu == cpu)
     {
       assert (is_done());
       run_local(cpu);
@@ -311,7 +312,7 @@ Cpu_call::remote_call(Cpu_number cpu)
 
   if (queued())
     {
-      Ipi::send(Ipi::Global_request, current_cpu(), cpu);
+      Ipi::send(Ipi::Global_request, from_cpu, cpu);
       return true;
     }
 
