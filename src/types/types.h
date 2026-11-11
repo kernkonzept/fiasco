@@ -390,7 +390,8 @@ struct Cpu_number : cxx::int_type_order_base<unsigned, Cpu_number, Order>
   explicit constexpr Cpu_number(unsigned n) : cxx::int_type_order_base<unsigned, Cpu_number, Order>(n) {}
 
   static constexpr Cpu_number boot_cpu() { return Cpu_number(0); }
-  static constexpr Cpu_number first()    { return Cpu_number(0); }
+  // By definition, the first CPU is the boot CPU.
+  static constexpr Cpu_number first()    { return boot_cpu(); }
   static constexpr Cpu_number second()   { return Cpu_number(1); }
   static constexpr Cpu_number nil()      { return Cpu_number(~0); }
 };
