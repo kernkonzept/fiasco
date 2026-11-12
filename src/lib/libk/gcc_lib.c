@@ -137,11 +137,11 @@ struct imoddiv_t imoddiv(int div, int s)
     neg_div = 1;
   if (div < 0)
     {
-      div = -div;
+      div = -(unsigned)div;
       neg_mod = 1;
     }
   if (s < 0)
-    s = -s;
+    s = -(unsigned)s;
 
   struct umoddiv_t res = umoddiv(div, s);
 
