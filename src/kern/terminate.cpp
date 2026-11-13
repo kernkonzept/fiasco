@@ -85,6 +85,9 @@ terminate_from(int, Cpu_number current_cpu)
   if (cov_print)
     cov_print();
 
+  // Workaround for gcc optimization bug #128697.
+  asm volatile ("" ::: "memory");
+
   while (1)
     {
       Proc::halt();
