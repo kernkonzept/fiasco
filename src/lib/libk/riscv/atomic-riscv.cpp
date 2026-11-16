@@ -2,7 +2,8 @@ INTERFACE [riscv]:
 
 // preprocess off
 #define ATOMIC_LOAD_OP_(size, suffix, order_name, pre_fence, post_fence, cl)   \
-  template<typename T> requires(sizeof(T) == size) inline                      \
+  template<typename T>                                                         \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   T                                                                            \
   atomic_load##order_name(T const *mem)                                        \
   {                                                                            \
@@ -28,7 +29,8 @@ ATOMIC_LOAD_OP(_seq_cst, "fence rw, rw", "fence r, rw", "memory")
 
 
 #define ATOMIC_STORE_OP_(size, suffix, order_name, pre_fence, post_fence, cl)  \
-  template<typename T, typename V> requires(sizeof(T) == size) inline          \
+  template<typename T, typename V>                                             \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   void                                                                         \
   atomic_store##order_name(T *mem, V value)                                    \
   {                                                                            \
@@ -61,7 +63,7 @@ ATOMIC_STORE_OP(_seq_cst, "fence rw, w", "fence rw, rw", "memory")
 
 #define ATOMIC_OP_(op, size, suffix, order_name, order, cl)                    \
   template<typename T, typename V>                                             \
-  requires(sizeof(T) == size) inline                                           \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   void                                                                         \
   atomic_##op##order_name(T *mem, V value)                                     \
   {                                                                            \
@@ -76,7 +78,7 @@ ATOMIC_STORE_OP(_seq_cst, "fence rw, w", "fence rw, rw", "memory")
   }                                                                            \
                                                                                \
   template<typename T, typename V>                                             \
-  requires(sizeof(T) == size) inline                                           \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   T                                                                            \
   atomic_fetch_##op##order_name(T *mem, V value)                               \
   {                                                                            \
@@ -93,7 +95,7 @@ ATOMIC_STORE_OP(_seq_cst, "fence rw, w", "fence rw, rw", "memory")
   }                                                                            \
                                                                                \
   template<typename T, typename V>                                             \
-  requires(sizeof(T) == size) inline                                           \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   T                                                                            \
   atomic_##op##_fetch##order_name(T *mem, V value)                             \
   {                                                                            \
@@ -126,7 +128,7 @@ ATOMIC_OP(add)
 
 #define ATOMIC_EXCHANGE_OP(size, suffix, order_name, order, cl)                \
   template<typename T, typename V>                                             \
-  requires(sizeof(T) == size) inline                                           \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   T                                                                            \
   atomic_exchange##order_name(T *mem, V value)                                 \
   {                                                                            \
@@ -148,7 +150,7 @@ ATOMIC_VARIANTS(ATOMIC_EXCHANGE_OP, 8, d)
 
 #define ATOMIC_CAS_OP_(size, suffix, order_name, ol, os, cl)                   \
   template<typename T>                                                         \
-  requires(sizeof(T) == size) inline                                           \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   bool                                                                         \
   cas##order_name(T *mem, T oldval, T newval)                                  \
   {                                                                            \
