@@ -6,7 +6,7 @@ INTERFACE [mips]:
 // preprocess off
 #define ATOMIC_OP_(name, op, size, suffix)                                     \
   template<typename T, typename V>                                             \
-  requires(sizeof(T) == size) inline                                           \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   void                                                                         \
   atomic_##name##_relaxed(T *mem, V value)                                     \
   {                                                                            \
@@ -27,7 +27,7 @@ INTERFACE [mips]:
   }                                                                            \
                                                                                \
   template<typename T, typename V>                                             \
-  requires(sizeof(T) == size) inline                                           \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   T                                                                            \
   atomic_fetch_##name##_relaxed(T *mem, V value)                               \
   {                                                                            \
@@ -51,7 +51,7 @@ INTERFACE [mips]:
   }                                                                            \
                                                                                \
   template<typename T, typename V>                                             \
-  requires(sizeof(T) == size) inline                                           \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   T                                                                            \
   atomic_##name##_fetch_relaxed(T *mem, V value)                               \
   {                                                                            \
@@ -95,7 +95,8 @@ atomic_load_relaxed(T const *mem)
   return res;
 }
 
-template<typename T> requires(sizeof(T) == 8) inline
+template<typename T>
+requires(sizeof(T) == 8 && sizeof(Mword) == 8) inline
 T
 atomic_load_relaxed(T const *mem)
 {
@@ -112,7 +113,8 @@ atomic_store_relaxed(T *mem, V value)
   __asm__ __volatile__ ("sw %1, %0" : "=m" (*mem) : "r" (val));
 }
 
-template<typename T, typename V> requires(sizeof(T) == 8) inline
+template<typename T, typename V>
+requires(sizeof(T) == 8 && sizeof(Mword) == 8) inline
 void
 atomic_store_relaxed(T *mem, V value)
 {
@@ -159,7 +161,7 @@ atomic_store_seq_cst(T *mem, V value)
 // preprocess off
 #define ATOMIC_EXCHANGE(size, suffix)                                          \
   template<typename T, typename V>                                             \
-  requires(sizeof(T) == size) inline                                           \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   T                                                                            \
   atomic_exchange_relaxed(T *mem, V value)                                     \
   {                                                                            \
@@ -185,7 +187,7 @@ ATOMIC_EXCHANGE(8, d)
 
 #define ATOMIC_CAS(size, suffix)                                               \
   template<typename T>                                                         \
-  requires(sizeof(T) == size) inline                                           \
+  requires(sizeof(T) == size && size <= sizeof(Mword)) inline                  \
   bool                                                                         \
   cas_relaxed(T *mem, T oldval, T newval)                                      \
   {                                                                            \
