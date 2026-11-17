@@ -54,6 +54,7 @@ INTERFACE [riscv && riscv_asid]:
 
 EXTENSION class Mem_space
 {
+  friend struct Asid_alloc_test;
 private:
   enum
   {
