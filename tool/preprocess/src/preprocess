@@ -34,6 +34,7 @@ require 5.014;
 use strict;
 use warnings;
 use Getopt::Std;
+use File::Compare;
 
 sub print_expand($);
 sub print_funcdecl($);
@@ -41,6 +42,9 @@ sub print_funcdef($);
 sub print_classdecl($);
 sub print_code($);
 sub func_prototype($);
+sub open_out($);
+sub update_outfiles();
+sub discard_outfiles();
 
 #
 # Get options
@@ -68,8 +72,9 @@ our $opt_W = 0;                 # Make warnings errors.
 our $opt_H = "h";		# Default extenstion for header files
 our $opt_C = "cc";		# Default extention for source files
 our $opt_t = 0;
+our $opt_u = 0;                 # Write only changed output files?
 
-getopts('e:o:c:p:h:H:C:ivlLsdwtW');
+getopts('e:o:c:p:h:H:C:ivlLsdwtuW');
 
 sub usage
 {
@@ -99,6 +104,7 @@ OPTIONS
                   per section).
   -t              Truncate empty implementation files to zero length (so
                   that even the includ directives are ommitted)
+  -u              Write only output files whose content changed.
   -v              Be verbose (very).
   -w              Do warnings.
   -W              Warnings are errors.
@@ -115,6 +121,7 @@ my $incfile_base = $opt_c;
 my $public_base = (($opt_h eq '') ? $incfile_base : $opt_h);
 my $outfile_base;
 my $headerfile_base;
+my @outfiles;                   # Output files written with -u
 my $doing_inlines = $opt_i;
 my $verbose = $opt_v;
 my $doing_linenumbers = (! $opt_l) && (! $opt_L);
@@ -260,8 +267,7 @@ parse_file ();
 #
 # Print header file
 # 
-open(OUT, ">${headerfile_base}.$header_ext")
-  || die "Cannot open ${headerfile_base}.$header_ext for writing!";
+open_out("${headerfile_base}.$header_ext");
 print OUT "// AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-\n\n";
 print OUT "#pragma once\n";
 
@@ -366,8 +372,7 @@ close OUT;
 # Print "internal data structures" header file
 #
 
-open(OUT, ">${outfile_base}_i.$header_ext")
-  || die "Cannot open ${outfile_base}_i.$header_ext for writing!";
+open_out("${outfile_base}_i.$header_ext");
 print OUT "// AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-\n\n";
 print OUT "#pragma once\n";
 print OUT "#include \"${public_base}.$header_ext\"\n";
@@ -437,7 +442,7 @@ foreach my $part (keys %impl_parts)
     my $filename = $outfile_base.($part eq '' ? '' : ('-' . $part)) . ".$source_ext";
     my $empty = 1;
     #print "==> $filename\n";
-    open(OUT, ">$filename") || die "Could not open $filename for writing!";
+    open_out($filename);
     print OUT "// AUTOMATICALLY GENERATED -- DO NOT EDIT!         -*- c++ -*-\n\n";
     print OUT "#include \"${public_base}.$header_ext\"\n" .
               "#include \"${incfile_base}_i.$header_ext\"\n\n";
@@ -493,16 +498,66 @@ foreach my $part (keys %impl_parts)
 if ($num_errors > 0)
   {
     print STDERR "error: found $num_errors error(s) and $num_warnings warning(s)\n";
+    discard_outfiles();
     exit 128;
   }
 
 if ($num_warnings > 0)
   {
     print STDERR "warning: found $num_warnings warning(s)\n";
-    exit 128 if $opt_W;
+    if ($opt_W)
+      {
+        discard_outfiles();
+        exit 128;
+      }
   }
 
+update_outfiles();
 exit 0;
+
+#
+# Output files
+#
+
+# With -u, output files are written to new_<name> first.
+sub new_name($)
+{
+  my $name = shift;
+  $name =~ s|([^/]*)$|new_$1|;
+  return $name;
+}
+
+sub open_out($)
+{
+  my $file = shift;
+  my $name = $opt_u ? new_name($file) : $file;
+
+  open(OUT, ">$name") || die "Cannot open $name for writing!";
+  push @outfiles, $file if $opt_u;
+}
+
+# Replace each output file by its new version if the content changed.
+sub update_outfiles()
+{
+  foreach my $file (@outfiles)
+    {
+      my $new = new_name($file);
+
+      if (-e $file && compare($new, $file) == 0)
+        {
+          unlink($new);
+        }
+      else
+        {
+          rename($new, $file) || die "Cannot rename $new to $file!";
+        }
+    }
+}
+
+sub discard_outfiles()
+{
+  unlink(map { new_name($_) } @outfiles);
+}
 
 #############################################################################
 
