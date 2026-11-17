@@ -175,6 +175,12 @@ all doc $(addsuffix .ps,$(DEPS_FILES)) $(addsuffix .svg,$(DEPS_FILES)) TAGS tags
 %.o %_t: $(MODULES_FILES) .Modules.deps create-sources globalconfig.h globalconfig.tags
 	$(MAKE) srcdir=$(srcdir) objbase=$(objbase) -f $(srcdir)/Makefile.sub2 $@
 
+%.i: $(MODULES_FILES) .Modules.deps create-sources globalconfig.h globalconfig.tags
+	$(MAKE) srcdir=$(srcdir) objbase=$(objbase) -f $(srcdir)/Makefile.sub2 $@
+
+%.S: $(MODULES_FILES) .Modules.deps create-sources globalconfig.h globalconfig.tags
+	$(MAKE) srcdir=$(srcdir) objbase=$(objbase) -f $(srcdir)/Makefile.sub2 $@
+
 
 # Divert any target we do not explicitly mention in this Makefile to
 # Makefile.sub2.  (Unfortunately 1, this does not work for file
