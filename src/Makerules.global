@@ -58,15 +58,17 @@ NOCOVFLAGS = $(if $(CONFIG_COV),$(NOCOVFLAGS-$(CC_TYPE)))
 comp_nocov = $(if $(filter $(1),$(NOCOV)),$(NOCOVFLAGS))
 
 # Put it all together.
-c_flgs = $(CPPFLAGS) $(call comp_c_flgs,$(1)) $(call comp_c_opt_flgs,$(1)) \
+c_flgs = $(strip $(CPPFLAGS) $(call comp_c_flgs,$(1)) \
+         $(call comp_c_opt_flgs,$(1)) \
          $(call comp_prof_flgs,$(1)) $(call comp_inst_flgs,$(1)) \
          $(call comp_nobuiltin,$(1)) $(call comp_nocov,$(1)) \
-         $(CFLAGS_$(basename $(notdir $(2))))
-cc_flgs = $(CPPFLAGS) $(call comp_cc_flgs,$(1)) $(call comp_cc_opt_flgs,$(1)) \
+         $(CFLAGS_$(basename $(notdir $(2)))))
+cc_flgs = $(strip $(CPPFLAGS) $(call comp_cc_flgs,$(1)) \
+          $(call comp_cc_opt_flgs,$(1)) \
           $(call comp_prof_flgs,$(1)) $(call comp_inst_flgs,$(1)) \
           $(call comp_nobuiltin,$(1)) $(call comp_nocov,$(1)) \
-          $(CXXFLAGS_$(basename $(notdir $(2))))
-as_flgs = $(CPPFLAGS) $(ASFLAGS)
+          $(CXXFLAGS_$(basename $(notdir $(2)))))
+as_flgs = $(strip $(CPPFLAGS) $(ASFLAGS))
 
 
 ###
@@ -126,8 +128,8 @@ endif
 
 %.lds:	%.ld
 	$(COMP_MESSAGE)
-	$(VERBOSE)$(CPP) -x c -MD -MP -MF .$@.d -MT $@ -undef -P -DASSEMBLER \
-	  -o $@ $(CPPFLAGS) $< $(COLLECT_REDIR)
+	$(VERBOSE)$(strip $(CPP) -x c -MD -MP -MF .$@.d -MT $@ -undef -P \
+	  -DASSEMBLER -o $@ $(CPPFLAGS) $<) $(COLLECT_REDIR)
 
 (%): %
 	$(AR_MESSAGE)
