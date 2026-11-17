@@ -20,7 +20,7 @@ endef
 define all_checksum_rules =
 
 do_chksum$(3): setchecksum genchecksum $(1)
-	$$(PATCH_MESSAGE)"$(1)"
+	$$(call PATCH_MESSAGE,$(1))
 	$$(VERBOSE)\
 	  cscode=$$$$($$(call get_checksum,$(1),$(2),_start,_etext)); \
 	  csdata=$$$$($$(call get_checksum,$(1),$(2),_kernel_data_start,_edata)); \

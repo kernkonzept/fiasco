@@ -311,20 +311,23 @@ ifeq ($(V),1)
 else ifeq ($(V),2)
   VERBOSE :=
   VERBOSE_PREP :=
-  PREP_MESSAGE  ?= @$(ECHO) "  ... Preprocessing $(filter %.cpp,$^)"
+  PREP_MESSAGE  ?= $(info $(msg_empty)  ... Preprocessing $(filter %.cpp,$^))
 endif
-AR_MESSAGE	?= @$(ECHO) "  ==> Archiving into $@"
-COMP_MESSAGE	?= @$(ECHO) "  ... Making $@"
-LINK_MESSAGE	?= @$(ECHO) "  ==> Linking $@"
-DEP_MESSAGE	?= @$(ECHO) "  ... Building dependencies for $<"
-PREP_MESSAGE	?= @$(ECHO) "  ... Preprocessing $*"
-PATCH_MESSAGE   ?= @$(ECHO) "  ... Writing checksum into "
-STRIP_MESSAGE	?= @$(ECHO) "  ... Stripping $@"
-GENVER_MESSAGE	?= @$(ECHO) "  ... Generating version information" 
-CLEAN_MESSAGE	?= @$(ECHO) "Removing created files"
-CLEANALL_MESSAGE?= @$(ECHO) "Removing all created files"
-INST_MESSAGE	?= @$(ECHO) "Installing $(^F)"
-OK_MESSAGE      ?= 
+# Messages are printed by make itself, so no shell is started for them.
+# $(msg_empty) preserves the leading spaces.
+msg_empty :=
+AR_MESSAGE	?= $(info $(msg_empty)  ==> Archiving into $@)
+COMP_MESSAGE	?= $(info $(msg_empty)  ... Making $@)
+LINK_MESSAGE	?= $(info $(msg_empty)  ==> Linking $@)
+DEP_MESSAGE	?= $(info $(msg_empty)  ... Building dependencies for $<)
+PREP_MESSAGE	?= $(info $(msg_empty)  ... Preprocessing $*)
+PATCH_MESSAGE   ?= $(info $(msg_empty)  ... Writing checksum into $(1))
+STRIP_MESSAGE	?= $(info $(msg_empty)  ... Stripping $@)
+GENVER_MESSAGE	?= $(info $(msg_empty)  ... Generating version information)
+CLEAN_MESSAGE	?= $(info Removing created files)
+CLEANALL_MESSAGE?= $(info Removing all created files)
+INST_MESSAGE	?= $(info Installing $(^F))
+OK_MESSAGE      ?=
 
 COMP_MESSAGE_NOOPT ?= $(COMP_MESSAGE)
 
