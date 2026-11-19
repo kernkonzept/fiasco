@@ -29,7 +29,7 @@ private:
   static char  breakpoint_cmd;
   static bool inited;
   static char state;
-  static char breakpoint_length;
+  static int  breakpoint_length;
   static int  breakpoint_number;
   static char breakpoint_type;
 
@@ -42,7 +42,7 @@ private:
 char Jdb_bp::breakpoint_cmd;
 bool Jdb_bp::inited;
 char Jdb_bp::state;
-char Jdb_bp::breakpoint_length;
+int  Jdb_bp::breakpoint_length;
 int  Jdb_bp::breakpoint_number;
 char Jdb_bp::breakpoint_type;
 
