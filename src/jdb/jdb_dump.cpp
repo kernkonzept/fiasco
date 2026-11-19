@@ -322,7 +322,7 @@ Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col) override
 				   "u[address=" L4_PTR_FMT "%s] ", virt1,
 				   Jdb::addr_space_to_str(a, s, sizeof(s)));
 	      int c1 = Jdb_core::getchar();
-	      if (c1 != KEY_RETURN && c1 != ' ' && c != KEY_RETURN_2)
+	      if (c1 != KEY_RETURN && c1 != ' ' && c1 != KEY_RETURN_2)
 		{
 		  Jdb::printf_statline("dump", nullptr, "u");
 		  Jdb::execute_command("u", c1);
