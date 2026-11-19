@@ -289,7 +289,7 @@ Jdb_tbuf_show::select_perf_event(Mword event)
     return Perf_cnt::No_event;
 
   unsigned evntsel;
-  Mword unit_mask;
+  Mword unit_mask = 0;
 
   Jdb::printf_statline("tbuf", "<CR>=select", "P?");
 
