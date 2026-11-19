@@ -15,7 +15,7 @@ static inline void set_ipc(Sys_call c)
   Address p = reinterpret_cast<Address>(c);
   // jal to c (c must be in the same 256 MiB aligned memory segment
   // like sys_ipc_call_patch
-  sys_ipc_call_patch = 0x0c000000 | ((p >> 2) & 0xffffff);
+  sys_ipc_call_patch = 0x0c000000 | ((p >> 2) & 0x3ffffff);
   Mips::synci(&sys_ipc_call_patch);
 }
 
