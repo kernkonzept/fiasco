@@ -72,7 +72,7 @@ Jdb_screen::cols()
 PUBLIC static inline
 unsigned long
 Jdb_screen::rows()
-{ return ~0UL / ((cols() - 1) * 4) + 1; }
+{ return ~0UL / ((cols() - 1) * sizeof(Mword)) + 1; }
 
 PUBLIC static inline
 void

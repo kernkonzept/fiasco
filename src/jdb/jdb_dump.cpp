@@ -219,13 +219,15 @@ Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col) override
           if (v.is_null())
             return Handled;
 
-          if (Pg::offset(v.addr()) == 0)
-            row -= Config::PAGE_SIZE / 32;
-          else
+          Address a = Pg::trunc(v.addr());
+          if (a == v.addr())
             {
-              col = 1;
-              row = Pg::trunc(v.addr()) / 32;
+              if (a < Config::PAGE_SIZE)
+                return Handled;
+              a -= Config::PAGE_SIZE;
             }
+          row = a / ((cols() - 1) * elb);
+          col = (a % ((cols() - 1) * elb)) / elb + 1;
           return Redraw;
         }
       return Back;
@@ -233,13 +235,15 @@ Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col) override
     case KEY_CURSOR_END:
         {
           Jdb_addr<Mword> v = virt(row, col);
-          if (Pg::offset(v.addr()) >> 2 == 0x3ff)
-            row += Config::PAGE_SIZE / 32;
-          else
+          Address a = Pg::trunc(v.addr()) + Config::PAGE_SIZE - elb;
+          if (a == v.addr())
             {
-              col = Jdb_screen::cols() - 1;
-              row = (Pg::trunc(v.addr()) + (Config::PAGE_SIZE - 4)) / 32;
+              if (a + Config::PAGE_SIZE < a)
+                return Handled;
+              a += Config::PAGE_SIZE;
             }
+          row = a / ((cols() - 1) * elb);
+          col = (a % ((cols() - 1) * elb)) / elb + 1;
         }
       return Redraw;
 
@@ -257,9 +261,9 @@ Jdb_dump::key_pressed(int c, unsigned long &row, unsigned long &col) override
 	      putchar('-');
 	      if (Jdb_input::get_mword(&high_addr, sizeof(Mword)*2, 16))
 		{
-		  unsigned l_row = low_addr  / ((cols()-1) * elb);
-		  unsigned l_col = (low_addr % ((cols()-1) * elb)) / elb;
-		  unsigned h_row = high_addr / ((cols()-1) * elb);
+		  unsigned long l_row = low_addr  / ((cols()-1) * elb);
+		  unsigned long l_col = (low_addr % ((cols()-1) * elb)) / elb;
+		  unsigned long h_row = high_addr / ((cols()-1) * elb);
 
 		  if (low_addr <= high_addr)
 		    {
