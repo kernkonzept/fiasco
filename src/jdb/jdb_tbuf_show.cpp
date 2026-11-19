@@ -203,6 +203,7 @@ Jdb_tbuf_show::select_perf_event_unit_mask(Mword nr, Mword unit_mask)
 
   if (nvalues < lines)
     lines = nvalues;
+  max_absy = nvalues - lines;
 
   Jdb::printf_statline("tbuf", "<Space>=set mask <CR>=done", "P?");
 
@@ -222,7 +223,7 @@ Jdb_tbuf_show::select_perf_event_unit_mask(Mword nr, Mword unit_mask)
       Jdb::cursor(Tbuf_start_line + 4, 1);
       for (i = 0; i < lines; ++i)
         {
-          show_perf_event_unit_mask_entry(nr, i, unit_mask, exclusive);
+          show_perf_event_unit_mask_entry(nr, absy + i, unit_mask, exclusive);
           putchar('\n');
         }
 
