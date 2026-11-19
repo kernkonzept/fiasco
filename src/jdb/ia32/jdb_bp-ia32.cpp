@@ -267,7 +267,8 @@ Breakpoint::show()
 	      if (j++)
 		printf("%32s", "and ");
 	      printf("register %s in [" L4_PTR_FMT ", " L4_PTR_FMT "]\n",
-                     (restrict.reg.reg > 0) && (restrict.reg.reg < 10)
+                     (restrict.reg.reg > 0)
+                     && (restrict.reg.reg <= Jdb_screen::num_regs())
                      ? Jdb_screen::Reg_names[restrict.reg.reg-1] : "???",
                      restrict.reg.y, restrict.reg.z);
 	    }
