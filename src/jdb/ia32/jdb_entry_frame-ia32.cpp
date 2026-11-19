@@ -41,16 +41,6 @@ Jdb_entry_frame::from_user() const
 { return cs() & 3; }
 
 PUBLIC inline
-Address
-Jdb_entry_frame::ksp() const
-{ return reinterpret_cast<Address>(&_sp); }
-
-PUBLIC inline
-Address
-Jdb_entry_frame::sp() const
-{ return from_user() ? _sp : ksp(); }
-
-PUBLIC inline
 Mword
 Jdb_entry_frame::param() const
 { return _ax; }
@@ -148,3 +138,31 @@ Jdb_entry_frame::get_reg(unsigned reg) const
 
   return val;
 }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION[ia32]:
+
+// The CPU saves esp only on a privilege level change.
+PUBLIC inline
+Address
+Jdb_entry_frame::ksp() const
+{ return reinterpret_cast<Address>(&_sp); }
+
+PUBLIC inline
+Address
+Jdb_entry_frame::sp() const
+{ return from_user() ? _sp : ksp(); }
+
+//---------------------------------------------------------------------------
+IMPLEMENTATION[amd64]:
+
+// The CPU always saves rsp.
+PUBLIC inline
+Address
+Jdb_entry_frame::ksp() const
+{ return from_user() ? reinterpret_cast<Address>(&_sp) : _sp; }
+
+PUBLIC inline
+Address
+Jdb_entry_frame::sp() const
+{ return _sp; }
