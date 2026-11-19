@@ -869,7 +869,8 @@ got_address:
 	  [[fallthrough]];
 	case 4:
 	  // length read
-	  if (breakpoint_length & (breakpoint_length - 1))
+	  if (!breakpoint_length
+	      || (breakpoint_length & (breakpoint_length - 1)))
 	    break;
 	  if (breakpoint_length > sizeof(Mword))
 	    break;
