@@ -6,7 +6,7 @@ IMPLEMENTATION:
 
 class Jdb_kern_info_mtrr : public Jdb_kern_info_module
 {
-  Address size_or_mask;
+  Unsigned64 size_or_mask;
 };
 
 static Jdb_kern_info_mtrr k_M INIT_PRIORITY(JDB_MODULE_INIT_PRIO+1);
@@ -18,7 +18,7 @@ Jdb_kern_info_mtrr::Jdb_kern_info_mtrr()
   if (!(Cpu::boot_cpu()->features() & FEAT_MTRR))
     return;
 
-  size_or_mask = ~((1 << (Cpu::boot_cpu()->phys_bits() - Config::PAGE_SHIFT)) - 1);
+  size_or_mask = ~((Unsigned64{1} << (Cpu::boot_cpu()->phys_bits() - Config::PAGE_SHIFT)) - 1);
   Jdb_kern_info::register_subcmd(this);
 }
 
