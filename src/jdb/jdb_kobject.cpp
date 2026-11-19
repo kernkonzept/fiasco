@@ -630,7 +630,7 @@ Jdb_kobject::fmt_handler(char /*fmt*/, int *size, char const *cmd_str, void *arg
       if((c==KEY_BACKSPACE || c==KEY_BACKSPACE_2) && pos>0)
 	{
 	  putstr("\b \b");
-	  --pos;
+	  buffer[--pos] = 0;
           continue;
 	}
 
