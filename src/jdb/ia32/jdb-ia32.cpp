@@ -546,7 +546,9 @@ Jdb::get_register(char *reg)
       int c = getchar();
       if (c == KEY_ESC)
 	return false;
-      putchar(reg_name.c[i] = c & 0xdf);
+      if (c >= 'a' && c <= 'z')
+        c -= 'a' - 'A';
+      putchar(reg_name.c[i] = c);
       if (c == '8' || c == '9')
 	break;
     }
