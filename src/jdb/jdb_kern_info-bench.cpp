@@ -150,10 +150,11 @@ Jdb_kern_info_bench::do_mp_benchmark()
                 Jdb::remote_work(v, &wait_for_ipi, false);
 
               // u is doing benchmark
+              auto bench = [v](Cpu_number cpu){ do_ipi_bench(cpu, v); };
               if (u == Cpu_number::boot_cpu())
                 do_ipi_bench(Cpu_number::boot_cpu(), v);
               else
-                Jdb::remote_work(u, [v](Cpu_number cpu){ do_ipi_bench(cpu, v); }, false);
+                Jdb::remote_work(u, bench, false);
 
               // v is waiting for IPIs
               if (v == Cpu_number::boot_cpu())
