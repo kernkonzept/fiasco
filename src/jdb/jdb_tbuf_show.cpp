@@ -813,8 +813,7 @@ restart:
                       if (!pt.is_first())
                         find_group(&group, ce, lookup_state, Direction::Older,
                                    lines, pt.depth());
-                      if (!pt.is_last()
-                          && lookup_state.seq != Jdb_tbuf::entries_majorant())
+                      if (!pt.is_last())
                         find_group(&group, ce, lookup_state, Direction::Newer,
                                    lines, pt.depth());
                     }

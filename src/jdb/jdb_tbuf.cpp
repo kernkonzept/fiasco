@@ -326,8 +326,6 @@ Jdb_tbuf::lookup_next(Direction direction, Lookup_state &state)
 {
   if (direction == Direction::Older)
     assert(state.seq > state.bound);
-  else
-    assert(state.seq != _status->tail);
 
   for (;;)
     {
@@ -338,8 +336,9 @@ Jdb_tbuf::lookup_next(Direction direction, Lookup_state &state)
         }
       else
         {
-          if (++state.seq == _status->tail)
+          if (state.seq == _status->tail)
             return nullptr;
+          ++state.seq;
         }
 
       if (Tb_entry *e = entry_valid(state.seq); e && predicate(*e))
