@@ -887,7 +887,7 @@ Jdb::write_ll_ns(String_buffer *buf, Signed64 ns, bool sign)
     {
       // 1000s...999min
       Mword _m  = uns / 60'000'000'000ULL;
-      Mword _s  = (uns % 60'000'000'000ULL) / 1'000ULL;
+      Mword _s  = (uns % 60'000'000'000ULL) / 1'000'000'000ULL;
       buf->printf("%3lu:%02lu M  ", _m, _s);
       return;
     }
