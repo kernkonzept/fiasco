@@ -51,7 +51,12 @@ PROTECTED inline template< typename T>
 bool
 Jdb_ptab_pdir<T>::is_executable(Pte_ptr const &entry) const
 {
-  return (*entry.pte & 3) == 2 || (*entry.pte & 3) == 1;
+  // section: XN is bit 4; large page: XN is bit 15; small page: XN is bit 0
+  if (entry.level == 0)
+    return !(*entry.pte & 0x10);
+  if ((*entry.pte & 3) == 1)
+    return !(*entry.pte & 0x8000);
+  return !(*entry.pte & 1);
 }
 
 PROTECTED inline template< typename T >
@@ -155,7 +160,12 @@ PROTECTED inline template< typename T >
 char
 Jdb_ptab_pdir<T>::ap_char(T_pte_ptr const &entry) const
 {
-  return ((*entry.pte >> 7) & 1) ? 'w' : 'r';
+  // Kpdir: AP[2] means read-only; Pdir (stage 2): S2AP[1] means writable
+  bool bit7 = (*entry.pte >> 7) & 1;
+  if constexpr (cxx::is_same_v<T, Kpdir>)
+    return bit7 ? 'r' : 'w';
+  else
+    return bit7 ? 'w' : 'r';
 }
 
 /**
