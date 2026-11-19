@@ -52,7 +52,7 @@ Jdb_tcb::info_thread_state(Thread *t)
   print_gp_regs(current.top_value_ptr(-18));
 
   printf("%08lx %08lx %08lx\n",
-         current.top_value(-4), current.top_value(-3),  current.top_value(-2));
+         current.top_value(-5), current.top_value(-4), current.top_value(-2));
 }
 
 IMPLEMENT
