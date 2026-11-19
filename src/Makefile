@@ -172,7 +172,7 @@ all doc $(addsuffix .ps,$(DEPS_FILES)) $(addsuffix .svg,$(DEPS_FILES)) TAGS tags
   $(MODULES_FILES) .Modules.deps create-sources globalconfig.h globalconfig.tags
 	$(MAKE) srcdir=$(srcdir) objbase=$(objbase) -f $(srcdir)/Makefile.sub2 $@
 
-%.o %_t: $(MODULES_FILES) .Modules.deps create-sources globalconfig.h globalconfig.tags
+%.o: $(MODULES_FILES) .Modules.deps create-sources globalconfig.h globalconfig.tags
 	$(MAKE) srcdir=$(srcdir) objbase=$(objbase) -f $(srcdir)/Makefile.sub2 $@
 
 %.i: $(MODULES_FILES) .Modules.deps create-sources globalconfig.h globalconfig.tags
