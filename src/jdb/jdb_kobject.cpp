@@ -696,7 +696,7 @@ Jdb_kobject::print_uid(Kobject_common *o, int task_format = 0)
 {
   if (!o)
     {
-      printf("%*.s", task_format, "---");
+      printf("%*s", task_format, "---");
       return;
     }
 
