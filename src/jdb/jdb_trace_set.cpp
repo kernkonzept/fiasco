@@ -81,14 +81,14 @@ Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &) override
 		case 'a':
 		case 'A':
 		  putstr(" restrict to task");
-		  fmt  = second_char == 'A' ? "!=%3x" : "==%3x";
+		  fmt  = second_char == 'A' ? "!=%3lx" : "==%3lx";
 		  args = &Jdb_ipc_trace::_task;
 		  Jdb_ipc_trace::_other_task = second_char == 'A';
 		  return EXTRA_INPUT;
 		case 't':
 		case 'T':
 		  putstr(" restrict to thread");
-		  fmt  = second_char == 'T' ? "!=%x" : "==%x";
+		  fmt  = second_char == 'T' ? "!=%lx" : "==%lx";
 		  args = &Jdb_ipc_trace::_gthread;
 		  Jdb_ipc_trace::_other_thread = second_char == 'T';
 		  return EXTRA_INPUT;
@@ -172,7 +172,7 @@ Jdb_set_trace::action(int cmd, void *&args, char const *&fmt, int &) override
 		case 't':
 		case 'T':
 		  putstr(" restrict to thread");
-		  fmt  = second_char == 'T' ? "!=%x" : "==%x";
+		  fmt  = second_char == 'T' ? "!=%lx" : "==%lx";
 		  args = &Jdb_pf_trace::_gthread;
 		  Jdb_pf_trace::_other_thread = second_char == 'T';
 		  return EXTRA_INPUT;
