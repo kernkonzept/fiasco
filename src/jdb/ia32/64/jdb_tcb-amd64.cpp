@@ -184,34 +184,36 @@ Jdb_stack_view::edit_registers()
   Mword value;
   char reg = char{-1};
   Mword *reg_ptr = nullptr;
-  unsigned x=0, y=0;
-
+  unsigned x = 0, y = 0;
 
   Jdb::printf_statline("tcb", nullptr, "edit register "
-      "r{ax|bx|cx|dx|si|di|sp|bp|ip|fl}: ");
-  Jdb::cursor(Jdb_screen::height(), 53);
+      "r{ax|bx|cx|dx|si|di|sp|bp|ip|fl|8..15}: ");
+  Jdb::cursor(Jdb_screen::height(), 60);
+  Jdb::get_register(&reg);
 
   switch (reg)
     {
-    case  1:  x= 4;    y= 9;    reg_ptr = &ef->_ax; break;
-    case  2:  x= 4;    y=10;    reg_ptr = &ef->_bx; break;
-    case  3:  x= 4;    y=11;    reg_ptr = &ef->_cx; break;
-    case  4:  x= 4;    y=12;    reg_ptr = &ef->_dx; break;
-    case  5:  x=24;    y=11;    reg_ptr = &ef->_bp; break;
-    case  6:  x=24;    y= 9;    reg_ptr = &ef->_si; break;
-    case  7:  x=24;    y=10;    reg_ptr = &ef->_di; break;
-    case  8:  x=13;    y=14;    reg_ptr = &ef->_ip; break;
-    case  20: x= 4;    y=14;    reg_ptr = &ef->_ip; break;
-    case  21: x=24;    y=14;    reg_ptr = &ef->_ip; break;
-    case  22: x= 4;    y=15;    reg_ptr = &ef->_ip; break;
-    case  23: x=24;    y=15;    reg_ptr = &ef->_ip; break;
-    case  24: x= 4;    y=16;    reg_ptr = &ef->_ip; break;
-
-    case  9: // we have no esp if we come from kernel
-	      if (!ef->from_user())
-	        return false;
-	      x=24;    y=12;    reg_ptr = &ef->_sp;    break;
-    case 10:  x=35;    y=12;    reg_ptr = &ef->_flags; break;
+    case  1: x= 4; y=10; reg_ptr = &ef->_ax; break;
+    case  2: x= 4; y=11; reg_ptr = &ef->_bx; break;
+    case  3: x= 4; y=12; reg_ptr = &ef->_cx; break;
+    case  4: x= 4; y=13; reg_ptr = &ef->_dx; break;
+    case  5: x=26; y=12; reg_ptr = &ef->_bp; break;
+    case  6: x=26; y=10; reg_ptr = &ef->_si; break;
+    case  7: x=26; y=11; reg_ptr = &ef->_di; break;
+    case  8: x= 4; y=14; reg_ptr = &ef->_r8; break;
+    case  9: x=26; y=14; reg_ptr = &ef->_r9; break;
+    case 10: x= 4; y=15; reg_ptr = &ef->_r10; break;
+    case 11: x=26; y=15; reg_ptr = &ef->_r11; break;
+    case 12: x= 4; y=16; reg_ptr = &ef->_r12; break;
+    case 13: x=26; y=16; reg_ptr = &ef->_r13; break;
+    case 14: x= 4; y=17; reg_ptr = &ef->_r14; break;
+    case 15: x=26; y=17; reg_ptr = &ef->_r15; break;
+    case 16: x= 4; y=19; reg_ptr = &ef->_ip; break;
+    case 17: // we have no rsp if we come from kernel
+             if (!ef->from_user())
+               return false;
+             x=26; y=13; reg_ptr = &ef->_sp; break;
+    case 18: x=29; y=19; reg_ptr = &ef->_flags; break;
     default: return false;
     }
 
