@@ -319,7 +319,7 @@ Breakpoint::restricted(Thread *t)
 
       // return true if rules do NOT match
       if (  (y <= z && (val <  y || val >  z))
-	  ||(y >  z && (val >= z || val <= y)))
+	  ||(y >  z && val >  z && val <  y))
 	return 1;
     }
 
@@ -335,7 +335,7 @@ Breakpoint::restricted(Thread *t)
 
       // return true if rules do NOT match
       if (  (y <= z && (val <  y || val >  z))
-	  ||(y >  z && (val >= z || val <= y)))
+	  ||(y >  z && val >  z && val <  y))
 	return 1;
     }
 
