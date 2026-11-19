@@ -950,7 +950,7 @@ Jdb_tcb::action(int cmd, void *&args, char const *&fmt, int &next_char) override
                 return Jdb_module::EXTRA_INPUT;
               case 'a':
                 args      = &tcb_addr;
-                fmt       = " tcb=%x => ";
+                fmt       = " tcb=" ADDR_FMT " => ";
                 putchar(first_char);
                 return Jdb_module::EXTRA_INPUT;
               case ' ':
