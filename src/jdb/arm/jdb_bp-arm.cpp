@@ -720,6 +720,12 @@ Jdb_bp::action(int cmd, void *&args, char const *&fmt, int &next_char) override
 
   if (state == Do_mod)
     {
+      unsigned num = breakpoint_type == 'w' ? num_watchpoints()
+                                            : num_breakpoints();
+      if (breakpoint_number < 0
+          || static_cast<unsigned>(breakpoint_number) >= num)
+        return ERROR;
+
       if (breakpoint_cmd == '-')
         Jdb::on_each_cpu_pl([](Cpu_number)
           {
