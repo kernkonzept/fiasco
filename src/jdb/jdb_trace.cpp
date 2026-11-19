@@ -140,7 +140,7 @@ Jdb_pf_trace::check_restriction (Mword id, Address pfa)
 	      || ((_other_thread) ^ (_gthread == id))))
 	  && (!(_addr.lo | _addr.hi)
 	      || (_addr.lo <= _addr.hi && pfa >= _addr.lo && pfa <= _addr.hi)
-	      || (_addr.lo >  _addr.hi && pfa <  _addr.hi && pfa >  _addr.lo)));
+	      || (_addr.lo >  _addr.hi && (pfa < _addr.hi || pfa > _addr.lo))));
 }
 
 PUBLIC static
