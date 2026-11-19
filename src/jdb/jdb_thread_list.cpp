@@ -582,7 +582,7 @@ Jdb_thread_list::action(int cmd, void *&argbuf, char const *&fmt, int &) overrid
         case 'r': cpu = Cpu_number::first(); list_threads(t, 'r'); break;
 	case 'p': list_threads(t, 'p'); break;
 	case 'c':
-		  if (Cpu::online(cpu))
+		  if (cpu < Config::max_num_cpus() && Cpu::online(cpu))
 		    list_threads(Jdb::get_thread(cpu), 'r');
 		  else
 		    printf("\nCPU %u is not online!\n",
@@ -596,6 +596,8 @@ Jdb_thread_list::action(int cmd, void *&argbuf, char const *&fmt, int &) overrid
   else if (cmd == 1)
     {
       Thread *t = Jdb::get_thread(Cpu_number::boot_cpu());
+      if (!t)
+        return NOTHING;
 
       {
         // Hm, we are in JDB, however we have to make the assertion in
@@ -731,6 +733,12 @@ Jdb_thread_list::list_threads(Thread *t_start, char pr)
 {
   unsigned y, y_max;
   Thread *t, *t_current = t_start;
+
+  if (!t_current)
+    {
+      puts("\nNo current thread.");
+      return;
+    }
 
     {
       // Hm, we are in JDB, however we have to make the assertion in

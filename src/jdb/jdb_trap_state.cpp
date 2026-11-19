@@ -28,8 +28,10 @@ PRIVATE static
 void
 Jdb_trap_state_module::print_trap_state(Cpu_number cpu)
 {
-  Jdb_entry_frame *ef = Jdb::entry_frame.cpu(cpu);
-  if (!Jdb::cpu_in_jdb(cpu) || !ef)
+  Jdb_entry_frame *ef = nullptr;
+  if (cpu < Config::max_num_cpus() && Jdb::cpu_in_jdb(cpu))
+    ef = Jdb::entry_frame.cpu(cpu);
+  if (!ef)
     printf("CPU %u has not entered JDB\n", cxx::int_value<Cpu_number>(cpu));
   else
     {
