@@ -99,20 +99,34 @@ void (*Mem_unit::_tlb_flush_full)();
 
 void (*Mem_unit::_vz_guest_tlb_flush)(unsigned guest_id);
 
-PUBLIC static inline
+/*
+ * The flush functions select TLB entries through CP0 registers such as
+ * EntryHi and Index. A context switch changes these registers, so the
+ * flush functions run with the CPU lock held.
+ */
+PUBLIC static inline NEEDS["cpu_lock.h", "lock_guard.h"]
 void
 Mem_unit::tlb_flush(long asid, unsigned guest_id)
-{ _tlb_flush(asid, guest_id); }
+{
+  auto guard = lock_guard(cpu_lock);
+  _tlb_flush(asid, guest_id);
+}
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["cpu_lock.h", "lock_guard.h"]
 void
 Mem_unit::tlb_flush()
-{ _tlb_flush_full(); }
+{
+  auto guard = lock_guard(cpu_lock);
+  _tlb_flush_full();
+}
 
-PUBLIC static inline
+PUBLIC static inline NEEDS["cpu_lock.h", "lock_guard.h"]
 void
 Mem_unit::vz_guest_tlb_flush(unsigned guest_id)
-{ _vz_guest_tlb_flush(guest_id); }
+{
+  auto guard = lock_guard(cpu_lock);
+  _vz_guest_tlb_flush(guest_id);
+}
 
 static unsigned _l1_i_line;
 static unsigned _l1_d_line;
