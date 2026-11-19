@@ -62,7 +62,7 @@ Jdb_input::get_mword(Mword *mword, int digits, int base, int first_char = 0)
         case 'x':
           // If last digit was 0, delete it. This makes it easier to cut
           // 'n paste hex values like 0x12345678 into the serial terminal
-          if (base == 16 && digit && ((val & 0x10) == 0))
+          if (base == 16 && digit && ((val & 0xf) == 0))
             {
               putstr("\b \b");
               digit--;
