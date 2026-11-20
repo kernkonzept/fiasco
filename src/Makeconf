@@ -89,9 +89,6 @@ include $(srcdir)/Makeconf.$(CONFIG_XARCH)
 -include $(srcdir)/Makeconf.local
 -include $(objbase)/Makeconf.local
 
-get_cc_version_part = $\
-  $(shell echo $(1) | $(filter-out $(CCACHE),$(CC)) -E -xc - | tail -1)
-
 # Use same architecture names as user-level build
 CROSS_COMPILE_MAP_amd64_64 = amd64
 CROSS_COMPILE_MAP_ia32_32  = x86
@@ -145,6 +142,9 @@ endif
 ifneq ($(LD_TYPE),clang)
   LD := $(CROSS_COMPILE)$(LD)
 endif
+
+get_cc_version_part = $\
+  $(shell echo $(1) | $(filter-out $(CCACHE),$(CC)) -E -P -xc -)
 
 CCVER_ID_MAJOR-gcc        := __GNUC__
 CCVER_ID_MINOR-gcc        := __GNUC_MINOR__
