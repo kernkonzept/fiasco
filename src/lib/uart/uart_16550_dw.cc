@@ -30,7 +30,7 @@ void Uart_16550_dw::irq_ack()
       U8 lcr = _regs->read<U8>(LCR);
       U8 usr = _regs->read<U8>(DW_USR);
       asm volatile("" : : "r" (usr) : "memory");
-      _regs->write<U8>(lcr, LCR);
+      _regs->write<U8>(LCR, lcr);
     }
 }
 
