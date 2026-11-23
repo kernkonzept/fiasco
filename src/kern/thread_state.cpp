@@ -67,7 +67,7 @@ enum Thread_state : Mword
   /// Thread has sent an exception but still got no reply.
   Thread_in_exception         = 0x40000,
 
-  /// Use one-shot, user space in-thread page fault trampoline.
+  /// Use one-shot, user space in-thread page fault trampoline for the next PF.
   Thread_pf_trampoline        = 0x80000,
 
   /// Thread polls for DRQs.

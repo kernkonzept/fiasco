@@ -99,7 +99,9 @@ Thread::handle_page_fault_trampoline(Address pfa, Mword pf_info, Trap_state *ts)
 
   assert(cpu_lock.test());
 
-  state_del_dirty(Thread_pf_trampoline);
+  Pf_trampoline *tramp_state = pf_tramp_state().access();
+  if (tramp_state->flags & Pf_trampoline::Pf_in_progress)
+    return false;
 
   // Actually only required for ARM32/novirt (SP_usr/LR_usr) and ARM64 (SP_EL0).
   // Must be done here so that tramp_state->ts contains the information.
@@ -107,7 +109,6 @@ Thread::handle_page_fault_trampoline(Address pfa, Mword pf_info, Trap_state *ts)
   // resume_{normal,trigger_exception}_after_pf_trampoline() Assembler code.
   spill_user_state();
 
-  Pf_trampoline *tramp_state = pf_tramp_state().access();
   tramp_state->ts = *ts;
   tramp_state->saved_mr0 = this->utcb().access(true)->values[0];
   tramp_state->flags |= Pf_trampoline::Pf_in_progress;

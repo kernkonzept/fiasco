@@ -923,13 +923,13 @@ Thread_object::sys_pf_tramp_control_resume(L4_msg_tag const &tag, bool reflect)
   if (current() != this) [[unlikely]]
     return commit_result(-L4_err::EPerm);
 
-  if (!_pf_tramp_state || (state() & Thread_pf_trampoline)) [[unlikely]]
+  if (!_pf_tramp_state) [[unlikely]]
     return commit_result(-L4_err::EInval);
 
-  // update thread state directly because we checked current() == this
-  state_add_dirty(Thread_pf_trampoline, false);
-
   Pf_trampoline *tramp_state = pf_tramp_state().access();
+  if (!(tramp_state->flags & Pf_trampoline::Pf_in_progress)) [[unlikely]]
+    return commit_result(-L4_err::EInval);
+
   this->utcb().access(true)->values[0] = tramp_state->saved_mr0;
 
   // reflecting the PF exception has precedence
