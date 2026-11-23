@@ -5,6 +5,8 @@
 
 #define FIASCO_IDT_MAX  0x100
 #define APIC_IRQ_BASE   (FIASCO_IDT_MAX - 0x08)
+/* Bits 0-3 of the APIC spurious vector are hardwired to 1 on PPro. */
+#define APIC_SPURIOUS_VECTOR (APIC_IRQ_BASE + 7)
 
 #ifdef ASSEMBLER
 

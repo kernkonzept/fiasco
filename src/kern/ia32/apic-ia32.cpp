@@ -627,10 +627,8 @@ Apic::init_spiv()
   // Enable Focus Processor Checking.
   val &= ~(1 << 9);
 
-  // Set spurious IRQ vector to 0x3f.
-  // Bits 0 .. 3 are hardwired to 1 on PPro!
   val &= ~0xff;
-  val |= APIC_IRQ_BASE + 0xf;
+  val |= APIC_SPURIOUS_VECTOR;
 
   reg_write(Reg::Spiv, val);
 }
