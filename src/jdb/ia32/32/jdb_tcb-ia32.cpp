@@ -28,18 +28,18 @@ Jdb_tcb::print_entry_frame_regs(Thread *t)
 
   // registers, disassemble
   printf("EAX=%08lx  ESI=%08lx  DS=%04lx\n"
-	 "EBX=%08lx  EDI=%08lx  ES=%04lx\n"
+         "EBX=%08lx  EDI=%08lx  ES=%04lx\n"
          "ECX=%08lx  EBP=%08lx  GS=%04lx\n"
          "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
-	 "trap %lu (%s), error %08lx, from %s mode%s\n"
-	 "CS=%04lx  EIP=%s%08lx\033[m  EFlags=%08lx\n",
-	 ef->_ax, ef->_si, ef->_ds & 0xffff, ef->_bx, ef->_di, ef->_es & 0xffff,
-	 ef->_cx, ef->_bp, ef->_gs & 0xffff,
-	 ef->_dx, ef->sp(), ef->ss() & 0xffff,
-	 ef->_trapno, Cpu::exception_string(ef->_trapno), ef->_err,
-	 ef->from_user() ? "user" : "kernel",
+         "trap %lu (%s), error %08lx, from %s mode%s\n"
+         "CS=%04lx  EIP=%s%08lx\033[m  EFlags=%08lx\n",
+         ef->_ax, ef->_si, ef->_ds & 0xffff, ef->_bx, ef->_di, ef->_es & 0xffff,
+         ef->_cx, ef->_bp, ef->_gs & 0xffff,
+         ef->_dx, ef->sp(), ef->ss() & 0xffff,
+         ef->_trapno, Cpu::exception_string(ef->_trapno), ef->_err,
+         ef->from_user() ? "user" : "kernel",
          ef->_trapno == 14 ? pfa : "",
-	 ef->cs() & 0xffff, Jdb::esc_emph, ef->ip(), ef->flags());
+         ef->cs() & 0xffff, Jdb::esc_emph, ef->ip(), ef->flags());
 }
 
 IMPLEMENT
@@ -57,83 +57,96 @@ Jdb_tcb::info_thread_state(Thread *t)
 {
   Jdb::Guessed_thread_state state = Jdb::guess_thread_state(t);
   Jdb_tcb_ptr p(reinterpret_cast<Address>(t->get_kernel_sp()));
-  int sub = 0;
 
   switch (state)
     {
     case Jdb::s_ipc:
+      // Stack layout: ecx, edx, esi, edi, ebx, ebp, eax,
+      //               dummy1, dummy2, dummy3, dummy4, dummy5, dummy6, dummy7,
+      //               eip, cs, eflags, sp, ss
       printf("EAX=%08lx  ESI=%08lx\n"
-	     "EBX=%08lx  EDI=%08lx\n"
-    	     "ECX=%08lx  EBP=%08lx\n"
-	     "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
-	     "in %s (user level registers)\n",
-	     p.top_value( -6), p.top_value(-10),
-	     p.top_value( -8), p.top_value( -9),
-	     p.top_value(-12), p.top_value( -7),
-	     p.top_value(-11), p.top_value( -2), p.top_value(-1) & 0xffff,
-	     state == Jdb::s_ipc ? "ipc" : "syscall");
+             "EBX=%08lx  EDI=%08lx\n"
+             "ECX=%08lx  EBP=%08lx\n"
+             "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
+             "in ipc (user level registers)\n",
+             p.top_value(-13), p.top_value(-17),
+             p.top_value(-15), p.top_value(-16),
+             p.top_value(-19), p.top_value(-14),
+             p.top_value(-18), p.top_value( -2), p.top_value(-1) & 0xffff);
       break;
     case Jdb::s_user_invoke:
       printf("EAX=00000000  ESI=00000000\n"
-	     "EBX=00000000  EDI=00000000\n"
-	     "ECX=00000000  EBP=00000000\n"
-	     "EDX=00000000  ESP=%08lx  SS=%04lx\n"
-	     "invoking user the first time (user level registers)\n",
-	     p.top_value(-2), p.top_value(-1) & 0xffff);
+             "EBX=00000000  EDI=00000000\n"
+             "ECX=00000000  EBP=00000000\n"
+             "EDX=00000000  ESP=%08lx  SS=%04lx\n"
+             "invoking user the first time (user level registers)\n",
+             p.top_value(-2), p.top_value(-1) & 0xffff);
       break;
     case Jdb::s_fputrap:
+      // Stack layout: ecx, edx, eax,
+      //               eip, cs, eflags, sp, ss
       printf("EAX=%08lx\n"
-	     "\n"
-    	     "ECX=%08lx\n"
-	     "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
-	     "in exception #0x07 (user level registers)\n",
-	     p.top_value(-7), p.top_value(-8),
-	     p.top_value(-9), p.top_value(-2), p.top_value(-1) & 0xffff);
+             "\n"
+             "ECX=%08lx\n"
+             "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
+             "in exception #0x07 (user level registers)\n",
+             p.top_value(-6), p.top_value(-7),
+             p.top_value(-8), p.top_value(-2), p.top_value(-1) & 0xffff);
       break;
     case Jdb::s_pagefault:
-      printf("EAX=%08lx\n"
-	     "\n"
-    	     "ECX=%08lx  EBP=%08lx\n"
-	     "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
-	     "in page fault, error %08lx (user level registers)\n"
-	     "\n"
-	     "page fault linear address %08lx\n",
-	     p.top_value( -7), p.top_value( -8), p.top_value(-6),
-	     p.top_value( -9), p.top_value( -2), p.top_value(-1) & 0xffff,
-	     p.top_value(-11), p.top_value(-10));
+      // Stack layout: es, ds, gs, fs, edi, esi, ebp, esp, ebx, edx, ecx, eax,
+      //               0x0e, error, eip, cs, eflags, sp, ss
+      printf("EAX=%08lx  ESI=%08lx\n"
+             "EBX=%08lx  EDI=%08lx\n"
+             "ECX=%08lx  EBP=%08lx\n"
+             "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
+             "in page fault, error %08lx (user level registers)\n"
+             "\n"
+             "page fault linear address %08lx\n",
+             p.top_value( -8), p.top_value(-14),
+             p.top_value(-11), p.top_value(-15),
+             p.top_value( -9), p.top_value(-13),
+             p.top_value(-10), p.top_value( -2), p.top_value(-1) & 0xffff,
+             p.top_value( -6), p.top_value(-12));
       break;
     case Jdb::s_interrupt:
+      // Stack layout: ecx, edx, eax,
+      //               eip, cs, eflags, sp, ss
       printf("EAX=%08lx\n"
-	     "\n"
-    	     "ECX=%08lx\n"
-	     "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
-	     "in interrupt #0x%02lx (user level registers)\n",
-	     p.top_value(-6), p.top_value(-8),
-	     p.top_value(-7), p.top_value(-2), p.top_value(-1) & 0xffff,
-	     p.top_value(-9));
+             "\n"
+             "ECX=%08lx\n"
+             "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
+             "in interrupt (user level registers)\n",
+             p.top_value(-6), p.top_value(-8),
+             p.top_value(-7), p.top_value(-2), p.top_value(-1) & 0xffff);
       break;
     case Jdb::s_timer_interrupt:
-      if constexpr (Config::Have_frame_ptr)
-	sub = -1;
-      printf("EAX=%08lx\n"
-	     "\n"
-    	     "ECX=%08lx\n"
-	     "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
-	     "in timer interrupt (user level registers)\n",
-	     p.top_value(-6-sub), p.top_value(-8-sub),
-	     p.top_value(-7-sub), p.top_value(-2), p.top_value(-1) & 0xffff);
-      break;
+      // Stack layout: edx, ecx, eax, (ebp)
+      //               eip, cs, eflags, sp, ss
+      {
+        int fp = Config::Have_frame_ptr ? 1 : 0;
+        printf("EAX=%08lx\n"
+               "\n"
+               "ECX=%08lx\n"
+               "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
+               "in timer interrupt (user level registers)\n",
+               p.top_value(-6-fp), p.top_value(-7-fp),
+               p.top_value(-8-fp), p.top_value(-2), p.top_value(-1) & 0xffff);
+        break;
+      }
     case Jdb::s_slowtrap:
+      // Stack layout: es, ds, gs, fs, edi, esi, ebp, esp, ebx, edx, ecx, eax,
+      //               trap, error, eip, cs, eflags, sp, ss
       printf("EAX=%08lx  ESI=%08lx  DS=%04lx\n"
              "EBX=%08lx  EDI=%08lx  ES=%04lx\n"
              "ECX=%08lx  EBP=%08lx  GS=%04lx\n"
              "EDX=%08lx  ESP=%08lx  SS=%04lx\n"
              "in exception %lu, error %08lx (user level registers)\n",
-	     p.top_value( -8), p.top_value(-14), p.top_value(-18) & 0xffff,
-	     p.top_value(-11), p.top_value(-15), p.top_value(-19) & 0xffff,
-	     p.top_value( -9), p.top_value(-13), p.top_value(-17) & 0xffff,
-	     p.top_value(-10), p.top_value( -2), p.top_value( -1) & 0xffff,
-	     p.top_value( -7), p.top_value( -6));
+             p.top_value( -8), p.top_value(-14), p.top_value(-18) & 0xffff,
+             p.top_value(-11), p.top_value(-15), p.top_value(-19) & 0xffff,
+             p.top_value( -9), p.top_value(-13), p.top_value(-17) & 0xffff,
+             p.top_value(-10), p.top_value( -2), p.top_value( -1) & 0xffff,
+             p.top_value( -7), p.top_value( -6));
       break;
     case Jdb::s_unknown:
       break;

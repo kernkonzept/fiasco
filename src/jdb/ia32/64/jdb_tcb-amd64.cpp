@@ -31,16 +31,16 @@ Jdb_tcb::print_entry_frame_regs(Thread *t)
          "R10=%016lx  R11=%016lx\n"
          "R12=%016lx  R13=%016lx  GSBASE=%lx\n"
          "R14=%016lx  R15=%016lx  FSBASE=%lx\n"
-	 "trapno %lu, error %08lx, from %s mode%s\n"
-	 "RIP=%s%016lx\033[m  RFlags=%016lx\n",
-	 ef->_ax, ef->_si, ef->_bx, ef->_di,
-	 ef->_cx, ef->_bp, ef->_dx, ef->sp(),
-	 ef->_r8,  ef->_r9, ef->_r10, ef->_r11,
-	 ef->_r12, ef->_r13, t->_gs_base,
+         "trapno %lu, error %08lx, from %s mode%s\n"
+         "RIP=%s%016lx\033[m  RFlags=%016lx\n",
+         ef->_ax, ef->_si, ef->_bx, ef->_di,
+         ef->_cx, ef->_bp, ef->_dx, ef->sp(),
+         ef->_r8,  ef->_r9, ef->_r10, ef->_r11,
+         ef->_r12, ef->_r13, t->_gs_base,
          ef->_r14, ef->_r15, t->_fs_base,
-	 ef->_trapno, ef->_err, ef->from_user() ? "user" : "kernel",
+         ef->_trapno, ef->_err, ef->from_user() ? "user" : "kernel",
          ef->_trapno == 14 ? pfa : "",
-	 Jdb::esc_emph, ef->ip(), ef->flags());
+         Jdb::esc_emph, ef->ip(), ef->flags());
 }
 
 IMPLEMENT
@@ -57,102 +57,74 @@ Jdb_tcb::info_thread_state(Thread *t)
 {
   Jdb::Guessed_thread_state state = Jdb::guess_thread_state(t);
   Jdb_tcb_ptr p(reinterpret_cast<Address>(t->get_kernel_sp()));
-  int sub = 0;
 
   switch (state)
     {
     case Jdb::s_ipc:
+      // Stack layout: r15, r14, r13, r12, r11, r10, r9, r8,
+      //               rdi, rsi, rbp, rbx, rdx, ---,
+      //               trap, error, rip, cs, rflags, rsp, ss
       printf("RAX=%016lx  RSI=%016lx\n"
-	     "RBX=%016lx  RDI=%016lx\n"
-             "RCX=%016lx  RBP=%016lx\n"
-             "RDX=%016lx  RSP=%016lx\n"
+             "RBX=%016lx  RDI=%016lx\n"
+             "RCX=----------------  RBP=%016lx\n"
+             "RDX=%016lx  RSP=%016lx  SS=%04lx\n"
              "R8= %016lx  R9= %016lx\n"
-             "R10=%016lx  R11=%016lx\n"
-             "R12=%016lx  R13=%016lx  SS=%04lx GSBASE=%lx\n"
-             "R14=%016lx  R15=%016lx  CS=%04lx FSBASE=%lx\n"
-	     "in %s (user level registers)\n",
-	     p.top_value( -6), p.top_value(-10),
-	     p.top_value( -8), p.top_value( -9),
-	     p.top_value(-12), p.top_value( -7),
-	     p.top_value(-11), p.top_value( -2),
-	     p.top_value(-19), p.top_value(-18),
-	     p.top_value(-17), p.top_value(-16),
-	     p.top_value(-15), p.top_value(-14), p.top_value(-1) & 0xffff, t->_gs_base,
-	     p.top_value(-13), p.top_value(-12), p.top_value(-4) & 0xffff, t->_fs_base,
-	     state == Jdb::s_ipc ? "ipc" : "syscall");
+             "R10=%016lx  R11=----------------\n"
+             "R12=%016lx  R13=%016lx  GSBASE=%lx\n"
+             "R14=%016lx  R15=%016lx  FSBASE=%lx\n"
+             "in ipc (user level registers)\n",
+             p.top_value( -8), p.top_value(-14),
+             p.top_value(-11), p.top_value(-15),
+                               p.top_value(-13),
+             p.top_value(-10), p.top_value( -2), p.top_value(-1) & 0xffff,
+             p.top_value(-16), p.top_value(-17),
+             p.top_value(-18),
+             p.top_value(-20), p.top_value(-21), t->_gs_base,
+             p.top_value(-22), p.top_value(-23), t->_fs_base);
       break;
     case Jdb::s_user_invoke:
       printf("RAX=0000000000000000  RSI=0000000000000000\n"
-	     "RBX=0000000000000000  RDI=0000000000000000\n"
-	     "RCX=0000000000000000  RBP=0000000000000000\n"
-	     "RDX=0000000000000000  RSP=%16lx  SS=%04lx\n"
-	     " R8=0000000000000000   R9=0000000000000000\n"
-	     "R10=0000000000000000  R11=0000000000000000\n"
-	     "R12=0000000000000000  R13=0000000000000000 GSBASE=%lx\n"
-	     "R14=0000000000000000  R15=0000000000000000 FSBASE=%lx\n"
-	     "invoking user the first time (user level registers)\n",
-	     p.top_value(-2), p.top_value(-1) & 0xffff,
+             "RBX=0000000000000000  RDI=0000000000000000\n"
+             "RCX=0000000000000000  RBP=0000000000000000\n"
+             "RDX=0000000000000000  RSP=%16lx  SS=%04lx\n"
+             " R8=0000000000000000   R9=0000000000000000\n"
+             "R10=0000000000000000  R11=0000000000000000\n"
+             "R12=0000000000000000  R13=0000000000000000 GSBASE=%lx\n"
+             "R14=0000000000000000  R15=0000000000000000 FSBASE=%lx\n"
+             "invoking user the first time (user level registers)\n",
+             p.top_value(-2), p.top_value(-1) & 0xffff,
              t->_gs_base, t->_fs_base);
       break;
     case Jdb::s_fputrap:
-      printf("RAX=%016lx  RSI=----------------\n"
-	     "RBX=----------------  RDI=----------------\n"
+    case Jdb::s_interrupt:
+    case Jdb::s_timer_interrupt:
+      // Stack layout: r11, r10, r9, r8, rdx, rcx, rax, rsi, rdi,
+      //               rip, cs, rflags, rsp, ss
+      printf("RAX=%016lx  RSI=%016lx\n"
+             "RBX=----------------  RDI=%016lx\n"
              "RCX=%016lx  RBP=----------------\n"
-	     "RDX=%016lx  RSP=%016lx  SS=%04lx\n"
-	     " R8=----------------   R9=----------------\n"
-	     "R10=----------------  R11=----------------\n"
-	     "R12=----------------  R13=----------------\n"
-	     "R14=----------------  R15=----------------\n"
-	     "in exception #0x07 (user level registers)\n",
-	     p.top_value(-7), p.top_value(-8),
-	     p.top_value(-9), p.top_value(-2), p.top_value(-1) & 0xffff);
+             "RDX=%016lx  RSP=%016lx  SS=%04lx\n"
+             " R8=%016lx   R9=%016lx\n"
+             "R10=%016lx  R11=%016lx\n"
+             "R12=----------------  R13=----------------\n"
+             "R14=----------------  R15=----------------\n"
+             "in %s (user level registers)\n",
+             p.top_value( -8), p.top_value( -7),
+                               p.top_value( -6),
+             p.top_value( -9),
+             p.top_value(-10), p.top_value( -2), p.top_value(-1) & 0xffff,
+             p.top_value(-11), p.top_value(-12),
+             p.top_value(-13), p.top_value(-14),
+             state == Jdb::s_fputrap
+               ? "exception #0x07"
+               : state == Jdb::s_interrupt
+                   ? "interrupt" : "timer interrupt");
       break;
     case Jdb::s_pagefault:
-      printf("RAX=%016lx  RSI=----------------\n"
-	     "RBX=----------------  RDI=----------------\n"
-             "RCX=%016lx  RBP=%016lx\n"
-	     "RDX=%016lx  RSP=%016lx  SS=%04lx\n"
-	     " R8=----------------   R9=----------------\n"
-	     "R10=----------------  R11=----------------\n"
-	     "R12=----------------  R13=----------------\n"
-	     "R14=----------------  R15=----------------\n"
-	     "in page fault, error %08lx (user level registers)\n"
-	     "\n"
-	     "page fault linear address %16lx\n",
-	     p.top_value( -7), p.top_value( -8), p.top_value(-6),
-	     p.top_value( -9), p.top_value( -2), p.top_value(-1) & 0xffff,
-	     p.top_value(-10), p.top_value(-11));
-      break;
-    case Jdb::s_interrupt:
-      printf("RAX=%016lx\n  RSI=----------------\n"
-	     "RBX=----------------  RDI=----------------\n"
-             "RCX=%016lx\n  RBP=----------------\n"
-	     "RDX=%016lx  RSP=%016lx  SS=%04lx\n"
-	     " R8=----------------   R9=----------------\n"
-	     "R10=----------------  R11=----------------\n"
-	     "R12=----------------  R13=----------------\n"
-	     "R14=----------------  R15=----------------\n"
-	     "in interrupt #0x%02lx (user level registers)\n",
-	     p.top_value(-6), p.top_value(-8),
-	     p.top_value(-7), p.top_value(-2), p.top_value(-1) & 0xffff,
-	     p.top_value(-9));
-      break;
-    case Jdb::s_timer_interrupt:
-      if constexpr (Config::Have_frame_ptr)
-	sub = -1;
-      printf("RAX=%016lx  RSI=----------------\n"
-	     "RBX=----------------  RDI=----------------\n"
-             "RCX=%016lx  RBP=----------------\n"
-	     "RDX=%016lx  RSP=%016lx  SS=%04lx\n"
-	     " R8=----------------   R9=----------------\n"
-	     "R10=----------------  R11=----------------\n"
-	     "R12=----------------  R13=----------------\n"
-	     "R14=----------------  R15=----------------\n"
-	     "in timer interrupt (user level registers)\n",
-	     p.top_value(-6-sub), p.top_value(-8-sub),
-	     p.top_value(-7-sub), p.top_value(-2), p.top_value(-1) & 0xffff);
-      break;
     case Jdb::s_slowtrap:
+      // Stack layout: r15, r14, r13, r12, r11, r10, r9, r8,
+      //               rdi, rsi, rbp, rbx, rdx, ---,
+      //               trap, error, rip, cs, rflags, rsp, ss
       printf("RAX=%016lx  RSI=%016lx\n"
              "RBX=%016lx  RDI=%016lx\n"
              "RCX=%016lx  RBP=%016lx\n"
@@ -160,17 +132,23 @@ Jdb_tcb::info_thread_state(Thread *t)
              " R8=%016lx   R9=%016lx\n"
              "R10=%016lx  R11=%016lx\n"
              "R12=%016lx  R13=%016lx\n"
-             "R14=%016lx  R15=%016lx  CS=%04lx\n"
-             "in exception %lu, error %08lx (user level registers)\n",
-	     p.top_value( -8), p.top_value(-14),
-	     p.top_value(-11), p.top_value(-15),
-	     p.top_value( -9), p.top_value(-13),
-	     p.top_value(-10), p.top_value( -2), p.top_value(-1) & 0xffff,
-	     p.top_value(-16), p.top_value(-17),
-	     p.top_value(-18), p.top_value(-19),
-	     p.top_value(-20), p.top_value(-21),
-	     p.top_value(-22), p.top_value(-23), p.top_value(-4) & 0xffff,
-	     p.top_value( -7), p.top_value( -6));
+             "R14=%016lx  R15=%016lx  CS=%04lx\n",
+             p.top_value( -8), p.top_value(-14),
+             p.top_value(-11), p.top_value(-15),
+             p.top_value( -9), p.top_value(-13),
+             p.top_value(-10), p.top_value( -2), p.top_value(-1) & 0xffff,
+             p.top_value(-16), p.top_value(-17),
+             p.top_value(-18), p.top_value(-19),
+             p.top_value(-20), p.top_value(-21),
+             p.top_value(-22), p.top_value(-23), p.top_value(-4) & 0xffff);
+      if (state == Jdb::s_pagefault)
+        printf("in page fault, error %08lx (user level registers)\n"
+               "\n"
+               "page fault linear address %16lx\n",
+               p.top_value(-6), p.top_value(-12));
+      else
+        printf("in exception %lu, error %08lx (user level registers)\n",
+               p.top_value(-7), p.top_value(-6));
       break;
     case Jdb::s_unknown:
       break;
