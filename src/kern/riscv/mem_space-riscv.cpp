@@ -357,9 +357,10 @@ Mem_space::make_current(Switchin_flags)
   // page table.
   Cpu::set_satp(asid_with_fence(),
                 Cpu::phys_to_ppn(cxx::int_value<Phys_mem_addr>(_dir_phys)));
+  // Set before the flush, which marks a non-current space as unused.
+  _current.current() = this;
   // If ASIDs are not supported, flush the TLB after switching the page table.
   Mem_space::tlb_flush_space(false);
-  _current.current() = this;
 }
 
 //----------------------------------------------------------------------------
