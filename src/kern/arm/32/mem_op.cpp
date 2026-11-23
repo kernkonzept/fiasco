@@ -52,12 +52,19 @@ Mem_op::__arm_kmem_cache_maint(Op_cache op, void const *kstart, void const *kend
       break;
 
     case Op_cache::Flush_data:
-    case Op_cache::Inv_data:
       Mem_unit::flush_dcache(kstart, kend);
       Mem::barrier();
       outer_cache_op(kstart_addr, kend_addr,
                      [](Address s, Address e, bool sync)
                      { Outer_cache::flush(s, e, sync); });
+      break;
+
+    case Op_cache::Inv_data:
+      Mem_unit::inv_dcache(kstart, kend);
+      Mem::barrier();
+      outer_cache_op(kstart_addr, kend_addr,
+                     [](Address s, Address e, bool sync)
+                     { Outer_cache::invalidate(s, e, sync); });
       break;
 
     case Op_cache::Coherent:
