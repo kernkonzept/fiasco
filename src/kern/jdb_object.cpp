@@ -2,9 +2,6 @@
  * Copyright (C) 2016, 2020-2021, 2023-2024 Kernkonzept GmbH.
  * Author: Steffen Liebergeld <steffen.liebergeld@kernkonzept.com>
  *
- * This file is distributed under the terms of the GNU General Public
- * License, version 2.  Please see the COPYING-GPL-2 file for details.
- *
  * Jdb kernel object.
  *
  * Common entry path for interaction of l4re applications with the kernel
